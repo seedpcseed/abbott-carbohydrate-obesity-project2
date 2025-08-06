@@ -787,14 +787,14 @@ n_conditions <- length(unique(subject_heatmap_data$condition_time))
 spacer_data <- expand_grid(
   analyte = unique(subject_heatmap_data$analyte),
   condition_time = unique(subject_heatmap_data$condition_time),
-  subject_group = "--- GROUP SEPARATOR ---",
+  subject_group = " ",
   mean_conc = NA_real_
 )
 
 # Create ordered factor levels with gap
 all_subject_levels <- c(
   rev(control_subjects$subject_group),  # Control at top (reversed for ggplot)
-  "--- GROUP SEPARATOR ---",           # Gap
+  " ",           # Gap
   rev(case_subjects$subject_group)      # Case at bottom (reversed for ggplot)
 )
 

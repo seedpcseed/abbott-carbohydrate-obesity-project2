@@ -14,7 +14,7 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, 
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, 
                       fig.width = 12, fig.height = 8, dpi = 300)
 ```
 
@@ -34,11 +34,15 @@ Short chain fatty acids were analyzed using Gas chromatography-mass spectrometry
 
 ### Detailed SCFA Analysis Protocol
 
+The following section outlines the specific protocol used for SCFA derivatization and GC-MS analysis.
+
 Short chain fatty acids were derivatized as described by Haak et al. with modifications. The metabolite extract (100 µL) was added to 100 µL of 100 mM borate buffer (pH 10), 400 µL of 100 mM pentafluorobenzyl bromide in Acetonitrile, and 400 µL of n-hexane in a capped mass spec autosampler vial. Samples were heated to 65°C for 1 hour while shaking at 1300 rpm. After cooling, samples were centrifuged at 4°C, 2000 x g for 5 min, allowing phase separation. The hexanes phase was transferred and analyzed.
 
 Samples were analyzed using a GC-MS (Agilent 7890A GC system, Agilent 5975C MS detector) operating in negative chemical ionization mode, using a HP-5MSUI column (30 m x 0.25 mm, 0.25 µm), methane as the reagent gas and 1 µL split injection (1:10 split ratio). A 10-point calibration curve was prepared with acetate (100 mM), propionate (25 mM), butyrate (12.5 mM), and succinate (50 mM), with 9 subsequent 2x serial dilutions.
 
 ### Sample Extraction
+
+This section describes the procedure for extracting metabolites from the fecal samples prior to analysis.
 
 Extraction solvent (80% methanol spiked with internal standards and stored at -80°C) was added at a ratio of 100 mg of material/mL of extraction solvent. Samples were homogenized at 4°C on a Bead Mill 24 Homogenizer, set at 1.6 m/s with 6 thirty-second cycles, 5 seconds off per cycle. Samples were then centrifuged at -10°C, 20,000 x g for 15 min and the supernatant was used for analysis.
 
@@ -55,6 +59,7 @@ library(viridis)
 library(RColorBrewer)
 library(lme4)
 library(lmerTest)
+library(kableExtra)
 ```
 
 ## Load Metadata
@@ -151,9 +156,10 @@ map2 <- map2 %>%
 # Combine metadata files
 map <- bind_rows(map, map2)
 
-# Make group names lowercase for consistency
+# Make group names lowercase for consistency and handle NA values
 map <- map %>%
-  mutate(group = tolower(group))
+  mutate(group = tolower(group)) %>%
+  filter(!is.na(group))  # Remove rows with NA group values
 ```
 
 ## Load SCFA Data
@@ -165,9 +171,10 @@ data <- fread("data/removed_qcs_quant_results_20250722_PFBBr_PS2720_20250731.csv
 # Join metadata with SCFA data
 sample_data <- left_join(map, data, by = "sampleid")
 
-# Ensure group names are lowercase
+# Ensure group names are lowercase and remove NA group values
 sample_data <- sample_data %>%
-  mutate(group = tolower(group))
+  mutate(group = tolower(group)) %>%
+  filter(!is.na(group))  # Remove rows with NA group values
 
 # Display data structure
 cat("Dataset dimensions:", dim(sample_data), "\n")
@@ -214,7 +221,8 @@ summary_by_group <- sample_data_long %>%
   arrange(analyte, group)
 
 knitr::kable(summary_by_group, digits = 3, 
-             caption = "Summary Statistics by Experimental Group")
+             caption = "Summary Statistics by Experimental Group") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = F)
 ```
 
 ## Summary by Carbohydrate Type
@@ -236,7 +244,8 @@ summary_by_carb <- sample_data_long %>%
   arrange(analyte, carbohydrate_type)
 
 knitr::kable(summary_by_carb, digits = 3, 
-             caption = "Summary Statistics by Carbohydrate Type")
+             caption = "Summary Statistics by Carbohydrate Type") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = F)
 ```
 
 ## Summary by Time Point
@@ -258,7 +267,8 @@ summary_by_time <- sample_data_long %>%
   arrange(analyte, timepoint_hr)
 
 knitr::kable(summary_by_time, digits = 3, 
-             caption = "Summary Statistics by Time Point")
+             caption = "Summary Statistics by Time Point") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = F)
 ```
 
 ## Combined Summary Statistics
@@ -525,25 +535,42 @@ cat("Subject-level and case-only analyses saved to results/ directory\n")
 
 ## Statistical Results
 
+We performed several statistical tests to compare SCFA concentrations across different experimental conditions. The following tables summarize the results of these comparisons, including t-tests for group differences and ANOVA for carbohydrate effects.
+
 ### Group Comparisons (Control vs Case)
+
+This table presents the results of t-tests comparing SCFA concentrations between the control and case groups.
+
 ```{r group-stats-table}
 knitr::kable(group_stats, digits = 4, 
-             caption = "Group Comparisons with Benjamini-Hochberg Correction")
+             caption = "Group Comparisons with Benjamini-Hochberg Correction") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = F)
 ```
 
 ### Carbohydrate Type Comparisons
+
+This table shows the results of ANOVA tests examining the effect of different carbohydrate types on SCFA concentrations.
+
 ```{r carb-stats-table}
 knitr::kable(carb_stats, digits = 4, 
-             caption = "ANOVA Results for Carbohydrate Type Effects")
+             caption = "ANOVA Results for Carbohydrate Type Effects") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = F)
 ```
 
 ### Post-hoc Carbohydrate Comparisons
+
+Following the ANOVA, pairwise t-tests were performed to compare each carbohydrate type to the 'no carbohydrate' control. The results are shown below.
+
 ```{r carb-posthoc-table}
 knitr::kable(carb_posthoc, digits = 4, 
-             caption = "Pairwise Comparisons vs No Carbohydrate Control")
+             caption = "Pairwise Comparisons vs No Carbohydrate Control") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = F)
 ```
 
 ### Three-way Interaction Analysis
+
+To assess the combined effects of group, carbohydrate type, and time, a three-way ANOVA was conducted. The results are summarized in this table.
+
 ```{r interaction-stats-table}
 # Check the structure and convert to data frame for proper column selection
 interaction_display <- as.data.frame(interaction_stats) %>%
@@ -551,38 +578,62 @@ interaction_display <- as.data.frame(interaction_stats) %>%
 
 knitr::kable(interaction_display, 
              digits = 4, 
-             caption = "Three-way ANOVA: Group × Carbohydrate × Time Interactions")
+             caption = "Three-way ANOVA: Group × Carbohydrate × Time Interactions") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = F)
 ```
 
 ## Subject-Level Analyses
 
+To account for individual variability, we conducted analyses at the subject level. This allows us to examine within-subject changes and summarize statistics for each participant, providing a more granular view of the data.
+
 ### Subject-Level Summary Statistics
+
+This table provides summary statistics for each subject, including the mean concentration and number of observations.
+
 ```{r subject-summary-table}
 knitr::kable(subject_summary, digits = 3, 
-             caption = "Subject-Level Summary Statistics")
+             caption = "Subject-Level Summary Statistics") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = F)
 ```
 
 ### Within-Subject Changes (0h to 48h)
+
+This table shows the results of statistical tests on the changes in SCFA concentrations within each subject from baseline to 48 hours.
+
 ```{r within-subject-stats-table}
 knitr::kable(within_subject_stats, digits = 4, 
-             caption = "Within-Subject Changes from Baseline to 48h")
+             caption = "Within-Subject Changes from Baseline to 48h") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = F)
 ```
 
 ## Case-Only Temporal Analysis
 
+To isolate the effects of the intervention within the case group, we performed a temporal analysis comparing SCFA concentrations at 0h and 48h. This analysis helps to understand the direct impact of the carbohydrate types on the case subjects over time.
+
 ### Case Group Temporal Changes by Carbohydrate Type
+
+This table presents the temporal changes in SCFA concentrations for the case group, broken down by carbohydrate type.
+
 ```{r case-only-stats-table}
 knitr::kable(case_only_stats, digits = 4, 
-             caption = "Case Group Only: Temporal Changes (0h to 48h) by Carbohydrate Type")
+             caption = "Case Group Only: Temporal Changes (0h to 48h) by Carbohydrate Type") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = F)
 ```
 
 ### Case Group Temporal Changes (Pooled)
+
+Here, we present the temporal changes for the case group, pooled across all carbohydrate types to assess the overall time effect.
+
 ```{r case-only-pooled-stats-table}
 knitr::kable(case_only_pooled_stats, digits = 4, 
-             caption = "Case Group Only: Temporal Changes (0h to 48h) Pooled Across Carbohydrate Types")
+             caption = "Case Group Only: Temporal Changes (0h to 48h) Pooled Across Carbohydrate Types") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = F)
 ```
 
 ### Case Group Mixed-Effects Models (Subject Random Effects)
+
+This table summarizes the results from the mixed-effects models applied to the case group data, accounting for subject-specific random effects.
+
 ```{r case-only-mixed-effects-summary}
 # Display key results from case-only mixed-effects models
 case_only_mixed_summary <- data.frame(
@@ -616,12 +667,194 @@ case_only_mixed_summary <- case_only_mixed_summary %>%
   ))
 
 knitr::kable(case_only_mixed_summary, digits = 4, 
-             caption = "Case Group Mixed-Effects Models: Time × Carbohydrate Effects with Subject Random Effects")
+             caption = "Case Group Mixed-Effects Models: Time × Carbohydrate Effects with Subject Random Effects") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = F)
+```
+
+## Delta Change Analysis (48h vs 0h)
+
+To further investigate the magnitude of change over time, we calculated the delta (change) in concentration for each analyte between 48h and 0h. This approach focuses on the *response magnitude* and allows us to test whether the group or carbohydrate type influences how strongly subjects respond to the intervention over time.
+
+```{r delta-analysis}
+# Calculate delta values for all subjects
+delta_analysis <- sample_data_long %>%
+  filter(timepoint_hr %in% c("0", "48")) %>%
+  mutate(timepoint_hr = as.character(timepoint_hr)) %>%
+  pivot_wider(names_from = timepoint_hr, 
+              values_from = concentration, 
+              names_prefix = "time_") %>%
+  mutate(delta_48h_0h = time_48 - time_0) %>%
+  filter(!is.na(delta_48h_0h))
+
+# Statistical comparisons of delta values between groups
+delta_group_stats <- delta_analysis %>%
+  group_by(analyte) %>%
+  t_test(delta_48h_0h ~ group) %>%
+  adjust_pvalue(method = "BH") %>%
+  add_significance()
+
+# Statistical comparisons of delta values between carbohydrate types
+delta_carb_stats <- delta_analysis %>%
+  group_by(analyte) %>%
+  anova_test(delta_48h_0h ~ carbohydrate_type) %>%
+  adjust_pvalue(method = "BH") %>%
+  add_significance()
+
+# Post-hoc comparisons for carbohydrate effects on delta
+delta_carb_posthoc <- delta_analysis %>%
+  group_by(analyte) %>%
+  pairwise_t_test(delta_48h_0h ~ carbohydrate_type, 
+                  ref.group = "no_carbohydrate") %>%
+  adjust_pvalue(method = "BH") %>%
+  add_significance()
+
+# Two-way ANOVA for delta: Group × Carbohydrate
+delta_interaction_stats <- delta_analysis %>%
+  group_by(analyte) %>%
+  anova_test(delta_48h_0h ~ group * carbohydrate_type) %>%
+  adjust_pvalue(method = "BH") %>%
+  add_significance()
+
+# Mixed-effects models for delta values
+delta_mixed_effects <- list()
+
+for (analyte_name in scfa_analytes) {
+  delta_analyte_data <- delta_analysis %>% 
+    filter(analyte == analyte_name) %>%
+    mutate(
+      group = factor(group, levels = c("control", "case")),
+      carbohydrate_type = factor(carbohydrate_type, 
+                                levels = c("no_carbohydrate", "rapid_digestible", "slow_digestible")),
+      subject = factor(subject)
+    )
+  
+  full_model <- lmer(delta_48h_0h ~ group * carbohydrate_type + (1 | subject), 
+                     data = delta_analyte_data, REML = FALSE)
+  
+  delta_mixed_effects[[analyte_name]] <- list(
+    full_model = full_model,
+    anova_full = anova(full_model)
+  )
+}
+
+# Summary statistics for delta values
+delta_summary <- delta_analysis %>%
+  group_by(group, carbohydrate_type, analyte) %>%
+  summarise(
+    n = n(),
+    mean_delta = mean(delta_48h_0h, na.rm = TRUE),
+    sd_delta = sd(delta_48h_0h, na.rm = TRUE),
+    sem_delta = sd_delta / sqrt(n),
+    .groups = "drop"
+  )
+
+# Save delta analysis results
+write.csv(delta_summary, "results/delta_summary_statistics.csv", row.names = FALSE)
+write.csv(delta_group_stats, "results/delta_group_comparisons.csv", row.names = FALSE)
+write.csv(delta_carb_stats, "results/delta_carbohydrate_effects.csv", row.names = FALSE)
+write.csv(delta_carb_posthoc, "results/delta_carbohydrate_posthoc.csv", row.names = FALSE)
+```
+
+### Delta Summary Statistics
+
+This table provides summary statistics for the calculated delta values (48h - 0h), showing the mean change and variability.
+
+```{r delta-summary-table}
+knitr::kable(delta_summary, digits = 3, 
+             caption = "Summary Statistics for Delta Change (48h - 0h)") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = F)
+```
+
+### Delta Group Comparisons
+
+This table shows the results of t-tests comparing the delta values between the control and case groups.
+
+```{r delta-group-stats-table}
+knitr::kable(delta_group_stats, digits = 4, 
+             caption = "Group Comparisons of Delta Change (Response Magnitude)") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = F)
+```
+
+### Delta Carbohydrate Comparisons
+
+This table presents the results of ANOVA tests on the delta values to examine the effect of carbohydrate type on the magnitude of change.
+
+```{r delta-carb-stats-table}
+knitr::kable(delta_carb_stats, digits = 4, 
+             caption = "ANOVA Results for Carbohydrate Effects on Delta Change") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = F)
+```
+
+### Delta Carbohydrate Post-Hoc Comparisons
+
+Following the ANOVA on delta values, pairwise t-tests were performed to compare each carbohydrate type to the 'no carbohydrate' control. The results are shown below.
+
+```{r delta-carb-posthoc-table}
+knitr::kable(delta_carb_posthoc, digits = 4, 
+             caption = "Pairwise Comparisons of Delta Change vs No Carbohydrate") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = F)
+```
+
+### Delta Interaction Analysis
+
+To assess the combined effects of group and carbohydrate type on the delta values, a two-way ANOVA was conducted. The results are summarized in this table.
+
+```{r delta-interaction-stats-table}
+delta_interaction_display <- as.data.frame(delta_interaction_stats) %>%
+  select(analyte, Effect, p, p.adj, p.adj.signif)
+knitr::kable(delta_interaction_display, digits = 4, 
+             caption = "Two-way ANOVA on Delta Change: Group × Carbohydrate Interactions") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = F)
+```
+
+### Delta Mixed-Effects Models
+
+This table summarizes the results from the mixed-effects models applied to the delta values, accounting for subject-specific random effects.
+
+```{r delta-mixed-effects-summary}
+# Display key results from delta mixed-effects models
+delta_mixed_summary <- data.frame(
+  analyte = character(),
+  effect = character(),
+  f_value = numeric(),
+  p_value = numeric(),
+  stringsAsFactors = FALSE
+)
+
+for (analyte_name in names(delta_mixed_effects)) {
+  anova_results <- delta_mixed_effects[[analyte_name]]$anova_full
+  for (i in 1:nrow(anova_results)) {
+    delta_mixed_summary <- rbind(delta_mixed_summary, data.frame(
+      analyte = analyte_name,
+      effect = rownames(anova_results)[i],
+      f_value = anova_results[i, "F value"],
+      p_value = anova_results[i, "Pr(>F)"],
+      stringsAsFactors = FALSE
+    ))
+  }
+}
+
+delta_mixed_summary <- delta_mixed_summary %>%
+  mutate(significance = case_when(
+    p_value < 0.001 ~ "***",
+    p_value < 0.01 ~ "**", 
+    p_value < 0.05 ~ "*",
+    TRUE ~ "ns"
+  ))
+
+knitr::kable(delta_mixed_summary, digits = 4, 
+             caption = "Delta Change Mixed-Effects Models: Group × Carbohydrate Effects") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = F)
 ```
 
 ## Mixed-Effects Model Results
 
+To account for the repeated measures design and the variability between subjects, we utilized linear mixed-effects models. These models include subject as a random effect, allowing us to more accurately assess the fixed effects of group, carbohydrate type, and time.
+
 ### Mixed-Effects Model Summary
+
+This table presents a summary of the full mixed-effects models, including F-values and p-values for all fixed effects.
+
 ```{r mixed-effects-summary}
 # Display key results from mixed-effects models
 mixed_effects_summary <- data.frame(
@@ -655,10 +888,13 @@ mixed_effects_summary <- mixed_effects_summary %>%
   ))
 
 knitr::kable(mixed_effects_summary, digits = 4, 
-             caption = "Mixed-Effects Models: F-values and P-values for Fixed Effects")
+             caption = "Mixed-Effects Models: F-values and P-values for Fixed Effects") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = F)
 ```
 
 # Visualizations
+
+To visually explore the data, we generated a series of plots. These visualizations illustrate the relationships between SCFA concentrations and the experimental variables, including group, carbohydrate type, and time. Each plot is designed to highlight different aspects of the data, from overall trends to individual subject responses.
 
 ```{r create-plots-directory, include=FALSE}
 # Create plots directory if it doesn't exist
@@ -843,14 +1079,14 @@ n_conditions <- length(unique(subject_heatmap_data$condition_time))
 spacer_data <- expand_grid(
   analyte = unique(subject_heatmap_data$analyte),
   condition_time = unique(subject_heatmap_data$condition_time),
-  subject_group = "--- GROUP SEPARATOR ---",
+  subject_group = " ",
   mean_conc = NA_real_
 )
 
 # Create ordered factor levels with gap
 all_subject_levels <- c(
   rev(control_subjects$subject_group),  # Control at top (reversed for ggplot)
-  "--- GROUP SEPARATOR ---",           # Gap
+  " ",           # Gap
   rev(case_subjects$subject_group)      # Case at bottom (reversed for ggplot)
 )
 
@@ -1021,6 +1257,80 @@ plot_case_individual <- case_individual_data %>%
 plot_case_individual
 ```
 
+## Delta Change (48h-0h) Visualizations
+
+```{r plot-delta-changes, fig.height=8, fig.width=12}
+# Group comparison of response magnitudes
+plot_delta_group <- delta_analysis %>%
+  ggplot(aes(x = group, y = delta_48h_0h, fill = group)) +
+  geom_boxplot(alpha = 0.8) +
+  facet_wrap(~ analyte, scales = "free_y") +
+  scale_fill_manual(values = group_colors) +
+  stat_compare_means(method = "t.test", 
+                     comparisons = list(c("control", "case")),
+                     label = "p.signif",
+                     step_increase = 0.1) +
+  labs(title = "SCFA Response Magnitude (Δ48h-0h) by Group",
+       subtitle = "Comparing metabolic response between control and case groups",
+       x = "Group",
+       y = "Delta Concentration (48h - 0h) μM",
+       fill = "Group") +
+  pub_theme +
+  theme(legend.position = "bottom")
+
+plot_delta_group
+```
+
+```{r plot-delta-carb-effects, fig.height=8, fig.width=12}
+# Carbohydrate comparison of response magnitudes
+plot_delta_carb <- delta_analysis %>%
+  ggplot(aes(x = carbohydrate_type, y = delta_48h_0h, fill = carbohydrate_type)) +
+  geom_boxplot(alpha = 0.8) +
+  facet_wrap(~ analyte, scales = "free_y") +
+  scale_fill_manual(values = carb_colors) +
+  stat_compare_means(method = "t.test",
+                     ref.group = "no_carbohydrate",
+                     label = "p.signif",
+                     step_increase = 0.1) +
+  labs(title = "SCFA Response Magnitude (Δ48h-0h) by Carbohydrate Type",
+       subtitle = "Comparing metabolic response magnitude across carbohydrate interventions",
+       x = "Carbohydrate Type",
+       y = "Delta Concentration (48h - 0h) μM",
+       fill = "Carbohydrate Type") +
+  pub_theme +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        legend.position = "bottom")
+
+plot_delta_carb
+```
+
+```{r plot-delta-interaction, fig.height=10, fig.width=14}
+# Group × Carbohydrate interaction for delta
+plot_delta_interaction <- delta_analysis %>%
+  group_by(group, carbohydrate_type, analyte) %>%
+  summarise(
+    mean_delta = mean(delta_48h_0h, na.rm = TRUE),
+    sem_delta = sd(delta_48h_0h, na.rm = TRUE) / sqrt(n()),
+    .groups = "drop"
+  ) %>%
+  ggplot(aes(x = carbohydrate_type, y = mean_delta, fill = group)) +
+  geom_col(position = "dodge", alpha = 0.8) +
+  geom_errorbar(aes(ymin = mean_delta - sem_delta, ymax = mean_delta + sem_delta),
+                position = position_dodge(width = 0.9), width = 0.2) +
+  facet_wrap(~ analyte, scales = "free_y") +
+  scale_fill_manual(values = group_colors) +
+  labs(title = "SCFA Response Magnitude: Group × Carbohydrate Interaction",
+       subtitle = "Mean ± SEM change from baseline (48h - 0h)",
+       x = "Carbohydrate Type",
+       y = "Mean Delta Concentration ± SEM (μM)",
+       fill = "Group") +
+  pub_theme +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        legend.position = "bottom")
+
+plot_delta_interaction
+```
+
 ## Save Plots
 
 ```{r save-plots}
@@ -1034,6 +1344,9 @@ ggsave("plots/scfa_subject_heatmap.png", plot_subject_heatmap, width = 16, heigh
 ggsave("plots/scfa_trajectories.png", plot_trajectories, width = 16, height = 12, dpi = 300)
 ggsave("plots/scfa_case_only_temporal.png", plot_case_only, width = 12, height = 8, dpi = 300)
 ggsave("plots/scfa_case_individual_trajectories.png", plot_case_individual, width = 16, height = 12, dpi = 300)
+ggsave("plots/scfa_delta_group_comparison.png", plot_delta_group, width = 12, height = 8, dpi = 300)
+ggsave("plots/scfa_delta_carbohydrate_effects.png", plot_delta_carb, width = 12, height = 8, dpi = 300)
+ggsave("plots/scfa_delta_group_carb_interaction.png", plot_delta_interaction, width = 14, height = 10, dpi = 300)
 
 cat("All plots saved to plots/ directory with publication-quality formatting\n")
 ```
@@ -1067,6 +1380,16 @@ The case-only mixed-effects analysis confirmed that **all SCFA analytes increase
 - **Acetate**: Modest carbohydrate effect (p = 0.043)
 - **Succinate**: Both temporal (p < 2e-16) and carbohydrate effects (p = 0.018), with marginal interaction (p = 0.030)
 - **Propionate**: Near-significant carbohydrate effect (p = 0.082) and interaction (p = 0.058)
+
+### Delta Change Analysis (Response Magnitude)
+
+To complement the analysis of raw concentrations, we analyzed the delta (48h - 0h) values to focus specifically on the *magnitude* of the metabolic response. This approach helps to clarify whether the experimental factors (group, carbohydrate type) influence the *rate of change* in SCFA levels, independent of baseline concentrations.
+
+-   **Group Effects on Response Magnitude**: The analysis of delta values revealed no significant differences in the magnitude of SCFA changes between the control and case groups. This reinforces the finding from the primary analysis that the experimental intervention did not lead to a differential metabolic response between groups.
+
+-   **Carbohydrate Effects on Response Magnitude**: The delta analysis highlighted that carbohydrate type had a significant effect on the magnitude of the response for some analytes. This indicates that while the temporal trend is universal, the *extent* of SCFA production is influenced by the type of carbohydrate provided.
+
+-   **Interaction Effects**: The two-way ANOVA on delta values showed no significant interaction between group and carbohydrate type for most analytes, suggesting that the effect of carbohydrate type on response magnitude was consistent across both control and case groups.
 
 ### Individual Subject Variation
 Subject-level analyses revealed substantial inter-individual variation in baseline SCFA levels, particularly in the case group (higher standard deviations for most analytes). The mixed-effects models properly accounted for this variation through random effects, strengthening the temporal effect findings.
@@ -1103,7 +1426,9 @@ This comprehensive SCFA analysis using PFBBr derivatization and GC-MS quantifica
 
 4. **Robust Case Group Responses**: Case-only analysis confirmed universal temporal increases across all SCFA analytes, with some analytes showing additional carbohydrate-dependent response patterns.
 
-5. **Substantial Individual Variation**: Subject-level analyses revealed considerable inter-individual differences in SCFA production, properly accounted for through mixed-effects modeling.
+5. **Delta Analysis Confirms Findings**: The analysis of delta changes (48h - 0h) reinforced the primary findings, showing no significant group differences in the magnitude of the metabolic response but confirming that carbohydrate type does influence the extent of SCFA production.
+
+6. **Substantial Individual Variation**: Subject-level analyses revealed considerable inter-individual differences in SCFA production, properly accounted for through mixed-effects modeling.
 
 ## Statistical Rigor
 
