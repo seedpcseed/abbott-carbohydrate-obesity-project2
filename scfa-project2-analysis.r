@@ -30,8 +30,8 @@ map <- map[-(1:3), ]
 # Extract information from sample names
 map <- map %>%
   mutate(
-    # Extract subject ID (digits and letter before first space)
-    subject = str_extract(sampleid, "^[0-9]+[a-zA-Z]*"),
+    # Extract subject ID (digits only, stripping off letters at the end)
+    subject = str_extract(sampleid, "^[0-9]+"),
     
     # Extract the part between spaces (e.g., "r1", "s2", "nc")
     carb_repeat = str_extract(sampleid, "(?<= )[rs]\\d|nc(?= )"),
@@ -71,8 +71,8 @@ map2 <- map2[-(1:3), ]
 #split out sample name information
 map2 <- map2 %>%
   mutate(
-    # Extract subject ID (digits and letter before first space)
-    subject = str_extract(sampleid, "^[0-9]+[a-zA-Z]*"),
+    # Extract subject ID (digits only, stripping off letters at the end)
+    subject = str_extract(sampleid, "^[0-9]+"),
     
     # Extract the part between spaces (e.g., "r1", "s2", "nc")
     carb_repeat = str_extract(sampleid, "(?<= )[rs]\\d|nc(?= )"),
