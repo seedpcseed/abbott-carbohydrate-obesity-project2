@@ -55,9 +55,7 @@ Metabolites were extracted from 100 mg of fecal material using 80% methanol with
 
 **Statistical Methods:** Data analysis was conducted in R (v4.4.1). Technical replicates were averaged prior to statistical analysis. Linear mixed-effects models were fitted using the `lme4` package with subject as a random effect to account for repeated measures. Post-hoc pairwise comparisons employed estimated marginal means (`emmeans` package) with Tukey adjustment for multiple comparisons. Significance was set at α = 0.05, with Benjamini-Hochberg adjustment applied where multiple testing occurred.
 
-# Data Loading and Preprocessing
-
-```{r load-libraries}
+```{r load-libraries, include=FALSE}
 library(tidyverse)
 library(readxl)
 library(janitor)
@@ -125,9 +123,7 @@ carb_colors <- c("No Carbohydrate" = "#95A5A6",
                  "Slow Digestible" = "#27AE60")
 ```
 
-## Load Metadata and SCFA Data
-
-```{r load-and-process-data}
+```{r load-and-process-data, include=FALSE}
 # Load and combine metadata files
 map1 <- read_excel("metadata/SEED LAB HMM Submission Sheet 202405.xlsx", skip = 9) %>% clean_names()
 colnames(map1) <- c("sampleid", "group", "bile_acids_panel", "pfbbr_scfa_panel", "tryp_indole_panel", "tms_panel_1", "tms_panel_2", "tms_panel_3", "untargeted_panel", "custom_targeted_panel", "low_abundant_metabolite_panel", "sample_origin", "sample_type", "mouse_number", "services_requested_per_sample", "mouse_strain", "mouse_flora", "volume_ul", "sample_weight_mg", "experiment_treatment")
@@ -192,8 +188,7 @@ sample_data_long_factored <- sample_data_long %>%
     subject = factor(subject)
   )
 
-cat("Dataset dimensions after processing:", dim(sample_data_long), "
-")
+# Dataset dimensions after processing: dim(sample_data_long)
 ```
 
 # Exploratory Data Analysis & Overall Trends
@@ -351,6 +346,78 @@ The analysis of the response magnitude (delta) shows that while carbohydrate typ
 Given the minimal group differences observed, we examine the carbohydrate effects by combining Control and Case groups to increase statistical power and focus on the primary experimental manipulation.
 
 **Statistical Method:** Box plots showing combined group data with Wilcoxon rank-sum tests comparing each carbohydrate type against the no-carbohydrate control. P-values adjusted using Benjamini-Hochberg method to control false discovery rate.
+
+### Control Group Only: Carbohydrate Type Effects
+
+```{r plot-delta-control-only, fig.height=8, fig.width=12}
+# Control group only analysis
+plot_delta_control_only <- delta_data %>%
+  filter(group == "control") %>%
+  ggplot(aes(x = carbohydrate_type_label, y = delta_48h_0h)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50", alpha = 0.7) +
+  geom_boxplot(aes(fill = carbohydrate_type_label), alpha = 0.8, outlier.shape = NA) +
+  geom_jitter(alpha = 0.6, width = 0.2, size = 1.5, color = "gray30") +
+  facet_wrap(~ analyte, scales = "free_y") +
+  scale_fill_manual(values = carb_colors, guide = "none") +
+  stat_compare_means(
+    comparisons = list(c("No Carbohydrate", "Rapid Digestible"),
+                      c("No Carbohydrate", "Slow Digestible"),
+                      c("Rapid Digestible", "Slow Digestible")),
+    method = "wilcox.test",
+    label = "p.signif",
+    step_increase = 0.1
+  ) +
+  labs(
+    title = "SCFA Response Magnitude by Carbohydrate Type - Control Group Only",
+    subtitle = "Pairwise Wilcoxon rank-sum test comparisons",
+    x = "Carbohydrate Type", 
+    y = "Change in Concentration (48h - 0h) μM"
+  ) +
+  pub_theme +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    strip.text = element_text(size = 12, face = "bold")
+  )
+
+plot_delta_control_only
+```
+
+### Case Group Only: Carbohydrate Type Effects
+
+```{r plot-delta-case-only, fig.height=8, fig.width=12}
+# Case group only analysis
+plot_delta_case_only <- delta_data %>%
+  filter(group == "case") %>%
+  ggplot(aes(x = carbohydrate_type_label, y = delta_48h_0h)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50", alpha = 0.7) +
+  geom_boxplot(aes(fill = carbohydrate_type_label), alpha = 0.8, outlier.shape = NA) +
+  geom_jitter(alpha = 0.6, width = 0.2, size = 1.5, color = "gray30") +
+  facet_wrap(~ analyte, scales = "free_y") +
+  scale_fill_manual(values = carb_colors, guide = "none") +
+  stat_compare_means(
+    comparisons = list(c("No Carbohydrate", "Rapid Digestible"),
+                      c("No Carbohydrate", "Slow Digestible"),
+                      c("Rapid Digestible", "Slow Digestible")),
+    method = "wilcox.test",
+    label = "p.signif",
+    step_increase = 0.1
+  ) +
+  labs(
+    title = "SCFA Response Magnitude by Carbohydrate Type - Case Group Only",
+    subtitle = "Pairwise Wilcoxon rank-sum test comparisons",
+    x = "Carbohydrate Type", 
+    y = "Change in Concentration (48h - 0h) μM"
+  ) +
+  pub_theme +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    strip.text = element_text(size = 12, face = "bold")
+  )
+
+plot_delta_case_only
+```
+
+### Combined Groups Analysis
 
 ```{r plot-delta-carb-only, fig.height=8, fig.width=12}
 # Create combined group analysis focusing on carbohydrate effects
@@ -915,6 +982,8 @@ ggsave("plots/scfa_ratios_interaction_improved.png", plot_ratios_interaction, wi
 ggsave("plots/scfa_trajectories_improved.png", plot_trajectories, width = 16, height = 12, dpi = 300)
 ggsave("plots/scfa_subject_heatmap_improved.png", plot_subject_heatmap, width = 16, height = 12, dpi = 300)
 ggsave("plots/scfa_delta_carb_combined.png", plot_delta_carb_combined, width = 12, height = 8, dpi = 300)
+ggsave("plots/scfa_delta_control_only.png", plot_delta_control_only, width = 12, height = 8, dpi = 300)
+ggsave("plots/scfa_delta_case_only.png", plot_delta_case_only, width = 12, height = 8, dpi = 300)
 
 # Save results
 write.csv(main_anova_summary, "results/mixed_models_summary_improved.csv", row.names = FALSE)
