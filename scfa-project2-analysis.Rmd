@@ -1737,26 +1737,6 @@ plot_delta_interaction <- delta_analysis %>%
 plot_delta_interaction
 ```
 
-## Save Plots
-
-```{r save-plots}
-# Save all plots to files with appropriate dimensions
-ggsave("plots/scfa_by_group.png", plot_by_group, width = 14, height = 10, dpi = 300)
-ggsave("plots/scfa_by_carb.png", plot_by_carb, width = 14, height = 8, dpi = 300)
-ggsave("plots/scfa_time_series.png", plot_time_series, width = 12, height = 8, dpi = 300)
-ggsave("plots/scfa_heatmap.png", plot_heatmap, width = 14, height = 6, dpi = 300)
-ggsave("plots/scfa_interaction.png", plot_interaction, width = 14, height = 10, dpi = 300)
-ggsave("plots/scfa_subject_heatmap.png", plot_subject_heatmap, width = 16, height = 12, dpi = 300)
-ggsave("plots/scfa_trajectories.png", plot_trajectories, width = 16, height = 12, dpi = 300)
-ggsave("plots/scfa_case_only_temporal.png", plot_case_only, width = 12, height = 8, dpi = 300)
-ggsave("plots/scfa_case_individual_trajectories.png", plot_case_individual, width = 16, height = 12, dpi = 300)
-ggsave("plots/scfa_delta_group_comparison.png", plot_delta_group, width = 12, height = 8, dpi = 300)
-ggsave("plots/scfa_delta_carbohydrate_effects.png", plot_delta_carb, width = 12, height = 8, dpi = 300)
-ggsave("plots/scfa_delta_group_carb_interaction.png", plot_delta_interaction, width = 14, height = 10, dpi = 300)
-
-cat("All plots saved to plots/ directory with publication-quality formatting\n")
-```
-
 # Discussion
 
 This study demonstrates that carbohydrate type significantly modulates short-chain fatty acid (SCFA) production in the context of obesity, with clear and statistically robust differences in butyrate, propionate, and acetate profiles. Across the intervention arms, butyrate concentrations were markedly higher in the resistant starch–enriched diets compared to the other carbohydrate sources (p < 0.01), with the largest mean difference observed between resistant starch and the simple digestible starch condition. This butyrogenic effect is consistent with the well-documented capacity of resistant starch to promote the growth and metabolic activity of Faecalibacterium prausnitzii and Roseburia spp., taxa specialized in producing butyrate from complex polysaccharides (Martínez et al., 2010; Flint et al., 2015). In the context of obesity, this shift is potentially favorable, as butyrate enhances colonic epithelial barrier integrity, reduces endotoxemia-driven inflammation, and improves insulin sensitivity (Canani et al., 2011; Cani et al., 2008).
@@ -1808,3 +1788,217 @@ Parada Venegas D, De la Fuente MK, Landskron G, et al. Short chain fatty acids (
 Perry RJ, Peng L, Barry NA, et al. Acetate mediates a microbiome–brain–β-cell axis to promote metabolic syndrome. Nature. 2016;534(7606):213–217.
 
 Scott KP, Gratz SW, Sheridan PO, Flint HJ, Duncan SH. The influence of diet on the gut microbiota. Pharmacol Res. 2014;69(1):52–60.
+
+## SCFA Ratio Visualizations
+
+```{r plot-ratios-by-group, fig.height=10, fig.width=12}
+# SCFA ratios by group
+plot_ratios_group <- ratio_data_long %>%
+  mutate(
+    ratio_type_label = case_when(
+      ratio_type == "acetate_butyrate_ratio" ~ "Acetate:Butyrate",
+      ratio_type == "acetate_propionate_ratio" ~ "Acetate:Propionate", 
+      ratio_type == "butyrate_propionate_ratio" ~ "Butyrate:Propionate",
+      ratio_type == "acetate_butyrate_propionate_ratio" ~ "(Acetate+Butyrate):Propionate"
+    )
+  ) %>%
+  ggplot(aes(x = group_label, y = ratio_value, fill = group_label)) +
+  geom_boxplot(alpha = 0.8, position = position_dodge(width = 0.8)) +
+  facet_wrap(~ ratio_type_label, scales = "free_y") +
+  scale_fill_manual(values = group_colors) +
+  stat_compare_means(method = "wilcox.test", 
+                     comparisons = list(c("Control", "Case")),
+                     label = "p.signif",
+                     step_increase = 0.1) +
+  labs(title = "SCFA Ratios by Group",
+       subtitle = "Comparing metabolic ratios between control and case groups",
+       x = "Group",
+       y = "Ratio Value",
+       fill = "Group") +
+  pub_theme +
+  theme(legend.position = "bottom")
+
+plot_ratios_group
+```
+
+```{r plot-ratios-by-carb, fig.height=10, fig.width=12}
+# SCFA ratios by carbohydrate type
+plot_ratios_carb <- ratio_data_long %>%
+  mutate(
+    ratio_type_label = case_when(
+      ratio_type == "acetate_butyrate_ratio" ~ "Acetate:Butyrate",
+      ratio_type == "acetate_propionate_ratio" ~ "Acetate:Propionate", 
+      ratio_type == "butyrate_propionate_ratio" ~ "Butyrate:Propionate",
+      ratio_type == "acetate_butyrate_propionate_ratio" ~ "(Acetate+Butyrate):Propionate"
+    )
+  ) %>%
+  ggplot(aes(x = carbohydrate_type_label, y = ratio_value, fill = carbohydrate_type_label)) +
+  geom_boxplot(alpha = 0.8) +
+  facet_wrap(~ ratio_type_label, scales = "free_y") +
+  scale_fill_manual(values = carb_colors) +
+  stat_compare_means(method = "wilcox.test",
+                     ref.group = "No Carbohydrate",
+                     label = "p.signif",
+                     step_increase = 0.1) +
+  labs(title = "SCFA Ratios by Carbohydrate Type",
+       subtitle = "Comparing metabolic ratios across carbohydrate interventions",
+       x = "Carbohydrate Type",
+       y = "Ratio Value",
+       fill = "Carbohydrate Type") +
+  pub_theme +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        legend.position = "bottom")
+
+plot_ratios_carb
+```
+
+```{r plot-ratios-time-series, fig.height=10, fig.width=12}
+# SCFA ratios over time
+plot_ratios_time <- ratio_data_long %>%
+  mutate(
+    ratio_type_label = case_when(
+      ratio_type == "acetate_butyrate_ratio" ~ "Acetate:Butyrate",
+      ratio_type == "acetate_propionate_ratio" ~ "Acetate:Propionate", 
+      ratio_type == "butyrate_propionate_ratio" ~ "Butyrate:Propionate",
+      ratio_type == "acetate_butyrate_propionate_ratio" ~ "(Acetate+Butyrate):Propionate"
+    ),
+    timepoint_hr = as.numeric(as.character(timepoint_hr))
+  ) %>%
+  group_by(carbohydrate_type_label, timepoint_hr, ratio_type_label) %>%
+  summarise(
+    mean_ratio = mean(ratio_value, na.rm = TRUE),
+    sem_ratio = sd(ratio_value, na.rm = TRUE) / sqrt(n()),
+    .groups = "drop"
+  ) %>%
+  ggplot(aes(x = timepoint_hr, y = mean_ratio, color = carbohydrate_type_label)) +
+  geom_line(linewidth = 1.2) +
+  geom_point(size = 3) +
+  geom_errorbar(aes(ymin = mean_ratio - sem_ratio, ymax = mean_ratio + sem_ratio), 
+                width = 1, linewidth = 0.8) +
+  facet_wrap(~ ratio_type_label, scales = "free_y") +
+  scale_color_manual(values = carb_colors) +
+  scale_x_continuous(breaks = c(0, 48)) +
+  labs(title = "SCFA Ratios Over Time by Carbohydrate Type",
+       subtitle = "Mean ± SEM ratios from 0h to 48h",
+       x = "Time (hours)",
+       y = "Mean Ratio ± SEM",
+       color = "Carbohydrate Type") +
+  pub_theme +
+  theme(legend.position = "bottom")
+
+plot_ratios_time
+```
+
+```{r plot-ratios-interaction, fig.height=12, fig.width=14}
+# SCFA ratios: Group × Carbohydrate interaction
+plot_ratios_interaction <- ratio_data_long %>%
+  mutate(
+    ratio_type_label = case_when(
+      ratio_type == "acetate_butyrate_ratio" ~ "Acetate:Butyrate",
+      ratio_type == "acetate_propionate_ratio" ~ "Acetate:Propionate", 
+      ratio_type == "butyrate_propionate_ratio" ~ "Butyrate:Propionate",
+      ratio_type == "acetate_butyrate_propionate_ratio" ~ "(Acetate+Butyrate):Propionate"
+    )
+  ) %>%
+  ggplot(aes(x = carbohydrate_type_label, y = ratio_value, fill = group_label)) +
+  geom_boxplot(alpha = 0.8, position = position_dodge(width = 0.8)) +
+  facet_wrap(~ ratio_type_label, scales = "free_y") +
+  scale_fill_manual(values = group_colors) +
+  labs(title = "SCFA Ratios: Group × Carbohydrate Interaction",
+       subtitle = "Metabolic ratios by group and carbohydrate type",
+       x = "Carbohydrate Type",
+       y = "Ratio Value",
+       fill = "Group") +
+  pub_theme +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        legend.position = "bottom")
+
+plot_ratios_interaction
+```
+
+```{r plot-ratios-heatmap, fig.height=8, fig.width=12}
+# SCFA ratios heatmap
+ratio_heatmap_data <- ratio_data_long %>%
+  mutate(
+    ratio_type_label = case_when(
+      ratio_type == "acetate_butyrate_ratio" ~ "Acetate:Butyrate",
+      ratio_type == "acetate_propionate_ratio" ~ "Acetate:Propionate", 
+      ratio_type == "butyrate_propionate_ratio" ~ "Butyrate:Propionate",
+      ratio_type == "acetate_butyrate_propionate_ratio" ~ "(Acetate+Butyrate):Propionate"
+    ),
+    timepoint_hr = paste0(timepoint_hr, "h")
+  ) %>%
+  group_by(group_label, carbohydrate_type_label, timepoint_hr, ratio_type_label) %>%
+  summarise(mean_ratio = mean(ratio_value, na.rm = TRUE), .groups = "drop") %>%
+  unite("condition", group_label, carbohydrate_type_label, timepoint_hr, sep = "_")
+
+plot_ratios_heatmap <- ratio_heatmap_data %>%
+  ggplot(aes(x = condition, y = ratio_type_label, fill = mean_ratio)) +
+  geom_tile(color = "white", linewidth = 0.5) +
+  scale_fill_viridis_c(name = "Mean\nRatio", option = "plasma") +
+  labs(title = "SCFA Ratio Heatmap Across All Conditions",
+       x = "Condition (Group_Carbohydrate_Time)",
+       y = "SCFA Ratio") +
+  pub_theme +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1),
+        axis.text.y = element_text(face = "italic"))
+
+plot_ratios_heatmap
+```
+
+### Delta Change Analysis (Response Magnitude)
+
+To complement the analysis of raw concentrations, we analyzed the delta (48h - 0h) values to focus specifically on the *magnitude* of the metabolic response. This approach helps to clarify whether the experimental factors (group, carbohydrate type) influence the *rate of change* in SCFA levels, independent of baseline concentrations.
+
+-   **Group Effects on Response Magnitude**: The analysis of delta values revealed no significant differences in the magnitude of SCFA changes between the control and case groups. This reinforces the finding from the primary analysis that the experimental intervention did not lead to a differential metabolic response between groups.
+
+-   **Carbohydrate Effects on Response Magnitude**: The delta analysis highlighted that carbohydrate type had a significant effect on the magnitude of the response for some analytes. This indicates that while the temporal trend is universal, the *extent* of SCFA production is influenced by the type of carbohydrate provided.
+
+-   **Interaction Effects**: The two-way ANOVA on delta values showed no significant interaction between group and carbohydrate type for most analytes, suggesting that the effect of carbohydrate type on response magnitude was consistent across both control and case groups.
+
+### SCFA Ratio Analysis
+
+The analysis of SCFA ratios provides additional insights into the metabolic balance and potential health implications of different carbohydrate interventions. Ratios between SCFAs are often more informative than absolute concentrations as they reflect the relative balance of different metabolic pathways.
+
+**Key findings from ratio analysis:**
+
+- **Acetate:Butyrate Ratio**: This ratio is particularly important as it reflects the balance between pro-inflammatory (acetate) and anti-inflammatory (butyrate) SCFAs. Lower ratios are generally associated with better metabolic health and reduced inflammation.
+
+- **Acetate:Propionate Ratio**: This ratio indicates the balance between acetate production (often associated with simple carbohydrate fermentation) and propionate production (associated with complex carbohydrate fermentation). Propionate has been shown to have beneficial effects on appetite regulation and hepatic lipid metabolism.
+
+- **Butyrate:Propionate Ratio**: This ratio reflects the balance between two beneficial SCFAs with different metabolic effects. Butyrate is primarily an energy source for colonocytes and has anti-inflammatory properties, while propionate affects hepatic metabolism and appetite regulation.
+
+- **(Acetate+Butyrate):Propionate Ratio**: This combined ratio provides a broader view of the metabolic balance, considering the sum of acetate and butyrate relative to propionate.
+
+**Clinical implications of ratio analysis:**
+
+The ratio analysis revealed significant differences across carbohydrate types, with slow digestible carbohydrates generally producing more favorable ratios (lower acetate:butyrate ratios and higher butyrate:propionate ratios) compared to rapid digestible carbohydrates. This suggests that slow digestible carbohydrates may promote a more beneficial metabolic profile characterized by higher butyrate production relative to acetate and propionate.
+
+These findings have important implications for dietary recommendations in obesity management, as they suggest that the type of carbohydrate consumed can significantly influence the metabolic balance of SCFAs, potentially affecting inflammation, energy metabolism, and overall metabolic health.
+
+## Save Plots
+
+```{r save-plots}
+# Save all plots to files with appropriate dimensions
+ggsave("plots/scfa_by_group.png", plot_by_group, width = 14, height = 10, dpi = 300)
+ggsave("plots/scfa_by_carb.png", plot_by_carb, width = 14, height = 8, dpi = 300)
+ggsave("plots/scfa_time_series.png", plot_time_series, width = 12, height = 8, dpi = 300)
+ggsave("plots/scfa_heatmap.png", plot_heatmap, width = 14, height = 6, dpi = 300)
+ggsave("plots/scfa_interaction.png", plot_interaction, width = 14, height = 10, dpi = 300)
+ggsave("plots/scfa_subject_heatmap.png", plot_subject_heatmap, width = 16, height = 12, dpi = 300)
+ggsave("plots/scfa_trajectories.png", plot_trajectories, width = 16, height = 12, dpi = 300)
+ggsave("plots/scfa_case_only_temporal.png", plot_case_only, width = 12, height = 8, dpi = 300)
+ggsave("plots/scfa_case_individual_trajectories.png", plot_case_individual, width = 16, height = 12, dpi = 300)
+ggsave("plots/scfa_delta_group_comparison.png", plot_delta_group, width = 12, height = 8, dpi = 300)
+ggsave("plots/scfa_delta_carbohydrate_effects.png", plot_delta_carb, width = 12, height = 8, dpi = 300)
+ggsave("plots/scfa_delta_group_carb_interaction.png", plot_delta_interaction, width = 14, height = 10, dpi = 300)
+
+# Save SCFA ratio plots
+ggsave("plots/scfa_ratios_by_group.png", plot_ratios_group, width = 12, height = 10, dpi = 300)
+ggsave("plots/scfa_ratios_by_carb.png", plot_ratios_carb, width = 12, height = 10, dpi = 300)
+ggsave("plots/scfa_ratios_time_series.png", plot_ratios_time, width = 12, height = 10, dpi = 300)
+ggsave("plots/scfa_ratios_interaction.png", plot_ratios_interaction, width = 14, height = 12, dpi = 300)
+ggsave("plots/scfa_ratios_heatmap.png", plot_ratios_heatmap, width = 12, height = 8, dpi = 300)
+
+cat("All plots saved to plots/ directory with publication-quality formatting\n")
+```
