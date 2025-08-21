@@ -121,11 +121,21 @@ if(!file.exists("seqtab.nochim.RData")) {
     cat("Constructing sequence table...\n")
     seqtab <- makeSequenceTable(mergers)
 
+    repseqs <- Biostrings::DNAStringSet(colnames(seqtab))
+    names(repseqs) <- paste0("ASV", seq(length(repseqs)))
+    Biostrings::writeXStringSet(repseqs, file = "repseqs.chimeras.fasta")
+
     save(mergers, seqtab, file = "seqtab.RData")
 
     # now remove chimeras
-    cat("Removing chimeras...\n")
-    seqtab.nochim <- removeBimeraDenovo(seqtab, method="consensus", multithread=TRUE, verbose=TRUE)
+    system("vsearch --uchime_ref repseqs.chimeras.fasta --db references/SILVA_138.1_SSURef_Nr99_tax_silva.fasta --nonchimeras repseqs.nochimera.fasta --threads 18")
+
+    nonchimeric_seqs <- Biostrings::readDNAStringSet("repseqs.nochimera.fasta")
+    
+
+    # now remove chimeras
+    # cat("Removing chimeras...\n")
+    # seqtab.nochim <- removeBimeraDenovo(seqtab, method="consensus", multithread=TRUE, verbose=TRUE)
 
     save(mergers, seqtab, seqtab.nochim, file = "seqtab.nochim.RData")
 }
@@ -143,7 +153,7 @@ names(repseqs) <- paste0("ASV", seq(length(repseqs)))
 
 # now output the representative sequences
 cat("Outputting representative sequences...\n")
-writeXStringSet(repseqs, file = "repseqs.fasta")
+Biostrings::writeXStringSet(repseqs, file = "repseqs.fasta")
 
 colnames(seqtab.nochim) <- names(repseqs)
 save(seqtab.nochim, file = "seqtab.nochim.RData")
