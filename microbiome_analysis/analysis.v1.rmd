@@ -128,21 +128,21 @@ if(!file.exists("seqtab.nochim.RData")) {
     save(mergers, seqtab, file = "seqtab.RData")
 
     # now remove chimeras
+    # using vsearch uchim3 approach for speed and sensitivity balance
     system("vsearch --uchime_ref repseqs.chimeras.fasta --db references/SILVA_138.1_SSURef_Nr99_tax_silva.fasta --nonchimeras repseqs.nochimera.fasta --threads 18")
 
     nonchimeric_seqs <- Biostrings::readDNAStringSet("repseqs.nochimera.fasta")
-    
+    w <- which(colnames(seqtab) %in% as.character(nonchimeric_seqs))
+    seqtab.nochim <- seqtab[,w]
+    seqs <- colnames(seqtab.nochim)
+    colnames(seqtab.nochim) <- paste0("ASV", seq(length(seqs)))
 
-    # now remove chimeras
-    # cat("Removing chimeras...\n")
-    # seqtab.nochim <- removeBimeraDenovo(seqtab, method="consensus", multithread=TRUE, verbose=TRUE)
-
-    save(mergers, seqtab, seqtab.nochim, file = "seqtab.nochim.RData")
+    save(mergers, seqtab, seqtab.nochim, seqs, nonchimeric_seqs, file = "seqtab.nochim.RData")
 }
 
 # assign taxonomy
 cat("Assigning taxonomy...\n")
-taxa <- assignTaxonomy(seqtab.nochim, "silva_nr_v138_train_set.fa.gz", multithread=TRUE)
+ taxa <- assignTaxonomy(seqs, "references/silva_nr99_v138.2_toSpecies_trainset.fa.gz", multithread = TRUE, tryRC = TRUE, verbose = TRUE)
 
 # now output the taxa
 cat("Outputting taxa...\n")
