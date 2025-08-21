@@ -1,0 +1,144 @@
+
+
+```{r library-loading}
+library(tidyverse)
+library(tidytext)
+library(tidygraph)
+library(ggraph)
+library(igraph)
+library(tidygraph)
+library(ggraph)
+library(igraph)
+```
+
+```{r data-loading}
+samdat <- read_tsv("sample.metadata.tsv")
+colnames(samdat) <- c("SampleID", "sample_label", "raw_seq_file", "group")
+
+# Process sample_label to extract additional information
+samdat <- samdat %>%
+  separate(sample_label, into = c("subjectID", "replicate_code", "timepoint"), sep = "\\.", remove = FALSE) %>%
+  mutate(
+    # Extract carbohydrate type from replicate_code
+    carbohydrate = case_when(
+      str_detect(replicate_code, "R") ~ "rapid",
+      str_detect(replicate_code, "S") ~ "slow",
+      TRUE ~ "no_carbohydrate"
+    ),
+    # Extract replicate number from replicate_code
+    replicate = str_extract(replicate_code, "\\d+") %>% as.numeric(),
+    # Replace NA values in replicate with 1
+    replicate = ifelse(is.na(replicate), 1, replicate)
+  ) %>%
+  select(-replicate_code, -group)  # Remove the intermediate replicate_code column
+
+# Display the processed metadata
+print(samdat)
+
+# now get the group information for health and obese
+
+group <- read_tsv("zr24558.16S_250813.zymo/1.Healthy.TimepointComparism..Bac16Sv34/Sample_Information/sample.metadata.csv")
+
+# Extract subjectID from customer_label
+group <- group %>%
+  separate(customer_label, into = c("subjectID", "replicate_code", "timepoint"), sep = "\\.", remove = FALSE) %>%
+  select(customer_label, subjectID, everything())
+
+# now where group$subjectID is in samdat$subjectID, the samdat$group should be "Healthy" and otherwise be "Obese"
+samdat <- samdat %>%
+  mutate(
+    group = ifelse(subjectID %in% group$subjectID, "Healthy", "Obese")
+  )
+
+# now output a summary of the metadata in samdat
+# summarize samdat by group and carbohydrate
+samdat_summary <- samdat %>%
+  group_by(group, carbohydrate) %>%
+  summarize(n_samples = n())
+
+samdat_summary
+
+# number of unique subjects per group
+samdat %>%
+  group_by(group) %>%
+  summarize(n_subjects = n_distinct(subjectID))
+
+
+write_csv(samdat, file = "samdat.csv")
+```
+
+```{r dada2-pipeline}
+library(dada2)
+
+fastqFs <- list.files("fastq_files", pattern = "R1.fastq.gz", full.names = TRUE)
+fastqRs <- list.files("fastq_files", pattern = "R2.fastq.gz", full.names = TRUE)
+
+# get the sample names from the fastq files
+sample_names <- sapply(strsplit(basename(fastqFs), "_"), function(x) paste0(x[1],"_", x[2]))
+
+# filter the fastq files
+filtered_fastq_dir <- "filtered_fastq"
+if (!dir.exists(filtered_fastq_dir)) {
+  dir.create(filtered_fastq_dir)
+}
+
+if(!file.exists("filtered_fastq_out.RData")) {
+    # filter the fastq files
+    filtFs <- file.path(filtered_fastq_dir, paste0(sample_names, "_F_filt.fastq.gz"))
+    filtRs <- file.path(filtered_fastq_dir, paste0(sample_names, "_R_filt.fastq.gz"))
+
+    # filter the fastq files
+    out <- filterAndTrim(fastqFs, filtFs, fastqRs, filtRs, truncLen=c(240,240), maxN=0, maxEE=c(2,2), truncQ=2, rm.phix=TRUE, compress=TRUE, multithread=TRUE)
+
+    save(sample_names, filtFs, filtRs, out, file = "filtered_fastq_out.RData")
+}
+
+if(!file.exists("dada2_out.RData")) {
+    # now load the filtered fastq files
+    load("filtered_fastq_out.RData")
+
+    # now learn the error rates
+    cat("Learning error rates...\n")
+    errF <- learnErrors(filtFs, multithread=TRUE)
+    errR <- learnErrors(filtRs, multithread=TRUE)
+
+    cat("Running DADA2...\n")
+    dadaFs <- dada(filtFs, err=errF, multithread=TRUE)
+    dadaRs <- dada(filtRs, err=errR, multithread=TRUE)
+
+    save(errF, errR, dadaFs, dadaRs, file = "dada2_out.RData")
+}
+
+if(!file.exists("seqtab.nochim.RData")) {
+    load("filtered_fastq_out.RData")
+    load("dada2_out.RData")
+
+    # now merge the forward and reverse reads
+    cat("Merging forward and reverse reads...\n")
+    mergers <- mergePairs(dadaFs, filtFs, dadaRs, filtRs, verbose=TRUE)
+
+    # now construct the sequence table
+    cat("Constructing sequence table...\n")
+    seqtab <- makeSequenceTable(mergers)
+
+    # now remove chimeras
+    cat("Removing chimeras...\n")
+    seqtab.nochim <- removeBimeraDenovo(seqtab, method="consensus", multithread=TRUE, verbose=TRUE)
+
+    save(mergers, seqtab, seqtab.nochim, file = "seqtab.nochim.RData")
+}
+
+# assign taxonomy
+cat("Assigning taxonomy...\n")
+taxa <- assignTaxonomy(seqtab.nochim, "silva_nr_v138_train_set.fa.gz", multithread=TRUE)
+
+# now output the taxa
+cat("Outputting taxa...\n")
+write.csv(taxa, file = "taxa.csv")
+
+# now output the sequence table
+cat("Outputting sequence table...\n")
+write.csv(seqtab.nochim, file = "seqtab.nochim.csv")
+
+```
+
