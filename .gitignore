@@ -14,6 +14,8 @@
 *.ico
 *.fasta
 *.fasta.gz
+*.fa
+*.fa.gz
 
 
 
