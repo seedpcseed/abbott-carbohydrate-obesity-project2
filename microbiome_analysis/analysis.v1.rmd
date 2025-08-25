@@ -137,7 +137,12 @@ if(!file.exists("seqtab.nochim.RData")) {
     
     seqtab.nochim <- seqtab[, w]
 
-    save(mergers, seqtab, seqtab.nochim,  nonchimeric_seqs, file = "seqtab.nochim.RData")
+    repseqs <- Biostrings::DNAStringSet(getSequences(seqtab.nochim))
+    names(repseqs) <- paste0("ASV", seq(length(repseqs)))
+
+    Biostrings::writeXStringSet(repseqs, file = "repseqs.nochimera.fasta")
+
+    save(mergers, seqtab, seqtab.nochim,  nonchimeric_seqs, repseqs, file = "seqtab.nochim.RData")
 }
 
 # assign taxonomy
@@ -149,38 +154,155 @@ dna <- Biostrings::DNAStringSet(getSequences(seqtab.nochim))
 ids <- IdTaxa(dna, trainingSet, strand = "top", processors = 18, verbose = TRUE)
 ranks <- c("Domain", "Phylum", "Class", "Order", "Family", "Genus", "Species")
 
-taxid <- t(sapply(ids, function(x) {
-  m <- match(ranks, x$rank)
-  taxa <- x$taxon[m]
-  taxa[startsWith(taxa, "unclassified_")] <- NA
-  taxa
-}))
-colnames(taxid) <- ranks
-rownames(taxid) <- getSequences(seqtab.nochim)
+# Convert DECIPHER Taxa object to data.frame with taxonomic hierarchy
+# Function to extract data from individual Taxa entries
+extract_taxa_info <- function(taxa_entry) {
+  # Each entry is a list with taxon, confidence, and rank components
+  taxon_vector <- taxa_entry$taxon
+  confidence_vector <- taxa_entry$confidence
+  rank_vector <- taxa_entry$rank
 
-save(taxid, file = "taxid.RData")
+  # Initialize result with all levels as "unclassified"
+  result <- c(
+    Domain = "unclassified",
+    Phylum = "unclassified",
+    Class = "unclassified",
+    Order = "unclassified",
+    Family = "unclassified",
+    Genus = "unclassified",
+    Species = "unclassified"
+  )
 
-# Add ranks as columns
+  # Map ranks to standard taxonomic levels
+  rank_mapping <- c(
+    "domain" = "Domain",
+    "phylum" = "Phylum",
+    "class" = "Class",
+    "order" = "Order",
+    "family" = "Family",
+    "genus" = "Genus",
+    "species" = "Species"
+  )
 
-#  taxa <- assignTaxonomy(seqtab.nochim, "references/silva_nr99_v138.2_toSpecies_trainset.fa.gz", multithread = TRUE, tryRC = TRUE, verbose = TRUE)
+  # Fill in taxonomic information based on ranks
+  for (i in seq_along(rank_vector)) {
+    rank <- rank_vector[i]
+    taxon <- taxon_vector[i]
 
-# now output the taxa
-cat("Outputting taxa...\n")
-write.csv(taxa, file = "taxa.csv")
+    # Skip "Root" and "rootrank"
+    if (rank == "rootrank" || taxon == "Root") {
+      next
+    }
 
-colnames(seqtab.nochim) <- paste0("ASV", seq(length(seqs)))
+    # Map rank to standard level
+    if (rank %in% names(rank_mapping)) {
+      level <- rank_mapping[rank]
 
+      # Clean up taxonomy names
+      if (grepl("^unclassified_", taxon)) {
+        result[level] <- "unclassified"
+      } else {
+        result[level] <- taxon
+      }
+    }
+  }
 
-repseqs <- Biostrings::DNAStringSet(colnames(seqtab.nochim))
-names(repseqs) <- paste0("ASV", seq(length(repseqs)))
+  # Get the minimum confidence (most conservative estimate)
+  # Skip confidence for "Root" level
+  non_root_indices <- rank_vector != "rootrank"
+  if (any(non_root_indices)) {
+    min_confidence <- min(confidence_vector[non_root_indices]) / 100
+  } else {
+    min_confidence <- NA
+  }
 
-# now output the representative sequences
-cat("Outputting representative sequences...\n")
-Biostrings::writeXStringSet(repseqs, file = "repseqs.fasta")
+  return(c(result, Confidence = min_confidence))
+}
 
-colnames(seqtab.nochim) <- names(repseqs)
-save(seqtab.nochim, file = "seqtab.nochim.RData")
+# Apply extraction to all entries in the Taxa object
+cat("Extracting taxonomic information from", length(ids), "entries...\n")
 
+# Process all entries
+all_results <- lapply(ids, extract_taxa_info)
 
+# Convert to matrix then data.frame
+results_matrix <- do.call(rbind, all_results)
+
+# Create the final data.frame with proper column types
+taxonomy_df <- data.frame(
+  Domain = as.character(results_matrix[, "Domain"]),
+  Phylum = as.character(results_matrix[, "Phylum"]),
+  Class = as.character(results_matrix[, "Class"]),
+  Order = as.character(results_matrix[, "Order"]),
+  Family = as.character(results_matrix[, "Family"]),
+  Genus = as.character(results_matrix[, "Genus"]),
+  Species = as.character(results_matrix[, "Species"]),
+  Confidence = as.numeric(results_matrix[, "Confidence"]),
+  stringsAsFactors = FALSE
+)
+
+# Display results
+cat("Conversion complete!\n")
+cat("Data.frame dimensions:", dim(taxonomy_df), "\n")
+
+# Show first few rows
+cat("\nFirst few rows:\n")
+print(head(taxonomy_df))
+
+# Show structure
+cat("\nStructure:\n")
+str(taxonomy_df)
+
+# Summary of confidence values
+cat("\nConfidence summary:\n")
+summary(taxonomy_df$Confidence)
+
+# Count of assignments at each taxonomic level
+cat("\nTaxonomic assignment counts (non-unclassified):\n")
+for (col in c("Domain", "Phylum", "Class", "Order", "Family", "Genus", "Species")) {
+  assigned_count <- sum(taxonomy_df[[col]] != "unclassified")
+  cat(sprintf("%s: %d (%.1f%%)\n", col, assigned_count, 100 * assigned_count / nrow(taxonomy_df)))
+}
+
+save(dna, ids, taxonomy_df, file = "taxid.RData")
+
+asv_names <- paste0("ASV", seq(ncol(seqtab.nochim)))
+names(dna) <- asv_names
+colnames(seqtab.nochim) <- asv_names
+rownames(taxonomy_df) <- asv_names
+
+save(seqtab.nochim, dna, taxonomy_df, file = "seqtab.nochim.RData")
 ```
 
+```{r readin-asv-finder-sintax-taxonomy}
+taxtab_sintax <- read_tsv("taxonomy-abbott.tsv")
+```
+
+```{r make-phyloseq-objects}
+library(phyloseq)
+
+# need to prep the seqtab.nochim rownames to match the format of samdat
+rownames(seqtab.nochim) <- sapply(strsplit(rownames(seqtab.nochim), "_"), function(x) paste(x[1:2], collapse = "_"))
+taxmatrix <- as.matrix(taxonomy_df)
+samdat <- as.data.frame(samdat)
+rownames(samdat) <- samdat$SampleID
+
+phy_decipher <- phyloseq(
+  otu_table(seqtab.nochim, taxa_are_rows = FALSE),
+  tax_table(taxmatrix),
+  sample_data(samdat),
+  refseq(dna)
+)
+
+taxmatrix <- as.matrix(taxtab_sintax)
+rownames(taxmatrix) <- rownames(seqtab.nochim)
+
+phy_sintax <- phyloseq(
+  otu_table(seqtab.nochim, taxa_are_rows = FALSE),
+  tax_table(taxtab_sintax),
+  sample_data(samdat),
+  refseq(dna)
+)
+
+save(phy_decipher, phy_sintax, file = "phyloseq_objects.RData")
+```
