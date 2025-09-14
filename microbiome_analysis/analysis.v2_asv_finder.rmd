@@ -999,6 +999,14 @@ corncob_hits <- corncob_hits %>%
 
 ```
 
+The taxa identified in this analysis exhibit distinct metabolic capacities with respect to short-chain fatty acid (SCFA) production. Agathobacter, a member of the family Lachnospiraceae (class Clostridia), is a well-established butyrate producer in the human gut. Genomic and cultivation studies have demonstrated that Agathobacter rectalis and related species utilize complex carbohydrates to generate high levels of butyrate, with some concomitant acetate production, but there is little evidence that this genus contributes meaningfully to propionate pools [Louis & Flint 2017; Vital et al. 2014]. Thus, Agathobacter is likely to influence host physiology through butyrate-mediated effects on colonocyte metabolism and immune regulation rather than through propionate pathways.
+
+Oscillospiraceae (UCG-002) represents a phylogenetically diverse group of Clostridia whose functional repertoire is less well characterized. Several genera within this family, such as Oscillibacter and Flavonifractor, are known to produce butyrate and, in some cases, valerate, while others can shift fermentation end-products depending on available substrates [Konikoff & Gophna 2016; Biddle et al. 2013]. Although there is some evidence that Oscillospiraceae can participate in propionate formation via the succinate pathway, their overall contribution to propionate pools appears modest relative to canonical producers such as Bacteroides or Veillonella. Therefore, the presence of UCG-002 may exert a secondary influence on propionate levels, but their role is likely minor compared with their butyrogenic activity.
+
+By contrast, members of the Eggerthellaceae (class Coriobacteriia) are not primary SCFA producers. Rather, they specialize in the metabolism of host-derived and dietary compounds such as bile acids, polyphenols, and steroids, generating diverse aromatic and secondary metabolites [Clavel et al. 2014; Ridlon et al. 2013]. While they do not produce propionate directly, their metabolic activities can shape the broader gut ecosystem by releasing intermediates such as lactate or succinate, which may be cross-fed to canonical propionate producers. Consequently, Eggerthellaceae may exert indirect effects on propionate abundance through trophic interactions, but they are unlikely to represent a direct source of this SCFA.
+
+Together, these findings suggest that within the taxa identified, Agathobacter is a strong contributor to butyrate, Oscillospiraceae UCG-002 may contribute modestly to propionate depending on context, and Eggerthellaceae are better understood as modulators of microbial metabolic networks than as direct SCFA producers. This highlights the importance of considering both direct fermentation pathways and cross-feeding interactions when linking microbial community composition to SCFA profiles.
+
 ### ANCOM-BC2 (with SubjectID random effect)
 
 ```{r da-ancombc2, message=FALSE, warning=FALSE}
