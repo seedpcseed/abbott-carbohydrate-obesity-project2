@@ -1,0 +1,628 @@
+
+
+```{r library-loading}
+# Helper function to install CRAN or Bioconductor packages if not already installed
+install_if_missing <- function(pkg) {
+  if (!requireNamespace(pkg, quietly = TRUE)) {
+    tryCatch({
+      install.packages(pkg)
+    }, error = function(e) {
+      if (!requireNamespace("BiocManager", quietly = TRUE)) {
+        install.packages("BiocManager")
+      }
+      BiocManager::install(pkg, ask = FALSE)
+    })
+  }
+}
+
+# List of required packages
+required_pkgs <- c("tidyverse", "tidytext", "tidygraph", "ggraph", "igraph", "phyloseq", "corncob")
+
+# Install missing packages
+invisible(lapply(required_pkgs, install_if_missing))
+
+# Load the libraries
+library(tidyverse)
+library(tidytext)
+library(tidygraph)
+library(ggraph)
+library(igraph)
+library(phyloseq)
+library(corncob)
+```
+
+```{r data-loading}
+samdat <- read_tsv("sample.metadata.tsv")
+colnames(samdat) <- c("SampleID", "sample_label", "raw_seq_file", "group")
+
+# Process sample_label to extract additional information
+samdat <- samdat %>%
+  separate(sample_label, into = c("subjectID", "replicate_code", "timepoint"), sep = "\\.", remove = FALSE) %>%
+  mutate(
+    # Extract carbohydrate type from replicate_code
+    carbohydrate = case_when(
+      str_detect(replicate_code, "R") ~ "RDC",
+      str_detect(replicate_code, "S") ~ "SDC",
+      TRUE ~ "No Added Carb"
+    ) %>% factor(levels = c("No Added Carb", "RDC", "SDC")),
+    # Extract replicate number from replicate_code
+    replicate = str_extract(replicate_code, "\\d+") %>% as.numeric(),
+    # Replace NA values in replicate with 1
+    replicate = ifelse(is.na(replicate), 1, replicate)
+  ) %>%
+  select(-replicate_code, -group)  # Remove the intermediate replicate_code column
+
+# Display the processed metadata
+print(samdat)
+
+# now get the group information for health and obese
+
+group <- read_tsv("zr24558.16S_250813.zymo/1.Healthy.TimepointComparism..Bac16Sv34/Sample_Information/sample.metadata.csv")
+
+# Extract subjectID from customer_label
+group <- group %>%
+  separate(customer_label, into = c("subjectID", "replicate_code", "timepoint"), sep = "\\.", remove = FALSE) %>%
+  select(customer_label, subjectID, everything())
+
+# Check the structure of group data
+print("Group data structure:")
+print(colnames(group))
+print(head(group))
+
+ samdat$group <- ifelse(samdat$subjectID %in% group$subjectID, "Healthy", "Obese")
+
+# now output a summary of the metadata in samdat
+# summarize samdat by group and carbohydrate
+samdat_summary <- samdat %>%
+  group_by(group, carbohydrate) %>%
+  summarize(n_samples = n())
+
+samdat_summary
+
+# number of unique subjects per group
+samdat %>%
+  group_by(group) %>%
+  summarize(n_subjects = n_distinct(subjectID))
+
+
+write_csv(samdat, file = "samdat.csv")
+```
+
+```{r import-asv-finder-data-and-phyloseq-object}
+asv_data <- read_tsv("dada2_asv/asv_table.tsv")
+asv <- asv_data$ASV_ID
+
+asv_data <- asv_data %>% 
+  as.data.frame() %>% 
+  select(-ASV_ID, -Sequence, -Length, -Total_Abundance, -Relative_Abundance) 
+colnames(asv_data) <- str_split(colnames(asv_data), "_") %>% sapply(function(x) paste(x[1:2], collapse = "_"))
+rownames(asv_data) <- asv
+
+taxonomy_data <- read_tsv("dada2_asv/strobelca_taxonomy.tsv")
+asv <- taxonomy_data$ASV_ID %>% str_split(" ") %>% sapply(function(x) x[1])
+repseqs <- Biostrings::DNAStringSet(taxonomy_data$Sequence)
+names(repseqs) <- asv
+taxonomy_data <- taxonomy_data %>% 
+  as.data.frame() %>% 
+  select(-ASV_ID, -Sequence, -Confidence, -Method, -Identity, -Coverage, -Reference_ID) %>% 
+  as.matrix() 
+rownames(taxonomy_data) <- asv
+
+samdat <- samdat %>% 
+  as.data.frame() 
+rownames(samdat) <- samdat$SampleID
+
+# now make the phyloseq object
+phy_asv_finder <- phyloseq(
+  otu_table(asv_data, taxa_are_rows = TRUE),
+  tax_table(taxonomy_data),
+  sample_data(samdat)
+)
+
+save(phy_asv_finder, file = "phy_asv_finder.RData")
+```
+
+```{r alpha-diversity-by-group}
+alpha_diversity <- estimate_richness(phy_asv_finder, measures = c("Shannon", "Simpson", "Observed"))
+# merge alpha_diversity with samdat
+alpha_diversity <- alpha_diversity %>% 
+  rownames_to_column(var = "SampleID") %>% 
+  left_join(samdat, by = "SampleID")
+
+
+# plot alpha_diversity with publication quality theme, colors, and Wilcoxon stats
+library(ggpubr)
+
+# Draw a stats bracket between the groups being compared using stat_compare_means with comparisons argument
+group_levels <- unique(alpha_diversity$group)
+if (length(group_levels) == 2) {
+  comparisons <- list(group_levels)
+} else {
+  # For more than 2 groups, compare all pairs
+  comparisons <- combn(group_levels, 2, simplify = FALSE)
+}
+
+library(cowplot)
+
+# Shannon panel
+p_shannon <- ggplot(alpha_diversity, aes(x = group, y = Shannon, fill = group)) +
+  geom_boxplot(outlier.shape = NA, width = 0.6, alpha = 0.8) +
+  geom_jitter(width = 0.15, size = 1.5, alpha = 0.4, color = "black") +
+  scale_fill_brewer(palette = "Set2") +
+  theme_classic(base_size = 16) +
+  labs(x = "Group", y = "Shannon Diversity", fill = "Group") +
+  stat_compare_means(
+    comparisons = comparisons,
+    method = "wilcox.test",
+    label = "p.signif",
+    label.y = seq(
+      from = max(alpha_diversity$Shannon, na.rm = TRUE) * 1.05,
+      by = 0.1 * max(alpha_diversity$Shannon, na.rm = TRUE),
+      length.out = length(comparisons)
+    )
+  ) +
+  theme(
+    legend.position = "none",
+    axis.text = element_text(color = "black"),
+    panel.grid = element_blank()
+  )
+
+# Observed panel
+p_observed <- ggplot(alpha_diversity, aes(x = group, y = Observed, fill = group)) +
+  geom_boxplot(outlier.shape = NA, width = 0.6, alpha = 0.8) +
+  geom_jitter(width = 0.15, size = 1.5, alpha = 0.4, color = "black") +
+  scale_fill_brewer(palette = "Set2") +
+  theme_classic(base_size = 16) +
+  labs(x = "Group", y = "Observed ASVs", fill = "Group") +
+  stat_compare_means(
+    comparisons = comparisons,
+    method = "wilcox.test",
+    label = "p.signif",
+    label.y = seq(
+      from = max(alpha_diversity$Observed, na.rm = TRUE) * 1.05,
+      by = 0.1 * max(alpha_diversity$Observed, na.rm = TRUE),
+      length.out = length(comparisons)
+    )
+  ) +
+  theme(
+    legend.position = "none",
+    axis.text = element_text(color = "black"),
+    panel.grid = element_blank()
+  )
+
+# Simpson panel
+p_simpson <- ggplot(alpha_diversity, aes(x = group, y = Simpson, fill = group)) +
+  geom_boxplot(outlier.shape = NA, width = 0.6, alpha = 0.8) +
+  geom_jitter(width = 0.15, size = 1.5, alpha = 0.4, color = "black") +
+  scale_fill_brewer(palette = "Set2") +
+  theme_classic(base_size = 16) +
+  labs(x = "Group", y = "Simpson Diversity", fill = "Group") +
+  stat_compare_means(
+    comparisons = comparisons,
+    method = "wilcox.test",
+    label = "p.signif",
+    label.y = seq(
+      from = max(alpha_diversity$Simpson, na.rm = TRUE) * 1.05,
+      by = 0.1 * max(alpha_diversity$Simpson, na.rm = TRUE),
+      length.out = length(comparisons)
+    )
+  ) +
+  theme(
+    legend.position = "none",
+    axis.text = element_text(color = "black"),
+    panel.grid = element_blank()
+  )
+
+# Combine panels into a multipanel figure
+plot_grid(
+  p_observed,
+  p_shannon,
+  p_simpson,
+  labels = c("A", "B", "C"),
+  nrow = 1,
+  align = "v"
+)
+```
+
+```{r alpha-diversity-by-group-and-timepoint}
+alpha_diversity <- estimate_richness(phy_asv_finder, measures = c("Shannon", "Simpson", "Observed"))
+# merge alpha_diversity with samdat
+alpha_diversity <- alpha_diversity %>%
+  rownames_to_column(var = "SampleID") %>%
+  left_join(samdat, by = "SampleID")
+
+# Get unique levels for all variables
+group_levels <- unique(alpha_diversity$group)
+time_levels <- unique(alpha_diversity$timepoint)
+carbohydrate_levels <- unique(alpha_diversity$carbohydrate)
+
+# Set up comparisons for different variables
+group_comparisons <- if (length(group_levels) == 2) {
+  list(group_levels)
+} else {
+  combn(group_levels, 2, simplify = FALSE)
+}
+
+carb_comparisons <- if (length(carbohydrate_levels) == 2) {
+  list(carbohydrate_levels)
+} else {
+  combn(carbohydrate_levels, 2, simplify = FALSE)
+}
+
+time_comparisons <- if (length(time_levels) == 2) {
+  list(time_levels)
+} else {
+  combn(time_levels, 2, simplify = FALSE)
+}
+
+# === BY GROUP ===
+# Shannon by group
+p_shannon_group <- ggplot(alpha_diversity, aes(x = group, y = Shannon, fill = group)) +
+  geom_boxplot(outlier.shape = NA, width = 0.6, alpha = 0.8) +
+  geom_jitter(width = 0.15, size = 1.5, alpha = 0.4, color = "black") +
+  scale_fill_brewer(palette = "Set2") +
+  theme_classic(base_size = 12) +
+  labs(x = "Group", y = "Shannon Diversity", title = "By Group") +
+  stat_compare_means(
+    comparisons = group_comparisons,
+    method = "wilcox.test",
+    label = "p.signif"
+  ) +
+  theme(legend.position = "none", axis.text = element_text(color = "black"))
+
+# Observed by group
+p_observed_group <- ggplot(alpha_diversity, aes(x = group, y = Observed, fill = group)) +
+  geom_boxplot(outlier.shape = NA, width = 0.6, alpha = 0.8) +
+  geom_jitter(width = 0.15, size = 1.5, alpha = 0.4, color = "black") +
+  scale_fill_brewer(palette = "Set2") +
+  theme_classic(base_size = 12) +
+  labs(x = "Group", y = "Observed ASVs", title = "By Group") +
+  stat_compare_means(
+    comparisons = group_comparisons,
+    method = "wilcox.test",
+    label = "p.signif"
+  ) +
+  theme(legend.position = "none", axis.text = element_text(color = "black"))
+
+# === BY CARBOHYDRATE ===
+# Shannon by carbohydrate
+p_shannon_carb <- ggplot(alpha_diversity, aes(x = carbohydrate, y = Shannon, fill = carbohydrate)) +
+  geom_boxplot(outlier.shape = NA, width = 0.6, alpha = 0.8) +
+  geom_jitter(width = 0.15, size = 1.5, alpha = 0.4, color = "black") +
+  scale_fill_brewer(palette = "Set3") +
+  theme_classic(base_size = 12) +
+  labs(x = "Carbohydrate", y = "Shannon Diversity", title = "By Carbohydrate") +
+  stat_compare_means(
+    comparisons = carb_comparisons,
+    method = "wilcox.test",
+    label = "p.signif"
+  ) +
+  theme(legend.position = "none", axis.text = element_text(color = "black"),
+        axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Observed by carbohydrate
+p_observed_carb <- ggplot(alpha_diversity, aes(x = carbohydrate, y = Observed, fill = carbohydrate)) +
+  geom_boxplot(outlier.shape = NA, width = 0.6, alpha = 0.8) +
+  geom_jitter(width = 0.15, size = 1.5, alpha = 0.4, color = "black") +
+  scale_fill_brewer(palette = "Set3") +
+  theme_classic(base_size = 12) +
+  labs(x = "Carbohydrate", y = "Observed ASVs", title = "By Carbohydrate") +
+  stat_compare_means(
+    comparisons = carb_comparisons,
+    method = "wilcox.test",
+    label = "p.signif"
+  ) +
+  theme(legend.position = "none", axis.text = element_text(color = "black"),
+        axis.text.x = element_text(angle = 45, hjust = 1))
+
+# === BY TIMEPOINT ===
+# Shannon by timepoint
+p_shannon_time <- ggplot(alpha_diversity, aes(x = timepoint, y = Shannon, fill = timepoint)) +
+  geom_boxplot(outlier.shape = NA, width = 0.6, alpha = 0.8) +
+  geom_jitter(width = 0.15, size = 1.5, alpha = 0.4, color = "black") +
+  scale_fill_brewer(palette = "Paired") +
+  theme_classic(base_size = 12) +
+  labs(x = "Timepoint", y = "Shannon Diversity", title = "By Timepoint") +
+  stat_compare_means(
+    comparisons = time_comparisons,
+    method = "wilcox.test",
+    label = "p.signif"
+  ) +
+  theme(legend.position = "none", axis.text = element_text(color = "black"))
+
+# Observed by timepoint
+p_observed_time <- ggplot(alpha_diversity, aes(x = timepoint, y = Observed, fill = timepoint)) +
+  geom_boxplot(outlier.shape = NA, width = 0.6, alpha = 0.8) +
+  geom_jitter(width = 0.15, size = 1.5, alpha = 0.4, color = "black") +
+  scale_fill_brewer(palette = "Paired") +
+  theme_classic(base_size = 12) +
+  labs(x = "Timepoint", y = "Observed ASVs", title = "By Timepoint") +
+  stat_compare_means(
+    comparisons = time_comparisons,
+    method = "wilcox.test",
+    label = "p.signif"
+  ) +
+  theme(legend.position = "none", axis.text = element_text(color = "black"))
+
+# === INTERACTION PLOTS ===
+# Shannon by group and timepoint
+p_shannon_interaction <- ggplot(alpha_diversity, aes(x = timepoint, y = Shannon, fill = group)) +
+  geom_boxplot(position = position_dodge(0.8), width = 0.7, alpha = 0.8) +
+  geom_point(position = position_jitterdodge(dodge.width = 0.8, jitter.width = 0.2),
+             size = 1.2, alpha = 0.6) +
+  scale_fill_brewer(palette = "Set2") +
+  theme_classic(base_size = 12) +
+  labs(x = "Timepoint", y = "Shannon Diversity", fill = "Group",
+       title = "Group × Timepoint Interaction") +
+  theme(axis.text = element_text(color = "black"))
+
+# Observed by group and timepoint
+p_observed_interaction <- ggplot(alpha_diversity, aes(x = timepoint, y = Observed, fill = group)) +
+  geom_boxplot(position = position_dodge(0.8), width = 0.7, alpha = 0.8) +
+  geom_point(position = position_jitterdodge(dodge.width = 0.8, jitter.width = 0.2),
+             size = 1.2, alpha = 0.6) +
+  scale_fill_brewer(palette = "Set2") +
+  theme_classic(base_size = 12) +
+  labs(x = "Timepoint", y = "Observed ASVs", fill = "Group",
+       title = "Group × Timepoint Interaction") +
+  theme(axis.text = element_text(color = "black"))
+
+# Combine all plots
+plot_grid(
+  p_shannon_group, p_shannon_carb, p_shannon_time, p_shannon_interaction,
+  p_observed_group, p_observed_carb, p_observed_time, p_observed_interaction,
+  labels = c("A", "B", "C", "D", "E", "F", "G", "H"),
+  nrow = 2,
+  align = "hv"
+)
+```
+
+### Interpretation of Alpha Diversity by Group, Carbohydrate, and Timepoint
+
+- Group comparisons: Using Wilcoxon rank-sum tests, we did `r ifelse(wilcox.test(Shannon ~ group, data = subset(alpha_diversity, !is.na(Shannon) & !is.na(group)))$p.value < 0.05, "detect", "not detect")` a statistically significant difference in Shannon diversity between groups (`p = `r format.pval(wilcox.test(Shannon ~ group, data = subset(alpha_diversity, !is.na(Shannon) & !is.na(group)))$p.value, digits = 2)`), and `r ifelse(wilcox.test(Observed ~ group, data = subset(alpha_diversity, !is.na(Observed) & !is.na(group)))$p.value < 0.05, "detect", "not detect")` a significant difference for Observed ASVs (`p = `r format.pval(wilcox.test(Observed ~ group, data = subset(alpha_diversity, !is.na(Observed) & !is.na(group)))$p.value, digits = 2)``). Visual patterns in panels A and E align with these results.
+
+- Carbohydrate comparisons: Because there are three conditions (No Added Carb, RDC, SDC), we summarize differences with Kruskal–Wallis tests. We observe significant overall effects of carbohydrate on Shannon diversity (`p = `r format.pval(kruskal.test(Shannon ~ carbohydrate, data = subset(alpha_diversity, !is.na(Shannon) & !is.na(carbohydrate)))$p.value, digits = 2)`) and on Observed ASVs (`p = `r format.pval(kruskal.test(Observed ~ carbohydrate, data = subset(alpha_diversity, !is.na(Observed) & !is.na(carbohydrate)))$p.value, digits = 2)`). Panels B and F illustrate these shifts across carbohydrate conditions.
+
+- Timepoint comparisons: Wilcoxon tests indicate `r ifelse(wilcox.test(Shannon ~ timepoint, data = subset(alpha_diversity, !is.na(Shannon) & !is.na(timepoint)))$p.value < 0.05, "significant", "no statistically significant")` differences in Shannon (`p = `r format.pval(wilcox.test(Shannon ~ timepoint, data = subset(alpha_diversity, !is.na(Shannon) & !is.na(timepoint)))$p.value, digits = 2)`) and `r ifelse(wilcox.test(Observed ~ timepoint, data = subset(alpha_diversity, !is.na(Observed) & !is.na(timepoint)))$p.value < 0.05, "significant", "no statistically significant")` differences in Observed ASVs (`p = `r format.pval(wilcox.test(Observed ~ timepoint, data = subset(alpha_diversity, !is.na(Observed) & !is.na(timepoint)))$p.value, digits = 2)`). Panels C and G show broadly similar distributions across timepoints.
+
+- Group × timepoint: The interaction panels (D, H) show limited divergence between groups across time, consistent with small between-group effects relative to within-subject variability. Formal inference for interactions is provided in the mixed-effects section below.
+
+
+```{r alpha-diversity-groups-by-carbohydrate, message=FALSE, warning=FALSE}
+# Observed ASVs: groups side-by-side within each carbohydrate type
+# Reuse alpha_diversity created above
+library(ggpubr)
+
+# Ensure expected ordering for readability
+alpha_diversity <- alpha_diversity %>%
+  mutate(
+    carbohydrate = factor(carbohydrate,
+                          levels = sort(unique(carbohydrate))),
+    group = factor(group, levels = sort(unique(group)))
+  )
+
+# Define comparison between groups (assumes two groups)
+grp_levels <- levels(alpha_diversity$group)
+grp_comparisons <- if (length(grp_levels) == 2) list(grp_levels) else combn(grp_levels, 2, simplify = FALSE)
+
+p_obs_grp_by_carb <- ggplot(alpha_diversity,
+                            aes(x = group, y = Observed, fill = group)) +
+  geom_boxplot(outlier.shape = NA, width = 0.65, alpha = 0.85) +
+  geom_jitter(width = 0.15, size = 1.3, alpha = 0.45, color = "black") +
+  scale_fill_brewer(palette = "Set2") +
+  theme_classic(base_size = 14) +
+  labs(x = "Group", y = "Observed ASVs", title = "Observed ASVs by Carbohydrate (Groups Side-by-Side)") +
+  facet_wrap(~ carbohydrate, nrow = 1) +
+  stat_compare_means(comparisons = grp_comparisons,
+                     method = "wilcox.test",
+                     label = "p.signif") +
+  theme(
+    legend.position = "none",
+    axis.text = element_text(color = "black"),
+    strip.background = element_rect(fill = "grey95", color = NA),
+    strip.text = element_text(color = "black")
+  )
+
+p_obs_grp_by_carb
+```
+
+```{r mixed-effects-alpha-diversity}
+# Load required packages for mixed effects models
+library(lme4)
+library(lmerTest)
+library(broom.mixed)
+
+# Ensure SubjectID exists and is a factor (metadata uses `subjectID`)
+if (!"SubjectID" %in% names(alpha_diversity)) {
+  if ("subjectID" %in% names(alpha_diversity)) {
+    alpha_diversity <- alpha_diversity %>% mutate(SubjectID = as.factor(subjectID))
+  } else {
+    stop("SubjectID/subjectID not found in alpha_diversity; check metadata join.")
+  }
+} else {
+  alpha_diversity$SubjectID <- as.factor(alpha_diversity$SubjectID)
+}
+
+# Create models for each diversity metric
+# Shannon Diversity Mixed Effects Model
+model_shannon <- lmer(Shannon ~ group * timepoint * carbohydrate + (1|SubjectID),
+                      data = alpha_diversity)
+
+# Observed ASVs Mixed Effects Model
+model_observed <- lmer(Observed ~ group * timepoint * carbohydrate + (1|SubjectID),
+                       data = alpha_diversity)
+
+# Simpson Diversity Mixed Effects Model
+model_simpson <- lmer(Simpson ~ group * timepoint * carbohydrate + (1|SubjectID),
+                      data = alpha_diversity)
+
+# Function to extract and format results
+extract_mixed_model_results <- function(model, metric_name) {
+  # Get ANOVA table with p-values
+  anova_results <- anova(model)
+
+  # Get fixed effects coefficients
+  fixed_effects <- broom.mixed::tidy(model, effects = "fixed")
+
+  # Get random effects variance
+  random_effects <- broom.mixed::tidy(model, effects = "ran_pars")
+
+  # Create a summary data frame
+  summary_df <- data.frame(
+    Metric = metric_name,
+    Term = rownames(anova_results),
+    F_value = anova_results$`F value`,
+    p_value = anova_results$`Pr(>F)`,
+    significance = ifelse(anova_results$`Pr(>F)` < 0.001, "***",
+                         ifelse(anova_results$`Pr(>F)` < 0.01, "**",
+                               ifelse(anova_results$`Pr(>F)` < 0.05, "*", ""))),
+    stringsAsFactors = FALSE
+  )
+
+  return(list(
+    anova = summary_df,
+    fixed_effects = fixed_effects,
+    random_effects = random_effects,
+    model = model
+  ))
+}
+
+# Extract results for all models
+shannon_results <- extract_mixed_model_results(model_shannon, "Shannon")
+observed_results <- extract_mixed_model_results(model_observed, "Observed")
+simpson_results <- extract_mixed_model_results(model_simpson, "Simpson")
+
+# Combine ANOVA results for display
+all_anova_results <- rbind(
+  shannon_results$anova,
+  observed_results$anova,
+  simpson_results$anova
+)
+
+# Display results
+cat("=== MIXED EFFECTS MODEL RESULTS ===\n")
+cat("(SubjectID as random effect)\n\n")
+
+print(all_anova_results)
+
+# Post-hoc comparisons for significant effects
+library(emmeans)
+
+# Function to perform post-hoc comparisons
+perform_posthoc <- function(model, metric_name) {
+  cat(paste("\n=== POST-HOC COMPARISONS FOR", metric_name, "===\n"))
+
+  # Group comparisons
+  if("group" %in% names(coef(model)$SubjectID)) {
+    group_emm <- emmeans(model, ~ group)
+    group_contrasts <- pairs(group_emm, adjust = "bonferroni")
+    cat("\nGroup comparisons:\n")
+    print(group_contrasts)
+  }
+
+  # Timepoint comparisons
+  if("timepoint" %in% names(coef(model)$SubjectID)) {
+    time_emm <- emmeans(model, ~ timepoint)
+    time_contrasts <- pairs(time_emm, adjust = "bonferroni")
+    cat("\nTimepoint comparisons:\n")
+    print(time_contrasts)
+  }
+
+  # Carbohydrate comparisons
+  if("carbohydrate" %in% names(coef(model)$SubjectID)) {
+    carb_emm <- emmeans(model, ~ carbohydrate)
+    carb_contrasts <- pairs(carb_emm, adjust = "bonferroni")
+    cat("\nCarbohydrate comparisons:\n")
+    print(carb_contrasts)
+  }
+
+  # Two-way interactions if significant
+  # Group × Timepoint
+  tryCatch({
+    group_time_emm <- emmeans(model, ~ group * timepoint)
+    group_time_contrasts <- pairs(group_time_emm, adjust = "bonferroni")
+    cat("\nGroup × Timepoint interaction:\n")
+    print(group_time_contrasts)
+  }, error = function(e) {})
+}
+
+# Perform post-hoc tests for models with significant effects
+if(any(shannon_results$anova$p_value < 0.05, na.rm = TRUE)) {
+  perform_posthoc(model_shannon, "SHANNON")
+}
+
+if(any(observed_results$anova$p_value < 0.05, na.rm = TRUE)) {
+  perform_posthoc(model_observed, "OBSERVED")
+}
+
+if(any(simpson_results$anova$p_value < 0.05, na.rm = TRUE)) {
+  perform_posthoc(model_simpson, "SIMPSON")
+}
+
+# Model diagnostics
+cat("\n=== MODEL DIAGNOSTICS ===\n")
+
+# Check model assumptions with plots
+par(mfrow = c(2, 2))
+
+# Shannon model diagnostics
+plot(model_shannon, main = "Shannon: Residuals vs Fitted")
+qqnorm(resid(model_shannon), main = "Shannon: Q-Q Plot")
+qqline(resid(model_shannon))
+
+# Observed model diagnostics
+plot(model_observed, main = "Observed: Residuals vs Fitted")
+qqnorm(resid(model_observed), main = "Observed: Q-Q Plot")
+qqline(resid(model_observed))
+
+par(mfrow = c(1, 1))
+
+# Random effects summary
+cat("\n=== RANDOM EFFECTS (SubjectID) ===\n")
+cat("Shannon model - Subject variance:",
+    shannon_results$random_effects$estimate[shannon_results$random_effects$term == "sd__(Intercept)"]^2, "\n")
+cat("Observed model - Subject variance:",
+    observed_results$random_effects$estimate[observed_results$random_effects$term == "sd__(Intercept)"]^2, "\n")
+cat("Simpson model - Subject variance:",
+    simpson_results$random_effects$estimate[simpson_results$random_effects$term == "sd__(Intercept)"]^2, "\n")
+
+# Effect sizes (pseudo R-squared for mixed models)
+library(MuMIn)
+cat("\n=== MODEL FIT (R-squared) ===\n")
+cat("Shannon R²:", round(r.squaredGLMM(model_shannon)[1], 3), "(marginal),",
+    round(r.squaredGLMM(model_shannon)[2], 3), "(conditional)\n")
+cat("Observed R²:", round(r.squaredGLMM(model_observed)[1], 3), "(marginal),",
+    round(r.squaredGLMM(model_observed)[2], 3), "(conditional)\n")
+cat("Simpson R²:", round(r.squaredGLMM(model_simpson)[1], 3), "(marginal),",
+    round(r.squaredGLMM(model_simpson)[2], 3), "(conditional)\n")
+
+cat("\nNote: Marginal R² = variance explained by fixed effects\n")
+cat("      Conditional R² = variance explained by fixed + random effects\n")
+```
+
+### Interpretation of Mixed-Effects Alpha-Diversity Models
+
+Across all three alpha-diversity metrics, carbohydrate condition was the only fixed effect that consistently explained variance in community diversity. With SubjectID modeled as a random intercept, the main effect of carbohydrate was significant for Shannon (F = `r round(shannon_results$anova$F_value[shannon_results$anova$Term == "carbohydrate"], 2)`, p = `r format.pval(shannon_results$anova$p_value[shannon_results$anova$Term == "carbohydrate"], digits = 2)`), Observed ASVs (F = `r round(observed_results$anova$F_value[observed_results$anova$Term == "carbohydrate"], 2)`, p = `r format.pval(observed_results$anova$p_value[observed_results$anova$Term == "carbohydrate"], digits = 2)`), and Simpson (F = `r round(simpson_results$anova$F_value[simpson_results$anova$Term == "carbohydrate"], 2)`, p = `r format.pval(simpson_results$anova$p_value[simpson_results$anova$Term == "carbohydrate"], digits = 2)`). The timepoint-by-carbohydrate interaction was `r ifelse(shannon_results$anova$p_value[shannon_results$anova$Term == "timepoint:carbohydrate"] < 0.05, "significant", "not significant")` for Shannon (F = `r round(shannon_results$anova$F_value[shannon_results$anova$Term == "timepoint:carbohydrate"], 2)`, p = `r format.pval(shannon_results$anova$p_value[shannon_results$anova$Term == "timepoint:carbohydrate"], digits = 2)`) and `r ifelse(observed_results$anova$p_value[observed_results$anova$Term == "timepoint:carbohydrate"] < 0.05, "significant", "not significant")` for Observed ASVs (F = `r round(observed_results$anova$F_value[observed_results$anova$Term == "timepoint:carbohydrate"], 2)`, p = `r format.pval(observed_results$anova$p_value[observed_results$anova$Term == "timepoint:carbohydrate"], digits = 2)`), indicating temporal modulation of carbohydrate effects. In contrast, the group main effect did `r ifelse(all(c(shannon_results$anova$p_value[shannon_results$anova$Term == "group"], observed_results$anova$p_value[observed_results$anova$Term == "group"], simpson_results$anova$p_value[simpson_results$anova$Term == "group"]) >= 0.05), "not", "")` reach conventional significance across metrics (Shannon p = `r format.pval(shannon_results$anova$p_value[shannon_results$anova$Term == "group"], digits = 2)`, Observed p = `r format.pval(observed_results$anova$p_value[observed_results$anova$Term == "group"], digits = 2)`, Simpson p = `r format.pval(simpson_results$anova$p_value[simpson_results$anova$Term == "group"], digits = 2)`).
+
+Random-effects estimates indicated meaningful inter-individual heterogeneity. The estimated SubjectID variance components were Shannon = `r signif(shannon_results$random_effects$estimate[shannon_results$random_effects$term == "sd__(Intercept)"]^2, 3)`, Observed = `r signif(observed_results$random_effects$estimate[observed_results$random_effects$term == "sd__(Intercept)"]^2, 3)`, and Simpson = `r signif(simpson_results$random_effects$estimate[simpson_results$random_effects$term == "sd__(Intercept)"]^2, 3)`. Consistent with this, conditional R² exceeded marginal R² for all metrics (Shannon: `r round(r.squaredGLMM(model_shannon)[2], 3)` vs `r round(r.squaredGLMM(model_shannon)[1], 3)`; Observed: `r round(r.squaredGLMM(model_observed)[2], 3)` vs `r round(r.squaredGLMM(model_observed)[1], 3)`; Simpson: `r round(r.squaredGLMM(model_simpson)[2], 3)` vs `r round(r.squaredGLMM(model_simpson)[1], 3)`), indicating that subject-specific baselines account for a substantial portion of total variance.
+
+Overall, these results support carbohydrate condition (No Added Carb, RDC, SDC) as a primary determinant of alpha diversity, with temporal dynamics modulating this effect for Shannon diversity and richness. Reporting adjusted pairwise contrasts among carbohydrate levels (e.g., estimated marginal means) will localize specific differences and provide effect sizes that are directly interpretable.
+
+```{r beta-diversity}
+library(microbiome)
+library(ggplot2)
+library(ggpubr)
+library(cowplot)
+
+# PCoA plot
+# need to convert to relative abundance
+phy_asv_finder_rel <- microbiome::transform(phy_asv_finder, "compositional")
+# PCoA plot
+pcoa <- ordinate(phy_asv_finder_rel, method = "PCoA", distance = "bray")
+plot_ordination(phy_asv_finder_rel, pcoa, type = "samples", color = "group") +
+  geom_point(size = 3) +
+  facet_wrap(~timepoint) +
+  theme_classic(base_size = 16)
+
+
+```

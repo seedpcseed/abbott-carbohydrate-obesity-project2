@@ -1,308 +1,494 @@
+---
+title: "Ex Vivo Carbohydrate–Microbiome Adaptation: 16S Analysis"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+---
 
+```{r setup, include=FALSE}
+set.seed(20250101)
+options(stringsAsFactors = FALSE)
+# Use sum-to-zero contrasts for Type III tests and balanced estimability
+options(contrasts = c("contr.sum", "contr.poly"))
 
-```{r library-loading}
-library(tidyverse)
-library(tidytext)
-library(tidygraph)
-library(ggraph)
-library(igraph)
-library(tidygraph)
-library(ggraph)
-library(igraph)
+# Knitr default chunk options for inline figures and cleaner logs
+knitr::opts_chunk$set(
+  fig.width = 7, fig.height = 4, dpi = 150,
+  message = FALSE, warning = FALSE,
+  fig.align = "center"
+)
+
+dirs <- c("outputs", "outputs/figures", "outputs/tables", "outputs/da")
+invisible(lapply(dirs, \(d) if(!dir.exists(d)) dir.create(d, recursive = TRUE)))
+
+# Simple config (avoids YAML params for interactive chunk testing)
+cfg <- list(
+  min_reads = 1000L,
+  feature_min_total = 10L,
+  prevalence_min = 0.05
+)
 ```
 
-```{r data-loading}
-samdat <- read_tsv("sample.metadata.tsv")
-colnames(samdat) <- c("SampleID", "sample_label", "raw_seq_file", "group")
+```{r libraries}
+# Helper to install CRAN/Bioc packages as needed
+install_if_missing <- function(pkg) {
+  if (!requireNamespace(pkg, quietly = TRUE)) {
+    tryCatch({
+      install.packages(pkg)
+    }, error = function(e) {
+      if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")
+      BiocManager::install(pkg, ask = FALSE)
+    })
+  }
+}
 
-# Process sample_label to extract additional information
-samdat <- samdat %>%
+pkgs <- c(
+  "tidyverse", "stringr", "tibble", "readr", "glue",
+  "phyloseq", "vegan", "microbiome",
+  "lme4", "lmerTest", "car", "emmeans",
+  "broom", "broom.mixed",
+  "ggplot2", "ggpubr", "cowplot"
+)
+invisible(lapply(pkgs, install_if_missing))
+
+library(tidyverse)
+library(phyloseq)
+library(vegan)
+library(microbiome)
+library(lme4)
+library(lmerTest)
+library(car)
+library(emmeans)
+library(broom)
+library(broom.mixed)
+library(glue)
+library(ggpubr)
+library(cowplot)
+```
+
+# Introduction
+
+This report follows the plan in `ANALYSIS_PLAN_PROJECT2.md` to evaluate how adolescent gut microbiota from Healthy vs Obese donors adapt ex vivo to rapid- vs slow-digestible carbohydrates over time using 16S rDNA.
+
+Objectives:
+
+- Describe sample balance and sequencing depth; flag replicate inconsistencies.
+- Test alpha diversity changes across group, carbohydrate, and timepoint with mixed-effects where supported.
+- Test beta diversity differences via PERMANOVA with permutations constrained within subjects; visualize with PCoA.
+- Explore differential abundance with ANCOM-BC2 using subject-level random effects.
+
+```{r load-metadata}
+# Load and parse metadata based on available files in repo
+md_raw <- readr::read_tsv("sample.metadata.tsv", show_col_types = FALSE)
+md <- md_raw %>%
+  transmute(
+    SampleID    = .data$sample_id,
+    sample_label= .data$customer_label,
+    raw_seq_file= .data$raw_seq_files
+  ) %>%
   separate(sample_label, into = c("subjectID", "replicate_code", "timepoint"), sep = "\\.", remove = FALSE) %>%
   mutate(
-    # Extract carbohydrate type from replicate_code
     carbohydrate = case_when(
-      str_detect(replicate_code, "R") ~ "rapid",
-      str_detect(replicate_code, "S") ~ "slow",
-      TRUE ~ "no_carbohydrate"
+      str_detect(replicate_code, "R") ~ "RDC",
+      str_detect(replicate_code, "S") ~ "SDC",
+      TRUE ~ "No Added Carb"
     ),
-    # Extract replicate number from replicate_code
-    replicate = str_extract(replicate_code, "\\d+") %>% as.numeric(),
-    # Replace NA values in replicate with 1
-    replicate = ifelse(is.na(replicate), 1, replicate)
+    replicate = str_extract(replicate_code, "\\d+") %>% as.integer() %>% replace_na(1L)
   ) %>%
-  select(-replicate_code, -group)  # Remove the intermediate replicate_code column
+  select(-replicate_code)
 
-# Display the processed metadata
-print(samdat)
+# Derive Healthy vs Obese from Zymo report (present in repo)
+zymo_md <- readr::read_tsv(
+  "zr24558.16S_250813.zymo/1.Healthy.TimepointComparism..Bac16Sv34/Sample_Information/sample.metadata.csv",
+  show_col_types = FALSE
+)
+zymo_subjects <- zymo_md %>%
+  separate(customer_label, into = c("subjectID", "rc", "tp"), sep = "\\.", remove = FALSE) %>%
+  distinct(subjectID) %>% pull(subjectID)
 
-# now get the group information for health and obese
+md <- md %>% mutate(group = if_else(subjectID %in% zymo_subjects, "Healthy", "Obese"))
 
-group <- read_tsv("zr24558.16S_250813.zymo/1.Healthy.TimepointComparism..Bac16Sv34/Sample_Information/sample.metadata.csv")
+# Factor coding (explicit reference levels)
+md <- md %>% mutate(
+  group        = factor(group,        levels = c("Healthy", "Obese")),
+  carbohydrate = factor(carbohydrate, levels = c("No Added Carb", "RDC", "SDC")),
+  timepoint    = factor(timepoint,    levels = c("0H", "48H", "72H")),
+  subjectID    = factor(subjectID),
+  replicate    = factor(replicate)
+)
 
-# Extract subjectID from customer_label
-group <- group %>%
-  separate(customer_label, into = c("subjectID", "replicate_code", "timepoint"), sep = "\\.", remove = FALSE) %>%
-  select(customer_label, subjectID, everything())
+# Keys for nested random effects
+md <- md %>% mutate(
+  cell = interaction(subjectID, carbohydrate, timepoint, drop = TRUE),
+  replicate_id = interaction(subjectID, carbohydrate, timepoint, replicate, drop = TRUE)
+)
 
-# now where group$subjectID is in samdat$subjectID, the samdat$group should be "Healthy" and otherwise be "Obese"
-samdat <- samdat %>%
+readr::write_csv(md, "samdat.csv")
+md %>% count(group, carbohydrate, timepoint, name = "n") %>% arrange(group, carbohydrate, timepoint) %>%
+  readr::write_csv("outputs/tables/cell_counts.csv")
+
+# Inline: sample balance across factors
+md %>% count(group, carbohydrate, timepoint, name = "n") %>% arrange(group, carbohydrate, timepoint) %>%
+  knitr::kable(caption = "Sample counts by group × carbohydrate × timepoint")
+```
+
+```{r load-asv-tax, message=FALSE}
+# Use processed DADA2 outputs already present in repo
+asv_tab <- readr::read_tsv("dada2_asv/asv_table.tsv", show_col_types = FALSE) %>% as.data.frame()
+rownames(asv_tab) <- asv_tab$ASV_ID
+counts <- asv_tab %>% select(-ASV_ID, -Sequence, -Length, -Total_Abundance, -Relative_Abundance)
+
+# Harmonize sample IDs to metadata: remove trailing "_filtered"
+colnames(counts) <- gsub("_filtered$", "", colnames(counts))
+
+# Keep only intersection and order by metadata
+common_samples <- intersect(colnames(counts), md$SampleID)
+if (length(common_samples) == 0) stop("No overlapping samples between counts and metadata.")
+counts <- counts[, common_samples, drop = FALSE]
+md_use <- md %>% filter(SampleID %in% common_samples) %>% arrange(match(SampleID, common_samples))
+stopifnot(all(colnames(counts) == md_use$SampleID))
+
+# Load taxonomy from strobelca table
+tax_tab <- readr::read_tsv("dada2_asv/strobelca_taxonomy.tsv", show_col_types = FALSE) %>% as.data.frame()
+tax_tab$ASV_ID <- sub(" .*$", "", tax_tab$ASV_ID)  # keep ASV id up to first space
+rownames(tax_tab) <- tax_tab$ASV_ID
+TAX <- tax_tab %>% select(Kingdom, Phylum, Class, Order, Family, Genus, Species) %>% as.matrix()
+
+# Align taxa rows between counts and taxonomy
+common_asv <- intersect(rownames(counts), rownames(TAX))
+counts <- counts[common_asv, , drop = FALSE]
+TAX    <- TAX[common_asv, , drop = FALSE]
+
+# Assemble phyloseq
+OTU  <- otu_table(as.matrix(counts), taxa_are_rows = TRUE)
+META <- sample_data(as.data.frame(md_use) %>% tibble::column_to_rownames("SampleID"))
+TAXO <- tax_table(TAX)
+ps   <- phyloseq(OTU, TAXO, META)
+
+saveRDS(ps, "outputs/ps_raw.rds")
+```
+
+## Data Sources
+
+```{r data-sources}
+data_sources <- tibble::tibble(
+  source = c("Metadata", "ASV table", "Taxonomy"),
+  path = c("sample.metadata.tsv", "dada2_asv/asv_table.tsv", "dada2_asv/strobelca_taxonomy.tsv"),
+  total_records = c(nrow(md_raw), nrow(asv_tab), nrow(tax_tab)),
+  matched_samples = c(length(common_samples), NA_integer_, NA_integer_),
+  matched_features = c(NA_integer_, length(common_asv), length(common_asv))
+)
+knitr::kable(data_sources, caption = "Data sources and matched counts")
+```
+
+# Methods (Summary)
+
+- Assembly: Built a phyloseq object from ASV counts, taxonomy, and curated metadata with explicit factor levels (Healthy vs Obese; No Added Carb, RDC, SDC; 0H, 48H, 72H).
+- Filtering: Removed low-depth samples below the max of 1,000 reads or the 10th percentile of library sizes; no rarefaction for inference.
+- Replicates: Kept biological replicates and used mixed-effects where identifiable; subject is the clustering unit.
+- Alpha diversity: Fitted per-metric models using the most complex estimable fixed-effects structure among 3-way, all two-way, or main effects; random intercept for subject where non-singular. Type III tests with sum contrasts; EMMs for carbohydrate within time×group.
+- Beta diversity: Bray–Curtis on relative abundance; PERMANOVA with permutations stratified by subject; PCoA visualization by carbohydrate/timepoint and faceted by group.
+- Differential abundance: ANCOM-BC2 with random effects `(1|subjectID) + (1|subjectID:cell)` when available.
+
+## Quality Control
+
+```{r qc}
+# QC: sequencing depth and basic filtering thresholds
+lib_sizes <- sample_sums(ps)
+min_depth <- max(cfg$min_reads, as.numeric(stats::quantile(lib_sizes, 0.10)))
+keep <- lib_sizes >= min_depth
+ps_filt <- prune_samples(keep, ps)
+
+readr::write_csv(
+  tibble(SampleID = names(lib_sizes), lib_size = as.numeric(lib_sizes), keep = keep),
+  "outputs/tables/qc_library_sizes.csv"
+)
+
+# Replicate concordance at Genus level
+ps_genus <- tax_glom(ps_filt, "Genus")
+ps_rel   <- transform_sample_counts(ps_genus, function(x) x/sum(x))
+md_rel   <- as.data.frame(sample_data(ps_rel)) %>% tibble::rownames_to_column("SampleID")
+
+dist_bray <- phyloseq::distance(ps_rel, "bray")
+get_within <- function(cell_id){
+  sids <- md_rel$SampleID[md_rel$cell == cell_id]
+  if(length(sids) < 2) return(NA_real_)
+  as.matrix(dist_bray)[sids, sids] %>% .[upper.tri(., diag=FALSE)] %>% mean()
+}
+wd <- sapply(unique(md_rel$cell), get_within)
+thresh <- stats::quantile(wd, 0.95, na.rm=TRUE)
+qc_cells_flag <- names(wd)[wd > thresh]
+
+# Create the tibble with proper handling of NA values
+qc_tibble <- tibble(
+  cell = names(wd), 
+  mean_within_bray = wd, 
+  flag = if(length(qc_cells_flag) > 0) names(wd) %in% qc_cells_flag else rep(FALSE, length(wd))
+)
+readr::write_csv(qc_tibble, "outputs/tables/qc_within_cell_bray.csv")
+
+# Inline QC summary table
+tibble(
+  n_samples_raw = nsamples(ps),
+  n_samples_kept = nsamples(ps_filt),
+  n_subjects = dplyr::n_distinct(sample_data(ps)$subjectID),
+  depth_min = min(lib_sizes),
+  depth_median = stats::median(lib_sizes),
+  depth_max = max(lib_sizes)
+) %>% knitr::kable(caption = "QC summary: library sizes and sample counts before/after filtering")
+```
+
+## Alpha Diversity
+
+```{r alpha}
+alpha_metrics <- c("Observed","Shannon","Simpson","InvSimpson")
+alpha_df <- estimate_richness(ps_filt, measures = alpha_metrics) %>%
+  tibble::rownames_to_column("SampleID") %>%
+  left_join(as.data.frame(sample_data(ps_filt)) %>% tibble::rownames_to_column("SampleID"), by = "SampleID")
+
+# Check data structure for random effects
+cat("Number of observations:", nrow(alpha_df), "\n")
+cat("Number of subjects:", length(unique(alpha_df$subjectID)), "\n")
+cat("Number of subject:cell combinations:", length(unique(alpha_df$cell)), "\n")
+
+# Choose the most complex non-singular fixed-effects specification available
+infer_fixed_terms <- function(df) {
+  # Try 3-way interaction
+  mm3 <- model.matrix(~ group*carbohydrate*timepoint, data = df)
+  if (qr(mm3)$rank == ncol(mm3)) return("group*carbohydrate*timepoint")
+  # Else try all 2-way interactions
+  mm2 <- model.matrix(~ (group + carbohydrate + timepoint)^2, data = df)
+  if (qr(mm2)$rank == ncol(mm2)) return("(group + carbohydrate + timepoint)^2")
+  # Fallback to main effects only
+  return("group + carbohydrate + timepoint")
+}
+
+fixed_str <- infer_fixed_terms(alpha_df)
+cat("Fixed-effects used for alpha models:", fixed_str, "\n")
+
+# Mixed models per metric with robust optimizer; fall back to lm if random effect is singular
+fits <- purrr::map(alpha_metrics, function(m){
+  fm_mixed <- as.formula(paste0(m, " ~ ", fixed_str, " + (1|subjectID)"))
+  fit <- try(
+    lme4::lmer(
+      fm_mixed, data = alpha_df, REML = TRUE,
+      control = lme4::lmerControl(optimizer = "bobyqa", optCtrl = list(maxfun = 2e5))
+    ),
+    silent = TRUE
+  )
+  if (inherits(fit, "try-error") || (inherits(fit, "merMod") && lme4::isSingular(fit, tol = 1e-4))) {
+    # Fallback to marginal model without random effect
+    fm_lm <- as.formula(paste0(m, " ~ ", fixed_str))
+    fit <- stats::lm(fm_lm, data = alpha_df)
+  }
+  fit
+}) %>% rlang::set_names(alpha_metrics)
+
+anova_tbl <- purrr::imap_dfr(fits, function(fit, m){
+  suppressWarnings(car::Anova(fit, type = "III")) %>% broom::tidy() %>% mutate(metric = m)
+})
+readr::write_csv(anova_tbl, "outputs/tables/alpha_typeIII_anova.csv")
+
+# Show Type III ANOVA results inline (top rows per metric)
+anova_tbl %>%
+  filter(term != "(Intercept)") %>%
+  arrange(metric, p.value) %>%
+  group_by(metric) %>%
+  slice_head(n = 10) %>%
+  ungroup() %>%
+  mutate(p.value = signif(p.value, 3)) %>%
+  knitr::kable(caption = "Alpha diversity: Type III ANOVA (top terms by metric)")
+
+# Example EMMs: carbohydrate contrasts at each timepoint within group
+emm_list <- list()
+for (m in alpha_metrics) {
+  fit <- fits[[m]]
+  emm <- emmeans::emmeans(fit, ~ carbohydrate | timepoint * group)
+  emm_list[[m]] <- summary(pairs(emm), adjust = "fdr") %>% as.data.frame() %>% mutate(metric = m)
+}
+emm_tbl <- dplyr::bind_rows(emm_list)
+readr::write_csv(emm_tbl, "outputs/tables/alpha_emmeans_contrasts.csv")
+
+# Brief narrative: list significant fixed effects per metric
+alpha_sig <- anova_tbl %>% filter(term != "(Intercept)", p.value < 0.05) %>% arrange(metric, p.value)
+if (nrow(alpha_sig) > 0) {
+  cat("Significant fixed effects detected in alpha models by metric:\n")
+  alpha_sig %>% group_by(metric) %>% summarize(terms = paste(unique(term), collapse = ", ")) %>%
+    mutate(text = paste0("- ", metric, ": ", terms)) %>% pull(text) %>% cat(sep = "\n")
+} else {
+  cat("No fixed effects reached p < 0.05 across alpha metrics; see EMMs for trends.\n")
+}
+
+# Inline: Shannon carbohydrate contrasts by timepoint × group (FDR-adjusted)
+emm_tbl %>%
+  filter(metric == "Shannon") %>%
+  {
+    cols <- intersect(c("timepoint","group","contrast","estimate","SE","df","t.ratio","p.value"), colnames(.))
+    dplyr::select(., dplyr::all_of(cols))
+  } %>%
+  mutate(p.value = signif(p.value, 3)) %>%
+  arrange(timepoint, group, contrast) %>%
+  knitr::kable(caption = "Shannon: carbohydrate contrasts by timepoint × group (FDR-adjusted p)")
+```
+
+```{r alpha-plots, message=FALSE, warning=FALSE}
+p_alpha <- alpha_df %>%
+  ggplot(aes(x = carbohydrate, y = Shannon, fill = carbohydrate)) +
+  geom_violin(trim = TRUE, alpha = 0.7) +
+  geom_boxplot(width = 0.1, outlier.shape = NA) +
+  geom_jitter(aes(color = timepoint), width = 0.15, height = 0, size = 1, alpha = 0.5) +
+  facet_wrap(~ group) +
+  scale_fill_brewer(palette = "Set3") +
+  theme_bw() + labs(title = "Alpha Diversity (Shannon)", x = "Carbohydrate", y = "Shannon")
+ggsave("outputs/figures/alpha_shannon.png", p_alpha, width = 8, height = 5, dpi = 300)
+p_alpha
+```
+
+## Beta Diversity
+
+```{r beta}
+ps_rel_all <- transform_sample_counts(ps_filt, function(x) x/sum(x))
+bray <- phyloseq::distance(ps_rel_all, "bray")
+md_b <- data.frame(sample_data(ps_rel_all), stringsAsFactors = FALSE)
+
+set.seed(42)
+permanova <- vegan::adonis2(bray ~ group*carbohydrate*timepoint, data = md_b, strata = md_b$subjectID, permutations = 999)
+capture.output(permanova, file = "outputs/tables/permanova_bray.txt")
+
+# Show PERMANOVA table inline
+as.data.frame(permanova) %>% tibble::rownames_to_column("term") %>%
+  knitr::kable(caption = "PERMANOVA on Bray–Curtis distances (stratified by subject)")
+
+ord <- ordinate(ps_rel_all, method = "PCoA", distance = "bray")
+p_ord <- plot_ordination(ps_rel_all, ord, color = "carbohydrate", shape = "timepoint") +
+  geom_point(size = 2, alpha = 0.85) + facet_wrap(~group) + theme_bw()
+ggsave("outputs/figures/pcoa_bray.png", p_ord, width = 8, height = 5, dpi = 300)
+p_ord
+```
+
+## Sensitivity: Collapsed Replicates
+
+```{r sensitivity-collapsed}
+# Collapse biological replicates to subject×carbohydrate×timepoint (cell)
+ps_coll <- phyloseq::merge_samples(ps_filt, "cell")
+
+# Rebuild minimal sample data for collapsed object
+md_coll <- as.data.frame(sample_data(ps_filt)) %>%
+  tibble::rownames_to_column("SampleID") %>%
+  dplyr::group_by(cell) %>%
+  dplyr::summarise(
+    subjectID = dplyr::first(subjectID),
+    group = dplyr::first(group),
+    carbohydrate = dplyr::first(carbohydrate),
+    timepoint = dplyr::first(timepoint),
+    .groups = "drop"
+  ) %>%
+  as.data.frame()
+
+# Set row names and create proper sample_data object
+rownames(md_coll) <- md_coll$cell
+md_coll$cell <- NULL  # Remove the cell column since it's now the row name
+sample_data(ps_coll) <- sample_data(md_coll)
+ps_coll_rel <- transform_sample_counts(ps_coll, function(x) x/sum(x))
+
+bray_coll <- phyloseq::distance(ps_coll_rel, "bray")
+md_bc <- sample_data(ps_coll_rel) %>%
+  as("data.frame") %>%
+  tibble::rownames_to_column("SampleID") %>%
   mutate(
-    group = ifelse(subjectID %in% group$subjectID, "Healthy", "Obese")
+    group = factor(group, levels = c("Healthy", "Obese")),
+    carbohydrate = factor(carbohydrate, levels = c("No Added Carb", "RDC", "SDC")),
+    timepoint = factor(timepoint, levels = c("0H", "48H", "72H")),
+    subjectID = factor(subjectID)
   )
 
-# now output a summary of the metadata in samdat
-# summarize samdat by group and carbohydrate
-samdat_summary <- samdat %>%
-  group_by(group, carbohydrate) %>%
-  summarize(n_samples = n())
+set.seed(42)
+permanova_coll <- vegan::adonis2(bray_coll ~ group*carbohydrate*timepoint, data = md_bc, strata = md_bc$subjectID, permutations = 999)
 
-samdat_summary
+as.data.frame(permanova_coll) %>% tibble::rownames_to_column("term") %>%
+  knitr::kable(caption = "PERMANOVA (collapsed replicates) on Bray–Curtis distances")
 
-# number of unique subjects per group
-samdat %>%
-  group_by(group) %>%
-  summarize(n_subjects = n_distinct(subjectID))
-
-
-write_csv(samdat, file = "samdat.csv")
+# Compare three-way interaction between primary and collapsed
+tri <- "group:carbohydrate:timepoint"
+if (tri %in% rownames(permanova) && tri %in% rownames(permanova_coll)) {
+  p1 <- permanova$`Pr(>F)`[tri]; r1 <- permanova$R2[tri]
+  p2 <- permanova_coll$`Pr(>F)`[tri]; r2 <- permanova_coll$R2[tri]
+  cat(glue::glue("Three-way interaction: primary R²={round(r1,3)}, p={signif(p1,3)}; collapsed R²={round(r2,3)}, p={signif(p2,3)}"))
+}
 ```
 
-```{r dada2-pipeline}
-library(dada2)
+## Differential Abundance
 
-fastqFs <- list.files("fastq_files", pattern = "R1.fastq.gz", full.names = TRUE) %>% sort()
-fastqRs <- list.files("fastq_files", pattern = "R2.fastq.gz", full.names = TRUE) %>% sort()
-
-# get the sample names from the fastq files
-sample_names <- sapply(strsplit(basename(fastqFs), "_"), function(x) paste0(x[1],"_", x[2]))
-
-# filter the fastq files
-filtered_fastq_dir <- "filtered_fastq"
-if (!dir.exists(filtered_fastq_dir)) {
-  dir.create(filtered_fastq_dir)
-}
-
-if(!file.exists("filtered_fastq_out.RData")) {
-    # filter the fastq files
-    filtFs <- file.path(filtered_fastq_dir, paste0(sample_names, "_F_filt.fastq.gz")) %>% sort()
-    filtRs <- file.path(filtered_fastq_dir, paste0(sample_names, "_R_filt.fastq.gz")) %>% sort()
-
-    # filter the fastq files
-    out <- filterAndTrim(fastqFs, filtFs, fastqRs, filtRs, truncLen=c(240,240), maxN=0, maxEE=c(2,2), truncQ=2, rm.phix=TRUE, compress=TRUE, multithread=TRUE, verbose=TRUE)
-
-    save(sample_names, filtFs, filtRs, out, file = "filtered_fastq_out.RData")
-}
-
-if(!file.exists("dada2_out.RData")) {
-    # now load the filtered fastq files
-    load("filtered_fastq_out.RData")
-
-    # now learn the error rates
-    cat("Learning error rates...\n")
-    errF <- learnErrors(filtFs, multithread=TRUE)
-    errR <- learnErrors(filtRs, multithread=TRUE)
-
-    cat("Running DADA2...\n")
-    dadaFs <- dada(filtFs, err=errF, multithread=TRUE)
-    dadaRs <- dada(filtRs, err=errR, multithread=TRUE)
-
-    save(errF, errR, dadaFs, dadaRs, file = "dada2_out.RData")
-}
-
-if(!file.exists("seqtab.nochim.RData")) {
-    load("filtered_fastq_out.RData")
-    load("dada2_out.RData")
-
-    # now merge the forward and reverse reads
-    cat("Merging forward and reverse reads...\n")
-    mergers <- mergePairs(dadaFs, filtFs, dadaRs, filtRs, verbose=TRUE)
-
-    # now construct the sequence table
-    cat("Constructing sequence table...\n")
-    seqtab <- makeSequenceTable(mergers)
-
-    repseqs <- Biostrings::DNAStringSet(getSequences(seqtab))
-    names(repseqs) <- paste0("ASV", seq(length(repseqs)))
-    Biostrings::writeXStringSet(repseqs, file = "repseqs.chimeras.fasta")
-
-    save(mergers, seqtab, file = "seqtab.RData")
-
-    # now remove chimeras
-    # using vsearch uchim3 approach for speed and sensitivity balance
-    system("vsearch --uchime_ref repseqs.chimeras.fasta --db references/SILVA_138.1_SSURef_Nr99_tax_silva.fasta --nonchimeras repseqs.nochimera.fasta --threads 18")
-
-    nonchimeric_seqs <- Biostrings::readDNAStringSet("repseqs.nochimera.fasta")
-
-    w <- which(getSequences(seqtab) %in% getSequences(nonchimeric_seqs))
-    
-    seqtab.nochim <- seqtab[, w]
-
-    repseqs <- Biostrings::DNAStringSet(getSequences(seqtab.nochim))
-    names(repseqs) <- paste0("ASV", seq(length(repseqs)))
-
-    Biostrings::writeXStringSet(repseqs, file = "repseqs.nochimera.fasta")
-
-    save(mergers, seqtab, seqtab.nochim,  nonchimeric_seqs, repseqs, file = "seqtab.nochim.RData")
-}
-
-# assign taxonomy
-library(DECIPHER)
-
-cat("Assigning taxonomy...\n")
-load("./references/SILVA_SSU_r138_2_2024.RData")
-dna <- Biostrings::DNAStringSet(getSequences(seqtab.nochim))
-ids <- IdTaxa(dna, trainingSet, strand = "top", processors = 18, verbose = TRUE)
-ranks <- c("Domain", "Phylum", "Class", "Order", "Family", "Genus", "Species")
-
-# Convert DECIPHER Taxa object to data.frame with taxonomic hierarchy
-# Function to extract data from individual Taxa entries
-extract_taxa_info <- function(taxa_entry) {
-  # Each entry is a list with taxon, confidence, and rank components
-  taxon_vector <- taxa_entry$taxon
-  confidence_vector <- taxa_entry$confidence
-  rank_vector <- taxa_entry$rank
-
-  # Initialize result with all levels as "unclassified"
-  result <- c(
-    Domain = "unclassified",
-    Phylum = "unclassified",
-    Class = "unclassified",
-    Order = "unclassified",
-    Family = "unclassified",
-    Genus = "unclassified",
-    Species = "unclassified"
+```{r da-ancombc2, message=FALSE, warning=FALSE}
+# Primary DA: ANCOM-BC2 with random effects (optional)
+if (requireNamespace("ANCOMBC", quietly = TRUE)) {
+  set.seed(42)
+  res_ab <- ANCOMBC::ancombc2(
+    data         = ps_filt,
+    fix_formula  = "group * carbohydrate * timepoint",
+    rand_formula = "(1|subjectID) + (1|subjectID:cell)",
+    group        = "group",
+    global       = TRUE,
+    p_adj_method = "fdr",
+    prv_cut = 0.10, lib_cut = cfg$min_reads, alpha = 0.05, verbose = TRUE
   )
+  saveRDS(res_ab, "outputs/da/ancombc2_results.rds")
 
-  # Map ranks to standard taxonomic levels
-  rank_mapping <- c(
-    "domain" = "Domain",
-    "phylum" = "Phylum",
-    "class" = "Class",
-    "order" = "Order",
-    "family" = "Family",
-    "genus" = "Genus",
-    "species" = "Species"
-  )
+  # Flatten and export
+  if (!is.null(res_ab$res)) {
+    res_df <- tryCatch({
+      tibble::as_tibble(res_ab$res)
+    }, error = function(e) {
+      # Fall back to combining elements if list-like
+      dplyr::bind_rows(lapply(res_ab, function(x) if (is.data.frame(x)) x else NULL), .id = "component")
+    })
+    readr::write_csv(res_df, "outputs/tables/ancombc2_all_results.csv")
 
-  # Fill in taxonomic information based on ranks
-  for (i in seq_along(rank_vector)) {
-    rank <- rank_vector[i]
-    taxon <- taxon_vector[i]
-
-    # Skip "Root" and "rootrank"
-    if (rank == "rootrank" || taxon == "Root") {
-      next
-    }
-
-    # Map rank to standard level
-    if (rank %in% names(rank_mapping)) {
-      level <- rank_mapping[rank]
-
-      # Clean up taxonomy names
-      if (grepl("^unclassified_", taxon)) {
-        result[level] <- "unclassified"
-      } else {
-        result[level] <- taxon
-      }
+    # Show a snapshot inline if likely columns exist
+    poss <- intersect(c("taxon", "feature", "q_val", "q.value", "p_adj", "lfc", "effect"), colnames(res_df))
+    if (length(poss) > 0) {
+      cols <- unique(c("taxon", "feature", "lfc", "effect", "q_val", "q.value", "p_adj"))
+      cols <- cols[cols %in% colnames(res_df)]
+      res_df %>% select(dplyr::all_of(cols)) %>%
+        mutate(across(matches("q_?val|q.value|p_adj"), ~signif(., 3))) %>%
+        head(20) %>% knitr::kable(caption = "ANCOM-BC2 results (top 20; selected columns)")
     }
   }
-
-  # Get the minimum confidence (most conservative estimate)
-  # Skip confidence for "Root" level
-  non_root_indices <- rank_vector != "rootrank"
-  if (any(non_root_indices)) {
-    min_confidence <- min(confidence_vector[non_root_indices]) / 100
-  } else {
-    min_confidence <- NA
-  }
-
-  return(c(result, Confidence = min_confidence))
+} else {
+  message("ANCOMBC not installed; skipping DA. See installation notes in the report.")
+  readr::write_lines(
+    "ANCOMBC not installed; DA step skipped. Install system libs: libgmp-dev, libmpfr-dev, then install.packages('CVXR') or BiocManager::install('ANCOMBC').",
+    "outputs/tables/da_skipped.txt"
+  )
 }
-
-# Apply extraction to all entries in the Taxa object
-cat("Extracting taxonomic information from", length(ids), "entries...\n")
-
-# Process all entries
-all_results <- lapply(ids, extract_taxa_info)
-
-# Convert to matrix then data.frame
-results_matrix <- do.call(rbind, all_results)
-
-# Create the final data.frame with proper column types
-taxonomy_df <- data.frame(
-  Domain = as.character(results_matrix[, "Domain"]),
-  Phylum = as.character(results_matrix[, "Phylum"]),
-  Class = as.character(results_matrix[, "Class"]),
-  Order = as.character(results_matrix[, "Order"]),
-  Family = as.character(results_matrix[, "Family"]),
-  Genus = as.character(results_matrix[, "Genus"]),
-  Species = as.character(results_matrix[, "Species"]),
-  Confidence = as.numeric(results_matrix[, "Confidence"]),
-  stringsAsFactors = FALSE
-)
-
-# Display results
-cat("Conversion complete!\n")
-cat("Data.frame dimensions:", dim(taxonomy_df), "\n")
-
-# Show first few rows
-cat("\nFirst few rows:\n")
-print(head(taxonomy_df))
-
-# Show structure
-cat("\nStructure:\n")
-str(taxonomy_df)
-
-# Summary of confidence values
-cat("\nConfidence summary:\n")
-summary(taxonomy_df$Confidence)
-
-# Count of assignments at each taxonomic level
-cat("\nTaxonomic assignment counts (non-unclassified):\n")
-for (col in c("Domain", "Phylum", "Class", "Order", "Family", "Genus", "Species")) {
-  assigned_count <- sum(taxonomy_df[[col]] != "unclassified")
-  cat(sprintf("%s: %d (%.1f%%)\n", col, assigned_count, 100 * assigned_count / nrow(taxonomy_df)))
-}
-
-save(dna, ids, taxonomy_df, file = "taxid.RData")
-
-asv_names <- paste0("ASV", seq(ncol(seqtab.nochim)))
-names(dna) <- asv_names
-colnames(seqtab.nochim) <- asv_names
-rownames(taxonomy_df) <- asv_names
-
-save(seqtab.nochim, dna, taxonomy_df, file = "seqtab.nochim.RData")
 ```
 
-```{r readin-asv-finder-sintax-taxonomy}
-taxtab_sintax <- read_tsv("taxonomy-abbott.tsv")
+```{r dynamic-interpretation}
+interp_permanova <- function(perma){
+  rn <- rownames(perma)
+  tri <- "group:carbohydrate:timepoint"
+  if (!tri %in% rn) return("PERMANOVA summary unavailable.")
+  r2 <- perma$R2[tri]; p <- perma$`Pr(>F)`[tri]
+  if(!is.na(p) && p < 0.05) glue::glue("Community composition differed by the group×carbohydrate×timepoint interaction (R² = {round(r2,3)}, p = {signif(p,3)}).")
+  else "No significant three-way interaction; see main effects."
+}
+
+cat(interp_permanova(permanova))
+
+# Also list any main or two-way effects with p < 0.05
+perm_df <- as.data.frame(permanova) %>% tibble::rownames_to_column("term")
+perm_sig <- perm_df %>% filter(!term %in% c("Df", "Residual"), `Pr(>F)` < 0.05)
+if (nrow(perm_sig) > 0) {
+  cat("\nAdditional PERMANOVA effects with p < 0.05:\n")
+  perm_sig %>% transmute(text = paste0("- ", term, ": R²=", round(R2, 3), ", p=", signif(`Pr(>F)`, 3))) %>%
+    pull(text) %>% cat(sep = "\n")
+}
 ```
 
-```{r make-phyloseq-objects}
-library(phyloseq)
+## Session Info
 
-# need to prep the seqtab.nochim rownames to match the format of samdat
-rownames(seqtab.nochim) <- sapply(strsplit(rownames(seqtab.nochim), "_"), function(x) paste(x[1:2], collapse = "_"))
-taxmatrix <- as.matrix(taxonomy_df)
-samdat <- as.data.frame(samdat)
-rownames(samdat) <- samdat$SampleID
-
-phy_decipher <- phyloseq(
-  otu_table(seqtab.nochim, taxa_are_rows = FALSE),
-  tax_table(taxmatrix),
-  sample_data(samdat),
-  refseq(dna)
-)
-
-taxmatrix <- as.matrix(taxtab_sintax)
-rownames(taxmatrix) <- rownames(seqtab.nochim)
-
-phy_sintax <- phyloseq(
-  otu_table(seqtab.nochim, taxa_are_rows = FALSE),
-  tax_table(taxtab_sintax),
-  sample_data(samdat),
-  refseq(dna)
-)
-
-save(phy_decipher, phy_sintax, file = "phyloseq_objects.RData")
+```{r session}
+sessionInfo()
 ```

@@ -1,0 +1,10 @@
+{
+  "use_quals": true,
+  "use_kmers": true,
+  "kdist_cutoff": 0.42,
+  "band_size": 16,
+  "gap_penalty": -8,
+  "homopolymer_gap_penalty": 0,
+  "pool_samples": false,
+  "threads": 20
+}
