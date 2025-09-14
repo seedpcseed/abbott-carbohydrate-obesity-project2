@@ -1,12 +1,17 @@
 #!/usr/bin/env Rscript
 
-# DADA2 processing pipeline for paired-end 16S FASTQ files
+# DADA2 processing pipeline (Big Data approach) for paired-end 16S FASTQ files
 # - Reads raw FASTQs from `fastq_raw/`
 # - Writes filtered FASTQs to `fastq_filtered/`
-# - Learns error models, infers ASVs, merges pairs, removes chimeras
+# - Learns error models
+# - Streams per-sample dereplication, inference, and merging to per-sample seqtabs
+# - Merges per-sample seqtabs in chunks, removes chimeras
 # - Saves sequence tables, representative sequences, and exports an ASV table TSV
 #
-# This script is designed to match conventions elsewhere in this repo:
+# This script follows the Big Data paired-end workflow:
+# https://benjjneb.github.io/dada2/bigdata_paired.html
+#
+# Conventions in this repo:
 # - Output directory: `dada2_asv/`
 # - Sample columns in TSV end with `_filtered` (analysis scripts strip this suffix)
 
@@ -49,6 +54,9 @@ MAX_N      <- as.integer(Sys.getenv("DADA2_MAX_N",   unset = 0))
 POOLING    <- FALSE
 MULTI      <- as.logical(Sys.getenv("DADA2_MULTITHREAD", unset = "TRUE"))
 VERBOSE    <- as.logical(Sys.getenv("DADA2_VERBOSE", unset = "TRUE"))
+
+# Big Data merge chunk size for combining per-sample seqtabs
+MERGE_CHUNK <- as.integer(Sys.getenv("DADA2_MERGE_CHUNK", unset = "50"))
 
 if (length(TRUNC_LEN) != 2) stop("DADA2_TRUNC_LEN must have two comma-separated values: forward,reverse")
 if (length(TRIM_LEFT) != 2) stop("DADA2_TRIM_LEFT must have two comma-separated values: forward,reverse")
@@ -141,37 +149,82 @@ errR <- learnErrors(filtR, multithread = MULTI)
 saveRDS(errF, file.path(OUT_DIR, "errF.rds"))
 saveRDS(errR, file.path(OUT_DIR, "errR.rds"))
 
-# -----------------------------
-# Dereplicate and DADA inference
-# -----------------------------
+# -----------------------------------------------
+# Big Data: stream per-sample inference and merge
+# -----------------------------------------------
 
-message_time("Dereplicating filtered reads...")
-derepF <- derepFastq(filtF)
-derepR <- derepFastq(filtR)
-names(derepF) <- pairs$sample
-names(derepR) <- pairs$sample
+tmp_seqtab_dir <- file.path(OUT_DIR, "per_sample_seqtab")
+if (!dir.exists(tmp_seqtab_dir)) dir.create(tmp_seqtab_dir, recursive = TRUE)
 
-message_time("Inferring ASVs with dada(); pooling = ", POOLING)
-dadaF <- dada(derepF, err = errF, pool = POOLING, multithread = MULTI, verbose = VERBOSE)
-dadaR <- dada(derepR, err = errR, pool = POOLING, multithread = MULTI, verbose = VERBOSE)
+samples <- pairs$sample
 
-saveRDS(dadaF, file.path(OUT_DIR, "dadaF.rds"))
-saveRDS(dadaR, file.path(OUT_DIR, "dadaR.rds"))
+# Track counts per sample for read-tracking output
+denoisedF_counts <- setNames(integer(length(samples)), samples)
+denoisedR_counts <- setNames(integer(length(samples)), samples)
+merged_counts    <- setNames(integer(length(samples)), samples)
 
-# -----------------------------
-# Merge paired reads
-# -----------------------------
+message_time("Streaming per-sample dereplication, inference, and merging...")
+for (i in seq_along(samples)) {
+  s <- samples[i]
+  fF <- filtF[i]
+  fR <- filtR[i]
 
-message_time("Merging paired reads...")
-mergers <- mergePairs(dadaF, derepF, dadaR, derepR, verbose = TRUE)
-saveRDS(mergers, file.path(OUT_DIR, "mergers.rds"))
+  if (!file.exists(fF) || !file.exists(fR)) {
+    message_time("[WARN] Missing filtered files for ", s, "; skipping.")
+    next
+  }
+
+  # Dereplicate this sample
+  drF <- derepFastq(fF)
+  drR <- derepFastq(fR)
+
+  # Infer sample variants
+  ddF <- dada(drF, err = errF, pool = POOLING, multithread = MULTI, verbose = VERBOSE)
+  ddR <- dada(drR, err = errR, pool = POOLING, multithread = MULTI, verbose = VERBOSE)
+
+  # Record denoised read counts
+  denoisedF_counts[s] <- sum(getUniques(ddF))
+  denoisedR_counts[s] <- sum(getUniques(ddR))
+
+  # Merge pairs for this sample
+  mg <- mergePairs(ddF, drF, ddR, drR, verbose = VERBOSE)
+  merged_counts[s] <- if (is.null(mg) || NROW(mg) == 0) 0L else sum(mg$abundance)
+
+  # Make per-sample sequence table and persist
+  mg_list <- list(mg)
+  names(mg_list) <- s
+  st <- makeSequenceTable(mg_list)
+  saveRDS(st, file.path(tmp_seqtab_dir, paste0(s, ".rds")))
+}
 
 # -----------------------------
 # Make sequence tables and remove chimeras
 # -----------------------------
 
-message_time("Building sequence table...")
-seqtab <- makeSequenceTable(mergers)
+message_time("Merging per-sample sequence tables in chunks of ", MERGE_CHUNK, "...")
+
+merge_seqtab_files <- function(files, chunk_size = 50) {
+  acc <- NULL
+  i <- 1L
+  n <- length(files)
+  while (i <= n) {
+    j <- min(i + chunk_size - 1L, n)
+    chunk_tabs <- lapply(files[i:j], readRDS)
+    chunk_merged <- Reduce(mergeSequenceTables, chunk_tabs)
+    if (is.null(acc)) {
+      acc <- chunk_merged
+    } else {
+      acc <- mergeSequenceTables(acc, chunk_merged)
+    }
+    i <- j + 1L
+  }
+  acc
+}
+
+seqtab_files <- sort(list.files(tmp_seqtab_dir, pattern = "\\.rds$", full.names = TRUE))
+if (length(seqtab_files) == 0) stop("No per-sample seqtab files were generated.")
+
+seqtab <- merge_seqtab_files(seqtab_files, chunk_size = MERGE_CHUNK)
 message_time("Sequence table dimensions: ", paste(dim(seqtab), collapse = " x "))
 
 message_time("Removing chimeras (consensus)...")
@@ -218,18 +271,21 @@ asv_table <- tibble::tibble(
 readr::write_tsv(asv_table, file.path(OUT_DIR, "asv_table.tsv"))
 
 # Tracking table: reads through the pipeline per sample
-getN <- function(x) sum(getUniques(x))
-n_reads <- data.frame(
-  input = ft[,1],
-  filtered = ft[,2],
-  denoisedF = sapply(dadaF, getN),
-  denoisedR = sapply(dadaR, getN),
-  merged = sapply(mergers, function(x) sum(x$abundance)),
-  nonchim = rowSums(seqtab.nochim)
+ft_sub <- ft[keep_nonzero, , drop = FALSE]
+rownames(ft_sub) <- pairs$sample
+
+nonchim_counts <- setNames(integer(length(samples)), samples)
+nonchim_counts[rownames(seqtab.nochim)] <- rowSums(seqtab.nochim)
+
+n_reads <- tibble::tibble(
+  sample   = samples,
+  input    = as.integer(ft_sub[samples, 1]),
+  filtered = as.integer(ft_sub[samples, 2]),
+  denoisedF = as.integer(denoisedF_counts[samples]),
+  denoisedR = as.integer(denoisedR_counts[samples]),
+  merged    = as.integer(merged_counts[samples]),
+  nonchim   = as.integer(nonchim_counts[samples])
 )
-rownames(n_reads) <- rownames(ft)
-n_reads <- n_reads %>% tibble::rownames_to_column("sample")
 readr::write_tsv(n_reads, file.path(OUT_DIR, "read_tracking.tsv"))
 
 message_time("DADA2 processing complete. Outputs written to ", normalizePath(OUT_DIR))
-
