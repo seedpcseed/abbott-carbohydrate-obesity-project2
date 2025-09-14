@@ -1,0 +1,87 @@
+metadata:
+  report_version: 1.0.0
+  asv_finder_version: 0.1.0
+  generated_at: 2025-09-14T22:49:32.043839297+00:00
+  command_line: ./asv-finder taxonomy --method strobelca --input-fasta dada2_asv/asvs.fasta --output dada2_asv/strobelca_taxonomy --threads 20 --database references/SILVA_138.2_SSURef_NR99_tax_silva_trunc.fasta.gz
+  working_directory: /root/projects/abbott-carbohydrate-obesity-project2/microbiome_analysis
+  analysis_type: taxonomy
+system_info:
+  hostname: DESKTOP-HLVGUPR
+  platform: linux
+  architecture: x86_64
+  cpu_count: 24
+  available_memory_gb: null
+  rust_version: unknown
+  git_commit: null
+input_data:
+  input_directory: dada2_asv
+  paired_files_found: 1
+  total_sequences_input: 0
+  total_bases_input: 1510430
+  samples:
+  - name: asvs
+    forward_file: dada2_asv/asvs.fasta
+    reverse_file: null
+    sequence_count: 0
+    average_length: 0.0
+  file_formats:
+  - fasta
+method_configuration:
+  method_name: strobelca
+  parameters:
+    identity_threshold: 0.97
+    confidence_threshold: 0.01
+    output_format: tsv
+    reverse_complement: true
+    coverage_threshold: 0.8
+    database: references/SILVA_138.2_SSURef_NR99_tax_silva_trunc.fasta.gz
+    method: strobelca
+    e_value_threshold: 1e-10
+  defaults_used: []
+  custom_parameters: []
+processing_steps:
+- step_name: Taxonomy Assignment
+  description: Assigning taxonomy using strobelca method
+  duration_seconds: 462.474971803
+  input_count: 4625
+  output_count: 4625
+  parameters:
+    threads: 20
+    method: strobelca
+    confidence_threshold: 0.01
+  statistics:
+    classification_rate: 1.0
+    sequences_classified: 4625.0
+results:
+  total_asvs_identified: null
+  total_variants: null
+  mean_asv_length: null
+  mean_asv_abundance: null
+  reads_assigned: null
+  reads_filtered: null
+  filtering_breakdown: null
+  taxonomic_assignments:
+    method: strobelca
+    database: references/SILVA_138.2_SSURef_NR99_tax_silva_trunc.fasta.gz
+    total_classified: 4625
+    confidence_threshold: 0.01
+    classification_levels:
+      phylum: 4625
+      species: 4625
+      order: 4625
+      kingdom: 4625
+      class: 4625
+      genus: 4625
+      family: 4625
+performance:
+  total_runtime_seconds: 462.519733232
+  peak_memory_mb: null
+  threads_used: 20
+  sequences_per_second: 9.999573353727804
+  cpu_utilization: null
+files_generated:
+- filename: dada2_asv/strobelca_taxonomy.tsv
+  file_type: tsv
+  size_bytes: 2663321
+  record_count: 4625
+  description: Taxonomy assignments in tsv format
