@@ -1,4 +1,19 @@
 
+---
+title: "Microbiome Analysis v2 - ASV Finder"
+author: "Abbott Carbohydrate Obesity Project"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: hide
+    theme: flatly
+    highlight: tango
+    fig_width: 10
+    fig_height: 6
+    df_print: paged
+---
 
 ```{r library-loading}
 # Helper function to install CRAN or Bioconductor packages if not already installed
@@ -213,7 +228,7 @@ phy_asv_finder <- phyloseq(
 save(phy_asv_finder, file = "phy_asv_finder.RData")
 ```
 
-```{r alpha-diversity-by-group}
+```{r alpha-diversity-by-group, fig.width = 14, fig.height = 8}
 alpha_diversity <- estimate_richness(phy_asv_finder, measures = c("Shannon", "Simpson", "Observed"))
 # merge alpha_diversity with samdat
 alpha_diversity <- alpha_diversity %>% 
@@ -468,7 +483,110 @@ plot_grid(
 )
 ```
 
-### Interpretation of Alpha Diversity by Group, Carbohydrate, and Timepoint
+```{r alpha-diversity-48hr-compare-carbohydrates, fig.width = 14, fig.height = 24}
+# Filter data for 48H timepoint only
+alpha_diversity_48h <- alpha_diversity %>%
+  filter(timepoint == "48H")
+
+# Get unique carbohydrate levels for 48H data
+carb_levels_48h <- unique(alpha_diversity_48h$carbohydrate)
+
+# Set up comparisons for carbohydrate groups at 48H
+carb_comparisons_48h <- if (length(carb_levels_48h) == 2) {
+  list(carb_levels_48h)
+} else {
+  combn(carb_levels_48h, 2, simplify = FALSE)
+}
+
+# === 48H TIMEPOINT CARBOHYDRATE COMPARISONS ===
+# Shannon by carbohydrate at 48H
+p_shannon_carb_48h <- ggplot(alpha_diversity_48h, aes(x = carbohydrate, y = Shannon, fill = carbohydrate)) +
+  geom_boxplot(outlier.shape = NA, width = 0.6, alpha = 0.8) +
+  geom_jitter(width = 0.15, size = 1.5, alpha = 0.4, color = "black") +
+  ggsci::scale_fill_nejm() +
+  theme_classic(base_size = 16) +
+  labs(x = "Carbohydrate", y = "Shannon Diversity", title = "Shannon Diversity at 48H by Carbohydrate") +
+  stat_compare_means(
+    comparisons = carb_comparisons_48h,
+    method = "wilcox.test",
+    label = "p.signif",
+    label.y = seq(
+      from = max(alpha_diversity_48h$Shannon, na.rm = TRUE) * 1.05,
+      by = 0.1 * max(alpha_diversity_48h$Shannon, na.rm = TRUE),
+      length.out = length(carb_comparisons_48h)
+    )
+  ) +
+  theme(
+    legend.position = "none",
+    axis.text = element_text(color = "black"),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    panel.grid = element_blank()
+  )
+
+# Observed by carbohydrate at 48H
+p_observed_carb_48h <- ggplot(alpha_diversity_48h, aes(x = carbohydrate, y = Observed, fill = carbohydrate)) +
+  geom_boxplot(outlier.shape = NA, width = 0.6, alpha = 0.8) +
+  geom_jitter(width = 0.15, size = 1.5, alpha = 0.4, color = "black") +
+  ggsci::scale_fill_nejm() +
+  theme_classic(base_size = 16) +
+  labs(x = "Carbohydrate", y = "Observed ASVs", title = "Observed ASVs at 48H by Carbohydrate") +
+  stat_compare_means(
+    comparisons = carb_comparisons_48h,
+    method = "wilcox.test",
+    label = "p.signif",
+    label.y = seq(
+      from = max(alpha_diversity_48h$Observed, na.rm = TRUE) * 1.05,
+      by = 0.1 * max(alpha_diversity_48h$Observed, na.rm = TRUE),
+      length.out = length(carb_comparisons_48h)
+    )
+  ) +
+  theme(
+    legend.position = "none",
+    axis.text = element_text(color = "black"),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    panel.grid = element_blank()
+  )
+
+# Shannon by carbohydrate and group at 48H (interaction)
+p_shannon_carb_group_48h <- ggplot(alpha_diversity_48h, aes(x = carbohydrate, y = Shannon, fill = group)) +
+  geom_boxplot(position = position_dodge(0.8), width = 0.7, alpha = 0.8) +
+  geom_point(position = position_jitterdodge(dodge.width = 0.8, jitter.width = 0.2),
+             size = 1.2, alpha = 0.6) +
+  ggsci::scale_fill_npg() +
+  theme_classic(base_size = 16) +
+  labs(x = "Carbohydrate", y = "Shannon Diversity", fill = "Group",
+       title = "Shannon Diversity at 48H: Carbohydrate × Group Interaction") +
+  theme(
+    axis.text = element_text(color = "black"),
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+# Observed by carbohydrate and group at 48H (interaction)
+p_observed_carb_group_48h <- ggplot(alpha_diversity_48h, aes(x = carbohydrate, y = Observed, fill = group)) +
+  geom_boxplot(position = position_dodge(0.8), width = 0.7, alpha = 0.8) +
+  geom_point(position = position_jitterdodge(dodge.width = 0.8, jitter.width = 0.2),
+             size = 1.2, alpha = 0.6) +
+  ggsci::scale_fill_npg() +
+  theme_classic(base_size = 16) +
+  labs(x = "Carbohydrate", y = "Observed ASVs", fill = "Group",
+       title = "Observed ASVs at 48H: Carbohydrate × Group Interaction") +
+  theme(
+    axis.text = element_text(color = "black"),
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+# Combine all 48H plots
+plot_grid(
+  p_shannon_carb_48h,
+  p_observed_carb_48h,
+  p_shannon_carb_group_48h,
+  p_observed_carb_group_48h,
+  labels = c("A", "B", "C", "D"),
+  nrow = 2,
+  ncol = 2,
+  align = "hv"
+)
+```
 
 - Group comparisons: Using Wilcoxon rank-sum tests, we did `r ifelse(wilcox.test(Shannon ~ group, data = subset(alpha_diversity, !is.na(Shannon) & !is.na(group)))$p.value < 0.05, "detect", "not detect")` a statistically significant difference in Shannon diversity between groups (`p = `r format.pval(wilcox.test(Shannon ~ group, data = subset(alpha_diversity, !is.na(Shannon) & !is.na(group)))$p.value, digits = 2)`), and `r ifelse(wilcox.test(Observed ~ group, data = subset(alpha_diversity, !is.na(Observed) & !is.na(group)))$p.value < 0.05, "detect", "not detect")` a significant difference for Observed ASVs (`p = `r format.pval(wilcox.test(Observed ~ group, data = subset(alpha_diversity, !is.na(Observed) & !is.na(group)))$p.value, digits = 2)``). Visual patterns in panels A and E align with these results.
 
@@ -748,6 +866,18 @@ ps_to_relabund_rank <- function(ps, rank = "Genus") {
   microbiome::transform(psg, transform = "compositional")
 }
 
+# Helper: build a highly distinct qualitative palette (colorblind-friendly)
+# Uses D3 category20 sets via ggsci; concatenates up to 60 distinct hues.
+make_distinct_palette <- function(n) {
+  n <- as.integer(n)
+  if (n <= 0) return(character(0))
+  d3a <- ggsci::pal_d3("category20")(20)
+  d3b <- ggsci::pal_d3("category20b")(20)
+  d3c <- ggsci::pal_d3("category20c")(20)
+  pal <- c(d3a, d3b, d3c)
+  if (n <= length(pal)) pal[seq_len(n)] else rep_len(pal, n)
+}
+
 # Helper: collapse to top N taxa with Other
 collapse_top_taxa <- function(df_long, tax_col = "Taxon", top_n = 12) {
   top_levels <- df_long %>%
@@ -795,10 +925,10 @@ plot_relabund <- function(ps_rel, rank = "Genus", group_vars, top_n = 12, palett
   if (is.null(palette)) {
     n_taxa <- length(taxa_order)
     if (n_taxa > 1 && tail(taxa_order, 1) == "Other") {
-      base_cols <- scico::scico(n_taxa - 1, palette = "batlow")
+      base_cols <- make_distinct_palette(n_taxa - 1)
       palette <- c(base_cols, "#BDBDBD")  # grey for Other
     } else {
-      palette <- scico::scico(n_taxa, palette = "batlow")
+      palette <- make_distinct_palette(n_taxa)
     }
   }
 
@@ -818,7 +948,7 @@ plot_relabund <- function(ps_rel, rank = "Genus", group_vars, top_n = 12, palett
 `%||%` <- function(a, b) if (!is.null(a)) a else b
 ```
 
-```{r relabundance-phylum-family-genus, message=FALSE, warning=FALSE, fig.width=12, fig.height=7}
+```{r relabundance-phylum-family-genus, message=FALSE, warning=FALSE, fig.width=12, fig.height=20}
 # Prepare rank-level relative abundance phyloseq objects
 ps_rel_phylum <- ps_to_relabund_rank(phy_asv_finder, rank = "Phylum")
 ps_rel_family <- ps_to_relabund_rank(phy_asv_finder, rank = "Family")
@@ -954,6 +1084,11 @@ cat("Genus taxa before/after filtering:", ntaxa(ps_genus_counts), ntaxa(ps_genus
 ### Corncob (beta-binomial)
 
 ```{r da-corncob, message=FALSE, warning=FALSE}
+# if the output file already exists, skip the analysis and load the results
+if(file.exists("outputs/corncob_genus_hits.csv")) {
+  corncob_hits <- read_csv("outputs/corncob_genus_hits.csv")
+  cat("Loaded Corncob results from file.\n")
+} else {
 # Note: corncob does not natively support random effects. We include SubjectID
 # as a blocking factor (fixed effect) to account for repeated measures.
 
@@ -988,7 +1123,8 @@ cc_carb  <- run_corncob_drop1(ps_genus_filt, "carbohydrate")
 
 corncob_hits <- bind_rows(cc_group, cc_time, cc_carb)
 write_csv(corncob_hits, "outputs/corncob_genus_hits.csv")
-corncob_hits
+
+}
 
 taxtab <- tax_table(ps_genus_filt) %>% as.data.frame()
 taxtab <- taxtab %>%
@@ -997,189 +1133,193 @@ taxtab <- taxtab %>%
 corncob_hits <- corncob_hits %>%
   left_join(taxtab, by = "taxon")
 
+corncob_hits
 ```
-
-The taxa identified in this analysis exhibit distinct metabolic capacities with respect to short-chain fatty acid (SCFA) production. Agathobacter, a member of the family Lachnospiraceae (class Clostridia), is a well-established butyrate producer in the human gut. Genomic and cultivation studies have demonstrated that Agathobacter rectalis and related species utilize complex carbohydrates to generate high levels of butyrate, with some concomitant acetate production, but there is little evidence that this genus contributes meaningfully to propionate pools [Louis & Flint 2017; Vital et al. 2014]. Thus, Agathobacter is likely to influence host physiology through butyrate-mediated effects on colonocyte metabolism and immune regulation rather than through propionate pathways.
-
-Oscillospiraceae (UCG-002) represents a phylogenetically diverse group of Clostridia whose functional repertoire is less well characterized. Several genera within this family, such as Oscillibacter and Flavonifractor, are known to produce butyrate and, in some cases, valerate, while others can shift fermentation end-products depending on available substrates [Konikoff & Gophna 2016; Biddle et al. 2013]. Although there is some evidence that Oscillospiraceae can participate in propionate formation via the succinate pathway, their overall contribution to propionate pools appears modest relative to canonical producers such as Bacteroides or Veillonella. Therefore, the presence of UCG-002 may exert a secondary influence on propionate levels, but their role is likely minor compared with their butyrogenic activity.
-
-By contrast, members of the Eggerthellaceae (class Coriobacteriia) are not primary SCFA producers. Rather, they specialize in the metabolism of host-derived and dietary compounds such as bile acids, polyphenols, and steroids, generating diverse aromatic and secondary metabolites [Clavel et al. 2014; Ridlon et al. 2013]. While they do not produce propionate directly, their metabolic activities can shape the broader gut ecosystem by releasing intermediates such as lactate or succinate, which may be cross-fed to canonical propionate producers. Consequently, Eggerthellaceae may exert indirect effects on propionate abundance through trophic interactions, but they are unlikely to represent a direct source of this SCFA.
-
-Together, these findings suggest that within the taxa identified, Agathobacter is a strong contributor to butyrate, Oscillospiraceae UCG-002 may contribute modestly to propionate depending on context, and Eggerthellaceae are better understood as modulators of microbial metabolic networks than as direct SCFA producers. This highlights the importance of considering both direct fermentation pathways and cross-feeding interactions when linking microbial community composition to SCFA profiles.
 
 ### ANCOM-BC2 (with SubjectID random effect)
 
 ```{r da-ancombc2, message=FALSE, warning=FALSE}
-# Try ANCOMBC2 if available; otherwise fall back to ANCOM-BC v1
-use_ancombc2 <- "ancombc2" %in% getNamespaceExports("ANCOMBC")
+# if the output file already exists, skip the analysis and load the results
+if(file.exists("outputs/ancombc_genus_results.csv")) {
+  res_tbl <- read_csv("outputs/ancombc_genus_results.csv")
+  cat("Loaded ANCOMBC2 results from file.\n")
+  use_ancombc2 <- FALSE
+} else {
+  use_ancombc2 <- "ancombc2" %in% getNamespaceExports("ANCOMBC")
 
-# CRITICAL: Fix duplicate sample names before ANCOM-BC analysis
-# This is essential because ANCOM-BC functions are sensitive to duplicate names
-cat("Checking for duplicate sample names before ANCOM-BC analysis...\n")
+  # CRITICAL: Fix duplicate sample names before ANCOM-BC analysis
+  # This is essential because ANCOM-BC functions are sensitive to duplicate names
+  cat("Checking for duplicate sample names before ANCOM-BC analysis...\n")
 
-# Fix ps_raw
-if(any(duplicated(sample_names(ps_raw)))) {
-  cat("Fixing duplicate sample names in ps_raw\n")
-  unique_names <- make.unique(sample_names(ps_raw), sep = "_")
-  sample_names(ps_raw) <- unique_names
-  cat("Updated", sum(duplicated(sample_names(ps_raw)) | duplicated(sample_names(ps_raw), fromLast = TRUE)), "duplicate names\n")
-}
-
-# Fix ps_genus_filt
-if(any(duplicated(sample_names(ps_genus_filt)))) {
-  cat("Fixing duplicate sample names in ps_genus_filt\n")
-  unique_names <- make.unique(sample_names(ps_genus_filt), sep = "_")
-  sample_names(ps_genus_filt) <- unique_names
-  cat("Updated", sum(duplicated(sample_names(ps_genus_filt)) | duplicated(sample_names(ps_genus_filt), fromLast = TRUE)), "duplicate names\n")
-}
-
-# Verify no duplicates remain
-cat("Final check - ps_raw duplicates:", sum(duplicated(sample_names(ps_raw))), "\n")
-cat("Final check - ps_genus_filt duplicates:", sum(duplicated(sample_names(ps_genus_filt))), "\n")
-
-if (use_ancombc2) {
-  cat("Running ANCOMBC2...\n")
-  out_ancom <- tryCatch({
-    ANCOMBC::ancombc2(
-      data = ps_raw,
-      tax_level = "Genus",
-      fix_formula = "group + timepoint + carbohydrate",
-      rand_formula = "(1|SubjectID)",
-      p_adj_method = "holm",
-      prv_cut = 0.10,
-      lib_cut = 0,
-      s0_perc = 0.05,
-      group = "group",
-      struc_zero = TRUE,
-      neg_lb = TRUE,
-      alpha = 0.05,
-      n_cl = 1,
-      global = TRUE
-    )
-  }, error = function(e) {
-    cat("ANCOMBC2 failed with error:", e$message, "\n")
-    cat("Falling back to ANCOM-BC v1...\n")
-    NULL
-  })
-
-  if (!is.null(out_ancom)) {
-    # Extract results
-    res_tbl <- out_ancom$res
-  } else {
-    use_ancombc2 <- FALSE  # Force fallback
+  # Fix ps_raw
+  if(any(duplicated(sample_names(ps_raw)))) {
+    cat("Fixing duplicate sample names in ps_raw\n")
+    unique_names <- make.unique(sample_names(ps_raw), sep = "_")
+    sample_names(ps_raw) <- unique_names
+    cat("Updated", sum(duplicated(sample_names(ps_raw)) | duplicated(sample_names(ps_raw), fromLast = TRUE)), "duplicate names\n")
   }
-}
 
-if (!use_ancombc2) {
-  message("Using ANCOM-BC (v1) without random effects.")
-  out_ancom <- tryCatch({
-    ANCOMBC::ancombc(
-      phyloseq = ps_genus_filt,
-      formula = "group + timepoint + carbohydrate",
-      p_adj_method = "holm",
-      zero_cut = 0.90,
-      lib_cut = 0,
-      group = "group",
-      struc_zero = TRUE,
-      neg_lb = TRUE,
-      alpha = 0.05,
-      global = TRUE
-    )
-  }, error = function(e) {
-    cat("ANCOM-BC v1 also failed with error:", e$message, "\n")
-    NULL
-  })
+  # Fix ps_genus_filt
+  if(any(duplicated(sample_names(ps_genus_filt)))) {
+    cat("Fixing duplicate sample names in ps_genus_filt\n")
+    unique_names <- make.unique(sample_names(ps_genus_filt), sep = "_")
+    sample_names(ps_genus_filt) <- unique_names
+    cat("Updated", sum(duplicated(sample_names(ps_genus_filt)) | duplicated(sample_names(ps_genus_filt), fromLast = TRUE)), "duplicate names\n")
+  }
 
-  if (!is.null(out_ancom)) {
-    # Tidy results from v1 object
-    res_list <- lapply(names(out_ancom$beta), function(term) {
-      tibble(
-        taxon = rownames(out_ancom$beta[[term]]),
-        term = term,
-        beta = out_ancom$beta[[term]][, 1],
-        se = out_ancom$se[[term]][, 1],
-        W = out_ancom$W[[term]][, 1],
-        p = out_ancom$p_val[[term]][, 1],
-        q = out_ancom$q_val[[term]][, 1],
-        diff_abn = out_ancom$diff_abn[[term]][, 1]
+  # Verify no duplicates remain
+  cat("Final check - ps_raw duplicates:", sum(duplicated(sample_names(ps_raw))), "\n")
+  cat("Final check - ps_genus_filt duplicates:", sum(duplicated(sample_names(ps_genus_filt))), "\n")
+
+  if (use_ancombc2) {
+    cat("Running ANCOMBC2...\n")
+    out_ancom <- tryCatch({
+      ANCOMBC::ancombc2(
+        data = ps_raw,
+        tax_level = "Genus",
+        fix_formula = "group + timepoint + carbohydrate",
+        rand_formula = "(1|SubjectID)",
+        p_adj_method = "holm",
+        prv_cut = 0.10,
+        lib_cut = 0,
+        s0_perc = 0.05,
+        group = "group",
+        struc_zero = TRUE,
+        neg_lb = TRUE,
+        alpha = 0.05,
+        n_cl = 1,
+        global = TRUE
       )
+    }, error = function(e) {
+      cat("ANCOMBC2 failed with error:", e$message, "\n")
+      cat("Falling back to ANCOM-BC v1...\n")
+      NULL
     })
-    res_tbl <- bind_rows(res_list)
-  } else {
-    cat("Both ANCOM-BC methods failed. Creating empty result table.\n")
-    res_tbl <- NULL
+
+    if (!is.null(out_ancom)) {
+      # Extract results
+      res_tbl <- out_ancom$res
+    } else {
+      use_ancombc2 <- FALSE  # Force fallback
+    }
   }
-}
 
-# Ensure res_tbl exists and has the expected structure
-if (!exists("res_tbl") || is.null(res_tbl)) {
-  cat("Warning: res_tbl not created properly. Creating empty result table.\n")
-  res_tbl <- tibble(
-    taxon = character(0),
-    term = character(0),
-    beta = numeric(0),
-    se = numeric(0),
-    W = numeric(0),
-    p = numeric(0),
-    q = numeric(0),
-    diff_abn = logical(0)
-  )
-}
+  if (!use_ancombc2) {
+    message("Using ANCOM-BC (v1) without random effects.")
+    out_ancom <- tryCatch({
+      ANCOMBC::ancombc(
+        phyloseq = ps_genus_filt,
+        formula = "group + timepoint + carbohydrate",
+        p_adj_method = "holm",
+        zero_cut = 0.90,
+        lib_cut = 0,
+        group = "group",
+        struc_zero = TRUE,
+        neg_lb = TRUE,
+        alpha = 0.05,
+        global = TRUE
+      )
+    }, error = function(e) {
+      cat("ANCOM-BC v1 also failed with error:", e$message, "\n")
+      NULL
+    })
 
-write_csv(res_tbl, "outputs/ancombc_genus_results.csv")
-head(res_tbl)
+    if (!is.null(out_ancom)) {
+      # Tidy results from v1 object
+      res_list <- lapply(names(out_ancom$beta), function(term) {
+        tibble(
+          taxon = rownames(out_ancom$beta[[term]]),
+          term = term,
+          beta = out_ancom$beta[[term]][, 1],
+          se = out_ancom$se[[term]][, 1],
+          W = out_ancom$W[[term]][, 1],
+          p = out_ancom$p_val[[term]][, 1],
+          q = out_ancom$q_val[[term]][, 1],
+          diff_abn = out_ancom$diff_abn[[term]][, 1]
+        )
+      })
+      res_tbl <- bind_rows(res_list)
+    } else {
+      cat("Both ANCOM-BC methods failed. Creating empty result table.\n")
+      res_tbl <- NULL
+    }
+  }
+
+  # Ensure res_tbl exists and has the expected structure
+  if (!exists("res_tbl") || is.null(res_tbl)) {
+    cat("Warning: res_tbl not created properly. Creating empty result table.\n")
+    res_tbl <- tibble(
+      taxon = character(0),
+      term = character(0),
+      beta = numeric(0),
+      se = numeric(0),
+      W = numeric(0),
+      p = numeric(0),
+      q = numeric(0),
+      diff_abn = logical(0)
+    )
+  }
+
+  write_csv(res_tbl, "outputs/ancombc_genus_results.csv")
+  head(res_tbl)
+}
 ```
 
 ### LEfSe (paired by SubjectID)
 
 ```{r da-lefse, message=FALSE, warning=FALSE}
+# if the output file already exists, skip the analysis and load the results
+if(file.exists("outputs/lefse_genus_results.csv")) {
+  lefse_group <- readRDS("outputs/lefse_group_genus.rds")
+  lefse_carb <- readRDS("outputs/lefse_carb_genus.rds")
+  lefse_time <- readRDS("outputs/lefse_time_genus.rds")
+  cat("Loaded LEfSe results from file.\n")
+} else {
 # LEfSe via microbiomeMarker; use subclass for within-subject pairing
 set.seed(123)
 lefse_group <- tryCatch({
   microbiomeMarker::run_lefse(
     ps_genus_filt,
-    class = "group",
-    subclass = "SubjectID",
+    group = "group",
     norm = "CPM",
     taxa_rank = "Genus",
     wilcoxon_cutoff = 0.05,
     lda_cutoff = 2.0,
-    bootstrap_n = 0
+    bootstrap_n = 30
   )
 }, error = function(e) NULL)
 
 lefse_carb <- tryCatch({
   microbiomeMarker::run_lefse(
     ps_genus_filt,
-    class = "carbohydrate",
-    subclass = "SubjectID",
+    group = "carbohydrate",
     norm = "CPM",
     taxa_rank = "Genus",
     wilcoxon_cutoff = 0.05,
     lda_cutoff = 2.0,
-    bootstrap_n = 0
+    bootstrap_n = 30
   )
 }, error = function(e) NULL)
 
 lefse_time <- tryCatch({
   microbiomeMarker::run_lefse(
     ps_genus_filt,
-    class = "timepoint",
-    subclass = "SubjectID",
+    group = "timepoint",
     norm = "CPM",
     taxa_rank = "Genus",
     wilcoxon_cutoff = 0.05,
     lda_cutoff = 2.0,
-    bootstrap_n = 0
+    bootstrap_n = 30
   )
 }, error = function(e) NULL)
 
 saveRDS(lefse_group, file = "outputs/lefse_group_genus.rds")
 saveRDS(lefse_carb,  file = "outputs/lefse_carb_genus.rds")
 saveRDS(lefse_time,  file = "outputs/lefse_time_genus.rds")
+}
 
 if (!is.null(lefse_carb)) {
-  p_lda <- plot(lefse_carb, taxa_level = "Genus", ldascore = 2.0)
+  p_lda <- microbiomeMarker::plot_ef_bar(lefse_carb)
   ggsave("outputs/lefse_lda_carb_genus.png", p_lda, width = 8, height = 6, dpi = 300)
   p_lda
 }
@@ -1190,3 +1330,110 @@ if (!is.null(lefse_carb)) {
 - Corncob: SubjectID is included as a blocking (fixed) factor since random effects are not supported in differentialTest. This adjusts for repeated measures when testing each effect by drop-one comparison.
 - ANCOM-BC2: Uses `rand_formula = (1|SubjectID)` to include a subject-specific random intercept when available; falls back to ANCOM-BC v1 otherwise.
 - LEfSe: Uses `subclass = SubjectID` to perform paired LEfSe appropriate for repeated measures.
+
+```{r ancombc-forest-plots, message=FALSE, warning=FALSE, fig.width=14, fig.height=24}
+# Forest plots for ANCOM-BC results (effect sizes with 95% CI)
+
+make_pretty_term <- function(term_key) {
+  # Map internal column suffixes to readable labels
+  term_key <- as.character(term_key)
+  term_key <- gsub("[()]+", "", term_key)
+  case_when(
+    term_key == "groupObese" ~ "Group: Obese vs Healthy",
+    term_key == "timepoint48H" ~ "Timepoint: 48H vs reference",
+    term_key == "carbohydrateRDC" ~ "Carbohydrate: RDC vs No Added Carb",
+    term_key == "carbohydrateSDC" ~ "Carbohydrate: SDC vs No Added Carb",
+    TRUE ~ term_key
+  )
+}
+
+plot_forest_from_wide <- function(res_wide, term_key, top_n = 25, alpha = 0.05,
+                                  title_prefix = "ANCOM-BC Genus Effects") {
+  lfc_col <- paste0("lfc_", term_key)
+  se_col  <- paste0("se_", term_key)
+  q_col   <- paste0("q_", term_key)
+  diff_col<- paste0("diff_", term_key)
+
+  if (!all(c("taxon", lfc_col) %in% names(res_wide))) return(NULL)
+
+  df <- res_wide %>%
+    transmute(
+      taxon,
+      term = make_pretty_term(term_key),
+      lfc = .data[[lfc_col]],
+      se  = ifelse(se_col %in% names(res_wide), .data[[se_col]], NA_real_),
+      q   = ifelse(q_col %in% names(res_wide), .data[[q_col]], NA_real_),
+      diff= ifelse(diff_col %in% names(res_wide), .data[[diff_col]], NA)
+    ) %>%
+    mutate(ci_l = lfc - 1.96 * se, ci_u = lfc + 1.96 * se,
+           sig = ifelse(!is.na(q) & q < alpha, TRUE, FALSE),
+           direction = ifelse(lfc > 0, "Higher", "Lower"))
+
+  # Keep significant taxa, or top by |lfc|
+  df_sig <- df %>% filter(sig)
+  if (nrow(df_sig) == 0) {
+    df_sig <- df %>% slice_max(order_by = abs(lfc), n = min(top_n, nrow(df)))
+  } else {
+    df_sig <- df_sig %>% arrange(desc(abs(lfc))) %>% slice_head(n = min(top_n, nrow(df_sig)))
+  }
+
+  df_sig <- df_sig %>% mutate(taxon = factor(taxon, levels = rev(unique(taxon[order(lfc)]))))
+
+  ggplot(df_sig, aes(x = lfc, y = taxon, color = direction)) +
+    geom_vline(xintercept = 0, linetype = 2, color = "grey50") +
+    geom_errorbarh(aes(xmin = ci_l, xmax = ci_u), height = 0.2, alpha = 0.9) +
+    geom_point(size = 2) +
+    ggsci::scale_color_lancet() +
+    labs(x = "Log fold-change (bias-corrected)", y = NULL,
+         title = paste(title_prefix, "-", make_pretty_term(term_key))) +
+    theme_classic(base_size = 12) +
+    theme(axis.text = element_text(color = "black"))
+}
+
+plot_forest_from_long <- function(res_long, term_key, top_n = 25, alpha = 0.05,
+                                  title_prefix = "ANCOM-BC Genus Effects") {
+  df <- res_long %>% filter(term == term_key) %>%
+    transmute(taxon, term = make_pretty_term(term_key), lfc = beta, se = se, q = q, diff = diff_abn) %>%
+    mutate(ci_l = lfc - 1.96 * se, ci_u = lfc + 1.96 * se,
+           sig = ifelse(!is.na(q) & q < alpha, TRUE, FALSE),
+           direction = ifelse(lfc > 0, "Higher", "Lower"))
+
+  df_sig <- df %>% filter(sig)
+  if (nrow(df_sig) == 0) {
+    df_sig <- df %>% slice_max(order_by = abs(lfc), n = min(top_n, nrow(df)))
+  } else {
+    df_sig <- df_sig %>% arrange(desc(abs(lfc))) %>% slice_head(n = min(top_n, nrow(df_sig)))
+  }
+  df_sig <- df_sig %>% mutate(taxon = factor(taxon, levels = rev(unique(taxon[order(lfc)]))))
+
+  ggplot(df_sig, aes(x = lfc, y = taxon, color = direction)) +
+    geom_vline(xintercept = 0, linetype = 2, color = "grey50") +
+    geom_errorbarh(aes(xmin = ci_l, xmax = ci_u), height = 0.2, alpha = 0.9) +
+    geom_point(size = 2) +
+    ggsci::scale_color_lancet() +
+    labs(x = "Log fold-change (bias-corrected)", y = NULL,
+         title = paste(title_prefix, "-", make_pretty_term(term_key))) +
+    theme_classic(base_size = 12) +
+    theme(axis.text = element_text(color = "black"))
+}
+
+# Decide which plotting path to use based on res_tbl structure
+is_wide <- any(grepl("^lfc_", names(res_tbl)))
+
+terms_to_plot <- c("groupObese", "timepoint48H", "carbohydrateRDC", "carbohydrateSDC")
+plots <- list()
+for (tm in terms_to_plot) {
+  p <- if (is_wide) plot_forest_from_wide(res_tbl, tm) else plot_forest_from_long(res_tbl, tm)
+  if (!is.null(p)) plots[[tm]] <- p
+}
+
+# Save individual plots and show a combined grid of available ones
+plot_list <- plots[!vapply(plots, is.null, logical(1))]
+if (length(plot_list) > 0) {
+  for (nm in names(plot_list)) {
+    ggsave(file.path("outputs", paste0("ancombc_forest_", nm, ".png")), plot_list[[nm]],
+           width = 8.5, height = 6.5, dpi = 300)
+  }
+  cowplot::plot_grid(plotlist = plot_list, ncol = 1)
+}
+```
