@@ -1,4 +1,3 @@
-
 ---
 title: "Microbiome Analysis v2 - ASV Finder"
 author: "Abbott Carbohydrate Obesity Project"
@@ -837,6 +836,200 @@ plot_ordination(phy_asv_finder_rel, pcoa, type = "samples", color = "group") +
 
 ```
 
+```{r beta-diversity-48hr-carbohydrate, fig.width = 12, fig.height = 8}
+# Beta diversity analysis focused on 48H timepoint with carbohydrate groupings
+library(vegan)
+library(ggplot2)
+library(ggsci)
+library(cowplot)
+
+# Filter data for 48H timepoint only
+phy_48h <- subset_samples(phy_asv_finder_rel, timepoint == "48H")
+
+# Remove any taxa that are completely absent in 48H samples
+phy_48h <- prune_taxa(taxa_sums(phy_48h) > 0, phy_48h)
+
+cat("48H samples:", nsamples(phy_48h), "\n")
+cat("Taxa after filtering:", ntaxa(phy_48h), "\n")
+
+# Extract sample data for 48H
+sample_data_48h <- sample_data(phy_48h) %>% as.data.frame()
+
+# Calculate different distance matrices
+distances <- list(
+  "Bray-Curtis" = phyloseq::distance(phy_48h, method = "bray"),
+  "Jaccard" = phyloseq::distance(phy_48h, method = "jaccard"),
+  "Weighted UniFrac" = tryCatch({
+    phyloseq::distance(phy_48h, method = "wunifrac")
+  }, error = function(e) {
+    cat("Warning: Weighted UniFrac failed, using Bray-Curtis instead\n")
+    phyloseq::distance(phy_48h, method = "bray")
+  })
+)
+
+# Function to create PCoA plot with carbohydrate groups and ellipses
+plot_pcoa_carb_ellipses <- function(dist_matrix, method_name, sample_data) {
+  # Perform PCoA
+  pcoa <- cmdscale(dist_matrix, eig = TRUE, k = 2)
+  
+  # Calculate percentage of variance explained
+  eig_pct <- round(100 * pcoa$eig[1:2] / sum(pcoa$eig[pcoa$eig > 0]), 1)
+  
+  # Create data frame for plotting
+  pcoa_df <- data.frame(
+    PC1 = pcoa$points[, 1],
+    PC2 = pcoa$points[, 2],
+    SampleID = rownames(pcoa$points)
+  ) %>%
+    left_join(sample_data %>% rownames_to_column("SampleID"), by = "SampleID")
+  
+  # Create the plot
+  p <- ggplot(pcoa_df, aes(x = PC1, y = PC2, color = carbohydrate, fill = carbohydrate)) +
+    # Add 95% confidence ellipses
+    stat_ellipse(level = 0.95, alpha = 0.2, size = 1.2, type = "norm") +
+    geom_point(size = 3, alpha = 0.8) +
+    ggsci::scale_color_nejm() +
+    ggsci::scale_fill_nejm() +
+    labs(
+      x = paste0("PC1 (", eig_pct[1], "%)"),
+      y = paste0("PC2 (", eig_pct[2], "%)"),
+      title = paste(method_name, "- 48H Timepoint"),
+      subtitle = "95% Confidence Ellipses by Carbohydrate Group",
+      color = "Carbohydrate",
+      fill = "Carbohydrate"
+    ) +
+    theme_classic(base_size = 14) +
+    theme(
+      axis.text = element_text(color = "black"),
+      legend.position = "bottom",
+      plot.title = element_text(hjust = 0.5),
+      plot.subtitle = element_text(hjust = 0.5)
+    )
+  
+  return(list(plot = p, data = pcoa_df, variance = eig_pct))
+}
+
+# Create plots for each distance method
+plot_results <- map(names(distances), function(method) {
+  plot_pcoa_carb_ellipses(distances[[method]], method, sample_data_48h)
+})
+names(plot_results) <- names(distances)
+
+# Extract just the plots for display
+plots <- map(plot_results, "plot")
+
+# Combine plots
+combined_plot <- plot_grid(
+  plotlist = plots,
+  labels = c("A", "B", "C"),
+  nrow = 1,
+  align = "hv"
+)
+
+print(combined_plot)
+
+# Save the combined plot
+ggsave("outputs/beta_diversity_48h_carbohydrate_ellipses.png", 
+       combined_plot, width = 18, height = 6, dpi = 300)
+
+# Display variance explained by each method
+cat("\n=== Variance Explained by PC1 and PC2 ===\n")
+for (method in names(plot_results)) {
+  var_exp <- plot_results[[method]]$variance
+  cat(method, ": PC1 =", var_exp[1], "%, PC2 =", var_exp[2], "%\n")
+}
+
+# PERMANOVA tests for each distance method
+cat("\n=== PERMANOVA Results (48H Timepoint) ===\n")
+permanova_results <- map_dfr(names(distances), function(method) {
+  # Test carbohydrate effect
+  perm_carb <- adonis2(distances[[method]] ~ carbohydrate, 
+                       data = sample_data_48h, permutations = 999)
+  
+  # Test group effect
+  perm_group <- adonis2(distances[[method]] ~ group, 
+                        data = sample_data_48h, permutations = 999)
+  
+  # Test carbohydrate + group
+  perm_both <- adonis2(distances[[method]] ~ carbohydrate + group, 
+                       data = sample_data_48h, permutations = 999)
+  
+  tibble(
+    Method = method,
+    Effect = c("Carbohydrate", "Group", "Carb + Group (Carb)", "Carb + Group (Group)"),
+    R2 = c(perm_carb$R2[1], perm_group$R2[1], perm_both$R2[1], perm_both$R2[2]),
+    F_statistic = c(perm_carb$F[1], perm_group$F[1], perm_both$F[1], perm_both$F[2]),
+    p_value = c(perm_carb$`Pr(>F)`[1], perm_group$`Pr(>F)`[1], 
+                perm_both$`Pr(>F)`[1], perm_both$`Pr(>F)`[2]),
+    significance = ifelse(c(perm_carb$`Pr(>F)`[1], perm_group$`Pr(>F)`[1], 
+                           perm_both$`Pr(>F)`[1], perm_both$`Pr(>F)`[2]) < 0.001, "***",
+                         ifelse(c(perm_carb$`Pr(>F)`[1], perm_group$`Pr(>F)`[1], 
+                                 perm_both$`Pr(>F)`[1], perm_both$`Pr(>F)`[2]) < 0.01, "**",
+                               ifelse(c(perm_carb$`Pr(>F)`[1], perm_group$`Pr(>F)`[1], 
+                                       perm_both$`Pr(>F)`[1], perm_both$`Pr(>F)`[2]) < 0.05, "*", "")))
+  )
+})
+
+print(permanova_results)
+
+# Pairwise comparisons between carbohydrate groups
+cat("\n=== Pairwise PERMANOVA: Carbohydrate Groups (48H) ===\n")
+pairwise_results <- map_dfr(names(distances), function(method) {
+  carb_levels <- unique(sample_data_48h$carbohydrate)
+  comparisons <- combn(carb_levels, 2, simplify = FALSE)
+  
+  map_dfr(comparisons, function(pair) {
+    subset_samples <- sample_data_48h$carbohydrate %in% pair
+    subset_dist <- as.dist(as.matrix(distances[[method]])[subset_samples, subset_samples])
+    subset_data <- sample_data_48h[subset_samples, ]
+    
+    perm_result <- adonis2(subset_dist ~ carbohydrate, data = subset_data, permutations = 999)
+    
+    tibble(
+      Method = method,
+      Comparison = paste(pair, collapse = " vs "),
+      R2 = perm_result$R2[1],
+      F_statistic = perm_result$F[1],
+      p_value = perm_result$`Pr(>F)`[1],
+      significance = ifelse(perm_result$`Pr(>F)`[1] < 0.001, "***",
+                           ifelse(perm_result$`Pr(>F)`[1] < 0.01, "**",
+                                 ifelse(perm_result$`Pr(>F)`[1] < 0.05, "*", "")))
+    )
+  })
+})
+
+print(pairwise_results)
+
+# Test for homogeneity of dispersion (PERMDISP)
+cat("\n=== PERMDISP: Homogeneity of Dispersions (48H) ===\n")
+permdisp_results <- map_dfr(names(distances), function(method) {
+  # Test carbohydrate groups
+  permdisp_carb <- betadisper(distances[[method]], sample_data_48h$carbohydrate)
+  permdisp_test_carb <- permutest(permdisp_carb, permutations = 999)
+  
+  # Test health groups
+  permdisp_group <- betadisper(distances[[method]], sample_data_48h$group)
+  permdisp_test_group <- permutest(permdisp_group, permutations = 999)
+  
+  tibble(
+    Method = method,
+    Factor = c("Carbohydrate", "Group"),
+    F_statistic = c(permdisp_test_carb$tab$F[1], permdisp_test_group$tab$F[1]),
+    p_value = c(permdisp_test_carb$tab$`Pr(>F)`[1], permdisp_test_group$tab$`Pr(>F)`[1]),
+    significance = ifelse(c(permdisp_test_carb$tab$`Pr(>F)`[1], permdisp_test_group$tab$`Pr(>F)`[1]) < 0.001, "***",
+                         ifelse(c(permdisp_test_carb$tab$`Pr(>F)`[1], permdisp_test_group$tab$`Pr(>F)`[1]) < 0.01, "**",
+                               ifelse(c(permdisp_test_carb$tab$`Pr(>F)`[1], permdisp_test_group$tab$`Pr(>F)`[1]) < 0.05, "*", "")))
+  )
+})
+
+print(permdisp_results)
+
+# Save results
+write_csv(permanova_results, "outputs/permanova_48h_results.csv")
+write_csv(pairwise_results, "outputs/permanova_48h_pairwise.csv")
+write_csv(permdisp_results, "outputs/permdisp_48h_results.csv")
+```
+
 ## Relative Abundance Profiles
 
 ```{r relabundance-helpers, message=FALSE, warning=FALSE}
@@ -1001,7 +1194,7 @@ ggsave("outputs/relabund_genus_by_carb.png",  p_genus_carb,  width = 10, height 
 plot_grid(p_phylum_group, p_family_group, p_genus_group, ncol = 1, labels = c("A","B","C"))
 ```
 
-```{r relabundance-combinations, message=FALSE, warning=FALSE, fig.width=12, fig.height=7}
+```{r relabundance-combinations, message=FALSE, warning=FALSE, fig.width=12, fig.height=14}
 # Two-way combinations
 p_genus_grp_time <- plot_relabund(ps_rel_genus, rank = "Genus",
                                   group_vars = c("group", "timepoint"), top_n = 15,
