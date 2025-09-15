@@ -224,3 +224,7 @@ n_reads <- n_reads %>% tibble::rownames_to_column("sample")
 readr::write_tsv(n_reads, file.path(OUT_DIR, "read_tracking.tsv"))
 
 message_time("DADA2 processing complete. Outputs written to ", normalizePath(OUT_DIR))
+
+refseq <- Biostrings::DNAStringSet(colnames(seqtab.nochim))
+names(refseq) <- paste0("ASV_", seq_along(refseq))
+Biostrings::writeXStringSet(refseq, filepath = file.path(OUT_DIR, "refseqs.fasta"))
