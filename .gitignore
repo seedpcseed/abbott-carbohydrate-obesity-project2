@@ -16,6 +16,7 @@
 *.fasta.gz
 *.fa
 *.fa.gz
+*.rds
 
 
 
