@@ -825,9 +825,18 @@ library(cowplot)
 # PCoA plot
 # need to convert to relative abundance
 phy_asv_finder_rel <- microbiome::transform(phy_asv_finder, "compositional")
+
+# Filter out samples with zero reads (empty samples) before PCoA
+sample_sums <- sample_sums(phy_asv_finder_rel)
+empty_samples <- names(sample_sums)[sample_sums == 0]
+cat("Removing", length(empty_samples), "empty samples for PCoA analysis\n")
+
+# Create filtered phyloseq object for ordination
+phy_asv_finder_rel_filtered <- prune_samples(sample_sums > 0, phy_asv_finder_rel)
+
 # PCoA plot
-pcoa <- ordinate(phy_asv_finder_rel, method = "PCoA", distance = "bray")
-plot_ordination(phy_asv_finder_rel, pcoa, type = "samples", color = "group") +
+pcoa <- ordinate(phy_asv_finder_rel_filtered, method = "PCoA", distance = "bray")
+plot_ordination(phy_asv_finder_rel_filtered, pcoa, type = "samples", color = "group") +
   geom_point(size = 3) +
   ggsci::scale_color_npg() +
   facet_wrap(~timepoint) +
@@ -852,6 +861,14 @@ phy_48h <- subset_samples(phy_asv_finder_rel, timepoint == "48H")
 
 # Remove any taxa that are completely absent in 48H samples
 phy_48h <- prune_taxa(taxa_sums(phy_48h) > 0, phy_48h)
+
+# Remove empty samples (samples with zero reads) to avoid distance calculation issues
+sample_sums_48h <- sample_sums(phy_48h)
+empty_samples_48h <- names(sample_sums_48h)[sample_sums_48h == 0]
+if(length(empty_samples_48h) > 0) {
+  cat("Removing", length(empty_samples_48h), "empty samples from 48H analysis\n")
+  phy_48h <- prune_samples(sample_sums_48h > 0, phy_48h)
+}
 
 cat("48H samples:", nsamples(phy_48h), "\n")
 cat("Taxa after filtering:", ntaxa(phy_48h), "\n")
@@ -1295,7 +1312,7 @@ if(any(duplicated(rownames(sdat)))) {
 
 if (!"SubjectID" %in% colnames(sdat) && "subjectID" %in% colnames(sdat)) {
   sdat$SubjectID <- as.factor(sdat$subjectID)
-  sample_data(ps_raw) <- sample_data(sdat)
+  sample_data(ps_raw) <- phyloseq::sample_data(sdat)
 }
 if (!"SubjectID" %in% colnames(sdat)) {
   stop("SubjectID (or subjectID) is required for random effect / blocking.")
@@ -1326,22 +1343,56 @@ if(file.exists("outputs/corncob_genus_hits.csv")) {
 
 run_corncob_drop1 <- function(ps, effect_var, fdr_cutoff = 0.1) {
   stopifnot(effect_var %in% sample_variables(ps))
+  
+  # Remove empty samples before analysis
+  sample_sums_ps <- sample_sums(ps)
+  if(sum(sample_sums_ps == 0) > 0) {
+    cat("Removing", sum(sample_sums_ps == 0), "empty samples for corncob analysis\n")
+    ps <- prune_samples(sample_sums_ps > 0, ps)
+  }
+  
   # Full and reduced formulas
   full <- as.formula(paste("~", paste(c("group", "timepoint", "carbohydrate", "SubjectID"), collapse = " + ")))
   red  <- as.formula(paste("~", paste(setdiff(c("group", "timepoint", "carbohydrate", "SubjectID"), effect_var), collapse = " + ")))
 
   set.seed(1)
-  res <- differentialTest(
-    formula = full,
-    phi.formula = full,
-    formula_null = red,
-    phi.formula_null = red,
-    test = "Wald",
-    data = ps,
-    boot = FALSE,
-    B = 0,
-    fdr_cutoff = fdr_cutoff
-  )
+  
+  # Use tryCatch to handle optimization failures gracefully
+  res <- tryCatch({
+    differentialTest(
+      formula = full,
+      phi.formula = full,
+      formula_null = red,
+      phi.formula_null = red,
+      test = "Wald",
+      data = ps,
+      boot = FALSE,
+      B = 0,
+      fdr_cutoff = fdr_cutoff
+    )
+  }, error = function(e) {
+    cat("Corncob optimization failed for", effect_var, ":", e$message, "\n")
+    cat("Trying with simpler model...\n")
+    
+    # Try with simpler phi formula (no random effects in phi)
+    tryCatch({
+      differentialTest(
+        formula = full,
+        phi.formula = ~ 1,
+        formula_null = red,
+        phi.formula_null = ~ 1,
+        test = "Wald",
+        data = ps,
+        boot = FALSE,
+        B = 0,
+        fdr_cutoff = fdr_cutoff
+      )
+    }, error = function(e2) {
+      cat("Simplified model also failed:", e2$message, "\n")
+      # Return empty result
+      list(significant_taxa = character(0))
+    })
+  })
 
   tibble(
     taxon = res$significant_taxa,
@@ -1517,13 +1568,12 @@ cat("48H samples for analysis:", nsamples(ps_48h_genus), "\n")
 cat("Taxa after 48H filtering:", ntaxa(ps_48h_genus), "\n")
 
 # Relevel carbohydrate factor to use RDC as reference
-sample_data_48h <- sample_data(ps_48h_genus) %>% 
-  as.data.frame() %>%
-  mutate(carbohydrate = factor(carbohydrate, levels = c("RDC", "No Added Carb", "SDC")))
+sample_data_48h <- as.data.frame(sample_data(ps_48h_genus))
+sample_data_48h$carbohydrate <- factor(sample_data_48h$carbohydrate, levels = c("RDC", "No Added Carb", "SDC"))
 
 # Update the phyloseq object with releveled factor
-sample_data(ps_48h_genus) <- sample_data(sample_data_48h)
-sample_data(ps_48h_raw) <- sample_data(sample_data_48h)
+sample_data(ps_48h_genus) <- sample_data_48h
+sample_data(ps_48h_raw) <- sample_data_48h
 
 # Check the levels
 cat("Carbohydrate levels (RDC is reference):", levels(sample_data_48h$carbohydrate), "\n")
@@ -1929,14 +1979,19 @@ plot_forest_from_wide <- function(res_wide, term_key, top_n = 25, alpha = 0.05,
     transmute(
       taxon,
       term = make_pretty_term(term_key),
-      lfc = .data[[lfc_col]],
-      se  = ifelse(se_col %in% names(res_wide), .data[[se_col]], NA_real_),
-      q   = ifelse(q_col %in% names(res_wide), .data[[q_col]], NA_real_),
+      lfc = as.numeric(.data[[lfc_col]]),
+      se  = ifelse(se_col %in% names(res_wide), as.numeric(.data[[se_col]]), NA_real_),
+      q   = ifelse(q_col %in% names(res_wide), as.numeric(.data[[q_col]]), NA_real_),
       diff= ifelse(diff_col %in% names(res_wide), .data[[diff_col]], NA)
     ) %>%
-    mutate(ci_l = lfc - 1.96 * se, ci_u = lfc + 1.96 * se,
-           sig = ifelse(!is.na(q) & q < alpha, TRUE, FALSE),
-           direction = ifelse(lfc > 0, "Higher", "Lower"))
+    mutate(
+      # Ensure se is numeric and handle any remaining non-numeric values
+      se = ifelse(is.na(se) | !is.finite(se), NA_real_, as.numeric(se)),
+      ci_l = ifelse(is.na(se), NA_real_, lfc - 1.96 * se), 
+      ci_u = ifelse(is.na(se), NA_real_, lfc + 1.96 * se),
+      sig = ifelse(!is.na(q) & q < alpha, TRUE, FALSE),
+      direction = ifelse(lfc > 0, "Higher", "Lower")
+    )
 
   # Keep significant taxa, or top by |lfc|
   df_sig <- df %>% filter(sig)
@@ -1962,10 +2017,22 @@ plot_forest_from_wide <- function(res_wide, term_key, top_n = 25, alpha = 0.05,
 plot_forest_from_long <- function(res_long, term_key, top_n = 25, alpha = 0.05,
                                   title_prefix = "ANCOM-BC Genus Effects") {
   df <- res_long %>% filter(term == term_key) %>%
-    transmute(taxon, term = make_pretty_term(term_key), lfc = beta, se = se, q = q, diff = diff_abn) %>%
-    mutate(ci_l = lfc - 1.96 * se, ci_u = lfc + 1.96 * se,
-           sig = ifelse(!is.na(q) & q < alpha, TRUE, FALSE),
-           direction = ifelse(lfc > 0, "Higher", "Lower"))
+    transmute(
+      taxon, 
+      term = make_pretty_term(term_key), 
+      lfc = as.numeric(beta), 
+      se = as.numeric(se), 
+      q = as.numeric(q), 
+      diff = diff_abn
+    ) %>%
+    mutate(
+      # Ensure se is numeric and handle any remaining non-numeric values
+      se = ifelse(is.na(se) | !is.finite(se), NA_real_, as.numeric(se)),
+      ci_l = ifelse(is.na(se), NA_real_, lfc - 1.96 * se), 
+      ci_u = ifelse(is.na(se), NA_real_, lfc + 1.96 * se),
+      sig = ifelse(!is.na(q) & q < alpha, TRUE, FALSE),
+      direction = ifelse(lfc > 0, "Higher", "Lower")
+    )
 
   df_sig <- df %>% filter(sig)
   if (nrow(df_sig) == 0) {
