@@ -842,6 +842,10 @@ library(vegan)
 library(ggplot2)
 library(ggsci)
 library(cowplot)
+library(tibble)
+library(dplyr)
+library(purrr)
+library(readr)
 
 # Filter data for 48H timepoint only
 phy_48h <- subset_samples(phy_asv_finder_rel, timepoint == "48H")
@@ -853,19 +857,41 @@ cat("48H samples:", nsamples(phy_48h), "\n")
 cat("Taxa after filtering:", ntaxa(phy_48h), "\n")
 
 # Extract sample data for 48H
-sample_data_48h <- sample_data(phy_48h) %>% as.data.frame()
+sample_data_48h <- data.frame(sample_data(phy_48h))
+
+# Check if SampleID column already exists
+if (!"SampleID" %in% colnames(sample_data_48h)) {
+  sample_data_48h <- sample_data_48h %>% 
+    rownames_to_column("SampleID")
+} else {
+  # If SampleID already exists, make sure it matches rownames
+  sample_data_48h$SampleID <- rownames(sample_data_48h)
+}
+
+sample_data_48h <- sample_data_48h %>% as_tibble()
+
+# Debug: Check the structure of sample_data_48h
+cat("Sample data columns:", colnames(sample_data_48h), "\n")
+cat("Sample data class:", class(sample_data_48h), "\n")
+
+# Check if phylogenetic tree is available
+has_tree <- !is.null(phy_tree(phy_48h, errorIfNULL = FALSE))
 
 # Calculate different distance matrices
 distances <- list(
   "Bray-Curtis" = phyloseq::distance(phy_48h, method = "bray"),
-  "Jaccard" = phyloseq::distance(phy_48h, method = "jaccard"),
-  "Weighted UniFrac" = tryCatch({
-    phyloseq::distance(phy_48h, method = "wunifrac")
-  }, error = function(e) {
-    cat("Warning: Weighted UniFrac failed, using Bray-Curtis instead\n")
-    phyloseq::distance(phy_48h, method = "bray")
-  })
+  "Jaccard" = phyloseq::distance(phy_48h, method = "jaccard")
 )
+
+# Add phylogenetic distance methods only if tree is available
+if (has_tree) {
+  distances[["Weighted UniFrac"]] <- phyloseq::distance(phy_48h, method = "wunifrac")
+  distances[["Unweighted UniFrac"]] <- phyloseq::distance(phy_48h, method = "unifrac")
+  cat("Phylogenetic tree found. Including UniFrac distance methods.\n")
+} else {
+  cat("No phylogenetic tree found. Skipping UniFrac distance methods.\n")
+  cat("Available distance methods: Bray-Curtis, Jaccard\n")
+}
 
 # Function to create PCoA plot with carbohydrate groups and ellipses
 plot_pcoa_carb_ellipses <- function(dist_matrix, method_name, sample_data) {
@@ -881,7 +907,7 @@ plot_pcoa_carb_ellipses <- function(dist_matrix, method_name, sample_data) {
     PC2 = pcoa$points[, 2],
     SampleID = rownames(pcoa$points)
   ) %>%
-    left_join(sample_data %>% rownames_to_column("SampleID"), by = "SampleID")
+    left_join(sample_data, by = "SampleID")
   
   # Create the plot
   p <- ggplot(pcoa_df, aes(x = PC1, y = PC2, color = carbohydrate, fill = carbohydrate)) +
@@ -919,9 +945,12 @@ names(plot_results) <- names(distances)
 plots <- map(plot_results, "plot")
 
 # Combine plots
+n_plots <- length(plots)
+plot_labels <- LETTERS[1:n_plots]
+
 combined_plot <- plot_grid(
   plotlist = plots,
-  labels = c("A", "B", "C"),
+  labels = plot_labels,
   nrow = 1,
   align = "hv"
 )
@@ -929,8 +958,9 @@ combined_plot <- plot_grid(
 print(combined_plot)
 
 # Save the combined plot
+plot_width <- 6 * n_plots  # 6 inches per plot
 ggsave("outputs/beta_diversity_48h_carbohydrate_ellipses.png", 
-       combined_plot, width = 18, height = 6, dpi = 300)
+       combined_plot, width = plot_width, height = 6, dpi = 300)
 
 # Display variance explained by each method
 cat("\n=== Variance Explained by PC1 and PC2 ===\n")
@@ -942,17 +972,23 @@ for (method in names(plot_results)) {
 # PERMANOVA tests for each distance method
 cat("\n=== PERMANOVA Results (48H Timepoint) ===\n")
 permanova_results <- map_dfr(names(distances), function(method) {
+  # Prepare data for adonis2 (remove SampleID column and set row names)
+  data_for_adonis <- sample_data_48h %>% 
+    select(-SampleID) %>%
+    as.data.frame() %>%
+    `rownames<-`(sample_data_48h$SampleID)
+  
   # Test carbohydrate effect
   perm_carb <- adonis2(distances[[method]] ~ carbohydrate, 
-                       data = sample_data_48h, permutations = 999)
+                       data = data_for_adonis, permutations = 999)
   
   # Test group effect
   perm_group <- adonis2(distances[[method]] ~ group, 
-                        data = sample_data_48h, permutations = 999)
+                        data = data_for_adonis, permutations = 999)
   
   # Test carbohydrate + group
   perm_both <- adonis2(distances[[method]] ~ carbohydrate + group, 
-                       data = sample_data_48h, permutations = 999)
+                       data = data_for_adonis, permutations = 999)
   
   tibble(
     Method = method,
@@ -981,7 +1017,10 @@ pairwise_results <- map_dfr(names(distances), function(method) {
   map_dfr(comparisons, function(pair) {
     subset_samples <- sample_data_48h$carbohydrate %in% pair
     subset_dist <- as.dist(as.matrix(distances[[method]])[subset_samples, subset_samples])
-    subset_data <- sample_data_48h[subset_samples, ]
+    subset_data <- sample_data_48h[subset_samples, ] %>% 
+      select(-SampleID) %>%
+      as.data.frame() %>%
+      `rownames<-`(sample_data_48h$SampleID[subset_samples])
     
     perm_result <- adonis2(subset_dist ~ carbohydrate, data = subset_data, permutations = 999)
     
@@ -1458,7 +1497,327 @@ if(file.exists("outputs/ancombc_genus_results.csv")) {
 }
 ```
 
-### LEfSe (paired by SubjectID)
+### ANCOM-BC Analysis: 48H Timepoint with RDC as Reference
+
+```{r da-ancombc-48h-rdc-reference, message=FALSE, warning=FALSE}
+# if the output file already exists, skip the analysis and load the results
+if(file.exists("outputs/ancombc_48h_rdc_ref_results.csv")) {
+  res_48h_rdc <- read_csv("outputs/ancombc_48h_rdc_ref_results.csv")
+  cat("Loaded 48H RDC reference ANCOMBC results from file.\n")
+} else { 
+# Filter data to 48H timepoint only
+ps_48h_raw <- subset_samples(ps_raw, timepoint == "48H")
+ps_48h_genus <- subset_samples(ps_genus_filt, timepoint == "48H")
+
+# Remove taxa that are completely absent in 48H samples
+ps_48h_raw <- prune_taxa(taxa_sums(ps_48h_raw) > 0, ps_48h_raw)
+ps_48h_genus <- prune_taxa(taxa_sums(ps_48h_genus) > 0, ps_48h_genus)
+
+cat("48H samples for analysis:", nsamples(ps_48h_genus), "\n")
+cat("Taxa after 48H filtering:", ntaxa(ps_48h_genus), "\n")
+
+# Relevel carbohydrate factor to use RDC as reference
+sample_data_48h <- sample_data(ps_48h_genus) %>% 
+  as.data.frame() %>%
+  mutate(carbohydrate = factor(carbohydrate, levels = c("RDC", "No Added Carb", "SDC")))
+
+# Update the phyloseq object with releveled factor
+sample_data(ps_48h_genus) <- sample_data(sample_data_48h)
+sample_data(ps_48h_raw) <- sample_data(sample_data_48h)
+
+# Check the levels
+cat("Carbohydrate levels (RDC is reference):", levels(sample_data_48h$carbohydrate), "\n")
+cat("Sample distribution by carbohydrate:\n")
+print(table(sample_data_48h$carbohydrate))
+
+# Run ANCOM-BC analysis if results don't exist
+if(file.exists("outputs/ancombc_48h_rdc_ref_results.csv")) {
+  res_48h_rdc <- read_csv("outputs/ancombc_48h_rdc_ref_results.csv")
+  cat("Loaded 48H RDC reference ANCOMBC results from file.\n")
+} else {
+  use_ancombc2_48h <- "ancombc2" %in% getNamespaceExports("ANCOMBC")
+  
+  if (use_ancombc2_48h) {
+    cat("Running ANCOMBC2 for 48H timepoint with RDC as reference...\n")
+    out_ancom_48h <- tryCatch({
+      ANCOMBC::ancombc2(
+        data = ps_48h_raw,
+        tax_level = "Genus",
+        fix_formula = "group + carbohydrate",  # Only group and carbohydrate since we're at single timepoint
+        rand_formula = "(1|SubjectID)",
+        p_adj_method = "holm",
+        prv_cut = 0.10,
+        lib_cut = 0,
+        s0_perc = 0.05,
+        group = "carbohydrate",  # Primary interest is carbohydrate effects
+        struc_zero = TRUE,
+        neg_lb = TRUE,
+        alpha = 0.05,
+        n_cl = 1,
+        global = TRUE
+      )
+    }, error = function(e) {
+      cat("ANCOMBC2 failed with error:", e$message, "\n")
+      cat("Falling back to ANCOM-BC v1...\n")
+      NULL
+    })
+    
+    if (!is.null(out_ancom_48h)) {
+      # Extract results from ANCOMBC2
+      res_48h_rdc <- out_ancom_48h$res
+    } else {
+      use_ancombc2_48h <- FALSE  # Force fallback
+    }
+  }
+  
+  if (!use_ancombc2_48h) {
+    cat("Using ANCOM-BC (v1) for 48H analysis...\n")
+    out_ancom_48h <- tryCatch({
+      ANCOMBC::ancombc(
+        phyloseq = ps_48h_genus,
+        formula = "group + carbohydrate",
+        p_adj_method = "holm",
+        zero_cut = 0.90,
+        lib_cut = 0,
+        group = "carbohydrate",
+        struc_zero = TRUE,
+        neg_lb = TRUE,
+        alpha = 0.05,
+        global = TRUE
+      )
+    }, error = function(e) {
+      cat("ANCOM-BC v1 also failed with error:", e$message, "\n")
+      NULL
+    })
+    
+    if (!is.null(out_ancom_48h)) {
+      # Tidy results from v1 object
+      res_list_48h <- lapply(names(out_ancom_48h$beta), function(term) {
+        tibble(
+          taxon = rownames(out_ancom_48h$beta[[term]]),
+          term = term,
+          beta = out_ancom_48h$beta[[term]][, 1],
+          se = out_ancom_48h$se[[term]][, 1],
+          W = out_ancom_48h$W[[term]][, 1],
+          p = out_ancom_48h$p_val[[term]][, 1],
+          q = out_ancom_48h$q_val[[term]][, 1],
+          diff_abn = out_ancom_48h$diff_abn[[term]][, 1]
+        )
+      })
+      res_48h_rdc <- bind_rows(res_list_48h)
+    } else {
+      cat("Both ANCOM-BC methods failed for 48H analysis. Creating empty result table.\n")
+      res_48h_rdc <- tibble(
+        taxon = character(0),
+        term = character(0),
+        beta = numeric(0),
+        se = numeric(0),
+        W = numeric(0),
+        p = numeric(0),
+        q = numeric(0),
+        diff_abn = logical(0)
+      )
+    }
+  }
+  
+  write_csv(res_48h_rdc, "outputs/ancombc_48h_rdc_ref_results.csv")
+}
+
+# Add taxonomy information
+if (nrow(res_48h_rdc) > 0) {
+  taxtab_48h <- tax_table(ps_48h_genus) %>% 
+    as.data.frame() %>%
+    rownames_to_column(var = "taxon")
+  
+  res_48h_rdc <- res_48h_rdc %>%
+    left_join(taxtab_48h, by = "taxon")
+}
+
+cat("ANCOM-BC 48H Results Summary:\n")
+if (nrow(res_48h_rdc) > 0) {
+  cat("Total taxa tested:", length(unique(res_48h_rdc$taxon)), "\n")
+  
+  # Summary by term
+  if ("term" %in% names(res_48h_rdc)) {
+    summary_by_term <- res_48h_rdc %>%
+      group_by(term) %>%
+      summarise(
+        total_taxa = n(),
+        significant = sum(q < 0.05, na.rm = TRUE),
+        prop_significant = round(significant / total_taxa * 100, 1),
+        .groups = "drop"
+      )
+    print(summary_by_term)
+  }
+} else {
+  cat("No results to summarize.\n")
+}
+
+head(res_48h_rdc)
+}
+```
+
+```{r ancombc-48h-summary-table, message=FALSE, warning=FALSE}
+# Create comprehensive summary table for 48H RDC reference analysis
+if (nrow(res_48h_rdc) > 0) {
+  
+  # Extract carbohydrate effect results (No Added Carb vs RDC and SDC vs RDC)
+  carb_effects <- res_48h_rdc %>%
+    filter(grepl("carbohydrate", term, ignore.case = TRUE)) %>%
+    filter(q < 0.05) %>%  # Only significant results
+    arrange(term, desc(abs(beta))) %>%
+    select(taxon, term, beta, se, p, q, diff_abn, 
+           Kingdom, Phylum, Class, Order, Family, Genus) %>%
+    mutate(
+      direction = ifelse(beta > 0, "Higher vs RDC", "Lower vs RDC"),
+      fold_change = exp(beta),
+      term_clean = case_when(
+        grepl("No.Added.Carb", term) ~ "No Added Carb vs RDC",
+        grepl("SDC", term) ~ "SDC vs RDC", 
+        TRUE ~ term
+      )
+    )
+  
+  # Create summary table
+  if (nrow(carb_effects) > 0) {
+    cat("\n=== SIGNIFICANT CARBOHYDRATE EFFECTS AT 48H (vs RDC Reference) ===\n")
+    
+    summary_table <- carb_effects %>%
+      select(Genus, term_clean, beta, fold_change, direction, p, q, 
+             Phylum, Family) %>%
+      arrange(term_clean, desc(abs(beta)))
+    
+    print(summary_table)
+    
+    # Save detailed results
+    write_csv(carb_effects, "outputs/ancombc_48h_carb_effects_vs_rdc.csv")
+    write_csv(summary_table, "outputs/ancombc_48h_summary_table.csv")
+    
+    # Count by comparison and direction
+    effect_counts <- carb_effects %>%
+      group_by(term_clean, direction) %>%
+      summarise(count = n(), .groups = "drop") %>%
+      arrange(term_clean, direction)
+    
+    cat("\n=== EFFECT COUNTS BY COMPARISON ===\n")
+    print(effect_counts)
+    
+    # Top genera by effect size for each comparison
+    top_effects <- carb_effects %>%
+      group_by(term_clean) %>%
+      slice_max(order_by = abs(beta), n = 5) %>%
+      select(term_clean, Genus, beta, fold_change, q) %>%
+      arrange(term_clean, desc(abs(beta)))
+    
+    cat("\n=== TOP 5 GENERA BY EFFECT SIZE FOR EACH COMPARISON ===\n")
+    print(top_effects)
+    
+  } else {
+    cat("No significant carbohydrate effects found in 48H analysis.\n")
+  }
+  
+} else {
+  cat("No results available for summary table.\n")
+}
+```
+
+```{r ancombc-48h-forest-plots, message=FALSE, warning=FALSE, fig.width=12, fig.height=10}
+# Forest plots for 48H carbohydrate effects vs RDC reference
+
+if (nrow(res_48h_rdc) > 0) {
+  
+  # Function to create forest plot for 48H analysis
+  plot_48h_forest <- function(data, term_pattern, title_suffix, top_n = 20) {
+    
+    df <- data %>%
+      filter(grepl(term_pattern, term, ignore.case = TRUE)) %>%
+      mutate(
+        ci_l = beta - 1.96 * se,
+        ci_u = beta + 1.96 * se,
+        sig = q < 0.05,
+        direction = ifelse(beta > 0, "Higher vs RDC", "Lower vs RDC"),
+        genus_label = ifelse(!is.na(Genus) & Genus != "", Genus, taxon)
+      )
+    
+    if (nrow(df) == 0) return(NULL)
+    
+    # Take top N by absolute effect size, prioritizing significant results
+    df_plot <- df %>%
+      arrange(desc(sig), desc(abs(beta))) %>%
+      slice_head(n = top_n) %>%
+      mutate(genus_label = factor(genus_label, levels = rev(unique(genus_label[order(beta)]))))
+    
+    p <- ggplot(df_plot, aes(x = beta, y = genus_label, color = direction)) +
+      geom_vline(xintercept = 0, linetype = 2, color = "grey50") +
+      geom_errorbarh(aes(xmin = ci_l, xmax = ci_u, alpha = sig), height = 0.3) +
+      geom_point(aes(size = sig, alpha = sig)) +
+      scale_alpha_manual(values = c("TRUE" = 1.0, "FALSE" = 0.4), guide = "none") +
+      scale_size_manual(values = c("TRUE" = 2.5, "FALSE" = 1.5), guide = "none") +
+      ggsci::scale_color_lancet() +
+      labs(
+        x = "Log fold-change (bias-corrected)",
+        y = NULL,
+        title = paste("48H Carbohydrate Effects:", title_suffix),
+        subtitle = "Solid/large points: FDR < 0.05; Faded/small points: FDR ≥ 0.05",
+        color = "Direction"
+      ) +
+      theme_classic(base_size = 12) +
+      theme(
+        axis.text = element_text(color = "black"),
+        plot.title = element_text(hjust = 0.5),
+        plot.subtitle = element_text(hjust = 0.5, size = 10)
+      )
+    
+    return(p)
+  }
+  
+  # Create plots for each comparison
+  plots_48h <- list()
+  
+  # No Added Carb vs RDC
+  if (any(grepl("No.Added.Carb", res_48h_rdc$term, ignore.case = TRUE))) {
+    plots_48h$no_carb <- plot_48h_forest(res_48h_rdc, "No.Added.Carb", "No Added Carb vs RDC")
+  }
+  
+  # SDC vs RDC  
+  if (any(grepl("SDC", res_48h_rdc$term, ignore.case = TRUE))) {
+    plots_48h$sdc <- plot_48h_forest(res_48h_rdc, "SDC", "SDC vs RDC")
+  }
+  
+  # Group effect for reference
+  if (any(grepl("group", res_48h_rdc$term, ignore.case = TRUE))) {
+    plots_48h$group <- plot_48h_forest(res_48h_rdc, "group", "Health Group Effect")
+  }
+  
+  # Combine and display plots
+  valid_plots <- plots_48h[!sapply(plots_48h, is.null)]
+  
+  if (length(valid_plots) > 0) {
+    # Save individual plots
+    for (nm in names(valid_plots)) {
+      ggsave(file.path("outputs", paste0("ancombc_48h_forest_", nm, "_vs_rdc.png")), 
+             valid_plots[[nm]], width = 10, height = 8, dpi = 300)
+    }
+    
+    # Display combined plot
+    if (length(valid_plots) == 1) {
+      print(valid_plots[[1]])
+    } else {
+      combined_48h <- cowplot::plot_grid(plotlist = valid_plots, ncol = 1, align = "v")
+      print(combined_48h)
+      
+      # Save combined plot
+      ggsave("outputs/ancombc_48h_forest_combined_vs_rdc.png", combined_48h, 
+             width = 12, height = 6 * length(valid_plots), dpi = 300)
+    }
+  } else {
+    cat("No valid forest plots could be created for 48H analysis.\n")
+  }
+  
+} else {
+  cat("No data available for 48H forest plots.\n")
+}
+```
 
 ```{r da-lefse, message=FALSE, warning=FALSE}
 # if the output file already exists, skip the analysis and load the results
@@ -1630,3 +1989,5 @@ if (length(plot_list) > 0) {
   cowplot::plot_grid(plotlist = plot_list, ncol = 1)
 }
 ```
+
+
