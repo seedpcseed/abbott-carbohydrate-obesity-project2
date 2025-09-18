@@ -1,8 +1,8 @@
 metadata:
   report_version: 1.0.0
   asv_finder_version: 0.1.0
-  generated_at: 2025-09-15T12:37:04.179917078+00:00
-  command_line: ./asv-finder taxonomy --method strobelca --input-fasta dada2_asv/refseqs.fasta --output dada2_asv/taxonomy_dada --threads 20 --database references/SILVA_138.2_SSURef_NR99_tax_silva_trunc.fasta.gz
+  generated_at: 2025-09-17T14:29:12.607533304+00:00
+  command_line: ./asv-finder taxonomy --method strobelca --input-fasta dada2_asv_3/asvs.fasta --output dada2_asv_3/strobelca_taxonomy --threads 20 --database references/SILVA_138.2_SSURef_NR99_tax_silva_trunc.fasta.gz
   working_directory: /root/projects/abbott-carbohydrate-obesity-project2/microbiome_analysis
   analysis_type: taxonomy
 system_info:
@@ -14,44 +14,44 @@ system_info:
   rust_version: unknown
   git_commit: null
 input_data:
-  input_directory: dada2_asv
+  input_directory: dada2_asv_3
   paired_files_found: 1
-  total_sequences_input: 0
-  total_bases_input: 603412
+  total_sequences_input: 8691
+  total_bases_input: 2371755
   samples:
-  - name: refseqs
-    forward_file: dada2_asv/refseqs.fasta
+  - name: asvs
+    forward_file: dada2_asv_3/asvs.fasta
     reverse_file: null
-    sequence_count: 0
-    average_length: 0.0
+    sequence_count: 8691
+    average_length: 272.89782533655506
   file_formats:
   - fasta
 method_configuration:
   method_name: strobelca
   parameters:
-    confidence_threshold: 0.01
+    e_value_threshold: 1e-10
+    coverage_threshold: 0.8
     method: strobelca
     identity_threshold: 0.97
     reverse_complement: true
-    coverage_threshold: 0.8
     output_format: tsv
+    confidence_threshold: 0.01
     database: references/SILVA_138.2_SSURef_NR99_tax_silva_trunc.fasta.gz
-    e_value_threshold: 1e-10
   defaults_used: []
   custom_parameters: []
 processing_steps:
 - step_name: Taxonomy Assignment
   description: Assigning taxonomy using strobelca method
-  duration_seconds: 244.109576492
-  input_count: 1714
-  output_count: 1714
+  duration_seconds: 663.814025429
+  input_count: 8691
+  output_count: 8691
   parameters:
-    threads: 20
     confidence_threshold: 0.01
     method: strobelca
+    threads: 20
   statistics:
-    sequences_classified: 1714.0
     classification_rate: 1.0
+    sequences_classified: 8691.0
 results:
   total_asvs_identified: null
   total_variants: null
@@ -63,25 +63,25 @@ results:
   taxonomic_assignments:
     method: strobelca
     database: references/SILVA_138.2_SSURef_NR99_tax_silva_trunc.fasta.gz
-    total_classified: 1714
+    total_classified: 8691
     confidence_threshold: 0.01
     classification_levels:
-      kingdom: 1714
-      class: 1714
-      order: 1714
-      family: 1714
-      genus: 1714
-      species: 1714
-      phylum: 1714
+      kingdom: 8691
+      genus: 8691
+      species: 8691
+      phylum: 8691
+      order: 8691
+      class: 8691
+      family: 8691
 performance:
-  total_runtime_seconds: 244.128978209
+  total_runtime_seconds: 663.898690821
   peak_memory_mb: null
   threads_used: 20
-  sequences_per_second: 7.0208789328263865
+  sequences_per_second: 13.090852746301413
   cpu_utilization: null
 files_generated:
-- filename: dada2_asv/taxonomy_dada.tsv
+- filename: dada2_asv_3/strobelca_taxonomy.tsv
   file_type: tsv
-  size_bytes: 1048803
-  record_count: 1714
+  size_bytes: 5005381
+  record_count: 8691
   description: Taxonomy assignments in tsv format

@@ -100,7 +100,7 @@ print("Group data structure:")
 print(colnames(group))
 print(head(group))
 
- samdat$group <- ifelse(samdat$subjectID %in% group$subjectID, "Healthy", "Obese")
+samdat$group <- ifelse(samdat$subjectID %in% group$subjectID, "Healthy", "Obese")
 
 # now output a summary of the metadata in samdat
 # summarize samdat by group and carbohydrate
@@ -120,7 +120,7 @@ write_csv(samdat, file = "samdat.csv")
 ```
 
 ```{r import-asv-finder-data-and-phyloseq-object}
-asv_data <- read_tsv("dada2_asv/asv_table.tsv")
+asv_data <- read_tsv("dada2_asv_2/asv_table.tsv")
 asv <- asv_data$ASV_ID
 
 asv_data <- asv_data %>% 
@@ -152,7 +152,7 @@ if(any(duplicated(colnames(asv_data)))) {
 
 rownames(asv_data) <- asv
 
-taxonomy_data <- read_tsv("dada2_asv/strobelca_taxonomy.tsv")
+taxonomy_data <- read_tsv("dada2_asv_2/strobelca_taxonomy.tsv")
 asv <- taxonomy_data$ASV_ID %>% str_split(" ") %>% sapply(function(x) x[1])
 repseqs <- Biostrings::DNAStringSet(taxonomy_data$Sequence)
 names(repseqs) <- asv
@@ -1318,54 +1318,29 @@ cat("Genus taxa before/after filtering:", ntaxa(ps_genus_counts), ntaxa(ps_genus
 ```{r da-corncob, message=FALSE, warning=FALSE}
 # if the output file already exists, skip the analysis and load the results
 if(file.exists("outputs/corncob_genus_hits.csv")) {
-  corncob_hits <- read_csv("outputs/corncob_genus_hits.csv")
+  res <- readRDS("outputs/corncob_genus_hits.rds")
   cat("Loaded Corncob results from file.\n")
 } else {
-# Note: corncob does not natively support random effects. We include SubjectID
-# as a blocking factor (fixed effect) to account for repeated measures.
-
-run_corncob_drop1 <- function(ps, effect_var, fdr_cutoff = 0.1) {
-  stopifnot(effect_var %in% sample_variables(ps))
-  # Full and reduced formulas
-  full <- as.formula(paste("~", paste(c("group", "timepoint", "carbohydrate", "SubjectID"), collapse = " + ")))
-  red  <- as.formula(paste("~", paste(setdiff(c("group", "timepoint", "carbohydrate", "SubjectID"), effect_var), collapse = " + ")))
-
-  set.seed(1)
+ps_genus_filt_sdcrdc <- subset_samples(ps_genus_filt, carbohydrate%in%c("SDC", "RDC"))
+tryCatch({
+  cat("Testing complex model...\n")
   res <- differentialTest(
-    formula = full,
-    phi.formula = full,
-    formula_null = red,
-    phi.formula_null = red,
+    formula = ~ group + timepoint + carbohydrate,
+    phi.formula = ~ group + timepoint + carbohydrate,
+    formula_null = ~ timepoint, 
+    phi.formula_null = ~ group + timepoint + carbohydrate,
     test = "Wald",
-    data = ps,
+    data = ps_genus_filt_sdcrdc,
     boot = FALSE,
-    B = 0,
-    fdr_cutoff = fdr_cutoff
+    B = 1000
   )
-
-  tibble(
-    taxon = res$significant_taxa,
-    effect = effect_var
-  )
+  saveRDS(res, "outputs/corncob_genus_hits.rds")
+}, error = function(e) {
+  cat("Complex model FAILED:", e$message, "\n")
+})
 }
 
-cc_group <- run_corncob_drop1(ps_genus_filt, "group")
-cc_time  <- run_corncob_drop1(ps_genus_filt, "timepoint")
-cc_carb  <- run_corncob_drop1(ps_genus_filt, "carbohydrate")
-
-corncob_hits <- bind_rows(cc_group, cc_time, cc_carb)
-write_csv(corncob_hits, "outputs/corncob_genus_hits.csv")
-
-}
-
-taxtab <- tax_table(ps_genus_filt) %>% as.data.frame()
-taxtab <- taxtab %>%
-  rownames_to_column(var = "taxon")
-
-corncob_hits <- corncob_hits %>%
-  left_join(taxtab, by = "taxon")
-
-corncob_hits
+plot(res, B=1000)
 ```
 
 ### ANCOM-BC2 (with SubjectID random effect)
