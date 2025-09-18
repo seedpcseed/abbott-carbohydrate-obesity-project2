@@ -2035,6 +2035,26 @@ res <- run_sl(
 
 ```
 
-```{r vroom-da-analysis}
+```{r adapt-da-analysis}
 
+```
+
+```{r maaslin2-da-analysis}
+library(Maaslin2)
+
+count_df <- data.frame(otu_table(ps_genus_filt))
+
+maaslin2_output <-invisible(Maaslin2(input_data=count_df, input_metadata=metadata,
+                                     output = file.path("outputs", 'maaslin2_output'),
+                                     min_prevalence=0.05,
+                                     max_significance = 0.05,
+                                     fixed_effects=c("group", "carbohydrate", "timepoint"),
+                                     random_effects=c("subjectID"),
+                                     cores=10, plot_heatmap = TRUE,plot_scatter = TRUE))
+maaslin2_result <- maaslin2_output$results
+maaslin2_DAtaxa <- maaslin2_result$feature[maaslin2_result$qval < 0.05]
+library(dplyr)
+maaslin2_summary <- maaslin2_result %>% filter(qval < 0.05) %>%
+  dplyr::select(feature, coef) %>% mutate(Taxa=feature, Maaslin2=coef > 0, .keep="none")
+maaslin2_summary$Maaslin2 <- 2*(maaslin2_summary$Maaslin2 - 0.5)
 ```
