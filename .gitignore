@@ -17,6 +17,6 @@
 *.fa
 *.fa.gz
 *.rds
-
+*.parquet
 
 
