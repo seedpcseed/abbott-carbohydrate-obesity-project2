@@ -1341,7 +1341,6 @@ if(file.exists("outputs/corncob_genus_hits.csv")) {
 
   set.seed(12345)
   
-  # Use tryCatch to handle optimization failures gracefully
   res <- tryCatch({
     differentialTest(
       formula = ~group+timepoint+carbohydrate,
@@ -2019,3 +2018,23 @@ if (length(plot_list) > 0) {
 ```
 
 
+```{r supervised-learning-analysis}
+library(microbiomemarker)
+
+set.seed(12345)
+res <- run_sl(
+    ps_genus_filt %>% subset_samples(carbohydrate%in%c("RDC", "SDC") & timepoint == "48H"),
+    group = "carbohydrate",
+    nfolds = 2,
+    nrepeats = 1,
+    taxa_rank = "Genus",
+    top_n = 25,
+    norm = "TSS",
+    method = "LR",
+)
+
+```
+
+```{r vroom-da-analysis}
+
+```
