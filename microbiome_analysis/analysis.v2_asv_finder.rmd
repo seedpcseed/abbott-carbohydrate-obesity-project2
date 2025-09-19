@@ -2036,6 +2036,17 @@ res <- run_sl(
 ```
 
 ```{r adapt-da-analysis}
+library(ADAPT)
+
+adapt_output <- adapt(input_data=ps_genus_filt, 
+  cond.var = "carbohydrate", 
+  base.cond = "No Added Carb", 
+  time.var = "timepoint", 
+  random.var = "subjectID")
+  adapt_DAtaxa <- adapt_output@signal
+  adapt_details <- adapt_output@details
+  adapt_summary <- data.frame(Taxa = adapt_DAtaxa, ADAPT=adapt_details[adapt_DAtaxa,  "log10foldchange"] > 0)
+  adapt_summary$ADAPT <- 2*(adapt_summary$ADAPT-0.5)
 
 ```
 
