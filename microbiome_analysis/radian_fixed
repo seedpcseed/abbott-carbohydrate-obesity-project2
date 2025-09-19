@@ -1,6 +1,0 @@
-#!/bin/bash
-# Force use of system libstdc++ instead of conda's older version
-export LD_LIBRARY_PATH="/usr/lib/x86_64-linux-gnu:/usr/local/lib:$LD_LIBRARY_PATH"
-# Remove conda's libstdc++ from the path to prevent conflicts
-export LD_LIBRARY_PATH=$(echo $LD_LIBRARY_PATH | tr ':' '\n' | grep -v '/root/miniconda' | tr '\n' ':' | sed 's/:$//')
-exec /root/miniconda/bin/radian "$@"

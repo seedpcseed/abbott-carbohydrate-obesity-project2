@@ -1335,91 +1335,31 @@ cat("Genus taxa before/after filtering:", ntaxa(ps_genus_counts), ntaxa(ps_genus
 ```{r da-corncob, message=FALSE, warning=FALSE}
 # if the output file already exists, skip the analysis and load the results
 if(file.exists("outputs/corncob_genus_hits.csv")) {
-  res <- readRDS("outputs/corncob_genus_hits.rds")
+ res <- readRDS("outputs/corncob_genus_hits.rdc")
   cat("Loaded Corncob results from file.\n")
 } else {
-# Note: corncob does not natively support random effects. We include SubjectID
-# as a blocking factor (fixed effect) to account for repeated measures.
 
-run_corncob_drop1 <- function(ps, effect_var, fdr_cutoff = 0.1) {
-  stopifnot(effect_var %in% sample_variables(ps))
+  set.seed(12345)
   
-  # Remove empty samples before analysis
-  sample_sums_ps <- sample_sums(ps)
-  if(sum(sample_sums_ps == 0) > 0) {
-    cat("Removing", sum(sample_sums_ps == 0), "empty samples for corncob analysis\n")
-    ps <- prune_samples(sample_sums_ps > 0, ps)
-  }
-  
-  # Full and reduced formulas
-  full <- as.formula(paste("~", paste(c("group", "timepoint", "carbohydrate", "SubjectID"), collapse = " + ")))
-  red  <- as.formula(paste("~", paste(setdiff(c("group", "timepoint", "carbohydrate", "SubjectID"), effect_var), collapse = " + ")))
-
-  set.seed(1)
-  
-  # Use tryCatch to handle optimization failures gracefully
   res <- tryCatch({
     differentialTest(
-      formula = full,
-      phi.formula = full,
-      formula_null = red,
-      phi.formula_null = red,
+      formula = ~group+timepoint+carbohydrate,
+      phi.formula = ~group+timepoint+carbohydrate,
+      formula_null = ~group+timepoint, 
+      phi.formula_null = ~group+timepoint+carbohydrate,
       test = "Wald",
       data = ps,
       boot = FALSE,
-      B = 0,
-      fdr_cutoff = fdr_cutoff
+      B = 1000,
+      fdr_cutoff = 0.1
     )
+    saveRDS(res, "outputs/corncob_genus_hits.rds")
   }, error = function(e) {
     cat("Corncob optimization failed for", effect_var, ":", e$message, "\n")
-    cat("Trying with simpler model...\n")
-    
-    # Try with simpler phi formula (no random effects in phi)
-    tryCatch({
-      differentialTest(
-        formula = full,
-        phi.formula = ~ 1,
-        formula_null = red,
-        phi.formula_null = ~ 1,
-        test = "Wald",
-        data = ps,
-        boot = FALSE,
-        B = 0,
-        fdr_cutoff = fdr_cutoff
-      )
-    }, error = function(e2) {
-      cat("Simplified model also failed:", e2$message, "\n")
-      # Return empty result
-      list(significant_taxa = character(0))
-    })
-  })
-
-  tibble(
-    taxon = res$significant_taxa,
-    effect = effect_var
-  )
+   
 }
 
-# Run corncob analysis for each effect
-corncob_results <- map_dfr(c("group", "timepoint", "carbohydrate"), function(effect) {
-  run_corncob_drop1(ps_genus_filt, effect)
-})
-
-# Save results
-saveRDS(corncob_results, "outputs/corncob_genus_hits.rds")
-write_csv(corncob_results, "outputs/corncob_genus_hits.csv")
-
-# Display results
-cat("Corncob analysis completed.\n")
-print(corncob_results)
-}
-
-# Plot corncob results if available
-if (exists("corncob_results") && nrow(corncob_results) > 0) {
-  cat("Corncob analysis found", nrow(corncob_results), "significant taxa.\n")
-} else {
-  cat("No significant taxa found in corncob analysis.\n")
-}
+plot(res, B=1000)
 ```
 
 ### ANCOM-BC2 (with SubjectID random effect)
@@ -2078,3 +2018,43 @@ if (length(plot_list) > 0) {
 ```
 
 
+```{r supervised-learning-analysis}
+library(microbiomemarker)
+
+set.seed(12345)
+res <- run_sl(
+    ps_genus_filt %>% subset_samples(carbohydrate%in%c("RDC", "SDC") & timepoint == "48H"),
+    group = "carbohydrate",
+    nfolds = 2,
+    nrepeats = 1,
+    taxa_rank = "Genus",
+    top_n = 25,
+    norm = "TSS",
+    method = "LR",
+)
+
+```
+
+```{r adapt-da-analysis}
+
+```
+
+```{r maaslin2-da-analysis}
+library(Maaslin2)
+
+count_df <- data.frame(otu_table(ps_genus_filt))
+
+maaslin2_output <-invisible(Maaslin2(input_data=count_df, input_metadata=metadata,
+                                     output = file.path("outputs", 'maaslin2_output'),
+                                     min_prevalence=0.05,
+                                     max_significance = 0.05,
+                                     fixed_effects=c("group", "carbohydrate", "timepoint"),
+                                     random_effects=c("subjectID"),
+                                     cores=10, plot_heatmap = TRUE,plot_scatter = TRUE))
+maaslin2_result <- maaslin2_output$results
+maaslin2_DAtaxa <- maaslin2_result$feature[maaslin2_result$qval < 0.05]
+library(dplyr)
+maaslin2_summary <- maaslin2_result %>% filter(qval < 0.05) %>%
+  dplyr::select(feature, coef) %>% mutate(Taxa=feature, Maaslin2=coef > 0, .keep="none")
+maaslin2_summary$Maaslin2 <- 2*(maaslin2_summary$Maaslin2 - 0.5)
+```
