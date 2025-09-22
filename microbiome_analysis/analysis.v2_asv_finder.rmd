@@ -100,7 +100,7 @@ print("Group data structure:")
 print(colnames(group))
 print(head(group))
 
- samdat$group <- ifelse(samdat$subjectID %in% group$subjectID, "Healthy", "Obese")
+samdat$group <- ifelse(samdat$subjectID %in% group$subjectID, "Healthy", "Obese")
 
 # now output a summary of the metadata in samdat
 # summarize samdat by group and carbohydrate
