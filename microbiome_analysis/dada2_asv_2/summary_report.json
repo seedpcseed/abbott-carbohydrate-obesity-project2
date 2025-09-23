@@ -1,3 +1,110 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:43e3136548448c7a3d23abadad2b61383e6bc66a20e4fd27daf1e4250f626313
-size 3180
+{
+  "metadata": {
+    "report_version": "1.0.0",
+    "asv_finder_version": "0.1.0",
+    "generated_at": "2025-09-22T10:47:38.331111972+00:00",
+    "command_line": "./asv-finder taxonomy --method strobelca --input-fasta dada2_asv_2/asvs.fasta --output dada2_asv_2/strobelca_taxonomy --database references/SILVA_138.2_SSURef_NR99_tax_silva_trunc.fasta.gz",
+    "working_directory": "/mnt/c/Users/pseed/Documents/GitHub/abbott-carbohydrate-obesity-project2/microbiome_analysis",
+    "analysis_type": "taxonomy"
+  },
+  "system_info": {
+    "hostname": "LTP-GRLSFY3",
+    "platform": "linux",
+    "architecture": "x86_64",
+    "cpu_count": 20,
+    "available_memory_gb": null,
+    "rust_version": "unknown",
+    "git_commit": null
+  },
+  "input_data": {
+    "input_directory": "dada2_asv_2",
+    "paired_files_found": 1,
+    "total_sequences_input": 19214,
+    "total_bases_input": 5783414,
+    "samples": [
+      {
+        "name": "asvs",
+        "forward_file": "dada2_asv_2/asvs.fasta",
+        "reverse_file": null,
+        "sequence_count": 19214,
+        "average_length": 301.0
+      }
+    ],
+    "file_formats": [
+      "fasta"
+    ]
+  },
+  "method_configuration": {
+    "method_name": "strobelca",
+    "parameters": {
+      "output_format": "tsv",
+      "database": "references/SILVA_138.2_SSURef_NR99_tax_silva_trunc.fasta.gz",
+      "reverse_complement": true,
+      "e_value_threshold": 1e-10,
+      "method": "strobelca",
+      "coverage_threshold": 0.8,
+      "confidence_threshold": 0.01,
+      "identity_threshold": 0.97
+    },
+    "defaults_used": [],
+    "custom_parameters": []
+  },
+  "processing_steps": [
+    {
+      "step_name": "Taxonomy Assignment",
+      "description": "Assigning taxonomy using strobelca method",
+      "duration_seconds": 21884.069308314,
+      "input_count": 19214,
+      "output_count": 19214,
+      "parameters": {
+        "confidence_threshold": 0.01,
+        "method": "strobelca",
+        "threads": 1
+      },
+      "statistics": {
+        "sequences_classified": 19214.0,
+        "classification_rate": 1.0
+      }
+    }
+  ],
+  "results": {
+    "total_asvs_identified": null,
+    "total_variants": null,
+    "mean_asv_length": null,
+    "mean_asv_abundance": null,
+    "reads_assigned": null,
+    "reads_filtered": null,
+    "filtering_breakdown": null,
+    "taxonomic_assignments": {
+      "method": "strobelca",
+      "database": "references/SILVA_138.2_SSURef_NR99_tax_silva_trunc.fasta.gz",
+      "total_classified": 19214,
+      "confidence_threshold": 0.01,
+      "classification_levels": {
+        "phylum": 19214,
+        "family": 19214,
+        "kingdom": 19214,
+        "species": 19214,
+        "genus": 19214,
+        "class": 19214,
+        "order": 19214
+      }
+    }
+  },
+  "performance": {
+    "total_runtime_seconds": 22098.4551428,
+    "peak_memory_mb": null,
+    "threads_used": 1,
+    "sequences_per_second": 0.8694725434804976,
+    "cpu_utilization": null
+  },
+  "files_generated": [
+    {
+      "filename": "dada2_asv_2/strobelca_taxonomy.tsv",
+      "file_type": "tsv",
+      "size_bytes": 11590876,
+      "record_count": 19214,
+      "description": "Taxonomy assignments in tsv format"
+    }
+  ]
+}
