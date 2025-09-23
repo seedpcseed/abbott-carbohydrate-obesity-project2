@@ -17,17 +17,22 @@ output:
 ```{r library-loading}
 # Helper function to install CRAN or Bioconductor packages if not already installed
 install_if_missing <- function(pkg) {
+  
   if (!requireNamespace(pkg, quietly = TRUE)) {
     tryCatch({
       install.packages(pkg)
     }, error = function(e) {
       if (!requireNamespace("BiocManager", quietly = TRUE)) {
-        install.packages("BiocManager")
+        install.packages("BiocManls /etc/apt/sources.list.d/ | grep -i cran
+ls /etc/apt/sources.list.d/ | grep -i r-project
+ager")
       }
       BiocManager::install(pkg, ask = FALSE)
     })
+    
   }
 }
+
 
 # List of required packages
 required_pkgs <- c(
