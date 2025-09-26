@@ -50,7 +50,7 @@ required_packages <- c(
   "broom", "broom.mixed", "lme4", "lmerTest", "emmeans", "performance",
   "rstatix", "ggpubr", "ggtext", "cowplot", "ggsci", "scico",
   "here", "corncob", "ANCOMBC", "ALDEx2", "microbiomeMarker", "ADAPT",
-  "Maaslin2", "gt", "cluster", "randomForest", "ranger", "caret", "phyloseqGraphTest"
+  "Maaslin2", "gt", "cluster", "nlme", "randomForest", "ranger", "caret", "phyloseqGraphTest"
 )
 
 # Function to install missing packages
@@ -139,12 +139,32 @@ add_fdr <- function(tbl, p_col = "p_value", new_col = "fdr") {
 }
 
 anova_table <- function(model) {
-  anova(model, type = 3) %>%
-    rownames_to_column("term") %>%
-    as_tibble() %>%
-    janitor::clean_names() %>%
-    dplyr::rename(p_value = pr_greater_f_) %>%
-    add_fdr("p_value", "fdr")
+  if (inherits(model, "lme")) {
+    anova_df <- nlme::anova.lme(model, type = "marginal") %>%
+      rownames_to_column("term") %>%
+      as_tibble() %>%
+      janitor::clean_names() %>%
+      dplyr::rename(
+        num_df = num_df,
+        den_df = den_df,
+        f_value = f_value,
+        p_value = p_value
+      )
+
+    if (!"p_value" %in% names(anova_df)) {
+      warning("anova.lme output did not contain p-values; returning empty tibble")
+      return(tibble())
+    }
+
+    anova_df %>% add_fdr("p_value", "fdr")
+  } else {
+    anova(model, type = 3) %>%
+      rownames_to_column("term") %>%
+      as_tibble() %>%
+      janitor::clean_names() %>%
+      dplyr::rename(p_value = pr_greater_f_) %>%
+      add_fdr("p_value", "fdr")
+  }
 }
 
 emmeans_pairs <- function(model, specs, adjust = "BH", by = NULL) {
@@ -384,39 +404,43 @@ alpha_long <- alpha_metrics %>%
     metric = factor(metric, levels = c("Shannon", "Observed", "Simpson"))
   )
 
-safe_lmer <- function(formula, data, response = "value") {
-  all_terms <- all.vars(formula)
-  response <- intersect(response, names(data))
-  keep_vars <- unique(c(response, all_terms))
-  vars_to_check <- setdiff(keep_vars, response)
+prep_mixed_data <- function(data, extra_vars = character()) {
+  keep_vars <- unique(c("value", "subject_id", extra_vars))
+  keep_vars <- keep_vars[keep_vars %in% names(data)]
 
   data <- data %>%
     dplyr::select(dplyr::all_of(keep_vars)) %>%
     tidyr::drop_na()
 
-  if (nrow(data) == 0 || length(vars_to_check) == 0) {
+  if (nrow(data) == 0) {
     return(NULL)
   }
 
   data <- droplevels(as.data.frame(data))
 
-  categorical_vars <- intersect(c("subject_id", "group", "carbohydrate", "timepoint", "baseline_cluster"), names(data))
+  categorical_vars <- intersect(c("subject_id", extra_vars, "baseline_cluster"), names(data))
   data[categorical_vars] <- lapply(data[categorical_vars], function(x) factor(x))
 
-  if (any(vapply(data[vars_to_check], function(x) length(unique(x)) < 2, logical(1)))) {
+  if (any(vapply(data[categorical_vars], function(x) length(levels(x)) < 2, logical(1)))) {
+    return(NULL)
+  }
+
+  data
+}
+
+safe_lme <- function(fixed, random, data, extra_vars = character()) {
+  data_prepped <- prep_mixed_data(data, extra_vars)
+  if (is.null(data_prepped)) {
     return(NULL)
   }
 
   tryCatch(
-    lmer(
-      formula = formula,
-      data = data,
-      control = lmerControl(
-        optimizer = "bobyqa",
-        optCtrl = list(maxfun = 1e5),
-        check.nobs.vs.nlev = "ignore",
-        check.nobs.vs.rankZ = "ignore"
-      )
+    nlme::lme(
+      fixed = fixed,
+      data = data_prepped,
+      random = random,
+      method = "REML",
+      control = nlme::lmeControl(opt = "optim")
     ),
     error = function(e) {
       message("Mixed model failed: ", e$message)
@@ -426,30 +450,60 @@ safe_lmer <- function(formula, data, response = "value") {
 }
 
 fit_alpha_model <- function(df) {
-  safe_lmer(
-    value ~ group * carbohydrate + group * timepoint + carbohydrate * timepoint + (1 | subject_id),
-    data = df
+  safe_lme(
+    fixed = value ~ group * carbohydrate + group * timepoint + carbohydrate * timepoint,
+    random = ~1 | subject_id,
+    data = df,
+    extra_vars = c("group", "carbohydrate", "timepoint")
   )
 }
 
 fit_alpha_model_collapsed <- function(df) {
-  safe_lmer(
-    value ~ carbohydrate * timepoint + (1 | subject_id),
-    data = df
+  safe_lme(
+    fixed = value ~ carbohydrate * timepoint,
+    random = ~1 | subject_id,
+    data = df,
+    extra_vars = c("carbohydrate", "timepoint")
   )
 }
 
 fit_alpha_model_48h <- function(df) {
-  safe_lmer(
-    value ~ group * carbohydrate + (1 | subject_id),
-    data = df
+  df_levels <- df %>%
+    dplyr::filter(!is.na(value)) %>%
+    droplevels()
+
+  group_levels <- dplyr::n_distinct(df_levels$group)
+  carb_levels <- dplyr::n_distinct(df_levels$carbohydrate)
+
+  if (group_levels <= 1 && carb_levels <= 1) {
+    return(NULL)
+  }
+
+  if (group_levels > 1 && carb_levels > 1) {
+    fixed_formula <- value ~ group * carbohydrate
+    extra_vars <- c("group", "carbohydrate")
+  } else if (carb_levels > 1) {
+    fixed_formula <- value ~ carbohydrate
+    extra_vars <- c("carbohydrate")
+  } else {
+    fixed_formula <- value ~ group
+    extra_vars <- c("group")
+  }
+
+  safe_lme(
+    fixed = fixed_formula,
+    random = ~1 | subject_id,
+    data = df,
+    extra_vars = extra_vars
   )
 }
 
 fit_cluster_model <- function(df) {
-  safe_lmer(
-    value ~ baseline_cluster * carbohydrate + (1 | subject_id),
-    data = df
+  safe_lme(
+    fixed = value ~ baseline_cluster * carbohydrate,
+    random = ~1 | subject_id,
+    data = df,
+    extra_vars = c("baseline_cluster", "carbohydrate")
   )
 }
 
@@ -463,7 +517,7 @@ for (metric_name in alpha_metrics_vec) {
     droplevels()
 
   model <- fit_alpha_model(df_metric)
-  anova_tbl <- if (is.null(model)) dplyr::tibble() else anova_table(model)
+  anova_tbl <- if (is.null(model)) tibble::tibble() else anova_table(model)
 
   alpha_results[[metric_name]] <- list(
     data = df_metric,
@@ -542,7 +596,7 @@ alpha_models_collapsed <- alpha_collapsed %>%
   tidyr::nest(data = -metric) %>%
   dplyr::mutate(
     model = purrr::map(data, fit_alpha_model_collapsed),
-    anova = purrr::map(model, ~ if (is.null(.x)) dplyr::tibble() else anova_table(.x))
+    anova = purrr::map(model, ~ if (is.null(.x)) tibble::tibble() else anova_table(.x))
   )
 
 alpha_models_collapsed %>%
@@ -550,8 +604,8 @@ alpha_models_collapsed %>%
   tidyr::unnest(anova) %>%
   gt::gt() %>%
   gt::fmt_number(columns = c(f_value), decimals = 2) %>%
-  gt::fmt_number(columns = c(df, sum_sq, mean_sq), decimals = 2) %>%
-  gt::cols_label(term = "Effect", f_value = "F", df = "df", sum_sq = "SS", mean_sq = "MS", p_value = "p", fdr = "q")
+  gt::fmt_number(columns = c(p_value, fdr), decimals = 3) %>%
+  gt::cols_label(term = "Effect", num_df = "df num", den_df = "df den", f_value = "F", p_value = "p", fdr = "q")
 ```
 
 ```{r alpha-collapsed-interpretation, results='asis'}
@@ -592,14 +646,35 @@ alpha_48_model <- alpha_48h %>%
   tidyr::nest(data = -metric) %>%
   dplyr::mutate(
     model = purrr::map(data, fit_alpha_model_48h),
-    anova = purrr::map(model, ~ if (is.null(.x)) dplyr::tibble() else anova_table(.x)),
-    contrasts = purrr::map(
+    anova = purrr::map(model, ~ if (is.null(.x)) tibble::tibble() else anova_table(.x)),
+    contrasts = purrr::map2(
       model,
+      data,
       ~ {
-        if (is.null(.x)) return(dplyr::tibble())
-        emmeans::emmeans(.x, ~ carbohydrate | group) %>%
-          emmeans::contrast("pairwise", adjust = "BH") %>%
-          broom::tidy()
+        if (is.null(.x)) return(tibble::tibble())
+
+        df_levels <- .y %>%
+          dplyr::filter(!is.na(value)) %>%
+          droplevels()
+
+        group_levels <- dplyr::n_distinct(df_levels$group)
+        carb_levels <- dplyr::n_distinct(df_levels$carbohydrate)
+
+        if (group_levels > 1 && carb_levels > 1) {
+          emmeans::emmeans(.x, ~ carbohydrate | group, data = df_levels) %>%
+            emmeans::contrast("pairwise", adjust = "BH") %>%
+            broom::tidy()
+        } else if (carb_levels > 1) {
+          emmeans::emmeans(.x, specs = "carbohydrate", data = df_levels) %>%
+            emmeans::contrast("pairwise", adjust = "BH") %>%
+            broom::tidy()
+        } else if (group_levels > 1) {
+          emmeans::emmeans(.x, specs = "group", data = df_levels) %>%
+            emmeans::contrast("pairwise", adjust = "BH") %>%
+            broom::tidy()
+        } else {
+          tibble::tibble()
+        }
       }
     )
   )
@@ -636,18 +711,62 @@ alpha_48_text %>%
   cat()
 ```
 
+```{r alpha-48h-wilcoxon}
+# Perform pairwise Wilcoxon tests for each metric
+alpha_48h_extent <- alpha_48h %>%
+  dplyr::group_by(metric) %>%
+  dplyr::summarise(
+    max_value = max(value, na.rm = TRUE),
+    min_value = min(value, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  dplyr::mutate(
+    range_value = max_value - min_value,
+    pad = dplyr::case_when(
+      range_value > 0 ~ range_value,
+      max_value > 0 ~ max_value * 0.1,
+      TRUE ~ 0.1
+    )
+  )
+
+alpha_48h_wilcoxon <- alpha_48h %>%
+  dplyr::group_by(metric) %>%
+  wilcox_test(value ~ carbohydrate, p.adjust.method = "BH") %>%
+  add_significance() %>%
+  add_xy_position(x = "carbohydrate", dodge = 0.8, step.increase = 0.05) %>%
+  dplyr::left_join(alpha_48h_extent, by = "metric") %>%
+  dplyr::group_by(metric) %>%
+  dplyr::arrange(y.position, .by_group = TRUE) %>%
+  dplyr::mutate(
+    comparison_order = dplyr::row_number() - 1,
+    y.position = max_value + pad * (0.2 + 0.12 * comparison_order)
+  ) %>%
+  dplyr::ungroup() %>%
+  dplyr::select(-comparison_order)
+
+# Check the structure of the results
+print("Columns in alpha_48h_wilcoxon:")
+print(names(alpha_48h_wilcoxon))
+print("First few rows:")
+print(head(alpha_48h_wilcoxon))
+```
+
 ```{r alpha-48h-plot}
 alpha_48h %>%
   ggplot(aes(x = carbohydrate, y = value, fill = carbohydrate)) +
-  geom_violin(trim = FALSE, alpha = 0.8) +
-  geom_boxplot(width = 0.12, alpha = 0.9, outlier.shape = NA) +
+  #geom_violin(trim = FALSE, alpha = 0.8) +
+  geom_boxplot(alpha = 0.9) +
+  geom_jitter(width = 0.12, size = 1.5, alpha = 0.7, show.legend = FALSE) +
+  stat_pvalue_manual(alpha_48h_wilcoxon,
+                     label = "p.adj.signif",
+                     tip.length = 0.005) +
   facet_wrap(~ metric, scales = "free_y") +
   scale_fill_manual(values = palette_carbohydrate) +
   labs(x = NULL, y = "Diversity", title = "Alpha diversity at 48 h") +
   custom_theme() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
-```
+
 ## 5. Beta Diversity and Community Structure
 
 ```{r beta-prep}
@@ -904,15 +1023,16 @@ cluster_models <- alpha_48h_cluster %>%
   tidyr::nest(data = -metric) %>%
   dplyr::mutate(
     model = purrr::map(data, fit_cluster_model),
-    anova = purrr::map(model, ~ if (is.null(.x)) dplyr::tibble() else anova_table(.x))
+    anova = purrr::map(model, ~ if (is.null(.x)) tibble::tibble() else anova_table(.x))
   )
 
 cluster_models %>%
   dplyr::select(metric, anova) %>%
   tidyr::unnest(anova) %>%
   gt::gt() %>%
-  gt::fmt_number(columns = c(f_value, sum_sq, mean_sq, p_value, fdr), decimals = 3) %>%
-  gt::cols_label(term = "Effect", f_value = "F", sum_sq = "SS", mean_sq = "MS", p_value = "p", fdr = "q")
+  gt::fmt_number(columns = c(f_value), decimals = 3) %>%
+  gt::fmt_number(columns = c(p_value, fdr), decimals = 3) %>%
+  gt::cols_label(term = "Effect", num_df = "df num", den_df = "df den", f_value = "F", p_value = "p", fdr = "q")
 ```
 
 ```{r cluster-interpretation, results='asis'}
