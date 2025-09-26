@@ -1,0 +1,1388 @@
+---
+title: "Microbiome Analysis v3 - ASV Finder"
+author: "Abbott Carbohydrate Obesity Project"
+date: "`r format(Sys.Date(), '%Y-%m-%d')`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
+    code_folding: hide
+    theme: flatly
+    highlight: tango
+    number_sections: true
+    fig_width: 10
+    fig_height: 6
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  message = FALSE,
+  warning = FALSE,
+  fig.align = "center",
+  fig.width = 9,
+  fig.height = 5.5,
+  cache = FALSE
+)
+```
+
+## 1. Analysis Roadmap
+
+This v3 report refines the v2 workflow to deliver a cleaner, more cohesive analysis with harmonized graphics, consistent statistical modeling, and dynamic interpretation. The key updates include:
+
+- Streamlined data processing with shared helper functions and reproducible checks.
+- Consistent mixed-effects modeling that respects the repeated-measures design (`SubjectID` random intercepts).
+- False discovery rate control (Benjamini–Hochberg) applied to all multi-comparison contexts.
+- Publication-quality visual styling and unified color palettes for categorical variables.
+- Interpretation blocks populated via inline code so narrative text always reflects current outputs.
+- Expanded differential-abundance section spanning corncob, ANCOM-BC2, ALDEx2, LEfSe, MaAsLin2, ADAPT, random forest, and consensus summaries.
+- Dedicated focus on 48 h responses, baseline clustering, and analyses with combined groups for improved power when appropriate.
+
+## 2. Libraries, Options, and Helper Functions
+
+```{r libraries}
+required_packages <- c(
+  "tidyverse", "readr", "janitor", "glue", "scales", "patchwork",
+  "phyloseq", "microbiome", "vegan", "betapart", "ape", "Biostrings",
+  "broom", "broom.mixed", "lme4", "lmerTest", "emmeans", "performance",
+  "rstatix", "ggpubr", "ggtext", "cowplot", "ggsci", "scico",
+  "here", "corncob", "ANCOMBC", "ALDEx2", "microbiomeMarker", "ADAPT",
+  "Maaslin2", "gt", "cluster", "randomForest", "ranger", "caret", "phyloseqGraphTest"
+)
+
+# Function to install missing packages
+install_missing_packages <- function(packages) {
+  missing_packages <- packages[!vapply(packages, requireNamespace, logical(1), quietly = TRUE)]
+  
+  if (length(missing_packages) > 0) {
+    cat("Installing missing packages:", paste(missing_packages, collapse = ", "), "\n")
+    
+    # Bioconductor packages
+    bioc_packages <- c("phyloseq", "microbiome", "Biostrings", "ANCOMBC", "ALDEx2", "microbiomeMarker", "Maaslin2", "phyloseqGraphTest", "ADAPT")
+    bioc_to_install <- intersect(missing_packages, bioc_packages)
+    
+    # CRAN packages
+    cran_to_install <- setdiff(missing_packages, bioc_packages)
+    
+    # Install Bioconductor packages
+    if (length(bioc_to_install) > 0) {
+      if (!requireNamespace("BiocManager", quietly = TRUE)) {
+        install.packages("BiocManager")
+      }
+      BiocManager::install(bioc_to_install, update = FALSE, ask = FALSE)
+    }
+    
+    # Install CRAN packages
+    if (length(cran_to_install) > 0) {
+      install.packages(cran_to_install, repos = "https://cloud.r-project.org/")
+    }
+    
+    cat("Package installation completed.\n")
+  }
+}
+
+# Install missing packages
+install_missing_packages(required_packages)
+
+invisible(lapply(required_packages, library, character.only = TRUE))
+
+options(dplyr.summarise.inform = FALSE)
+set.seed(12345)
+
+# Output directory for derived artefacts
+outputs_dir <- here::here("outputs")
+dir.create(outputs_dir, showWarnings = FALSE, recursive = TRUE)
+```
+
+```{r theming}
+# Harmonized aesthetic ---------------------------------------------------
+
+palette_group <- setNames(scico::scico(2, palette = "berlin"), c("Healthy", "Obese"))
+palette_carbohydrate <- setNames(scico::scico(3, palette = "vik"), c("No Added Carb", "RDC", "SDC"))
+palette_timepoint <- setNames(scico::scico(2, palette = "roma"), c("0H", "48H"))
+
+palette_cluster <- setNames(scico::scico(6, palette = "batlow"), paste0("Cluster", seq_len(6)))
+
+custom_theme <- function(base_size = 12, base_family = "sans") {
+  theme_minimal(base_size = base_size, base_family = base_family) +
+    theme(
+      panel.grid.major = element_line(color = "grey85", linewidth = 0.4),
+      panel.grid.minor = element_blank(),
+      panel.border = element_rect(color = "grey65", fill = NA, linewidth = 0.4),
+      plot.title = element_text(face = "bold", size = base_size + 2),
+      plot.subtitle = element_text(size = base_size, margin = ggplot2::margin(b = 6)),
+      plot.caption = element_text(size = base_size - 2, color = "grey40"),
+      strip.text = element_text(face = "bold", size = base_size - 1),
+      legend.position = "right",
+      legend.title = element_text(face = "bold"),
+      legend.background = element_rect(fill = "white", color = NA)
+    )
+}
+
+theme_set(custom_theme())
+
+format_p <- function(p) {
+  case_when(
+    is.na(p) ~ "NA",
+    p < 0.001 ~ "<0.001",
+    TRUE ~ sprintf("%.3f", p)
+  )
+}
+
+fdr_adjust <- function(p) stats::p.adjust(p, method = "BH")
+
+add_fdr <- function(tbl, p_col = "p_value", new_col = "fdr") {
+  tbl %>% dplyr::mutate(!!new_col := fdr_adjust(.data[[p_col]]))
+}
+
+anova_table <- function(model) {
+  anova(model, type = 3) %>%
+    rownames_to_column("term") %>%
+    as_tibble() %>%
+    janitor::clean_names() %>%
+    dplyr::rename(p_value = pr_greater_f_) %>%
+    add_fdr("p_value", "fdr")
+}
+
+emmeans_pairs <- function(model, specs, adjust = "BH", by = NULL) {
+  emmeans::emmeans(model, specs = specs, by = by) %>%
+    emmeans::contrast(method = "pairwise", adjust = adjust) %>%
+    broom::tidy()
+}
+```
+
+```{r util-functions}
+# Helper utilities -------------------------------------------------------
+
+collapse_taxa <- function(ps_obj, rank = "Genus", top_n = 15) {
+  ps_rel <- microbiome::transform(ps_obj, "compositional")
+  tax_rank <- tax_table(ps_rel)[, rank]
+  tax_rank[is.na(tax_rank) | tax_rank == ""] <- paste0(rank, "_Unassigned")
+  tax_table(ps_rel)[, rank] <- tax_rank
+
+  ps_rank <- tax_glom(ps_rel, taxrank = rank, NArm = FALSE)
+  abund <- taxa_sums(ps_rank)
+  keep <- rank(abund, ties.method = "first") > (ntaxa(ps_rank) - top_n)
+  ps_keep <- prune_taxa(keep, ps_rank)
+  other <- prune_taxa(!keep, ps_rank)
+
+  if (ntaxa(other) > 0) {
+    other_sum <- tax_table(other)[, rank]
+    tax_table(other)[, rank] <- "Other"
+    ps_rank <- merge_phyloseq(ps_keep, other)
+  } else {
+    ps_rank <- ps_keep
+  }
+
+  ps_rank
+}
+
+plot_bar_compositional <- function(ps_obj, fill_var, facet_var = NULL, rank = "Genus", top_n = 15) {
+  ps_rank <- collapse_taxa(ps_obj, rank = rank, top_n = top_n)
+  df <- psmelt(ps_rank)
+
+  fill_palette <- scico::scico(length(unique(df[[rank]])) + 1, palette = "batlow")
+
+  ggplot(df, aes(x = .data[[fill_var]], y = Abundance, fill = .data[[rank]])) +
+    geom_col(position = "stack") +
+    scale_y_continuous(labels = scales::percent) +
+    scale_fill_manual(values = fill_palette, guide = guide_legend(ncol = 1)) +
+    labs(
+      x = NULL,
+      y = "Relative abundance",
+      fill = rank
+    ) +
+    custom_theme() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    facet_wrap(vars(.data[[facet_var]]), scales = "free_x") %||%
+    identity
+}
+
+format_emm_table <- function(tbl) {
+  tbl %>%
+    dplyr::mutate(
+      estimate = round(estimate, 3),
+      conf.low = round(conf.low, 3),
+      conf.high = round(conf.high, 3),
+      p_raw = p.value,
+      fdr = p.adjust(p.value, method = "BH")
+    ) %>%
+    dplyr::mutate(
+      p.value = format_p(p_raw),
+      fdr = format_p(fdr)
+    ) %>%
+    dplyr::select(-p_raw)
+}
+
+inline_glue <- function(...) {
+  glue::glue_data(.x = environment(), ...)
+}
+
+`%||%` <- function(x, y) if (!is.null(x)) x else y
+
+pull_safe <- function(tbl, col) {
+  if (is.null(tbl) || nrow(tbl) == 0 || !(col %in% names(tbl))) {
+    return(character())
+  }
+  tbl[[col]]
+}
+
+first_match_col <- function(tbl, candidates) {
+  candidates <- candidates[candidates %in% names(tbl)]
+  if (length(candidates) == 0) return(NULL)
+  candidates[[1]]
+}
+```
+## 3. Data Import and Curation
+
+```{r data-load}
+metadata_raw <- readr::read_tsv("sample.metadata.tsv", show_col_types = FALSE) %>%
+  janitor::clean_names()
+
+metadata <- metadata_raw %>%
+  separate(customer_label, into = c("subject_id", "replicate_code", "timepoint"), sep = "\\.", remove = FALSE) %>%
+  dplyr::mutate(
+    carbohydrate = case_when(
+      str_detect(replicate_code, "R") ~ "RDC",
+      str_detect(replicate_code, "S") ~ "SDC",
+      TRUE ~ "No Added Carb"
+    ),
+    carbohydrate = factor(carbohydrate, levels = c("No Added Carb", "RDC", "SDC")),
+    timepoint = factor(timepoint, levels = c("0H", "48H")),
+    replicate = readr::parse_number(replicate_code) %>% replace_na(1)
+  ) %>%
+  dplyr::rename(SampleID = sample_id) %>%
+  dplyr::select(SampleID, subject_id, timepoint, carbohydrate, replicate, customer_label, raw_seq_files)
+
+healthy_lookup <- readr::read_tsv(
+  file = here::here("zr24558.16S_250813.zymo", "1.Healthy.TimepointComparism..Bac16Sv34", "Sample_Information", "sample.metadata.csv"),
+  show_col_types = FALSE
+) %>%
+  janitor::clean_names() %>%
+  separate(customer_label, into = c("subject_id", "tmp", "tp"), sep = "\\.", remove = FALSE) %>%
+  dplyr::distinct(subject_id) %>%
+  dplyr::mutate(group = "Healthy")
+
+metadata <- metadata %>%
+  dplyr::mutate(
+    group = if_else(subject_id %in% healthy_lookup$subject_id, "Healthy", "Obese"),
+    group = factor(group, levels = c("Healthy", "Obese")),
+    subject_id = factor(subject_id)
+  )
+
+metadata_summary <- metadata %>%
+  dplyr::count(group, carbohydrate, timepoint, name = "n_samples")
+
+subject_counts <- metadata %>%
+  dplyr::distinct(subject_id, group) %>%
+  dplyr::count(group, name = "n_subjects")
+
+metadata_overview <- metadata_summary %>%
+  dplyr::group_by(group) %>%
+  dplyr::summarise(total = sum(n_samples), .groups = "drop") %>%
+  dplyr::left_join(subject_counts, by = "group")
+```
+
+**Cohort coverage**
+
+- Samples: `r scales::comma(nrow(metadata))`
+- Subjects: `r scales::comma(n_distinct(metadata$subject_id))`
+- Group allocation: `r glue::glue_collapse(glue::glue('{metadata_overview$group}: {metadata_overview$n_subjects} subjects, {metadata_overview$total} samples'), sep = '; ')`
+- Carbohydrate distribution: `r glue::glue_collapse(levels(metadata$carbohydrate), sep = ', ')`
+
+```{r metadata-table}
+metadata_summary %>%
+  dplyr::arrange(group, carbohydrate, timepoint) %>%
+  gt::gt(rowname_col = "timepoint") %>%
+  gt::tab_header(title = "Sample counts by group, carbohydrate, and timepoint") %>%
+  gt::fmt_number(columns = "n_samples", decimals = 0)
+```
+```
+### 3.1 Amplicon Sequence Variants and Taxonomy
+
+```{r phyloseq-import}
+asv_raw <- readr::read_tsv("dada2_asv_2/asv_table.tsv", show_col_types = FALSE)
+
+asv_ids <- stringr::str_extract(asv_raw$ASV_ID, "ASV_\\d+")
+
+otu_mat <- asv_raw %>%
+  dplyr::select(-ASV_ID, -Sequence, -Length, -Total_Abundance, -Relative_Abundance) %>%
+  as.data.frame()
+
+colnames(otu_mat) <- stringr::str_remove(colnames(otu_mat), "_filtered$")
+rownames(otu_mat) <- asv_ids
+
+taxonomy_raw <- readr::read_tsv("dada2_asv_2/strobelca_taxonomy.tsv", show_col_types = FALSE)
+
+taxonomy_mat <- taxonomy_raw %>%
+  dplyr::mutate(ASV = stringr::str_extract(ASV_ID, "ASV_\\d+")) %>%
+  dplyr::select(ASV, Kingdom, Phylum, Class, Order, Family, Genus, Species) %>%
+  dplyr::mutate(across(everything(), ~ replace_na(., "Unassigned"))) %>%
+  column_to_rownames("ASV") %>%
+  as.matrix()
+
+stopifnot(all(rownames(otu_mat) %in% rownames(taxonomy_mat)))
+
+metadata_ps <- metadata %>%
+  dplyr::mutate(SampleID = as.character(SampleID)) %>%
+  column_to_rownames("SampleID")
+
+common_samples <- intersect(colnames(otu_mat), rownames(metadata_ps))
+otu_mat <- otu_mat[, common_samples]
+metadata_ps <- metadata_ps[common_samples, ]
+
+ps <- phyloseq(
+  otu_table(as.matrix(otu_mat), taxa_are_rows = TRUE),
+  sample_data(metadata_ps),
+  tax_table(taxonomy_mat[rownames(otu_mat), ])
+)
+
+ps <- prune_taxa(taxa_sums(ps) > 0, ps)
+ps <- prune_samples(sample_sums(ps) > 0, ps)
+
+sample_data(ps)$SubjectID <- sample_data(ps)$subject_id
+sample_data(ps)$Group <- sample_data(ps)$group
+sample_data(ps)$Carbohydrate <- sample_data(ps)$carbohydrate
+sample_data(ps)$Timepoint <- sample_data(ps)$timepoint
+
+ps_rel <- microbiome::transform(ps, "compositional")
+```
+
+```{r sequencing-depth}
+seq_depth <- tibble(
+  SampleID = sample_names(ps),
+  reads = sample_sums(ps)
+) %>%
+  dplyr::left_join(as_tibble(metadata, .name_repair = "minimal"), by = "SampleID")
+
+coverage_stats <- seq_depth %>%
+  dplyr::summarise(
+    min_reads = min(reads),
+    median_reads = median(reads),
+    max_reads = max(reads)
+  )
+
+coverage_stats
+```
+
+**Retained ASV reads** – minimum `r scales::comma(coverage_stats$min_reads)`, median `r scales::comma(coverage_stats$median_reads)`, maximum `r scales::comma(coverage_stats$max_reads)` reads per sample represented in the denoised ASV table after filtering and chimera removal.
+
+
+## 4. Alpha Diversity
+
+```{r alpha-diversity}
+alpha_metrics <- estimate_richness(ps, measures = c("Observed", "Shannon", "Simpson")) %>%
+  rownames_to_column("SampleID")
+
+alpha_long <- alpha_metrics %>%
+  pivot_longer(cols = -SampleID, names_to = "metric", values_to = "value") %>%
+  dplyr::left_join(as_tibble(metadata, .name_repair = "minimal"), by = "SampleID") %>%
+  dplyr::mutate(
+    metric = factor(metric, levels = c("Shannon", "Observed", "Simpson"))
+  )
+
+safe_lmer <- function(formula, data, response = "value") {
+  all_terms <- all.vars(formula)
+  response <- intersect(response, names(data))
+  keep_vars <- unique(c(response, all_terms))
+  vars_to_check <- setdiff(keep_vars, response)
+
+  data <- data %>%
+    dplyr::select(dplyr::all_of(keep_vars)) %>%
+    tidyr::drop_na()
+
+  if (nrow(data) == 0 || length(vars_to_check) == 0) {
+    return(NULL)
+  }
+
+  data <- droplevels(as.data.frame(data))
+
+  categorical_vars <- intersect(c("subject_id", "group", "carbohydrate", "timepoint", "baseline_cluster"), names(data))
+  data[categorical_vars] <- lapply(data[categorical_vars], function(x) factor(x))
+
+  if (any(vapply(data[vars_to_check], function(x) length(unique(x)) < 2, logical(1)))) {
+    return(NULL)
+  }
+
+  tryCatch(
+    lmer(
+      formula = formula,
+      data = data,
+      control = lmerControl(
+        optimizer = "bobyqa",
+        optCtrl = list(maxfun = 1e5),
+        check.nobs.vs.nlev = "ignore",
+        check.nobs.vs.rankZ = "ignore"
+      )
+    ),
+    error = function(e) {
+      message("Mixed model failed: ", e$message)
+      NULL
+    }
+  )
+}
+
+fit_alpha_model <- function(df) {
+  safe_lmer(
+    value ~ group * carbohydrate + group * timepoint + carbohydrate * timepoint + (1 | subject_id),
+    data = df
+  )
+}
+
+fit_alpha_model_collapsed <- function(df) {
+  safe_lmer(
+    value ~ carbohydrate * timepoint + (1 | subject_id),
+    data = df
+  )
+}
+
+fit_alpha_model_48h <- function(df) {
+  safe_lmer(
+    value ~ group * carbohydrate + (1 | subject_id),
+    data = df
+  )
+}
+
+fit_cluster_model <- function(df) {
+  safe_lmer(
+    value ~ baseline_cluster * carbohydrate + (1 | subject_id),
+    data = df
+  )
+}
+
+alpha_metrics_vec <- levels(alpha_long$metric)
+alpha_results <- vector("list", length(alpha_metrics_vec))
+names(alpha_results) <- alpha_metrics_vec
+
+for (metric_name in alpha_metrics_vec) {
+  df_metric <- alpha_long %>%
+    dplyr::filter(metric == metric_name) %>%
+    droplevels()
+
+  model <- fit_alpha_model(df_metric)
+  anova_tbl <- if (is.null(model)) dplyr::tibble() else anova_table(model)
+
+  alpha_results[[metric_name]] <- list(
+    data = df_metric,
+    model = model,
+    anova = anova_tbl
+  )
+}
+
+alpha_models <- tibble(
+  metric = alpha_metrics_vec,
+  data = lapply(alpha_metrics_vec, function(m) alpha_results[[m]]$data),
+  model = lapply(alpha_metrics_vec, function(m) alpha_results[[m]]$model),
+  anova = lapply(alpha_metrics_vec, function(m) alpha_results[[m]]$anova)
+)
+
+alpha_significance <- alpha_models %>%
+  dplyr::mutate(
+    sig_terms = purrr::map_chr(
+      anova,
+      ~ {
+        if (is.null(.x) || nrow(.x) == 0) {
+          return("Model unavailable for this metric")
+        }
+        .x %>%
+          dplyr::filter(fdr < 0.1) %>%
+          dplyr::mutate(term = stringr::str_replace_all(term, ":", " × ")) %>%
+          dplyr::mutate(label = glue::glue("{term} (q = {format_p(fdr)})")) %>%
+          dplyr::pull(label) %>%
+          glue::glue_collapse(sep = "; ") %>%
+          {
+            ifelse(. == "", "No terms reach q < 0.10", .)
+          }
+      }
+    )
+  ) %>%
+  dplyr::select(metric, sig_terms)
+
+```
+
+```{r alpha-figures}
+alpha_plot <- function(data, metric_name) {
+  data %>%
+    dplyr::filter(metric == metric_name) %>%
+    ggplot(aes(x = carbohydrate, y = value, fill = carbohydrate)) +
+    geom_boxplot(alpha = 0.8, outlier.alpha = 0.4, width = 0.7) +
+    geom_jitter(aes(color = group), width = 0.12, size = 1.5, alpha = 0.7, show.legend = FALSE) +
+    scale_fill_manual(values = palette_carbohydrate) +
+    scale_color_manual(values = palette_group) +
+    labs(x = NULL, y = metric_name, title = metric_name) +
+    facet_grid(group ~ timepoint) +
+    custom_theme() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+}
+
+alpha_plots <- purrr::map(levels(alpha_long$metric), ~ alpha_plot(alpha_long, .x))
+alpha_plots[[1]] / alpha_plots[[2]] / alpha_plots[[3]] + plot_layout(guides = "collect") + plot_annotation(tag_levels = "A")
+```
+
+```{r alpha-interpretation, results='asis'}
+alpha_significance %>%
+  dplyr::mutate(text = glue::glue("**{metric}**: {sig_terms}")) %>%
+  dplyr::pull(text) %>%
+  glue::glue_collapse(sep = "\n") %>%
+  cat()
+```
+
+### 4.1 Combined-Group Modeling
+
+The limited group-level separation motivates a secondary model that collapses healthy and obese cohorts to evaluate carbohydrate effects with improved power.
+
+```{r alpha-collapsed}
+alpha_collapsed <- alpha_long %>%
+  dplyr::mutate(group_collapsed = factor("Combined"))
+
+alpha_models_collapsed <- alpha_collapsed %>%
+  tidyr::nest(data = -metric) %>%
+  dplyr::mutate(
+    model = purrr::map(data, fit_alpha_model_collapsed),
+    anova = purrr::map(model, ~ if (is.null(.x)) dplyr::tibble() else anova_table(.x))
+  )
+
+alpha_models_collapsed %>%
+  dplyr::select(metric, anova) %>%
+  tidyr::unnest(anova) %>%
+  gt::gt() %>%
+  gt::fmt_number(columns = c(f_value), decimals = 2) %>%
+  gt::fmt_number(columns = c(df, sum_sq, mean_sq), decimals = 2) %>%
+  gt::cols_label(term = "Effect", f_value = "F", df = "df", sum_sq = "SS", mean_sq = "MS", p_value = "p", fdr = "q")
+```
+
+```{r alpha-collapsed-interpretation, results='asis'}
+alpha_collapsed_summary <- alpha_models_collapsed %>%
+  dplyr::mutate(
+    sig_terms = purrr::map_chr(
+      anova,
+      ~ {
+        if (is.null(.x) || nrow(.x) == 0) {
+          return("Model unavailable for this metric")
+        }
+        .x %>%
+          dplyr::filter(fdr < 0.1) %>%
+          dplyr::mutate(term = stringr::str_replace_all(term, ":", " × ")) %>%
+          dplyr::mutate(label = glue::glue("{term} (q = {format_p(fdr)})")) %>%
+          dplyr::pull(label) %>%
+          glue::glue_collapse(sep = "; ") %>%
+          {
+            ifelse(. == "", "No carbohydrate × timepoint effects detected at q < 0.10", .)
+          }
+      }
+    )
+  )
+
+alpha_collapsed_summary %>%
+  dplyr::mutate(text = glue::glue("**{metric}** (groups combined): {sig_terms}")) %>%
+  dplyr::pull(text) %>%
+  glue::glue_collapse(sep = "\n") %>%
+  cat()
+```
+
+### 4.2 48 h Focus
+
+```{r alpha-48h}
+alpha_48h <- alpha_long %>% dplyr::filter(timepoint == "48H")
+
+alpha_48_model <- alpha_48h %>%
+  tidyr::nest(data = -metric) %>%
+  dplyr::mutate(
+    model = purrr::map(data, fit_alpha_model_48h),
+    anova = purrr::map(model, ~ if (is.null(.x)) dplyr::tibble() else anova_table(.x)),
+    contrasts = purrr::map(
+      model,
+      ~ {
+        if (is.null(.x)) return(dplyr::tibble())
+        emmeans::emmeans(.x, ~ carbohydrate | group) %>%
+          emmeans::contrast("pairwise", adjust = "BH") %>%
+          broom::tidy()
+      }
+    )
+  )
+
+alpha_48_model$anova
+```
+
+```{r alpha-48h-interpretation, results='asis'}
+alpha_48_text <- alpha_48_model %>%
+  dplyr::mutate(
+    sig_terms = purrr::map_chr(
+      anova,
+      ~ {
+        if (is.null(.x) || nrow(.x) == 0) {
+          return("Model unavailable for this metric")
+        }
+        .x %>%
+          dplyr::filter(fdr < 0.1) %>%
+          dplyr::mutate(term = stringr::str_replace_all(term, ":", " × ")) %>%
+          dplyr::mutate(label = glue::glue("{term} (q = {format_p(fdr)})")) %>%
+          dplyr::pull(label) %>%
+          glue::glue_collapse(sep = "; ") %>%
+          {
+            ifelse(. == "", "No significant effects after FDR correction", .)
+          }
+      }
+    )
+  )
+
+alpha_48_text %>%
+  dplyr::mutate(text = glue::glue("**{metric}** (48 h): {sig_terms}")) %>%
+  dplyr::pull(text) %>%
+  glue::glue_collapse(sep = "\n") %>%
+  cat()
+```
+
+```{r alpha-48h-plot}
+alpha_48h %>%
+  ggplot(aes(x = carbohydrate, y = value, fill = carbohydrate)) +
+  geom_violin(trim = FALSE, alpha = 0.8) +
+  geom_boxplot(width = 0.12, alpha = 0.9, outlier.shape = NA) +
+  facet_wrap(~ metric, scales = "free_y") +
+  scale_fill_manual(values = palette_carbohydrate) +
+  labs(x = NULL, y = "Diversity", title = "Alpha diversity at 48 h") +
+  custom_theme() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+```
+## 5. Beta Diversity and Community Structure
+
+```{r beta-prep}
+make_pcoa_df <- function(ps_obj, distance_method) {
+  ord <- ordinate(ps_obj, method = "PCoA", distance = distance_method)
+  vecs <- as_tibble(ord$vectors[, 1:2], rownames = "SampleID")
+  colnames(vecs)[2:3] <- c("PC1", "PC2")
+  vecs <- vecs %>%
+    dplyr::mutate(
+      axis1_var = ord$values$Relative_eig[1],
+      axis2_var = ord$values$Relative_eig[2]
+    ) %>%
+    dplyr::left_join(as_tibble(metadata, .name_repair = "minimal"), by = "SampleID")
+  vecs$distance_method <- distance_method
+  vecs
+}
+
+dist_methods <- c("bray", "jaccard")
+
+pcoa_dfs <- purrr::map_dfr(dist_methods, ~ make_pcoa_df(ps_rel, .x))
+
+pcoa_plot <- function(df, method_name) {
+  df_subset <- df %>% dplyr::filter(distance_method == method_name)
+  var1 <- scales::percent(round(df_subset$axis1_var[1], 3))
+  var2 <- scales::percent(round(df_subset$axis2_var[1], 3))
+
+  ggplot(df_subset, aes(x = PC1, y = PC2, color = carbohydrate, shape = group)) +
+    geom_point(size = 2.5, alpha = 0.85) +
+    stat_ellipse(aes(group = interaction(carbohydrate, timepoint)), linewidth = 0.4, linetype = "dashed") +
+    facet_wrap(~ timepoint) +
+    scale_color_manual(values = palette_carbohydrate) +
+    scale_shape_manual(values = c(16, 17)) +
+    labs(
+      x = glue::glue("PC1 ({var1})"),
+      y = glue::glue("PC2 ({var2})"),
+      title = glue::glue("PCoA – {stringr::str_to_title(method_name)} distance")
+    ) +
+    custom_theme()
+}
+
+(pcoa_plot(pcoa_dfs, "bray") | pcoa_plot(pcoa_dfs, "jaccard")) + plot_annotation(tag_levels = "A")
+```
+
+```{r permanova}
+permanova_results <- purrr::map_dfr(
+  dist_methods,
+  ~ {
+    dist_mat <- phyloseq::distance(ps_rel, method = .x)
+    df <- as(sample_data(ps_rel), "data.frame")
+    adonis_out <- vegan::adonis2(
+      dist_mat ~ group * carbohydrate + timepoint,
+      data = df,
+      permutations = 999,
+      strata = df$subject_id
+    )
+    adonis_tbl <- as.data.frame(adonis_out) %>% rownames_to_column('term') %>% janitor::clean_names()
+    adonis_tbl$distance <- .x
+    adonis_tbl
+  }
+)
+
+permanova_results %>%
+  dplyr::mutate(p_value = pr_greater_f_, q_value = fdr_adjust(p_value)) %>%
+  gt::gt() %>%
+  gt::fmt_number(columns = c(f, r2), decimals = 3) %>%
+  gt::fmt_number(columns = c(p_value, q_value), decimals = 3) %>%
+  gt::cols_label(term = "Effect", f = "F", r2 = "R2", p_value = "p", q_value = "q") %>%
+  gt::tab_header("PERMANOVA results (subject-level strata)")
+```
+
+```{r dispersion-tests}
+betadisp_results <- purrr::map_dfr(
+  dist_methods,
+  ~ {
+    dist_mat <- phyloseq::distance(ps_rel, method = .x)
+    df <- as(sample_data(ps_rel), "data.frame")
+    bd <- vegan::betadisper(dist_mat, df$carbohydrate)
+    perm <- vegan::permutest(bd, permutations = 999)
+    tibble(
+      distance = .x,
+      stat = perm$tab["F", "F"],
+      p_value = perm$tab["F", "Pr(>F)"],
+      q_value = fdr_adjust(p_value)
+    )
+  }
+)
+
+betadisp_results %>%
+  gt::gt() %>%
+  gt::fmt_number(columns = c(stat, p_value, q_value), decimals = 3) %>%
+  gt::cols_label(stat = "F", p_value = "p", q_value = "q") %>%
+  gt::tab_header("Homogeneity of dispersion (carbohydrate groups)")
+```
+
+### Interpretation
+
+```{r beta-interpretation, results='asis'}
+permanova_summary <- permanova_results %>%
+  dplyr::mutate(p_value = pr_greater_f_, q = fdr_adjust(p_value)) %>%
+  dplyr::filter(term != "Residual" & q < 0.1) %>%
+  dplyr::mutate(item = glue::glue("{stringr::str_to_title(distance)}: {term} (q = {format_p(q)})")) %>%
+  dplyr::pull(item)
+
+if (length(permanova_summary) == 0) {
+  cat("No beta-diversity terms reach q < 0.10 after FDR adjustment. Patterns are primarily driven by subject-level variability.")
+} else {
+  cat(glue::glue_collapse(permanova_summary, sep = "\n"))
+}
+```
+```
+### 5.1 Beta Diversity at 48 h
+
+```{r beta-48h}
+ps_48h <- phyloseq::subset_samples(ps_rel, Timepoint == "48H")
+
+pcoa_48h <- make_pcoa_df(ps_48h, "bray")
+
+pcoa_48h %>%
+  ggplot(aes(x = PC1, y = PC2, color = carbohydrate, shape = group)) +
+  geom_point(size = 3, alpha = 0.9) +
+  stat_ellipse(aes(group = carbohydrate), linewidth = 0.5, linetype = "dashed") +
+  scale_color_manual(values = palette_carbohydrate) +
+  scale_shape_manual(values = c(16, 17)) +
+  labs(
+    x = glue::glue("PC1 ({scales::percent(round(pcoa_48h$axis1_var[1], 3))})"),
+    y = glue::glue("PC2 ({scales::percent(round(pcoa_48h$axis2_var[1], 3))})"),
+    title = "PCoA – Bray-Curtis distance (48 h samples)"
+  ) +
+  custom_theme()
+```
+
+```{r beta-48h-permanova}
+metadata_48h <- as(sample_data(ps_48h), "data.frame")
+permanova_48h <- vegan::adonis2(
+  phyloseq::distance(ps_48h, method = "bray") ~ group * carbohydrate,
+  data = metadata_48h,
+  permutations = 999,
+  strata = metadata_48h$subject_id
+)
+
+permanova_48h_tbl <- as.data.frame(permanova_48h) %>% rownames_to_column('term') %>% janitor::clean_names()
+permanova_48h_tbl %>%
+  dplyr::mutate(p_value = pr_greater_f_, q = fdr_adjust(p_value)) %>%
+  gt::gt() %>%
+  gt::fmt_number(columns = c(f, r2), decimals = 3) %>%
+  gt::fmt_number(columns = c(p_value, q), decimals = 3) %>%
+  gt::cols_label(term = "Effect", f = "F", r2 = "R2", p_value = "p", q = "q")
+```
+```
+## 6. Baseline Clustering and Trajectories
+
+```{r cluster-baseline}
+ps_0h <- phyloseq::subset_samples(ps_rel, Timepoint == "0H")
+stopifnot(nsamples(ps_0h) > 0)
+
+bray_0h <- phyloseq::distance(ps_0h, method = "bray")
+dist_matrix <- as.matrix(bray_0h)
+
+silhouette_scores <- map_dbl(2:6, ~ {
+  pam_fit <- cluster::pam(bray_0h, k = .x)
+  mean(cluster::silhouette(pam_fit)[, "sil_width"])
+})
+
+best_k <- which.max(silhouette_scores) + 1
+pam_best <- cluster::pam(bray_0h, k = best_k)
+
+cluster_assignments <- tibble(
+  SampleID = sample_names(ps_0h),
+  baseline_cluster = factor(paste0("Cluster", pam_best$clustering), levels = paste0("Cluster", seq_len(best_k)))
+)
+
+cluster_summary <- cluster_assignments %>%
+  dplyr::left_join(as_tibble(metadata, .name_repair = "minimal"), by = "SampleID") %>%
+  dplyr::count(baseline_cluster, carbohydrate, group, name = "n")
+
+cluster_summary
+```
+
+```{r cluster-plot}
+cluster_ord <- make_pcoa_df(ps_0h, "bray") %>%
+  dplyr::left_join(cluster_assignments, by = "SampleID")
+
+cluster_ord %>%
+  ggplot(aes(x = PC1, y = PC2, color = baseline_cluster, shape = carbohydrate)) +
+  geom_point(size = 3, alpha = 0.9) +
+  stat_ellipse(aes(group = baseline_cluster), linewidth = 0.5) +
+  scale_color_manual(values = palette_cluster) +
+  labs(
+    title = "Baseline (0 h) clusters",
+    x = glue::glue("PC1 ({scales::percent(round(cluster_ord$axis1_var[1], 3))})"),
+    y = glue::glue("PC2 ({scales::percent(round(cluster_ord$axis2_var[1], 3))})")
+  ) +
+  custom_theme()
+```
+
+```{r cluster-propagation}
+metadata_with_cluster <- metadata %>%
+  dplyr::left_join(cluster_assignments %>% dplyr::select(SampleID, baseline_cluster), by = "SampleID")
+
+# propagate baseline cluster to all timepoints via subject_id
+subject_clusters <- cluster_assignments %>%
+  dplyr::left_join(metadata %>% dplyr::select(SampleID, subject_id), by = "SampleID") %>%
+  dplyr::distinct(subject_id, baseline_cluster)
+
+metadata_with_cluster <- metadata %>%
+  dplyr::left_join(subject_clusters, by = "subject_id")
+
+ps_with_cluster <- ps_rel
+sample_data(ps_with_cluster)$baseline_cluster <- metadata_with_cluster$baseline_cluster[match(sample_names(ps_with_cluster), metadata_with_cluster$SampleID)]
+```
+
+```{r cluster-48h}
+ps_48h_cluster <- phyloseq::subset_samples(ps_with_cluster, Timepoint == "48H")
+ord_48h_cluster <- make_pcoa_df(ps_48h_cluster, "bray") %>%
+  dplyr::mutate(baseline_cluster = sample_data(ps_48h_cluster)$baseline_cluster[match(SampleID, sample_names(ps_48h_cluster))])
+
+ord_48h_cluster %>%
+  ggplot(aes(x = PC1, y = PC2, color = baseline_cluster, shape = carbohydrate)) +
+  geom_point(size = 3, alpha = 0.9) +
+  stat_ellipse(aes(group = interaction(baseline_cluster, carbohydrate)), linewidth = 0.5, linetype = "dotted") +
+  scale_color_manual(values = palette_cluster) +
+  scale_shape_manual(values = c(16, 17)) +
+  labs(
+    title = "48 h beta diversity colored by baseline cluster",
+    x = glue::glue("PC1 ({scales::percent(round(ord_48h_cluster$axis1_var[1], 3))})"),
+    y = glue::glue("PC2 ({scales::percent(round(ord_48h_cluster$axis2_var[1], 3))})")
+  ) +
+  custom_theme()
+```
+
+```{r cluster-statistics}
+cluster_response <- ord_48h_cluster %>%
+  dplyr::filter(!is.na(baseline_cluster)) %>%
+  dplyr::group_by(baseline_cluster, carbohydrate) %>%
+  dplyr::summarise(
+    mean_PC1 = mean(PC1),
+    mean_PC2 = mean(PC2),
+    n = n(),
+    .groups = "drop"
+  )
+
+cluster_response
+```
+
+```{r cluster-anova}
+ps_48h_counts <- phyloseq::subset_samples(ps, Timepoint == "48H")
+alpha_48h_cluster <- estimate_richness(ps_48h_counts, measures = c("Observed", "Shannon", "Simpson")) %>%
+  rownames_to_column("SampleID") %>%
+  pivot_longer(-SampleID, names_to = "metric", values_to = "value") %>%
+  dplyr::left_join(metadata_with_cluster, by = "SampleID") %>%
+  dplyr::filter(!is.na(baseline_cluster))
+
+cluster_models <- alpha_48h_cluster %>%
+  tidyr::nest(data = -metric) %>%
+  dplyr::mutate(
+    model = purrr::map(data, fit_cluster_model),
+    anova = purrr::map(model, ~ if (is.null(.x)) dplyr::tibble() else anova_table(.x))
+  )
+
+cluster_models %>%
+  dplyr::select(metric, anova) %>%
+  tidyr::unnest(anova) %>%
+  gt::gt() %>%
+  gt::fmt_number(columns = c(f_value, sum_sq, mean_sq, p_value, fdr), decimals = 3) %>%
+  gt::cols_label(term = "Effect", f_value = "F", sum_sq = "SS", mean_sq = "MS", p_value = "p", fdr = "q")
+```
+
+```{r cluster-interpretation, results='asis'}
+cluster_text <- cluster_models %>%
+  dplyr::mutate(summary = purrr::map_chr(
+    anova,
+    ~ {
+      if (is.null(.x) || nrow(.x) == 0) {
+        return("Model unavailable for this metric at 48 h")
+      }
+      .x %>%
+        dplyr::filter(fdr < 0.1) %>%
+        dplyr::mutate(label = glue::glue("{term} (q = {format_p(fdr)})")) %>%
+        dplyr::pull(label) %>%
+        glue::glue_collapse(sep = "; ") %>%
+        {ifelse(. == "", "No significant cluster–carbohydrate interactions detected at 48 h", .)}
+    }
+  ))
+
+cluster_text %>%
+  dplyr::mutate(text = glue::glue("**{metric}**: {summary}")) %>%
+  dplyr::pull(text) %>%
+  glue::glue_collapse(sep = "\n") %>%
+  cat()
+```
+```
+## 7. Community Composition Profiles
+
+```{r composition-overview}
+ps_genus <- collapse_taxa(ps_with_cluster, rank = "Genus", top_n = 20)
+
+ggplot(psmelt(microbiome::transform(ps_genus, "compositional")),
+       aes(x = carbohydrate, y = Abundance, fill = Genus)) +
+  geom_col(position = "fill") +
+  facet_grid(group ~ timepoint) +
+  scale_y_continuous(labels = scales::percent) +
+  scale_fill_manual(values = scico::scico(21, palette = "batlow")) +
+  labs(
+    x = NULL,
+    y = "Relative abundance",
+    title = "Genus-level composition by group, carbohydrate, and timepoint"
+  ) +
+  custom_theme() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+```{r composition-48h}
+ps_48h_genus <- phyloseq::subset_samples(ps_genus, Timepoint == "48H")
+
+ggplot(psmelt(microbiome::transform(ps_48h_genus, "compositional")),
+       aes(x = carbohydrate, y = Abundance, fill = Genus)) +
+  geom_col(position = "fill") +
+  facet_wrap(~ group) +
+  scale_y_continuous(labels = scales::percent) +
+  scale_fill_manual(values = scico::scico(21, palette = "batlow")) +
+  labs(
+    x = NULL,
+    y = "Relative abundance",
+    title = "Genus-level composition at 48 h"
+  ) +
+  custom_theme() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+```{r composition-cluster}
+ps_cluster <- phyloseq::subset_samples(ps_genus, !is.na(sample_data(ps_genus)$baseline_cluster))
+
+ggplot(psmelt(microbiome::transform(ps_cluster, "compositional")),
+       aes(x = baseline_cluster, y = Abundance, fill = Genus)) +
+  geom_col(position = "fill") +
+  facet_wrap(~ carbohydrate + timepoint, ncol = 3) +
+  scale_y_continuous(labels = scales::percent) +
+  scale_fill_manual(values = scico::scico(21, palette = "batlow")) +
+  labs(
+    x = "Baseline cluster",
+    y = "Relative abundance",
+    title = "Genus-level composition by baseline cluster"
+  ) +
+  custom_theme() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+```
+## 8. Differential Abundance and Predictive Modeling
+
+### 8.1 Shared Setup
+
+```{r da-setup}
+ps_counts <- ps
+sample_data(ps_counts)$subject_id <- factor(sample_data(ps_counts)$subject_id)
+
+ps_genus_counts <- tax_glom(ps_counts, taxrank = "Genus", NArm = FALSE)
+ps_genus_counts <- prune_taxa(taxa_sums(ps_genus_counts) > 0, ps_genus_counts)
+
+metadata_counts <- as(sample_data(ps_genus_counts), "data.frame") %>%
+  as_tibble(rownames = "SampleID")
+
+prevalence_cutoff <- 0.05
+min_prev <- ceiling(prevalence_cutoff * nsamples(ps_genus_counts))
+keep_taxa <- taxa_sums(ps_genus_counts) > 0 & rowSums(otu_table(ps_genus_counts) > 0) >= min_prev
+ps_genus_filtered <- prune_taxa(keep_taxa, ps_genus_counts)
+
+ps_genus_48h <- subset_samples(ps_genus_filtered, Timepoint == "48H")
+ps_genus_0h <- subset_samples(ps_genus_filtered, Timepoint == "0H")
+```
+```
+### 8.2 Corncob (beta-binomial)
+
+```{r corncob}
+set.seed(12345)
+
+corncob_test <- tryCatch({
+  corncob::differentialTest(
+    formula = ~ group + carbohydrate * timepoint + subject_id,
+    phi.formula = ~ group + carbohydrate * timepoint + subject_id,
+    formula_null = ~ group + timepoint + subject_id,
+    phi.formula_null = ~ group + timepoint + subject_id,
+    test = "Wald",
+    data = ps_genus_filtered,
+    fdr_cutoff = 0.1,
+    B = 0
+  )
+}, error = function(e) {
+  message("Corncob failed: ", e$message)
+  NULL
+})
+
+if (!is.null(corncob_test)) {
+  corncob_results <- corncob_test$wald_results %>%
+    dplyr::mutate(q_value = fdr_adjust(p_val)) %>%
+    dplyr::arrange(q_value)
+} else {
+  corncob_results <- tibble()
+}
+
+corncob_results
+```
+```
+### 8.3 ANCOM-BC2
+
+```{r ancombc2}
+ancombc2_res <- tryCatch({
+  ANCOMBC::ancombc2(
+    data = ps_counts,
+    tax_level = "Genus",
+    fix_formula = "group + carbohydrate * timepoint",
+    rand_formula = "(1|subject_id)",
+    p_adj_method = "BH",
+    prv_cut = 0.10,
+    lib_cut = 0,
+    s0_perc = 0.05,
+    group = "carbohydrate",
+    struc_zero = TRUE,
+    neg_lb = TRUE,
+    alpha = 0.05,
+    global = TRUE
+  )
+}, error = function(e) {
+  message("ANCOM-BC2 failed: ", e$message)
+  NULL
+})
+
+if (!is.null(ancombc2_res)) {
+  ancombc2_tbl <- map_dfr(names(ancombc2_res$lfc), function(effect) {
+    tibble(
+      taxon = rownames(ancombc2_res$lfc[[effect]]),
+      effect = effect,
+      beta = ancombc2_res$lfc[[effect]][, 1],
+      se = ancombc2_res$se[[effect]][, 1],
+      W = ancombc2_res$W[[effect]][, 1],
+      p_value = ancombc2_res$p_val[[effect]][, 1],
+      q = ancombc2_res$q_val[[effect]][, 1],
+      diff_abn = ancombc2_res$diff_abn[[effect]][, 1]
+    )
+  }) %>% dplyr::arrange(q)
+} else {
+  ancombc2_tbl <- tibble()
+}
+
+ancombc2_tbl %>%
+  dplyr::filter(q < 0.1)
+```
+```
+### 8.4 ANCOM-BC (48 h, RDC reference)
+
+```{r ancombc48}
+ps_48h_counts <- subset_samples(ps_counts, Timepoint == "48H")
+
+ancombc_48h <- tryCatch({
+  ANCOMBC::ancombc(
+    phyloseq = ps_48h_counts,
+    formula = "group + carbohydrate",
+    p_adj_method = "BH",
+    zero_cut = 0.90,
+    lib_cut = 0,
+    group = "carbohydrate",
+    struc_zero = TRUE,
+    neg_lb = TRUE,
+    alpha = 0.05,
+    global = TRUE
+  )
+}, error = function(e) {
+  message("ANCOM-BC 48h failed: ", e$message)
+  NULL
+})
+
+if (!is.null(ancombc_48h)) {
+  ancombc48_tbl <- map_dfr(names(ancombc_48h$beta), function(effect) {
+    tibble(
+      taxon = rownames(ancombc_48h$beta[[effect]]),
+      effect = effect,
+      beta = ancombc_48h$beta[[effect]][, 1],
+      se = ancombc_48h$se[[effect]][, 1],
+      W = ancombc_48h$W[[effect]][, 1],
+      p = ancombc_48h$p_val[[effect]][, 1],
+      q = ancombc_48h$q_val[[effect]][, 1]
+    )
+  }) %>%
+    dplyr::filter(q < 0.1)
+} else {
+  ancombc48_tbl <- tibble()
+}
+
+ancombc48_tbl
+```
+```
+### 8.5 ALDEx2 (48 h carbohydrate effect)
+
+```{r aldex}
+counts_48h <- as(otu_table(ps_genus_48h), "matrix")
+conds_48h <- sample_data(ps_genus_48h)$carbohydrate
+
+aldex_clr <- ALDEx2::aldex.clr(counts_48h, conds_48h, mc.samples = 64, denom = "all", verbose = FALSE)
+aldex_kw <- ALDEx2::aldex.kw(aldex_clr)
+aldex_effect <- ALDEx2::aldex.effect(aldex_clr)
+
+aldex_tbl <- aldex_kw %>%
+  rownames_to_column("taxon") %>%
+  dplyr::left_join(aldex_effect %>% rownames_to_column("taxon"), by = "taxon") %>%
+  dplyr::mutate(q = fdr_adjust(kw.ep)) %>%
+  dplyr::arrange(q)
+
+aldex_tbl %>% dplyr::filter(q < 0.1)
+```
+```
+### 8.6 LEfSe (48 h, subclass = group)
+
+```{r lefse}
+lefse_res <- tryCatch({
+  microbiomeMarker::run_lefse(
+    object = ps_genus_48h,
+    class = "carbohydrate",
+    subclass = "group",
+    taxa_rank = "Genus",
+    kw_cutoff = 0.05,
+    lda_cutoff = 2
+  )
+}, error = function(e) {
+  message("LEfSe failed: ", e$message)
+  NULL
+})
+
+lefse_tbl <- if (!is.null(lefse_res)) {
+  microbiomeMarker::marker_table(lefse_res) %>%
+    as_tibble() %>%
+    dplyr::arrange(desc(lda))
+} else {
+  tibble()
+}
+
+lefse_tbl
+```
+```
+### 8.7 MaAsLin2
+
+```{r maaslin2}
+maaslin_counts <- as.data.frame(otu_table(ps_genus_filtered))
+maaslin_meta <- as(sample_data(ps_genus_filtered), "data.frame")
+maaslin_meta$SampleID <- rownames(maaslin_meta)
+
+maaslin_fit <- Maaslin2::Maaslin2(
+  input_data = maaslin_counts,
+  input_metadata = maaslin_meta,
+  output = file.path(outputs_dir, "maaslin2_genus"),
+  min_prevalence = prevalence_cutoff,
+  normalization = "TSS",
+  transform = "LOG",
+  analysis_method = "LM",
+  fixed_effects = c("group", "carbohydrate", "timepoint"),
+  random_effects = c("subject_id"),
+  plot_heatmap = FALSE,
+  plot_scatter = FALSE
+)
+
+maaslin_tbl <- maaslin_fit$results %>%
+  as_tibble() %>%
+  dplyr::mutate(q = fdr_adjust(qval)) %>%
+  dplyr::arrange(q)
+
+maaslin_tbl %>% dplyr::filter(q < 0.1)
+```
+```
+### 8.8 ADAPT
+
+```{r adapt}
+adapt_res <- tryCatch({
+  ADAPT::adapt(
+    input_data = ps_genus_filtered,
+    cond.var = "carbohydrate",
+    base.cond = "No Added Carb",
+    time.var = "timepoint",
+    random.var = "subject_id"
+  )
+}, error = function(e) {
+  message("ADAPT failed: ", e$message)
+  NULL
+})
+
+adapt_tbl <- if (!is.null(adapt_res)) {
+  signals <- adapt_res@signal
+  details <- adapt_res@details
+  tibble(
+    taxon = signals,
+    log10_fc = details[signals, "log10foldchange"],
+    direction = if_else(log10_fc > 0, "Enriched", "Depleted")
+  )
+} else {
+  tibble()
+}
+
+adapt_tbl
+```
+```
+### 8.9 Random Forest Classification (48 h carbohydrate)
+
+```{r random-forest}
+set.seed(12345)
+
+rf_res <- tryCatch({
+  microbiomeMarker::run_sl(
+    object = ps_genus_48h,
+    group = "carbohydrate",
+    taxa_rank = "Genus",
+    norm = "TSS",
+    method = "RF",
+    nfolds = 5,
+    nrepeats = 1,
+    top_n = 30
+  )
+}, error = function(e) {
+  message("Random forest failed: ", e$message)
+  NULL
+})
+
+rf_markers <- if (!is.null(rf_res)) {
+  microbiomeMarker::marker_table(rf_res) %>%
+    as_tibble() %>%
+    dplyr::arrange(desc(importance))
+} else {
+  tibble()
+}
+
+rf_markers
+```
+```
+### 8.10 Cross-Method Signal Concordance
+
+```{r da-consensus}
+da_lists <- list(
+  Corncob = pull_safe(corncob_results %>% dplyr::filter(q_value < 0.1), "taxon"),
+  ANCOMBC2 = {
+    col <- first_match_col(ancombc2_tbl, c("taxa_id", "taxon"))
+    if (is.null(col)) character() else pull_safe(ancombc2_tbl %>% dplyr::filter(q < 0.1), col)
+  },
+  ANCOMBC48 = pull_safe(ancombc48_tbl, "taxon"),
+  ALDEx2 = pull_safe(aldex_tbl %>% dplyr::filter(q < 0.1), "taxon"),
+  LEfSe = pull_safe(lefse_tbl, "taxa"),
+  MaAsLin2 = pull_safe(maaslin_tbl %>% dplyr::filter(q < 0.1), "feature"),
+  ADAPT = pull_safe(adapt_tbl, "taxon"),
+  RandomForest = {
+    col <- first_match_col(rf_markers, c("taxa", "feature", "marker"))
+    if (is.null(col)) character() else pull_safe(rf_markers %>% slice_head(n = 15), col)
+  }
+)
+
+da_long <- enframe(da_lists, name = "method", value = "taxa") %>%
+  tidyr::unnest(taxa) %>%
+  dplyr::distinct(method, taxa) %>%
+  dplyr::count(taxa, method) %>%
+  dplyr::mutate(present = 1)
+
+consensus_matrix <- da_long %>%
+  pivot_wider(names_from = method, values_from = present, values_fill = 0)
+
+consensus_matrix %>% dplyr::arrange(desc(rowSums(across(where(is.numeric)))))
+```
+
+```{r forest-plot}
+if (nrow(ancombc48_tbl) > 0) {
+  ancombc48_tbl %>%
+    dplyr::mutate(
+      taxon = stringr::str_replace_all(taxon, "_", " "),
+      effect = factor(effect)
+    ) %>%
+    ggplot(aes(x = beta, y = reorder(taxon, beta), xmin = beta - 1.96 * se, xmax = beta + 1.96 * se, color = effect)) +
+    geom_point(size = 2.5) +
+    geom_errorbar(width = 0.2) +
+    geom_vline(xintercept = 0, linetype = "dashed", color = "grey40") +
+    labs(
+      x = "Log fold-change vs RDC",
+      y = NULL,
+      title = "48 h ANCOM-BC effect sizes"
+    ) +
+    custom_theme()
+} else {
+  ggplot() + annotate("text", x = 0, y = 0, label = "No ANCOM-BC signals at q < 0.10") +
+    theme_void()
+}
+```
+```
+```{r da-interpretation, results='asis'}
+consensus_summary <- consensus_matrix %>%
+  dplyr::mutate(method_count = rowSums(across(where(is.numeric)))) %>%
+  dplyr::arrange(desc(method_count))
+
+if (nrow(consensus_summary) == 0) {
+  cat("No overlapping differential taxa detected across the configured methods at q < 0.10.")
+} else {
+  top_taxa <- consensus_summary %>%
+    slice_max(order_by = method_count, n = 10) %>%
+    dplyr::mutate(text = glue::glue("{taxa}: detected by {method_count} methods")) %>%
+    dplyr::pull(text)
+  cat(glue::glue_collapse(top_taxa, sep = "\n"))
+}
+```
+```
+## 9. Summary and Next Steps
+
+```{r final-summary, results='asis'}
+alpha_highlights <- alpha_significance %>%
+  dplyr::mutate(text = glue::glue("{metric}: {sig_terms}")) %>%
+  dplyr::pull(text) %>%
+  glue::glue_collapse(sep = "; ")
+
+permanova_highlights <- permanova_results %>%
+  dplyr::mutate(p_value = pr_greater_f_, q = fdr_adjust(p_value)) %>%
+  dplyr::filter(term != "Residual", q < 0.1) %>%
+  dplyr::mutate(text = glue::glue("{stringr::str_to_title(distance)} {term}")) %>%
+  dplyr::pull(text) %>%
+  glue::glue_collapse(sep = "; ")
+
+if (permanova_highlights == "") permanova_highlights <- "No beta-diversity terms at q < 0.10"
+
+consensus_highlights <- if (exists("consensus_summary") && nrow(consensus_summary) > 0) {
+  consensus_summary %>%
+    slice_max(order_by = method_count, n = 5) %>%
+    dplyr::mutate(text = glue::glue("{taxa} ({method_count} methods)")) %>%
+    dplyr::pull(text) %>%
+    glue::glue_collapse(sep = "; ")
+} else {
+  "No shared differential taxa"
+}
+
+cat(glue::glue(
+  "- Alpha diversity signals: {alpha_highlights}\n- Beta diversity drivers: {permanova_highlights}\n- Differential abundance consensus: {consensus_highlights}"
+))
+```
+
+**Suggested extensions**
+
+1. Validate differential findings with targeted modeling (e.g., mixed-effects regressions on log-relative abundances) for key taxa.
+2. Incorporate functional pathway predictions (PICRUSt2, HUMAnN) to relate taxonomic shifts to metabolic potential.
+3. Explore subject-level trajectories using longitudinal models (e.g., smoothing splines) to capture individual response heterogeneity.
+```
