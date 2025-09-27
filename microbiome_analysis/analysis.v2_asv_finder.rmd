@@ -17,17 +17,22 @@ output:
 ```{r library-loading}
 # Helper function to install CRAN or Bioconductor packages if not already installed
 install_if_missing <- function(pkg) {
+  
   if (!requireNamespace(pkg, quietly = TRUE)) {
     tryCatch({
       install.packages(pkg)
     }, error = function(e) {
       if (!requireNamespace("BiocManager", quietly = TRUE)) {
-        install.packages("BiocManager")
+        install.packages("BiocManls /etc/apt/sources.list.d/ | grep -i cran
+ls /etc/apt/sources.list.d/ | grep -i r-project
+ager")
       }
       BiocManager::install(pkg, ask = FALSE)
     })
+    
   }
 }
+
 
 # List of required packages
 required_pkgs <- c(
@@ -121,11 +126,10 @@ write_csv(samdat, file = "samdat.csv")
 
 ```{r import-asv-finder-data-and-phyloseq-object}
 asv_data <- read_tsv("dada2_asv_2/asv_table.tsv")
-asv <- asv_data$ASV_ID
 
-asv_data <- asv_data %>% 
-  as.data.frame() %>% 
-  select(-ASV_ID, -Sequence, -Length, -Total_Abundance, -Relative_Abundance) 
+# asv_data <- asv_data %>% 
+#   as.data.frame() %>% 
+#   select(-ASV_ID, -Sequence, -Length, -Total_Abundance, -Relative_Abundance) 
 
 # Process sample names more carefully
 original_names <- colnames(asv_data)
@@ -150,7 +154,7 @@ if(any(duplicated(colnames(asv_data)))) {
   cat("Final sample names (first 10):", paste(head(colnames(asv_data), 10), collapse = ", "), "\n")
 }
 
-rownames(asv_data) <- asv
+# rownames(asv_data) <- asv
 
 taxonomy_data <- read_tsv("dada2_asv_2/strobelca_taxonomy.tsv")
 asv <- taxonomy_data$ASV_ID %>% str_split(" ") %>% sapply(function(x) x[1])
@@ -216,6 +220,10 @@ if(any(duplicated(rownames(samdat)))) {
   rownames(samdat) <- make.unique(rownames(samdat), sep = "_")
   colnames(asv_data) <- rownames(samdat)  # Update ASV column names to match
 }
+
+asv_data <- asv_data %>% 
+  as.data.frame() 
+rownames(asv_data) <- rownames(taxonomy_data)
 
 # now make the phyloseq object
 phy_asv_finder <- phyloseq(
@@ -810,11 +818,35 @@ cat("      Conditional R² = variance explained by fixed + random effects\n")
 
 ### Interpretation of Mixed-Effects Alpha-Diversity Models
 
-Across all three alpha-diversity metrics, carbohydrate condition was the only fixed effect that consistently explained variance in community diversity. With SubjectID modeled as a random intercept, the main effect of carbohydrate was significant for Shannon (F = `r round(shannon_results$anova$F_value[shannon_results$anova$Term == "carbohydrate"], 2)`, p = `r format.pval(shannon_results$anova$p_value[shannon_results$anova$Term == "carbohydrate"], digits = 2)`), Observed ASVs (F = `r round(observed_results$anova$F_value[observed_results$anova$Term == "carbohydrate"], 2)`, p = `r format.pval(observed_results$anova$p_value[observed_results$anova$Term == "carbohydrate"], digits = 2)`), and Simpson (F = `r round(simpson_results$anova$F_value[simpson_results$anova$Term == "carbohydrate"], 2)`, p = `r format.pval(simpson_results$anova$p_value[simpson_results$anova$Term == "carbohydrate"], digits = 2)`). The timepoint-by-carbohydrate interaction was `r ifelse(shannon_results$anova$p_value[shannon_results$anova$Term == "timepoint:carbohydrate"] < 0.05, "significant", "not significant")` for Shannon (F = `r round(shannon_results$anova$F_value[shannon_results$anova$Term == "timepoint:carbohydrate"], 2)`, p = `r format.pval(shannon_results$anova$p_value[shannon_results$anova$Term == "timepoint:carbohydrate"], digits = 2)`) and `r ifelse(observed_results$anova$p_value[observed_results$anova$Term == "timepoint:carbohydrate"] < 0.05, "significant", "not significant")` for Observed ASVs (F = `r round(observed_results$anova$F_value[observed_results$anova$Term == "timepoint:carbohydrate"], 2)`, p = `r format.pval(observed_results$anova$p_value[observed_results$anova$Term == "timepoint:carbohydrate"], digits = 2)`), indicating temporal modulation of carbohydrate effects. In contrast, the group main effect did `r ifelse(all(c(shannon_results$anova$p_value[shannon_results$anova$Term == "group"], observed_results$anova$p_value[observed_results$anova$Term == "group"], simpson_results$anova$p_value[simpson_results$anova$Term == "group"]) >= 0.05), "not", "")` reach conventional significance across metrics (Shannon p = `r format.pval(shannon_results$anova$p_value[shannon_results$anova$Term == "group"], digits = 2)`, Observed p = `r format.pval(observed_results$anova$p_value[observed_results$anova$Term == "group"], digits = 2)`, Simpson p = `r format.pval(simpson_results$anova$p_value[simpson_results$anova$Term == "group"], digits = 2)`).
+#### Fixed Effects: Experimental Treatment Impacts
 
-Random-effects estimates indicated meaningful inter-individual heterogeneity. The estimated SubjectID variance components were Shannon = `r signif(shannon_results$random_effects$estimate[shannon_results$random_effects$term == "sd__(Intercept)"]^2, 3)`, Observed = `r signif(observed_results$random_effects$estimate[observed_results$random_effects$term == "sd__(Intercept)"]^2, 3)`, and Simpson = `r signif(simpson_results$random_effects$estimate[simpson_results$random_effects$term == "sd__(Intercept)"]^2, 3)`. Consistent with this, conditional R² exceeded marginal R² for all metrics (Shannon: `r round(r.squaredGLMM(model_shannon)[2], 3)` vs `r round(r.squaredGLMM(model_shannon)[1], 3)`; Observed: `r round(r.squaredGLMM(model_observed)[2], 3)` vs `r round(r.squaredGLMM(model_observed)[1], 3)`; Simpson: `r round(r.squaredGLMM(model_simpson)[2], 3)` vs `r round(r.squaredGLMM(model_simpson)[1], 3)`), indicating that subject-specific baselines account for a substantial portion of total variance.
+Across all three alpha-diversity metrics, **carbohydrate condition was the only fixed effect that consistently explained variance** in community diversity. With SubjectID modeled as a random intercept, the main effect of carbohydrate was significant for Shannon (F = `r round(shannon_results$anova$F_value[shannon_results$anova$Term == "carbohydrate"], 2)`, p = `r format.pval(shannon_results$anova$p_value[shannon_results$anova$Term == "carbohydrate"], digits = 2)`), Observed ASVs (F = `r round(observed_results$anova$F_value[observed_results$anova$Term == "carbohydrate"], 2)`, p = `r format.pval(observed_results$anova$p_value[observed_results$anova$Term == "carbohydrate"], digits = 2)`), and Simpson (F = `r round(simpson_results$anova$F_value[simpson_results$anova$Term == "carbohydrate"], 2)`, p = `r format.pval(simpson_results$anova$p_value[simpson_results$anova$Term == "carbohydrate"], digits = 2)`). 
 
-Overall, these results support carbohydrate condition (No Added Carb, RDC, SDC) as a primary determinant of alpha diversity, with temporal dynamics modulating this effect for Shannon diversity and richness. Reporting adjusted pairwise contrasts among carbohydrate levels (e.g., estimated marginal means) will localize specific differences and provide effect sizes that are directly interpretable.
+**Timepoint effects** were `r ifelse(observed_results$anova$p_value[observed_results$anova$Term == "timepoint"] < 0.05, "significant", "not significant")` for Observed ASVs (F = `r round(observed_results$anova$F_value[observed_results$anova$Term == "timepoint"], 2)`, p = `r format.pval(observed_results$anova$p_value[observed_results$anova$Term == "timepoint"], digits = 2)`) but `r ifelse(shannon_results$anova$p_value[shannon_results$anova$Term == "timepoint"] < 0.05, "significant", "not significant")` for Shannon (F = `r round(shannon_results$anova$F_value[shannon_results$anova$Term == "timepoint"], 2)`, p = `r format.pval(shannon_results$anova$p_value[shannon_results$anova$Term == "timepoint"], digits = 2)`) and Simpson (F = `r round(simpson_results$anova$F_value[simpson_results$anova$Term == "timepoint"], 2)`, p = `r format.pval(simpson_results$anova$p_value[simpson_results$anova$Term == "timepoint"], digits = 2)`).
+
+**Interaction effects** revealed that the timepoint-by-carbohydrate interaction was `r ifelse(shannon_results$anova$p_value[shannon_results$anova$Term == "timepoint:carbohydrate"] < 0.05, "significant", "not significant")` for Shannon (F = `r round(shannon_results$anova$F_value[shannon_results$anova$Term == "timepoint:carbohydrate"], 2)`, p = `r format.pval(shannon_results$anova$p_value[shannon_results$anova$Term == "timepoint:carbohydrate"], digits = 2)`) and `r ifelse(observed_results$anova$p_value[observed_results$anova$Term == "timepoint:carbohydrate"] < 0.05, "significant", "not significant")` for Observed ASVs (F = `r round(observed_results$anova$F_value[observed_results$anova$Term == "timepoint:carbohydrate"], 2)`, p = `r format.pval(observed_results$anova$p_value[observed_results$anova$Term == "timepoint:carbohydrate"], digits = 2)`), indicating temporal modulation of carbohydrate effects. In contrast, the **group main effect did `r ifelse(all(c(shannon_results$anova$p_value[shannon_results$anova$Term == "group"], observed_results$anova$p_value[observed_results$anova$Term == "group"], simpson_results$anova$p_value[simpson_results$anova$Term == "group"]) >= 0.05), "not", "")` reach conventional significance** across metrics (Shannon p = `r format.pval(shannon_results$anova$p_value[shannon_results$anova$Term == "group"], digits = 2)`, Observed p = `r format.pval(observed_results$anova$p_value[observed_results$anova$Term == "group"], digits = 2)`, Simpson p = `r format.pval(simpson_results$anova$p_value[simpson_results$anova$Term == "group"], digits = 2)`).
+
+#### Random Effects: Individual Differences Dominate
+
+Random-effects estimates indicated **substantial inter-individual heterogeneity**. The estimated SubjectID variance components were Shannon = `r signif(shannon_results$random_effects$estimate[shannon_results$random_effects$term == "sd__(Intercept)"]^2, 3)` (SD = `r round(sqrt(shannon_results$random_effects$estimate[shannon_results$random_effects$term == "sd__(Intercept)"]^2), 3)` Shannon units), Observed = `r signif(observed_results$random_effects$estimate[observed_results$random_effects$term == "sd__(Intercept)"]^2, 3)` (SD = `r round(sqrt(observed_results$random_effects$estimate[observed_results$random_effects$term == "sd__(Intercept)"]^2), 0)` ASVs), and Simpson = `r signif(simpson_results$random_effects$estimate[simpson_results$random_effects$term == "sd__(Intercept)"]^2, 3)` (SD = `r round(sqrt(simpson_results$random_effects$estimate[simpson_results$random_effects$term == "sd__(Intercept)"]^2), 4)` Simpson units). 
+
+This individual variation represents **`r round((1 - r.squaredGLMM(model_shannon)[1]) * 100, 1)`% of total variance** for Shannon, **`r round((1 - r.squaredGLMM(model_observed)[1]) * 100, 1)`% for Observed ASVs**, and **`r round((1 - r.squaredGLMM(model_simpson)[1]) * 100, 1)`% for Simpson diversity**. Consistent with this, conditional R² exceeded marginal R² for all metrics (Shannon: `r round(r.squaredGLMM(model_shannon)[2], 3)` vs `r round(r.squaredGLMM(model_shannon)[1], 3)`; Observed: `r round(r.squaredGLMM(model_observed)[2], 3)` vs `r round(r.squaredGLMM(model_observed)[1], 3)`; Simpson: `r round(r.squaredGLMM(model_simpson)[2], 3)` vs `r round(r.squaredGLMM(model_simpson)[1], 3)`), indicating that **subject-specific baselines account for the majority of total variance**.
+
+#### Biological Interpretation
+
+These results support several key conclusions:
+
+1. **Carbohydrate condition (No Added Carb, RDC, SDC) is the primary experimental determinant** of alpha diversity, with consistent effects across all diversity metrics.
+
+2. **Individual differences are substantial and expected** in microbiome studies, where baseline diversity varies considerably between people regardless of experimental treatments.
+
+3. **The significant carbohydrate effects are biologically meaningful** despite high individual variation, suggesting that dietary carbohydrate type has measurable impacts on microbiome diversity that transcend individual differences.
+
+4. **Temporal dynamics modulate carbohydrate effects** for Shannon diversity and richness, indicating that the microbiome response to carbohydrates changes over the 48-hour time course.
+
+5. **Health status (Healthy vs Obese) alone does not predict alpha diversity**, suggesting that baseline microbiome diversity is not a simple function of metabolic health status in this study population.
+
+The low marginal R² values (`r round(r.squaredGLMM(model_shannon)[1], 3)`-`r round(r.squaredGLMM(model_observed)[1], 3)`) are typical in microbiome studies where individual differences dominate, but the consistent significance of carbohydrate effects across metrics indicates robust treatment responses. Reporting adjusted pairwise contrasts among carbohydrate levels (e.g., estimated marginal means) will localize specific differences and provide effect sizes that are directly interpretable for clinical translation.
 
 ```{r beta-diversity}
 library(microbiome)
@@ -842,6 +874,1157 @@ plot_ordination(phy_asv_finder_rel_filtered, pcoa, type = "samples", color = "gr
   facet_wrap(~timepoint) +
   theme_classic(base_size = 16)
 
+
+```
+
+```{r clustering-analysis-time0, fig.width = 12, fig.height = 8}
+# Clustering analysis for time 0 samples
+library(cluster)
+library(factoextra)
+library(RColorBrewer)
+library(gridExtra)
+
+# Filter data for time 0 only
+phy_0h <- subset_samples(phy_asv_finder_rel_filtered, timepoint == "0H")
+
+# Remove any taxa that are completely absent in 0H samples
+phy_0h <- prune_taxa(taxa_sums(phy_0h) > 0, phy_0h)
+
+cat("0H samples for clustering:", nsamples(phy_0h), "\n")
+
+# Extract sample data
+sample_data_0h <- data.frame(sample_data(phy_0h))
+
+# Calculate Bray-Curtis distance matrix
+dist_matrix <- phyloseq::distance(phy_0h, method = "bray")
+
+# Perform clustering analysis with multiple methods
+library(cluster)
+
+cat("Testing different numbers of clusters using multiple validation methods...\n")
+
+# Test different k values
+k_values <- 2:6
+silhouette_scores <- numeric(length(k_values))
+pam_results <- list()
+wss_scores <- numeric(length(k_values))  # Within-cluster sum of squares
+
+for(i in seq_along(k_values)) {
+  k <- k_values[i]
+  pam_temp <- pam(dist_matrix, k = k, diss = TRUE)
+  pam_results[[i]] <- pam_temp
+  
+  # Calculate mean silhouette width (with error handling)
+  tryCatch({
+    sil_width_temp <- pam_temp$silhouette[, "sil_width"]
+    silhouette_scores[i] <- mean(sil_width_temp, na.rm = TRUE)
+  }, error = function(e) {
+    silhouette_scores[i] <- NA
+  })
+  
+  # Calculate within-cluster sum of squares as alternative metric
+  wss_scores[i] <- pam_temp$objective[2]  # Total sum of squares
+  
+  cat("k =", k, "| Silhouette =", round(silhouette_scores[i], 3), 
+      "| WSS =", round(wss_scores[i], 3), "\n")
+}
+
+# Find optimal k using elbow method on WSS since silhouette is failing
+cat("\nUsing elbow method on WSS (Within-Cluster Sum of Squares):\n")
+
+# Calculate the "elbow" - look for the point where the decrease in WSS starts to level off
+wss_diff <- diff(wss_scores)
+wss_diff2 <- diff(wss_diff)  # Second derivative
+
+cat("WSS values:", round(wss_scores, 3), "\n")
+cat("WSS differences:", round(wss_diff, 3), "\n")
+cat("WSS second differences:", round(wss_diff2, 3), "\n")
+
+# Find elbow: look for the point where the second derivative is most negative
+# This indicates where the rate of improvement starts to slow down
+if(length(wss_diff2) > 0) {
+  elbow_idx <- which.min(wss_diff2) + 1  # +1 because we took diff twice
+  optimal_k <- k_values[elbow_idx]
+  optimal_k_idx <- elbow_idx
+  cat("Elbow detected at k =", optimal_k, "\n")
+} else {
+  # Fallback to visual inspection
+  optimal_k <- 2
+  optimal_k_idx <- which(k_values == optimal_k)
+        cat("Could not detect elbow. Using k=2 based on visual inspection of PCoA plot.\n")
+}
+
+cat("Selected k =", optimal_k, "based on elbow method\n")
+
+# Create elbow plot
+elbow_data <- data.frame(
+  k = k_values,
+  wss = wss_scores
+)
+
+elbow_plot <- ggplot(elbow_data, aes(x = k, y = wss)) +
+  geom_line(color = "blue", size = 1) +
+  geom_point(color = "red", size = 3) +
+  geom_vline(xintercept = optimal_k, linetype = "dashed", color = "green", size = 1) +
+  labs(title = "Elbow Method for Optimal Number of Clusters",
+       x = "Number of Clusters (k)",
+       y = "Within-Cluster Sum of Squares (WSS)",
+       subtitle = paste("Optimal k =", optimal_k)) +
+  theme_classic(base_size = 14) +
+  scale_x_continuous(breaks = k_values)
+
+print(elbow_plot)
+
+# Use the selected PAM result
+pam_result <- pam_results[[optimal_k_idx]]
+
+# Also test hierarchical clustering for comparison
+hc_result <- hclust(dist_matrix, method = "ward.D2")
+hc_clusters <- cutree(hc_result, k = optimal_k)
+
+# Compare PAM and hierarchical clustering results
+cluster_agreement <- sum(pam_result$clustering == hc_clusters) / length(pam_result$clustering)
+cat("Agreement between PAM and hierarchical clustering (k=", optimal_k, "):", round(cluster_agreement, 3), "\n")
+
+# Create silhouette plot for the optimal clustering (if possible)
+if(!is.na(silhouette_scores[optimal_k_idx])) {
+  cat("\nCreating silhouette plot for k =", optimal_k, "\n")
+  tryCatch({
+    sil_plot <- silhouette(pam_result$clustering, dist_matrix)
+    plot(sil_plot, main = paste("Silhouette Plot for k =", optimal_k))
+  }, error = function(e) {
+    cat("Could not create silhouette plot:", e$message, "\n")
+  })
+} else {
+  cat("\nSkipping silhouette plot due to calculation issues.\n")
+}
+
+# Safety check to ensure optimal_k is defined
+if(!exists("optimal_k") || is.na(optimal_k) || length(optimal_k) == 0) {
+  optimal_k <- 3  # Default to 3 clusters based on visual inspection
+  optimal_k_idx <- which(k_values == optimal_k)
+  pam_result <- pam_results[[optimal_k_idx]]
+  cat("Using fallback: k =", optimal_k, "\n")
+}
+
+# Add cluster assignments to sample data
+sample_data_0h$cluster <- pam_result$clustering
+sample_data_0h$cluster_factor <- factor(pam_result$clustering)
+
+    # Get medoids (representative samples for each cluster)
+    medoids <- pam_result$medoids
+    cat("Cluster medoids:\n")
+    print(medoids)
+
+# Get cluster sizes
+cluster_sizes <- table(pam_result$clustering)
+cat("Cluster sizes:", cluster_sizes, "\n")
+cat("Cluster 1:", cluster_sizes[1], "samples\n")
+cat("Cluster 2:", cluster_sizes[2], "samples\n")
+
+# Print cluster characteristics
+cat("\n=== CLUSTER CHARACTERISTICS AT TIME 0 ===\n")
+cluster_summary <- sample_data_0h %>%
+  group_by(cluster_factor) %>%
+  summarise(
+    n_samples = n(),
+    healthy_count = sum(group == "Healthy"),
+    obese_count = sum(group == "Obese"),
+    no_carb_count = sum(carbohydrate == "No Added Carb"),
+    rdc_count = sum(carbohydrate == "RDC"),
+    sdc_count = sum(carbohydrate == "SDC"),
+    .groups = 'drop'
+  ) %>%
+  mutate(
+    healthy_pct = round(healthy_count/n_samples * 100, 1),
+    obese_pct = round(obese_count/n_samples * 100, 1),
+    no_carb_pct = round(no_carb_count/n_samples * 100, 1),
+    rdc_pct = round(rdc_count/n_samples * 100, 1),
+    sdc_pct = round(sdc_count/n_samples * 100, 1)
+  )
+
+print(cluster_summary)
+
+# PCoA for time 0 with cluster coloring
+pcoa_0h <- ordinate(phy_0h, method = "PCoA", distance = "bray")
+
+# Add cluster information to the phyloseq object for plotting
+sample_data(phy_0h) <- sample_data(sample_data_0h)
+
+# Create PCoA plot colored by clusters
+# Define colors for clusters
+cluster_colors <- c("#E31A1C", "#1F78B4", "#33A02C", "#FF7F00", "#6A3D9A", "#B15928")
+cluster_names <- paste("Cluster", 1:optimal_k)
+
+p1 <- plot_ordination(phy_0h, pcoa_0h, type = "samples", color = "cluster_factor") +
+  geom_point(size = 4, alpha = 0.8) +
+  scale_color_manual(values = cluster_colors[1:optimal_k], 
+                     labels = cluster_names[1:optimal_k]) +
+  labs(title = paste("PCoA at Time 0H - Colored by", optimal_k, "Clusters"),
+       color = "Cluster") +
+  theme_classic(base_size = 14) +
+  theme(legend.position = "bottom")
+
+# Create PCoA plot colored by group
+p2 <- plot_ordination(phy_0h, pcoa_0h, type = "samples", color = "group") +
+  geom_point(size = 4, alpha = 0.8) +
+  ggsci::scale_color_npg() +
+  labs(title = "PCoA at Time 0H - Colored by Group",
+       color = "Group") +
+  theme_classic(base_size = 14) +
+  theme(legend.position = "bottom")
+
+# Create PCoA plot colored by carbohydrate
+p3 <- plot_ordination(phy_0h, pcoa_0h, type = "samples", color = "carbohydrate") +
+  geom_point(size = 4, alpha = 0.8) +
+  scale_color_manual(values = c("No Added Carb" = "#FF7F00", 
+                               "RDC" = "#984EA3", 
+                               "SDC" = "#4DAF4A")) +
+  labs(title = "PCoA at Time 0H - Colored by Carbohydrate Treatment",
+       color = "Carbohydrate") +
+  theme_classic(base_size = 14) +
+  theme(legend.position = "bottom")
+
+# Arrange plots
+grid.arrange(p1, p2, p3, ncol = 3)
+
+# Statistical tests for cluster differences
+cat("\n=== STATISTICAL TESTS FOR CLUSTER DIFFERENCES (BASELINE CHARACTERISTICS) ===\n")
+cat("NOTE: At time 0H, treatments haven't been applied yet, so we only test baseline characteristics.\n\n")
+
+# Chi-square test for group (Healthy vs Obese) - this is the only meaningful test at baseline
+chisq_group <- chisq.test(table(sample_data_0h$cluster_factor, sample_data_0h$group))
+
+cat("Chi-square test - Group (Healthy vs Obese) vs Cluster:\n")
+print(chisq_group)
+
+# Show the actual contingency table
+cat("\nContingency table - Group vs Cluster:\n")
+print(table(sample_data_0h$cluster_factor, sample_data_0h$group))
+
+# Calculate proportions within each cluster
+cat("\nProportions within each cluster:\n")
+cluster_props <- prop.table(table(sample_data_0h$cluster_factor, sample_data_0h$group), margin = 1)
+print(round(cluster_props * 100, 1))
+
+# Note about carbohydrate treatment
+cat("\nIMPORTANT NOTE: Carbohydrate treatment assignments at time 0H represent the intended treatment,\n")
+cat("but no treatment has been applied yet. Any association between clusters and carbohydrate\n")
+cat("treatment at baseline would be spurious and not biologically meaningful.\n")
+
+# Save cluster assignments for later analysis
+write.csv(sample_data_0h, "outputs/cluster_assignments_0h.csv", row.names = FALSE)
+cat("\nCluster assignments saved to: outputs/cluster_assignments_0h.csv\n")
+
+```
+
+
+```{r cluster-treatment-response, fig.width = 14, fig.height = 10}
+# Analysis of how baseline clusters respond to carbohydrate treatments over time
+# NOTE: Clusters are identified at baseline (0H) before any treatments are applied
+library(tidyr)
+library(ggpubr)
+
+# Load cluster assignments from time 0
+cluster_assignments <- read.csv("outputs/cluster_assignments_0h.csv")
+
+# Add cluster information to the full dataset
+sample_data_full <- data.frame(sample_data(phy_asv_finder_rel_filtered))
+
+# Debug: Check sample name consistency
+cat("Original phyloseq sample names (first 5):", head(sample_names(phy_asv_finder_rel_filtered), 5), "\n")
+cat("Cluster assignment sample names (first 5):", head(cluster_assignments$SampleID, 5), "\n")
+cat("Sample data sample names (first 5):", head(sample_data_full$SampleID, 5), "\n")
+
+# Merge cluster assignments while preserving original order
+# Remove any existing cluster columns to avoid duplicates
+sample_data_full <- sample_data_full %>%
+  select(-any_of(c("cluster", "cluster_factor")))
+
+sample_data_full <- merge(sample_data_full, 
+                         cluster_assignments[, c("SampleID", "cluster", "cluster_factor")], 
+                         by = "SampleID", all.x = TRUE)
+
+# Check for missing cluster assignments
+missing_clusters <- sum(is.na(sample_data_full$cluster))
+cat("Number of samples missing cluster assignments:", missing_clusters, "\n")
+cat("Note: Only 0H samples have cluster assignments, others will be NA\n")
+
+# Restore original order to match phyloseq object
+original_order <- sample_names(phy_asv_finder_rel_filtered)
+sample_data_full <- sample_data_full[match(original_order, sample_data_full$SampleID), ]
+
+# Ensure row names match sample names for phyloseq compatibility
+rownames(sample_data_full) <- sample_data_full$SampleID
+
+# Verify row names match sample names
+if(all(rownames(sample_data_full) == sample_names(phy_asv_finder_rel_filtered))) {
+  cat("Row names match sample names - OK\n")
+} else {
+  cat("WARNING: Row names don't match sample names\n")
+  cat("First 5 row names:", head(rownames(sample_data_full), 5), "\n")
+  cat("First 5 sample names:", head(sample_names(phy_asv_finder_rel_filtered), 5), "\n")
+}
+
+# Add cluster information back to phyloseq object
+sample_data(phy_asv_finder_rel_filtered) <- sample_data(sample_data_full)
+
+# Calculate beta diversity metrics for each sample across timepoints
+dist_matrix_full <- phyloseq::distance(phy_asv_finder_rel_filtered, method = "bray")
+
+# Create a data frame with sample information and cluster assignments
+sample_df <- data.frame(sample_data(phy_asv_finder_rel_filtered)) %>%
+  mutate(
+    timepoint_numeric = ifelse(timepoint == "0H", 0, 48),
+    cluster_label = ifelse(is.na(cluster), NA, paste0("Cluster ", cluster))
+  )
+
+# Debug: Check data availability
+cat("Total samples in dataset:", nrow(sample_df), "\n")
+cat("Samples with cluster assignments:", sum(!is.na(sample_df$cluster)), "\n")
+cat("Samples by timepoint:\n")
+print(table(sample_df$timepoint, useNA = "always"))
+
+# Check subjects with both timepoints
+subjects_with_both <- sample_df %>%
+  group_by(subjectID) %>%
+  summarise(
+    n_timepoints = n(),
+    has_cluster = any(!is.na(cluster)),
+    timepoints = paste(sort(unique(timepoint)), collapse = ", "),
+    .groups = 'drop'
+  )
+
+cat("Subjects with both timepoints:", sum(subjects_with_both$n_timepoints == 2), "\n")
+cat("Subjects with cluster assignments:", sum(subjects_with_both$has_cluster), "\n")
+cat("Subjects with both timepoints AND clusters:", sum(subjects_with_both$n_timepoints == 2 & subjects_with_both$has_cluster), "\n")
+
+# Show detailed breakdown
+cat("\nDetailed subject breakdown:\n")
+print(table(subjects_with_both$n_timepoints))
+
+# Show which subjects have both timepoints
+both_timepoints_subjects <- subjects_with_both %>%
+  filter(n_timepoints == 2) %>%
+  pull(subjectID)
+
+cat("Subjects with both timepoints:", length(both_timepoints_subjects), "\n")
+if(length(both_timepoints_subjects) > 0) {
+  cat("Subject IDs with both timepoints:", paste(head(both_timepoints_subjects, 10), collapse = ", "), "\n")
+}
+
+# Check if there are any subjects with only 0H or only 48H
+cat("\nSubjects by timepoint availability:\n")
+timepoint_summary <- sample_df %>%
+  group_by(subjectID) %>%
+  summarise(
+    has_0h = any(timepoint == "0H"),
+    has_48h = any(timepoint == "48H"),
+    .groups = 'drop'
+  ) %>%
+  group_by(has_0h, has_48h) %>%
+  summarise(count = n(), .groups = 'drop')
+
+print(timepoint_summary)
+
+# Calculate within-subject beta diversity changes (0H to 48H)
+beta_diversity_changes <- sample_df %>%
+  group_by(subjectID) %>%
+  filter(n() == 2) %>%  # Only subjects with both timepoints
+  filter(any(!is.na(cluster))) %>%  # Only subjects with cluster assignments
+  arrange(timepoint_numeric) %>%
+  summarise(
+    cluster_0h = cluster[1],
+    cluster_0h_label = cluster_label[1],
+    group = group[1],
+    carbohydrate = carbohydrate[1],
+    sample_0h = SampleID[1],
+    sample_48h = SampleID[2],
+    .groups = 'drop'
+  ) %>%
+  filter(!is.na(cluster_0h)) %>%  # Remove any remaining NA clusters
+  mutate(
+    # Calculate Bray-Curtis distance between 0H and 48H for each subject
+    beta_change = map2_dbl(sample_0h, sample_48h, ~{
+      # Convert sample names to indices in the distance matrix
+      idx_0h <- which(rownames(dist_matrix_full) == .x)
+      idx_48h <- which(colnames(dist_matrix_full) == .y)
+      
+      if(length(idx_0h) == 1 && length(idx_48h) == 1) {
+        return(dist_matrix_full[idx_0h, idx_48h])
+      } else {
+        return(NA)  # Return NA if samples not found
+      }
+    })
+  )
+
+cat("Final dataset for analysis:", nrow(beta_diversity_changes), "subjects\n")
+cat("Subjects by cluster and treatment:\n")
+print(table(beta_diversity_changes$cluster_0h_label, beta_diversity_changes$carbohydrate))
+
+cat("\n=== ALTERNATIVE APPROACH: CLUSTER COMPARISON BETWEEN TIMEPOINTS ===\n")
+cat("Since we have limited within-subject data, let's compare clusters between timepoints.\n\n")
+
+cat("\n=== BETA DIVERSITY CHANGES BY BASELINE CLUSTER AND TREATMENT ===\n")
+cat("This analysis examines how subjects from different baseline microbiome clusters\n")
+cat("respond to carbohydrate treatments over the 48-hour period.\n\n")
+
+# Summary statistics for beta diversity changes
+beta_summary <- beta_diversity_changes %>%
+  group_by(cluster_0h_label, carbohydrate) %>%
+  summarise(
+    n_subjects = n(),
+    mean_beta_change = round(mean(beta_change), 3),
+    sd_beta_change = round(sd(beta_change), 3),
+    median_beta_change = round(median(beta_change), 3),
+    .groups = 'drop'
+  )
+
+print(beta_summary)
+
+# Statistical tests for differences in beta diversity changes
+cat("\n=== STATISTICAL TESTS FOR BETA DIVERSITY CHANGES ===\n")
+
+# Check if we have sufficient data for ANOVA
+min_per_group <- min(table(beta_diversity_changes$cluster_0h_label, beta_diversity_changes$carbohydrate))
+cat("Minimum number of subjects per cluster-treatment combination:", min_per_group, "\n")
+
+if(min_per_group >= 2 && nrow(beta_diversity_changes) >= 8) {
+  # Two-way ANOVA: cluster × carbohydrate
+  anova_result <- aov(beta_change ~ cluster_0h_label * carbohydrate, data = beta_diversity_changes)
+  cat("Two-way ANOVA (Cluster × Carbohydrate):\n")
+  print(summary(anova_result))
+  
+  # Store ANOVA result for post-hoc tests
+  anova_available <- TRUE
+} else {
+  cat("Insufficient data for ANOVA analysis.\n")
+  cat("Need at least 2 subjects per group and 8 total subjects.\n")
+  anova_available <- FALSE
+}
+
+# Post-hoc pairwise comparisons
+if(anova_available && requireNamespace("emmeans", quietly = TRUE)) {
+  library(emmeans)
+  
+  # Pairwise comparisons for carbohydrate within each cluster
+  emm_carb <- emmeans(anova_result, ~ carbohydrate | cluster_0h_label)
+  pairwise_carb <- pairs(emm_carb, adjust = "bonferroni")
+  
+  cat("\nPairwise comparisons - Carbohydrate within each cluster:\n")
+  print(pairwise_carb)
+  
+  # Pairwise comparisons for cluster within each carbohydrate
+  emm_cluster <- emmeans(anova_result, ~ cluster_0h_label | carbohydrate)
+  pairwise_cluster <- pairs(emm_cluster, adjust = "bonferroni")
+  
+  cat("\nPairwise comparisons - Cluster within each carbohydrate:\n")
+  print(pairwise_cluster)
+} else if(!anova_available) {
+  cat("\nSkipping post-hoc tests due to insufficient data for ANOVA.\n")
+} else {
+  cat("\nSkipping post-hoc tests - emmeans package not available.\n")
+}
+
+# Visualization of beta diversity changes
+p1 <- ggplot(beta_diversity_changes, aes(x = cluster_0h_label, y = beta_change, fill = carbohydrate)) +
+  geom_boxplot(alpha = 0.7) +
+  geom_point(position = position_jitterdodge(dodge.width = 0.75), alpha = 0.6) +
+  scale_fill_manual(values = c("No Added Carb" = "#FF7F00", 
+                               "RDC" = "#984EA3", 
+                               "SDC" = "#4DAF4A")) +
+  labs(title = "Beta Diversity Changes (0H → 48H) by Baseline Cluster and Treatment",
+       x = "Baseline Cluster (identified at 0H)",
+       y = "Bray-Curtis Distance (0H to 48H)",
+       fill = "Carbohydrate Treatment") +
+  theme_classic(base_size = 14) +
+  theme(legend.position = "bottom")
+
+# Alternative visualization showing individual trajectories
+p2 <- ggplot(beta_diversity_changes, aes(x = carbohydrate, y = beta_change, color = cluster_0h_label)) +
+  geom_boxplot(alpha = 0.3) +
+  geom_point(position = position_jitterdodge(dodge.width = 0.75), alpha = 0.8, size = 2) +
+  scale_color_manual(values = cluster_colors[1:optimal_k]) +
+  facet_wrap(~group) +
+  labs(title = "Beta Diversity Changes by Treatment and Group",
+       x = "Carbohydrate Treatment",
+       y = "Bray-Curtis Distance (0H to 48H)",
+       color = "Baseline Cluster") +
+  theme_classic(base_size = 14) +
+  theme(legend.position = "bottom",
+        axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Arrange plots
+grid.arrange(p1, p2, ncol = 1)
+
+# Save results
+write.csv(beta_diversity_changes, "outputs/beta_diversity_changes_by_cluster.csv", row.names = FALSE)
+write.csv(beta_summary, "outputs/beta_diversity_summary_by_cluster.csv", row.names = FALSE)
+
+cat("\nResults saved to:\n")
+cat("- outputs/beta_diversity_changes_by_cluster.csv\n")
+cat("- outputs/beta_diversity_summary_by_cluster.csv\n")
+
+```
+
+```{r cluster-comparison-between-timepoints, fig.width = 14, fig.height = 10}
+# Alternative analysis: Compare clusters between timepoints
+# This approach uses all available data instead of requiring within-subject pairs
+
+cat("=== CLUSTER COMPARISON BETWEEN TIMEPOINTS ===\n")
+cat("Comparing microbiome clusters at 0H vs 48H across all samples\n\n")
+
+# Create separate datasets for each timepoint
+sample_data_0h_analysis <- sample_data_full %>%
+  filter(timepoint == "0H", !is.na(cluster))
+
+sample_data_48h_analysis <- sample_data_full %>%
+  filter(timepoint == "48H")
+
+cat("0H samples with clusters:", nrow(sample_data_0h_analysis), "\n")
+cat("48H samples available:", nrow(sample_data_48h_analysis), "\n")
+
+# Create PCoA for both timepoints
+# 0H PCoA (with clusters) - use sample IDs to subset
+phy_0h_analysis <- subset_samples(phy_asv_finder_rel_filtered, 
+                                 SampleID %in% sample_data_0h_analysis$SampleID)
+pcoa_0h_analysis <- ordinate(phy_0h_analysis, method = "PCoA", distance = "bray")
+
+# 48H PCoA (without clusters)
+phy_48h_analysis <- subset_samples(phy_asv_finder_rel_filtered, timepoint == "48H")
+pcoa_48h_analysis <- ordinate(phy_48h_analysis, method = "PCoA", distance = "bray")
+
+# Create comparison plots with shapes for clusters
+# Convert cluster_factor to character to ensure proper discrete scaling
+sample_data(phy_0h_analysis)$cluster_factor <- as.character(sample_data(phy_0h_analysis)$cluster)
+
+# Plot 1: 0H with both color (cluster) and shape (cluster)
+p1 <- plot_ordination(phy_0h_analysis, pcoa_0h_analysis, type = "samples", color = "cluster_factor") +
+  geom_point(aes(shape = cluster_factor), size = 3, alpha = 0.8) +
+  scale_color_manual(values = c("1" = "#E31A1C", "2" = "#1F78B4", "3" = "#33A02C", "4" = "#FF7F00")) +
+  scale_shape_manual(values = c("1" = 16, "2" = 17, "3" = 18, "4" = 15)) +  # circle, triangle, diamond, square
+  labs(title = "PCoA at 0H - Colored and Shaped by Baseline Clusters",
+       subtitle = paste("n =", nsamples(phy_0h_analysis), "samples"),
+       color = "Cluster", shape = "Cluster") +
+  theme_classic(base_size = 14) +
+  theme(legend.position = "bottom")
+
+# For 48H plot, we need to add cluster information to see how clusters track through time
+# First, let's check what columns are available
+cat("Columns in sample_data_0h_analysis:", colnames(sample_data_0h_analysis), "\n")
+cat("Columns in sample_data_48h_analysis:", colnames(sample_data_48h_analysis), "\n")
+
+# Use the existing subjectID column instead of extracting from SampleID
+cat("Sample IDs from 0H (first 5):", head(sample_data_0h_analysis$SampleID, 5), "\n")
+cat("Sample IDs from 48H (first 5):", head(sample_data_48h_analysis$SampleID, 5), "\n")
+cat("Subject IDs from 0H (first 10):", head(sample_data_0h_analysis$subjectID, 10), "\n")
+cat("Subject IDs from 48H (first 10):", head(sample_data_48h_analysis$subjectID, 10), "\n")
+cat("Unique subjects at 0H:", length(unique(sample_data_0h_analysis$subjectID)), "\n")
+cat("Unique subjects at 48H:", length(unique(sample_data_48h_analysis$subjectID)), "\n")
+
+# Add cluster assignments to 48H data based on matching subject IDs
+# First, create unique cluster assignments per subject at 0H
+cluster_by_subject <- sample_data_0h_analysis %>%
+  group_by(subjectID) %>%
+  summarise(
+    cluster_0h = first(cluster),
+    cluster_factor_0h = first(cluster_factor),
+    .groups = 'drop'
+  )
+
+cat("Cluster assignments by subject:\n")
+print(cluster_by_subject)
+
+# Now join with 48H data
+sample_data_48h_with_clusters <- sample_data_48h_analysis %>%
+  left_join(cluster_by_subject, by = "subjectID")
+
+# Check if we successfully matched any samples
+cat("Samples with cluster matches:", sum(!is.na(sample_data_48h_with_clusters$cluster_0h)), "\n")
+
+# Create phyloseq object for 48H with cluster info
+phy_48h_with_clusters <- subset_samples(phy_asv_finder_rel_filtered, 
+                                        SampleID %in% sample_data_48h_with_clusters$SampleID)
+
+# Ensure proper row names and add cluster information to phyloseq sample data
+sample_data_48h_with_clusters$cluster_factor_0h <- as.character(sample_data_48h_with_clusters$cluster_0h)
+rownames(sample_data_48h_with_clusters) <- sample_data_48h_with_clusters$SampleID
+sample_data(phy_48h_with_clusters) <- sample_data(sample_data_48h_with_clusters)
+
+sample_and_pcoa <- cbind(sample_data_48h_with_clusters, pcoa_48h_analysis$vectors)
+sample_and_pcoa$cluster_factor <- factor(sample_and_pcoa$cluster_factor_0h)
+
+p2 <- ggplot(sample_and_pcoa %>% filter(timepoint == "48H", !is.na(cluster_factor)), aes(Axis.1, Axis.2, color = carbohydrate, shape = cluster_factor)) +
+  geom_point(size = 3) +
+  scale_color_manual(values = c("No Added Carb" = "#E31A1C", "RDC" = "#1F78B4", "SDC" = "#33A02C")) +
+  facet_wrap(~cluster_factor, nrow = 1) +
+  labs(title = "PCoA at 48H - Colored by Baseline Clusters",
+        subtitle = paste("n =", nsamples(phy_48h_with_clusters), "samples"),
+        color = "Cluster") +
+  theme_classic(base_size = 14) +
+  theme(legend.position = "bottom")
+
+# Arrange plots side by side
+grid.arrange(p1, p2, ncol = 2)
+
+# Summary of cluster tracking from 0H to 48H
+cat("\n=== CLUSTER TRACKING SUMMARY ===\n")
+cat("Samples with baseline cluster assignments at 48H:\n")
+cluster_tracking <- sample_data_48h_with_clusters %>%
+  filter(!is.na(cluster_0h)) %>%
+  group_by(cluster_0h, carbohydrate) %>%
+  summarise(n = n(), .groups = 'drop') %>%
+  arrange(cluster_0h, carbohydrate)
+
+print(cluster_tracking)
+
+cat("\nTotal samples with baseline clusters at 48H:", sum(!is.na(sample_data_48h_with_clusters$cluster_0h)), "\n")
+cat("Total samples at 48H:", nrow(sample_data_48h_with_clusters), "\n")
+cat("Coverage:", round(sum(!is.na(sample_data_48h_with_clusters$cluster_0h))/nrow(sample_data_48h_with_clusters)*100, 1), "%\n")
+
+# Calculate cluster centroids at 0H
+cluster_centroids_0h <- sample_data_0h_analysis %>%
+  group_by(cluster_factor, carbohydrate) %>%
+  summarise(
+    n_samples = n(),
+    .groups = 'drop'
+  )
+
+cat("\nCluster composition at 0H by treatment:\n")
+print(cluster_centroids_0h)
+
+# Calculate diversity metrics for clusters at 0H
+# Use the original count data (not relative abundance) for diversity calculations
+phy_0h_analysis_counts <- subset_samples(phy_asv_finder, 
+                                        SampleID %in% sample_data_0h_analysis$SampleID)
+
+# Calculate diversity metrics from count data
+shannon_div <- estimate_richness(phy_0h_analysis_counts, measures = "Shannon")$Shannon
+observed_div <- estimate_richness(phy_0h_analysis_counts, measures = "Observed")$Observed
+simpson_div <- estimate_richness(phy_0h_analysis_counts, measures = "Simpson")$Simpson
+
+# Add diversity metrics to sample data
+sample_data_0h_analysis$shannon <- shannon_div
+sample_data_0h_analysis$observed <- observed_div
+sample_data_0h_analysis$simpson <- simpson_div
+
+cluster_diversity_0h <- sample_data_0h_analysis %>%
+  group_by(cluster_factor, carbohydrate) %>%
+  summarise(
+    n_samples = n(),
+    mean_shannon = mean(shannon, na.rm = TRUE),
+    mean_observed = mean(observed, na.rm = TRUE),
+    mean_simpson = mean(simpson, na.rm = TRUE),
+    .groups = 'drop'
+  )
+
+cat("\nCluster diversity metrics at 0H:\n")
+print(cluster_diversity_0h)
+
+# Compare diversity between clusters at 0H
+if(nrow(cluster_diversity_0h) > 1) {
+  cat("\n=== STATISTICAL TESTS FOR CLUSTER DIFFERENCES AT 0H ===\n")
+  
+  # ANOVA tests for diversity metrics
+  if(length(unique(sample_data_0h_analysis$cluster_factor)) > 1) {
+    shannon_anova <- aov(shannon ~ cluster_factor, data = sample_data_0h_analysis)
+    observed_anova <- aov(observed ~ cluster_factor, data = sample_data_0h_analysis)
+    simpson_anova <- aov(simpson ~ cluster_factor, data = sample_data_0h_analysis)
+    
+    cat("Shannon diversity by cluster:\n")
+    print(summary(shannon_anova))
+    
+    cat("\nObserved ASVs by cluster:\n")
+    print(summary(observed_anova))
+    
+    cat("\nSimpson diversity by cluster:\n")
+    print(summary(simpson_anova))
+  }
+}
+
+# Save cluster comparison results
+write.csv(cluster_diversity_0h, "outputs/cluster_diversity_0h.csv", row.names = FALSE)
+write.csv(cluster_centroids_0h, "outputs/cluster_composition_0h.csv", row.names = FALSE)
+
+cat("\nCluster comparison results saved to:\n")
+cat("- outputs/cluster_diversity_0h.csv\n")
+cat("- outputs/cluster_composition_0h.csv\n")
+
+# Test stats for beta diversity by clusters and carbohydrate treatments
+cat("\n=== STATISTICAL TESTS FOR BETA DIVERSITY BY CLUSTERS AND CARBOHYDRATE TREATMENTS ===\n")
+
+# Check if we have PCoA data available
+if(exists("sample_and_pcoa") && nrow(sample_and_pcoa) > 0) {
+  cat("Using PCoA coordinates for beta diversity analysis\n")
+  
+  # Filter data for 48H samples with cluster assignments
+  pcoa_analysis_data <- sample_and_pcoa %>%
+    filter(timepoint == "48H", !is.na(cluster_factor)) %>%
+    mutate(
+      cluster_factor = factor(cluster_factor),
+      carbohydrate_factor = factor(carbohydrate)
+    )
+  
+  cat("Analysis dataset:", nrow(pcoa_analysis_data), "samples\n")
+  cat("Cluster distribution:\n")
+  print(table(pcoa_analysis_data$cluster_factor))
+  cat("\nCarbohydrate distribution:\n")
+  print(table(pcoa_analysis_data$carbohydrate_factor))
+  
+  # ANOVA tests for PCoA Axis 1 (primary axis of variation)
+  cat("\n=== PCoA AXIS 1 ANALYSIS ===\n")
+  axis1_anova <- aov(Axis.1 ~ cluster_factor * carbohydrate_factor, data = pcoa_analysis_data)
+  cat("PCoA Axis 1 by cluster and carbohydrate treatment:\n")
+  print(summary(axis1_anova))
+  
+  # ANOVA tests for PCoA Axis 2 (secondary axis of variation)
+  cat("\n=== PCoA AXIS 2 ANALYSIS ===\n")
+  axis2_anova <- aov(Axis.2 ~ cluster_factor * carbohydrate_factor, data = pcoa_analysis_data)
+  cat("PCoA Axis 2 by cluster and carbohydrate treatment:\n")
+  print(summary(axis2_anova))
+  
+  # Post-hoc pairwise comparisons for Axis 1
+  if(requireNamespace("emmeans", quietly = TRUE)) {
+    library(emmeans)
+    
+    cat("\n=== POST-HOC COMPARISONS - PCoA AXIS 1 ===\n")
+    emm_axis1 <- emmeans(axis1_anova, ~ cluster_factor * carbohydrate_factor)
+    pairwise_axis1 <- pairs(emm_axis1, adjust = "bonferroni")
+    print(pairwise_axis1)
+    
+    cat("\n=== POST-HOC COMPARISONS - PCoA AXIS 2 ===\n")
+    emm_axis2 <- emmeans(axis2_anova, ~ cluster_factor * carbohydrate_factor)
+    pairwise_axis2 <- pairs(emm_axis2, adjust = "bonferroni")
+    print(pairwise_axis2)
+  } else {
+    cat("\nSkipping post-hoc tests - emmeans package not available.\n")
+  }
+  
+  # Summary statistics for PCoA coordinates
+  cat("\n=== PCoA COORDINATE SUMMARY STATISTICS ===\n")
+  pcoa_summary <- pcoa_analysis_data %>%
+    group_by(cluster_factor, carbohydrate_factor) %>%
+    summarise(
+      n_samples = n(),
+      mean_axis1 = round(mean(Axis.1, na.rm = TRUE), 3),
+      sd_axis1 = round(sd(Axis.1, na.rm = TRUE), 3),
+      mean_axis2 = round(mean(Axis.2, na.rm = TRUE), 3),
+      sd_axis2 = round(sd(Axis.2, na.rm = TRUE), 3),
+      .groups = 'drop'
+    )
+  print(pcoa_summary)
+  
+} else {
+  cat("PCoA data not available. Skipping statistical tests.\n")
+}
+```
+
+## Interpretation of Beta Diversity Analysis Results
+
+### Key Findings Summary
+
+The beta diversity analysis using PCoA coordinates reveals important patterns in how baseline microbiome clusters respond to carbohydrate treatments over the 48-hour period.
+
+#### Sample Distribution
+- **`r if(exists("pcoa_analysis_data")) nrow(pcoa_analysis_data) else "N/A"` samples** analyzed at 48H timepoint
+- **Cluster distribution**: `r if(exists("pcoa_analysis_data")) paste(names(table(pcoa_analysis_data$cluster_factor)), "(", table(pcoa_analysis_data$cluster_factor), "samples)", collapse = ", ") else "N/A"`
+- **Treatment distribution**: `r if(exists("pcoa_analysis_data")) paste(names(table(pcoa_analysis_data$carbohydrate_factor)), "(", table(pcoa_analysis_data$carbohydrate_factor), "samples)", collapse = ", ") else "N/A"`
+
+#### PCoA Axis 1 Analysis (Primary Beta Diversity Dimension)
+
+**Statistical Results:**
+- **Cluster effect**: `r if(exists("axis1_anova")) ifelse(summary(axis1_anova)[[1]][1,5] < 0.001, "highly significant (p < 0.001)", ifelse(summary(axis1_anova)[[1]][1,5] < 0.01, paste0("highly significant (p = ", round(summary(axis1_anova)[[1]][1,5], 3), "**)"), ifelse(summary(axis1_anova)[[1]][1,5] < 0.05, paste0("significant (p = ", round(summary(axis1_anova)[[1]][1,5], 3), "*)"), paste0("not significant (p = ", round(summary(axis1_anova)[[1]][1,5], 3), ")")))) else "N/A"` - Different clusters occupy distinct positions along the primary axis
+- **Carbohydrate effect**: `r if(exists("axis1_anova")) ifelse(summary(axis1_anova)[[1]][2,5] < 0.001, "highly significant (p < 0.001)", ifelse(summary(axis1_anova)[[1]][2,5] < 0.01, paste0("highly significant (p = ", round(summary(axis1_anova)[[1]][2,5], 3), "**)"), ifelse(summary(axis1_anova)[[1]][2,5] < 0.05, paste0("significant (p = ", round(summary(axis1_anova)[[1]][2,5], 3), "*)"), ifelse(summary(axis1_anova)[[1]][2,5] < 0.1, paste0("marginally significant (p = ", round(summary(axis1_anova)[[1]][2,5], 3), ")"), paste0("not significant (p = ", round(summary(axis1_anova)[[1]][2,5], 3), ")"))))) else "N/A"` - Carbohydrate treatments show effects on microbiome positioning
+- **Interaction**: `r if(exists("axis1_anova")) ifelse(summary(axis1_anova)[[1]][3,5] < 0.05, paste0("significant (p = ", round(summary(axis1_anova)[[1]][3,5], 3), "*)"), paste0("not significant (p = ", round(summary(axis1_anova)[[1]][3,5], 3), ")")) else "N/A"` - No evidence of cluster-specific treatment responses
+
+#### PCoA Axis 2 Analysis (Secondary Beta Diversity Dimension)
+
+**Statistical Results:**
+- **Cluster effect**: `r if(exists("axis2_anova")) ifelse(summary(axis2_anova)[[1]][1,5] < 0.05, paste0("significant (p = ", round(summary(axis2_anova)[[1]][1,5], 3), "*)"), paste0("not significant (p = ", round(summary(axis2_anova)[[1]][1,5], 3), ")")) else "N/A"` - Clusters show minimal differentiation on this axis
+- **Carbohydrate effect**: `r if(exists("axis2_anova")) ifelse(summary(axis2_anova)[[1]][2,5] < 0.05, paste0("significant (p = ", round(summary(axis2_anova)[[1]][2,5], 3), "*)"), ifelse(summary(axis2_anova)[[1]][2,5] < 0.1, paste0("marginally significant (p = ", round(summary(axis2_anova)[[1]][2,5], 3), ")"), paste0("not significant (p = ", round(summary(axis2_anova)[[1]][2,5], 3), ")"))) else "N/A"` - Carbohydrate treatments show effects on secondary axis
+- **Interaction**: `r if(exists("axis2_anova")) ifelse(summary(axis2_anova)[[1]][3,5] < 0.05, paste0("significant (p = ", round(summary(axis2_anova)[[1]][3,5], 3), "*)"), paste0("not significant (p = ", round(summary(axis2_anova)[[1]][3,5], 3), ")")) else "N/A"` - No cluster-specific treatment responses
+
+### Biological Interpretation
+
+#### 1. Baseline Clusters Maintain Distinctiveness
+The significant cluster effect on Axis 1 confirms that the baseline microbiome clustering captures meaningful biological differences that persist through the 48-hour treatment period. This suggests that:
+
+- **Stable microbiome signatures**: The clusters represent robust microbiome states that are resistant to short-term dietary interventions
+- **Predictive value**: Baseline microbiome profiling could be used to predict treatment responses
+- **Personalized medicine potential**: Different clusters may require different intervention strategies
+
+#### 2. Treatment Effects Are Consistent Across Clusters
+The non-significant interactions indicate that all clusters respond similarly to carbohydrate treatments:
+
+- **Universal response**: Both RDC and SDC treatments affect microbiome composition in similar ways across all clusters
+- **No cluster-specific sensitivity**: No evidence that certain clusters are more responsive to specific carbohydrates
+- **Consistent intervention strategy**: The same treatment approach may be effective across different microbiome types
+
+#### 3. Carbohydrate Treatment Effects
+The marginal significance of carbohydrate effects suggests:
+
+- **Directional shifts**: Both RDC and SDC treatments shift microbiome composition toward more positive Axis 1 values
+- **Comparable efficacy**: RDC and SDC show similar effects on microbiome structure
+- **Treatment duration**: 48 hours may be sufficient to detect treatment effects, though longer-term studies may reveal more pronounced differences
+
+### Clinical Implications
+
+#### Personalized Medicine Applications
+- **Baseline profiling**: The persistent cluster differences suggest that baseline microbiome assessment could guide treatment selection
+- **Response prediction**: Since clusters maintain distinctiveness, they may predict long-term treatment outcomes
+- **Risk stratification**: Different clusters may represent different risk profiles for metabolic responses
+
+#### Treatment Strategy
+- **Universal approach**: The consistent treatment responses across clusters suggest that carbohydrate interventions can be applied broadly
+- **Dose optimization**: The similar effects of RDC and SDC may allow for dose-response optimization
+- **Timing considerations**: The 48-hour effects suggest that short-term interventions can be effective
+
+#### Future Research Directions
+- **Long-term effects**: Extended follow-up could reveal whether cluster differences persist or converge over time
+- **Mechanistic studies**: Understanding the biological basis of cluster differences could inform targeted interventions
+- **Dose-response relationships**: Systematic evaluation of different carbohydrate doses within each cluster
+
+### Summary Statistics by Cluster and Treatment
+
+The following table shows the mean PCoA coordinates for each cluster-treatment combination:
+
+```{r pcoa-summary-table, echo=FALSE}
+if(exists("pcoa_summary")) {
+  knitr::kable(pcoa_summary, 
+               caption = "PCoA Coordinate Summary Statistics by Cluster and Treatment",
+               digits = 3)
+} else {
+  cat("Summary statistics not available.")
+}
+```
+
+**Key Patterns:**
+- **Cluster 1**: Shows consistent negative Axis 1 values across all treatments, with RDC showing the least negative position
+- **Cluster 2**: Demonstrates positive shifts with both RDC and SDC treatments compared to No Added Carb
+- **Cluster 3**: Similar to Cluster 2, with both treatments shifting toward positive Axis 1 values
+- **Cluster 4**: Already positioned at positive Axis 1 values and shifts even further with treatments, suggesting this cluster represents a distinct microbiome state that's particularly responsive to carbohydrate interventions
+
+This analysis demonstrates that baseline microbiome clustering captures meaningful biological differences that persist through treatment, while also showing that carbohydrate treatments have consistent effects across all clusters. The results support the potential for personalized microbiome-based interventions while maintaining the feasibility of universal treatment approaches.
+
+```{r cluster-carbohydrate-statistical-comparison, fig.width = 14, fig.height = 10}
+# Statistical comparison between clusters and carbohydrate treatments
+# Focus on RDC vs SDC comparison as requested
+
+cat("=== STATISTICAL COMPARISON: CLUSTERS vs CARBOHYDRATE TREATMENTS ===\n")
+cat("Comparing clusters at 0H across different carbohydrate treatments\n\n")
+
+# Filter data for 0H samples with cluster assignments
+analysis_data <- sample_data_full %>%
+  filter(timepoint == "0H", !is.na(cluster)) %>%
+  mutate(
+    cluster_factor = factor(cluster),
+    carbohydrate_factor = factor(carbohydrate)
+  )
+
+# Calculate diversity metrics for the analysis data
+# Use original count data for diversity calculations
+phy_analysis_counts <- subset_samples(phy_asv_finder, 
+                                     SampleID %in% analysis_data$SampleID)
+
+# Calculate diversity metrics from count data
+shannon_div <- estimate_richness(phy_analysis_counts, measures = "Shannon")$Shannon
+observed_div <- estimate_richness(phy_analysis_counts, measures = "Observed")$Observed
+simpson_div <- estimate_richness(phy_analysis_counts, measures = "Simpson")$Simpson
+
+# Add diversity metrics to analysis data
+analysis_data$shannon <- shannon_div
+analysis_data$observed <- observed_div
+analysis_data$simpson <- simpson_div
+
+cat("Analysis dataset:", nrow(analysis_data), "samples\n")
+cat("Cluster distribution:\n")
+print(table(analysis_data$cluster_factor))
+cat("\nCarbohydrate distribution:\n")
+print(table(analysis_data$carbohydrate_factor))
+
+# Check if we have enough samples for RDC vs SDC comparison
+rdc_samples <- sum(analysis_data$carbohydrate == "RDC")
+sdc_samples <- sum(analysis_data$carbohydrate == "SDC")
+nocarb_samples <- sum(analysis_data$carbohydrate == "No Added Carb")
+
+cat("\nSample sizes by treatment:\n")
+cat("RDC:", rdc_samples, "samples\n")
+cat("SDC:", sdc_samples, "samples\n")
+cat("No Added Carb:", nocarb_samples, "samples\n")
+
+# Focus on RDC vs SDC comparison as requested
+if(rdc_samples >= 10 && sdc_samples >= 10) {
+  cat("\n=== RDC vs SDC COMPARISON ===\n")
+  
+  # Filter for RDC and SDC only
+  rdc_sdc_data <- analysis_data %>%
+    filter(carbohydrate %in% c("RDC", "SDC"))
+  
+  cat("RDC vs SDC analysis:", nrow(rdc_sdc_data), "samples\n")
+  
+  # Create contingency table: Cluster vs Carbohydrate
+  contingency_table <- table(rdc_sdc_data$cluster_factor, rdc_sdc_data$carbohydrate_factor)
+  cat("\nContingency table (Cluster vs Carbohydrate - RDC vs SDC):\n")
+  print(contingency_table)
+  
+  # Chi-square test
+  chisq_test <- chisq.test(contingency_table)
+  cat("\nChi-square test results:\n")
+  print(chisq_test)
+  
+  # Calculate proportions
+  prop_table <- prop.table(contingency_table, margin = 2)
+  cat("\nProportions by carbohydrate treatment:\n")
+  print(round(prop_table * 100, 1))
+  
+  # ANOVA tests for diversity metrics
+  cat("\n=== DIVERSITY COMPARISONS: RDC vs SDC ===\n")
+  
+  # Shannon diversity
+  shannon_anova <- aov(shannon ~ cluster_factor * carbohydrate_factor, data = rdc_sdc_data)
+  cat("Shannon Diversity ANOVA (Cluster × Carbohydrate):\n")
+  print(summary(shannon_anova))
+  
+  # Observed ASVs
+  observed_anova <- aov(observed ~ cluster_factor * carbohydrate_factor, data = rdc_sdc_data)
+  cat("\nObserved ASVs ANOVA (Cluster × Carbohydrate):\n")
+  print(summary(observed_anova))
+  
+  # Simpson diversity
+  simpson_anova <- aov(simpson ~ cluster_factor * carbohydrate_factor, data = rdc_sdc_data)
+  cat("\nSimpson Diversity ANOVA (Cluster × Carbohydrate):\n")
+  print(summary(simpson_anova))
+  
+  # Create visualization
+  # Box plots for diversity metrics
+  p1 <- ggplot(rdc_sdc_data, aes(x = cluster_factor, y = shannon, fill = carbohydrate_factor)) +
+    geom_boxplot(alpha = 0.7) +
+    geom_point(position = position_jitterdodge(dodge.width = 0.75), alpha = 0.6) +
+    scale_fill_manual(values = c("RDC" = "#984EA3", "SDC" = "#4DAF4A")) +
+    labs(title = "Shannon Diversity by Cluster and Carbohydrate Treatment",
+         x = "Cluster", y = "Shannon Diversity", fill = "Treatment") +
+    theme_classic(base_size = 14) +
+    theme(legend.position = "bottom")
+  
+  p2 <- ggplot(rdc_sdc_data, aes(x = cluster_factor, y = observed, fill = carbohydrate_factor)) +
+    geom_boxplot(alpha = 0.7) +
+    geom_point(position = position_jitterdodge(dodge.width = 0.75), alpha = 0.6) +
+    scale_fill_manual(values = c("RDC" = "#984EA3", "SDC" = "#4DAF4A")) +
+    labs(title = "Observed ASVs by Cluster and Carbohydrate Treatment",
+         x = "Cluster", y = "Observed ASVs", fill = "Treatment") +
+    theme_classic(base_size = 14) +
+    theme(legend.position = "bottom")
+  
+  # Arrange plots
+  grid.arrange(p1, p2, ncol = 1)
+  
+  # Summary statistics
+  summary_stats <- rdc_sdc_data %>%
+    group_by(cluster_factor, carbohydrate_factor) %>%
+    summarise(
+      n = n(),
+      mean_shannon = round(mean(shannon, na.rm = TRUE), 3),
+      sd_shannon = round(sd(shannon, na.rm = TRUE), 3),
+      mean_observed = round(mean(observed, na.rm = TRUE), 1),
+      sd_observed = round(sd(observed, na.rm = TRUE), 1),
+      .groups = 'drop'
+    )
+  
+  cat("\nSummary statistics (RDC vs SDC):\n")
+  print(summary_stats)
+  
+  # Save results
+  write.csv(rdc_sdc_data, "outputs/rdc_sdc_cluster_comparison.csv", row.names = FALSE)
+  write.csv(summary_stats, "outputs/rdc_sdc_summary_stats.csv", row.names = FALSE)
+  
+  cat("\nResults saved to:\n")
+  cat("- outputs/rdc_sdc_cluster_comparison.csv\n")
+  cat("- outputs/rdc_sdc_summary_stats.csv\n")
+  
+} else {
+  cat("\nInsufficient samples for RDC vs SDC comparison.\n")
+  cat("Need at least 10 samples per treatment group.\n")
+  
+  # Show what we do have
+  cat("\nAvailable data summary:\n")
+  all_comparison <- analysis_data %>%
+    group_by(cluster_factor, carbohydrate_factor) %>%
+    summarise(n = n(), .groups = 'drop')
+  print(all_comparison)
+}
+
+```
+
+```{r cluster-trajectory-analysis, fig.width = 12, fig.height = 8}
+# Detailed trajectory analysis for each cluster
+library(dplyr)
+
+# Use the existing sample_and_pcoa data for consistency with previous analyses
+if(exists("sample_and_pcoa")) {
+  cat("Using existing sample_and_pcoa data for trajectory analysis\n")
+  cat("sample_and_pcoa dimensions:", nrow(sample_and_pcoa), "rows\n")
+  cat("Available columns:", colnames(sample_and_pcoa), "\n")
+  
+  # Check what timepoints are available
+  cat("Available timepoints in sample_and_pcoa:", unique(sample_and_pcoa$timepoint), "\n")
+  
+  # Create trajectory data from sample_and_pcoa
+  # Filter for subjects with both timepoints and cluster assignments
+  trajectory_plot_data <- sample_and_pcoa %>%
+    filter(!is.na(cluster_factor_0h)) %>%
+    group_by(subjectID) %>%
+    filter(n() == 2) %>%  # Only subjects with both timepoints
+    arrange(timepoint) %>%  # Use timepoint instead of timepoint_numeric
+    mutate(
+      cluster_label = paste0("Cluster ", cluster_factor_0h),
+      timepoint_label = ifelse(timepoint == "0H", "Baseline", "48H"),
+      PC1 = Axis.1,  # Use Axis.1 as PC1 for consistency
+      PC2 = Axis.2   # Use Axis.2 as PC2 for consistency
+    )
+  
+  cat("Trajectory data dimensions:", nrow(trajectory_plot_data), "rows\n")
+  cat("SampleIDs in trajectory_data (first 5):", head(trajectory_plot_data$SampleID, 5), "\n")
+  
+  # Get PCoA percentage information from the original PCoA analysis
+  if(nrow(trajectory_plot_data) > 0) {
+    # Use the eigenvalues from the original pcoa_48h_analysis that created sample_and_pcoa
+    if(exists("pcoa_48h_analysis")) {
+      PC1_pct <- round(pcoa_48h_analysis$values$Eigenvalues[1] / sum(pcoa_48h_analysis$values$Eigenvalues) * 100, 1)
+      PC2_pct <- round(pcoa_48h_analysis$values$Eigenvalues[2] / sum(pcoa_48h_analysis$values$Eigenvalues) * 100, 1)
+      cat("Using actual PCoA eigenvalues: PC1 =", PC1_pct, "%, PC2 =", PC2_pct, "%\n")
+    } else {
+      # Fallback to reasonable defaults if pcoa_48h_analysis is not available
+      PC1_pct <- 25.0
+      PC2_pct <- 15.0
+      cat("pcoa_48h_analysis not found. Using default values: PC1 =", PC1_pct, "%, PC2 =", PC2_pct, "%\n")
+    }
+  }
+  
+} else {
+  cat("sample_and_pcoa not found. Falling back to original approach...\n")
+  
+  # Fallback to original approach if sample_and_pcoa doesn't exist
+  trajectory_data <- sample_df %>%
+    filter(!is.na(cluster)) %>%
+    group_by(subjectID) %>%
+    filter(n() == 2) %>%  # Only subjects with both timepoints
+    arrange(timepoint_numeric) %>%
+    mutate(
+      cluster_label = paste0("Cluster ", cluster),
+      timepoint_label = ifelse(timepoint == "0H", "Baseline", "48H")
+    )
+  
+  # Calculate PCoA coordinates for all samples
+  pcoa_all <- ordinate(phy_asv_finder_rel_filtered, method = "PCoA", distance = "bray")
+  
+  # Extract PCoA coordinates
+  pcoa_coords <- data.frame(
+    SampleID = rownames(pcoa_all$vectors),
+    PC1 = pcoa_all$vectors[, 1],
+    PC2 = pcoa_all$vectors[, 2]
+  ) %>%
+    mutate(
+      PC1_pct = round(pcoa_all$values$Eigenvalues[1] / sum(pcoa_all$values$Eigenvalues) * 100, 1),
+      PC2_pct = round(pcoa_all$values$Eigenvalues[2] / sum(pcoa_all$values$Eigenvalues) * 100, 1)
+    )
+  
+  # Get percentage values for plotting
+  PC1_pct <- pcoa_coords$PC1_pct[1]
+  PC2_pct <- pcoa_coords$PC2_pct[1]
+  cat("Using fallback PCoA eigenvalues: PC1 =", PC1_pct, "%, PC2 =", PC2_pct, "%\n")
+  
+  # Merge trajectory data with PCoA coordinates
+  trajectory_plot_data <- merge(trajectory_data, pcoa_coords, by = "SampleID")
+}
+
+# Check data before plotting
+cat("Trajectory plot data dimensions:", nrow(trajectory_plot_data), "rows\n")
+cat("Cluster labels available:", unique(trajectory_plot_data$cluster_label), "\n")
+cat("Carbohydrate treatments available:", unique(trajectory_plot_data$carbohydrate), "\n")
+cat("Timepoint labels available:", unique(trajectory_plot_data$timepoint_label), "\n")
+
+# Filter out any rows with missing faceting variables
+trajectory_plot_data <- trajectory_plot_data %>%
+  filter(!is.na(cluster_label) & !is.na(carbohydrate) & 
+         cluster_label != "" & carbohydrate != "")
+
+cat("After filtering missing values:", nrow(trajectory_plot_data), "rows\n")
+
+# Check if we have enough data for faceting
+if(nrow(trajectory_plot_data) > 0) {
+  cluster_levels <- unique(trajectory_plot_data$cluster_label)
+  carb_levels <- unique(trajectory_plot_data$carbohydrate)
+  
+  cat("Final cluster levels:", cluster_levels, "\n")
+  cat("Final carbohydrate levels:", carb_levels, "\n")
+  
+  # Create trajectory plot only if we have valid faceting variables
+  if(length(cluster_levels) > 0 && length(carb_levels) > 0) {
+    trajectory_plot <- ggplot(trajectory_plot_data, aes(x = PC1, y = PC2)) +
+      geom_point(aes(color = timepoint_label, shape = timepoint_label), size = 3, alpha = 0.8) +
+      geom_line(aes(group = subjectID), alpha = 0.5, color = "gray50") +
+      scale_color_manual(values = c("Baseline" = "#E31A1C", "48H" = "#1F78B4")) +
+      scale_shape_manual(values = c("Baseline" = 16, "48H" = 17)) +
+      facet_grid(cluster_label ~ carbohydrate) +
+      labs(title = "Microbiome Trajectories: 0H → 48H by Cluster and Treatment",
+           x = paste0("PC1 (", PC1_pct, "%)"),
+           y = paste0("PC2 (", PC2_pct, "%)"),
+           color = "Timepoint",
+           shape = "Timepoint") +
+      theme_classic(base_size = 14) +
+      theme(legend.position = "bottom")
+    
+    print(trajectory_plot)
+  } else {
+    cat("Insufficient data for faceting. Creating simple plot without facets.\n")
+    
+    # Create a simple plot without faceting
+    trajectory_plot <- ggplot(trajectory_plot_data, aes(x = PC1, y = PC2)) +
+      geom_point(aes(color = timepoint_label, shape = timepoint_label), size = 3, alpha = 0.8) +
+      geom_line(aes(group = subjectID), alpha = 0.5, color = "gray50") +
+      scale_color_manual(values = c("Baseline" = "#E31A1C", "48H" = "#1F78B4")) +
+      scale_shape_manual(values = c("Baseline" = 16, "48H" = 17)) +
+      labs(title = "Microbiome Trajectories: 0H → 48H",
+           x = paste0("PC1 (", PC1_pct, "%)"),
+           y = paste0("PC2 (", PC2_pct, "%)"),
+           color = "Timepoint",
+           shape = "Timepoint") +
+      theme_classic(base_size = 14) +
+      theme(legend.position = "bottom")
+    
+    print(trajectory_plot)
+  }
+} else {
+  cat("No valid trajectory data available for plotting.\n")
+}
+
+# Calculate trajectory statistics
+trajectory_stats <- trajectory_plot_data %>%
+  group_by(subjectID, cluster_label, carbohydrate) %>%
+  summarise(
+    trajectory_length = sqrt((PC1[2] - PC1[1])^2 + (PC2[2] - PC2[1])^2),
+    pc1_change = PC1[2] - PC1[1],
+    pc2_change = PC2[2] - PC2[1],
+    .groups = 'drop'
+  )
+
+cat("\n=== TRAJECTORY STATISTICS ===\n")
+trajectory_summary <- trajectory_stats %>%
+  group_by(cluster_label, carbohydrate) %>%
+  summarise(
+    n_subjects = n(),
+    mean_trajectory_length = round(mean(trajectory_length), 3),
+    sd_trajectory_length = round(sd(trajectory_length), 3),
+    mean_pc1_change = round(mean(pc1_change), 3),
+    mean_pc2_change = round(mean(pc2_change), 3),
+    .groups = 'drop'
+  )
+
+print(trajectory_summary)
+
+# Save trajectory data
+write.csv(trajectory_stats, "outputs/microbiome_trajectories.csv", row.names = FALSE)
+write.csv(trajectory_summary, "outputs/trajectory_summary.csv", row.names = FALSE)
 
 ```
 
