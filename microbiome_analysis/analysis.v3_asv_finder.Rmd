@@ -243,6 +243,21 @@ inline_glue <- function(...) {
 
 `%||%` <- function(x, y) if (!is.null(x)) x else y
 
+cache_rds <- function(path, code) {
+  if (file.exists(path)) {
+    message("Loading cached result: ", path)
+    readRDS(path)
+  } else {
+    dir.create(dirname(path), showWarnings = FALSE, recursive = TRUE)
+    message("Caching result to: ", path)
+    result <- code
+    if (!is.null(result)) {
+      saveRDS(result, path)
+    }
+    result
+  }
+}
+
 pull_safe <- function(tbl, col) {
   if (is.null(tbl) || nrow(tbl) == 0 || !(col %in% names(tbl))) {
     return(character())
@@ -713,36 +728,29 @@ alpha_48_text %>%
 
 ```{r alpha-48h-wilcoxon}
 # Perform pairwise Wilcoxon tests for each metric
-alpha_48h_extent <- alpha_48h %>%
-  dplyr::group_by(metric) %>%
-  dplyr::summarise(
-    max_value = max(value, na.rm = TRUE),
-    min_value = min(value, na.rm = TRUE),
-    .groups = "drop"
-  ) %>%
-  dplyr::mutate(
-    range_value = max_value - min_value,
-    pad = dplyr::case_when(
-      range_value > 0 ~ range_value,
-      max_value > 0 ~ max_value * 0.1,
-      TRUE ~ 0.1
-    )
-  )
-
 alpha_48h_wilcoxon <- alpha_48h %>%
-  dplyr::group_by(metric) %>%
+  group_by(metric) %>%
   wilcox_test(value ~ carbohydrate, p.adjust.method = "BH") %>%
-  add_significance() %>%
-  add_xy_position(x = "carbohydrate", dodge = 0.8, step.increase = 0.05) %>%
-  dplyr::left_join(alpha_48h_extent, by = "metric") %>%
-  dplyr::group_by(metric) %>%
-  dplyr::arrange(y.position, .by_group = TRUE) %>%
-  dplyr::mutate(
-    comparison_order = dplyr::row_number() - 1,
-    y.position = max_value + pad * (0.2 + 0.12 * comparison_order)
+  add_significance()
+
+# Calculate max values for each metric to position annotations
+max_values <- alpha_48h %>%
+  group_by(metric) %>%
+  summarise(max_val = max(value, na.rm = TRUE), .groups = "drop")
+
+# Add manual y-positions based on data range for each metric
+alpha_48h_wilcoxon <- alpha_48h_wilcoxon %>%
+  left_join(max_values, by = "metric") %>%
+  group_by(metric) %>%
+  mutate(
+    y.position = case_when(
+      metric == "Shannon" ~ max_val * 1.1,
+      metric == "Observed" ~ max_val * 1.15,
+      metric == "Simpson" ~ max_val * 1.1
+    ),
+    y.position = y.position + (row_number() - 1) * (max_val * 0.1)
   ) %>%
-  dplyr::ungroup() %>%
-  dplyr::select(-comparison_order)
+  ungroup()
 
 # Check the structure of the results
 print("Columns in alpha_48h_wilcoxon:")
@@ -757,9 +765,10 @@ alpha_48h %>%
   #geom_violin(trim = FALSE, alpha = 0.8) +
   geom_boxplot(alpha = 0.9) +
   geom_jitter(width = 0.12, size = 1.5, alpha = 0.7, show.legend = FALSE) +
-  stat_pvalue_manual(alpha_48h_wilcoxon,
-                     label = "p.adj.signif",
-                     tip.length = 0.005) +
+  stat_pvalue_manual(alpha_48h_wilcoxon, 
+                     label = "p.adj.signif", 
+                     tip.length = 0.01,
+                     bracket.nudge.y = 0.05) +
   facet_wrap(~ metric, scales = "free_y") +
   scale_fill_manual(values = palette_carbohydrate) +
   labs(x = NULL, y = "Diversity", title = "Alpha diversity at 48 h") +
@@ -811,7 +820,7 @@ pcoa_plot <- function(df, method_name) {
 ```
 
 ```{r permanova}
-permanova_results <- purrr::map_dfr(
+permanova_results_raw <- purrr::map_dfr(
   dist_methods,
   ~ {
     dist_mat <- phyloseq::distance(ps_rel, method = .x)
@@ -828,8 +837,25 @@ permanova_results <- purrr::map_dfr(
   }
 )
 
+permanova_p_col <- intersect(c("pr_greater_f_", "pr_greater_f", "pr_f", "p_value"), names(permanova_results_raw))
+permanova_f_col <- intersect(c("f", "f_model", "pseudo_f"), names(permanova_results_raw))
+permanova_r2_col <- intersect(c("r2", "r_squared", "r2_adj"), names(permanova_results_raw))
+
+if (length(permanova_p_col) == 0 || length(permanova_f_col) == 0 || length(permanova_r2_col) == 0) {
+  stop(glue::glue(
+    "Unexpected PERMANOVA columns. Available: {glue::glue_collapse(names(permanova_results_raw), sep = ', ')}"
+  ))
+}
+
+permanova_results <- permanova_results_raw %>%
+  dplyr::mutate(
+    f = .data[[permanova_f_col[1]]],
+    r2 = .data[[permanova_r2_col[1]]],
+    p_value = .data[[permanova_p_col[1]]],
+    q_value = fdr_adjust(p_value)
+  )
+
 permanova_results %>%
-  dplyr::mutate(p_value = pr_greater_f_, q_value = fdr_adjust(p_value)) %>%
   gt::gt() %>%
   gt::fmt_number(columns = c(f, r2), decimals = 3) %>%
   gt::fmt_number(columns = c(p_value, q_value), decimals = 3) %>%
@@ -1114,7 +1140,7 @@ ggplot(psmelt(microbiome::transform(ps_cluster, "compositional")),
   custom_theme() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
-```
+
 ## 8. Differential Abundance and Predictive Modeling
 
 ### 8.1 Shared Setup
@@ -1137,65 +1163,112 @@ ps_genus_filtered <- prune_taxa(keep_taxa, ps_genus_counts)
 ps_genus_48h <- subset_samples(ps_genus_filtered, Timepoint == "48H")
 ps_genus_0h <- subset_samples(ps_genus_filtered, Timepoint == "0H")
 ```
-```
+
 ### 8.2 Corncob (beta-binomial)
 
 ```{r corncob}
-set.seed(12345)
+corncob_path <- file.path(outputs_dir, "corncob_genus_results.rds")
 
-corncob_test <- tryCatch({
-  corncob::differentialTest(
-    formula = ~ group + carbohydrate * timepoint + subject_id,
-    phi.formula = ~ group + carbohydrate * timepoint + subject_id,
-    formula_null = ~ group + timepoint + subject_id,
-    phi.formula_null = ~ group + timepoint + subject_id,
-    test = "Wald",
-    data = ps_genus_filtered,
-    fdr_cutoff = 0.1,
-    B = 0
-  )
-}, error = function(e) {
-  message("Corncob failed: ", e$message)
-  NULL
-})
+corncob_test <- cache_rds(
+  corncob_path,
+  {
+    set.seed(12345)
+    tryCatch({
+      corncob::differentialTest(
+        formula = ~ group + carbohydrate * timepoint + subject_id,
+        phi.formula = ~ group + carbohydrate * timepoint + subject_id,
+        formula_null = ~ group + timepoint + subject_id,
+        phi.formula_null = ~ group + timepoint + subject_id,
+        test = "Wald",
+        data = ps_genus_filtered,
+        fdr_cutoff = 0.1,
+        B = 0
+      )
+    }, error = function(e) {
+      message("Corncob failed: ", e$message)
+      NULL
+    })
+  }
+)
 
 if (!is.null(corncob_test)) {
-  corncob_results <- corncob_test$wald_results %>%
-    dplyr::mutate(q_value = fdr_adjust(p_val)) %>%
-    dplyr::arrange(q_value)
+  if (!is.null(corncob_test$wald_results)) {
+    corncob_results <- corncob_test$wald_results %>%
+      dplyr::mutate(q_value = fdr_adjust(p_val)) %>%
+      dplyr::arrange(q_value)
+  } else if (!is.null(corncob_test$p) && !is.null(corncob_test$p_fdr)) {
+    p_mat <- corncob_test$p
+    q_mat <- corncob_test$p_fdr
+
+    if (is.null(dim(p_mat))) {
+      p_vals <- as.numeric(p_mat)
+    } else {
+      p_vals <- as.numeric(p_mat[, 1])
+    }
+
+    if (is.null(dim(q_mat))) {
+      q_vals = as.numeric(q_mat)
+    } else {
+      q_vals = as.numeric(q_mat[, 1])
+    }
+
+    taxa_names <- rownames(p_mat)
+    if (is.null(taxa_names)) {
+      taxa_names <- names(p_mat)
+    }
+    if (is.null(taxa_names)) {
+      taxa_names <- paste0("taxon_", seq_along(p_vals))
+    }
+
+    corncob_results <- tibble::tibble(
+      taxon = taxa_names,
+      p_val = p_vals,
+      q_value = q_vals
+    ) %>%
+      dplyr::arrange(q_value)
+  } else {
+    corncob_results <- tibble()
+  }
 } else {
   corncob_results <- tibble()
 }
 
 corncob_results
 ```
-```
+
 ### 8.3 ANCOM-BC2
 
 ```{r ancombc2}
-ancombc2_res <- tryCatch({
-  ANCOMBC::ancombc2(
-    data = ps_counts,
-    tax_level = "Genus",
-    fix_formula = "group + carbohydrate * timepoint",
-    rand_formula = "(1|subject_id)",
-    p_adj_method = "BH",
-    prv_cut = 0.10,
-    lib_cut = 0,
-    s0_perc = 0.05,
-    group = "carbohydrate",
-    struc_zero = TRUE,
-    neg_lb = TRUE,
-    alpha = 0.05,
-    global = TRUE
-  )
-}, error = function(e) {
-  message("ANCOM-BC2 failed: ", e$message)
-  NULL
-})
+ancombc2_path <- file.path(outputs_dir, "ancombc2_genus_results.rds")
+
+ancombc2_res <- cache_rds(
+  ancombc2_path,
+  {
+    tryCatch({
+      ANCOMBC::ancombc2(
+        data = ps_counts,
+        tax_level = "Genus",
+        fix_formula = "group + carbohydrate * timepoint",
+        rand_formula = "(1|subject_id)",
+        p_adj_method = "BH",
+        prv_cut = 0.10,
+        lib_cut = 0,
+        s0_perc = 0.05,
+        group = "carbohydrate",
+        struc_zero = TRUE,
+        neg_lb = TRUE,
+        alpha = 0.05,
+        global = TRUE
+      )
+    }, error = function(e) {
+      message("ANCOM-BC2 failed: ", e$message)
+      NULL
+    })
+  }
+)
 
 if (!is.null(ancombc2_res)) {
-  ancombc2_tbl <- map_dfr(names(ancombc2_res$lfc), function(effect) {
+  ancombc2_tbl <- purrr::map_dfr(names(ancombc2_res$lfc), function(effect) {
     tibble(
       taxon = rownames(ancombc2_res$lfc[[effect]]),
       effect = effect,
@@ -1214,32 +1287,39 @@ if (!is.null(ancombc2_res)) {
 ancombc2_tbl %>%
   dplyr::filter(q < 0.1)
 ```
-```
+
 ### 8.4 ANCOM-BC (48 h, RDC reference)
 
 ```{r ancombc48}
 ps_48h_counts <- subset_samples(ps_counts, Timepoint == "48H")
 
-ancombc_48h <- tryCatch({
-  ANCOMBC::ancombc(
-    phyloseq = ps_48h_counts,
-    formula = "group + carbohydrate",
-    p_adj_method = "BH",
-    zero_cut = 0.90,
-    lib_cut = 0,
-    group = "carbohydrate",
-    struc_zero = TRUE,
-    neg_lb = TRUE,
-    alpha = 0.05,
-    global = TRUE
-  )
-}, error = function(e) {
-  message("ANCOM-BC 48h failed: ", e$message)
-  NULL
-})
+ancombc48_path <- file.path(outputs_dir, "ancombc_48h_results.rds")
+
+ancombc_48h <- cache_rds(
+  ancombc48_path,
+  {
+    tryCatch({
+      ANCOMBC::ancombc(
+        phyloseq = ps_48h_counts,
+        formula = "group + carbohydrate",
+        p_adj_method = "BH",
+        zero_cut = 0.90,
+        lib_cut = 0,
+        group = "carbohydrate",
+        struc_zero = TRUE,
+        neg_lb = TRUE,
+        alpha = 0.05,
+        global = TRUE
+      )
+    }, error = function(e) {
+      message("ANCOM-BC 48h failed: ", e$message)
+      NULL
+    })
+  }
+)
 
 if (!is.null(ancombc_48h)) {
-  ancombc48_tbl <- map_dfr(names(ancombc_48h$beta), function(effect) {
+  ancombc48_tbl <- purrr::map_dfr(names(ancombc_48h$beta), function(effect) {
     tibble(
       taxon = rownames(ancombc_48h$beta[[effect]]),
       effect = effect,
@@ -1257,42 +1337,56 @@ if (!is.null(ancombc_48h)) {
 
 ancombc48_tbl
 ```
-```
+
 ### 8.5 ALDEx2 (48 h carbohydrate effect)
 
 ```{r aldex}
-counts_48h <- as(otu_table(ps_genus_48h), "matrix")
-conds_48h <- sample_data(ps_genus_48h)$carbohydrate
+aldex_path <- file.path(outputs_dir, "aldex2_48h_results.rds")
 
-aldex_clr <- ALDEx2::aldex.clr(counts_48h, conds_48h, mc.samples = 64, denom = "all", verbose = FALSE)
-aldex_kw <- ALDEx2::aldex.kw(aldex_clr)
-aldex_effect <- ALDEx2::aldex.effect(aldex_clr)
+aldex_tbl <- cache_rds(
+  aldex_path,
+  {
+    counts_48h <- as(otu_table(ps_genus_48h), "matrix")
+    conds_48h <- sample_data(ps_genus_48h)$carbohydrate
 
-aldex_tbl <- aldex_kw %>%
-  rownames_to_column("taxon") %>%
-  dplyr::left_join(aldex_effect %>% rownames_to_column("taxon"), by = "taxon") %>%
-  dplyr::mutate(q = fdr_adjust(kw.ep)) %>%
-  dplyr::arrange(q)
+    aldex_clr <- ALDEx2::aldex.clr(counts_48h, conds_48h, mc.samples = 64, denom = "all", verbose = FALSE)
+    aldex_kw <- ALDEx2::aldex.kw(aldex_clr)
+    aldex_effect <- ALDEx2::aldex.effect(aldex_clr)
+
+    aldex_kw %>%
+      rownames_to_column("taxon") %>%
+      dplyr::left_join(aldex_effect %>% rownames_to_column("taxon"), by = "taxon") %>%
+      dplyr::mutate(q = fdr_adjust(kw.ep)) %>%
+      dplyr::arrange(q)
+  }
+)
 
 aldex_tbl %>% dplyr::filter(q < 0.1)
 ```
-```
+
 ### 8.6 LEfSe (48 h, subclass = group)
 
 ```{r lefse}
-lefse_res <- tryCatch({
-  microbiomeMarker::run_lefse(
-    object = ps_genus_48h,
-    class = "carbohydrate",
-    subclass = "group",
-    taxa_rank = "Genus",
-    kw_cutoff = 0.05,
-    lda_cutoff = 2
-  )
-}, error = function(e) {
-  message("LEfSe failed: ", e$message)
-  NULL
-})
+lefse_path <- file.path(outputs_dir, "lefse_48h_results.rds")
+
+lefse_res <- cache_rds(
+  lefse_path,
+  {
+    tryCatch({
+      microbiomeMarker::run_lefse(
+        object = ps_genus_48h,
+        class = "carbohydrate",
+        subclass = "group",
+        taxa_rank = "Genus",
+        kw_cutoff = 0.05,
+        lda_cutoff = 2
+      )
+    }, error = function(e) {
+      message("LEfSe failed: ", e$message)
+      NULL
+    })
+  }
+)
 
 lefse_tbl <- if (!is.null(lefse_res)) {
   microbiomeMarker::marker_table(lefse_res) %>%
@@ -1304,26 +1398,33 @@ lefse_tbl <- if (!is.null(lefse_res)) {
 
 lefse_tbl
 ```
-```
+
 ### 8.7 MaAsLin2
 
 ```{r maaslin2}
+maaslin_path <- file.path(outputs_dir, "maaslin2_genus_results.rds")
+
 maaslin_counts <- as.data.frame(otu_table(ps_genus_filtered))
 maaslin_meta <- as(sample_data(ps_genus_filtered), "data.frame")
 maaslin_meta$SampleID <- rownames(maaslin_meta)
 
-maaslin_fit <- Maaslin2::Maaslin2(
-  input_data = maaslin_counts,
-  input_metadata = maaslin_meta,
-  output = file.path(outputs_dir, "maaslin2_genus"),
-  min_prevalence = prevalence_cutoff,
-  normalization = "TSS",
-  transform = "LOG",
-  analysis_method = "LM",
-  fixed_effects = c("group", "carbohydrate", "timepoint"),
-  random_effects = c("subject_id"),
-  plot_heatmap = FALSE,
-  plot_scatter = FALSE
+maaslin_fit <- cache_rds(
+  maaslin_path,
+  {
+    Maaslin2::Maaslin2(
+      input_data = maaslin_counts,
+      input_metadata = maaslin_meta,
+      output = file.path(outputs_dir, "maaslin2_genus"),
+      min_prevalence = prevalence_cutoff,
+      normalization = "TSS",
+      transform = "LOG",
+      analysis_method = "LM",
+      fixed_effects = c("group", "carbohydrate", "timepoint"),
+      random_effects = c("subject_id"),
+      plot_heatmap = FALSE,
+      plot_scatter = FALSE
+    )
+  }
 )
 
 maaslin_tbl <- maaslin_fit$results %>%
@@ -1333,22 +1434,29 @@ maaslin_tbl <- maaslin_fit$results %>%
 
 maaslin_tbl %>% dplyr::filter(q < 0.1)
 ```
-```
+
 ### 8.8 ADAPT
 
 ```{r adapt}
-adapt_res <- tryCatch({
-  ADAPT::adapt(
-    input_data = ps_genus_filtered,
-    cond.var = "carbohydrate",
-    base.cond = "No Added Carb",
-    time.var = "timepoint",
-    random.var = "subject_id"
-  )
-}, error = function(e) {
-  message("ADAPT failed: ", e$message)
-  NULL
-})
+adapt_path <- file.path(outputs_dir, "adapt_results.rds")
+
+adapt_res <- cache_rds(
+  adapt_path,
+  {
+    tryCatch({
+      ADAPT::adapt(
+        input_data = ps_genus_filtered,
+        cond.var = "carbohydrate",
+        base.cond = "No Added Carb",
+        time.var = "timepoint",
+        random.var = "subject_id"
+      )
+    }, error = function(e) {
+      message("ADAPT failed: ", e$message)
+      NULL
+    })
+  }
+)
 
 adapt_tbl <- if (!is.null(adapt_res)) {
   signals <- adapt_res@signal
@@ -1364,35 +1472,43 @@ adapt_tbl <- if (!is.null(adapt_res)) {
 
 adapt_tbl
 ```
-```
+
 ### 8.9 Random Forest Classification (48 h carbohydrate)
 
 ```{r random-forest}
-set.seed(12345)
+rf_path <- file.path(outputs_dir, "random_forest_markers.rds")
 
-rf_res <- tryCatch({
-  microbiomeMarker::run_sl(
-    object = ps_genus_48h,
-    group = "carbohydrate",
-    taxa_rank = "Genus",
-    norm = "TSS",
-    method = "RF",
-    nfolds = 5,
-    nrepeats = 1,
-    top_n = 30
-  )
-}, error = function(e) {
-  message("Random forest failed: ", e$message)
-  NULL
-})
+rf_markers <- cache_rds(
+  rf_path,
+  {
+    set.seed(12345)
+    rf_res <- tryCatch({
+      microbiomeMarker::run_sl(
+        object = ps_genus_48h,
+        group = "carbohydrate",
+        taxa_rank = "Genus",
+        norm = "TSS",
+        method = "RF",
+        nfolds = 5,
+        nrepeats = 1,
+        top_n = 30
+      )
+    }, error = function(e) {
+      message("Random forest failed: ", e$message)
+      NULL
+    })
 
-rf_markers <- if (!is.null(rf_res)) {
-  microbiomeMarker::marker_table(rf_res) %>%
-    as_tibble() %>%
-    dplyr::arrange(desc(importance))
-} else {
-  tibble()
-}
+    if (!is.null(rf_res)) {
+      microbiomeMarker::marker_table(rf_res) %>%
+        as_tibble() %>%
+        dplyr::arrange(desc(importance))
+    } else {
+      NULL
+    }
+  }
+)
+
+rf_markers <- rf_markers %||% tibble()
 
 rf_markers
 ```
