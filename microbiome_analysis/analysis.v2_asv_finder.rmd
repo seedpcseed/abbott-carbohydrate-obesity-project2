@@ -23,9 +23,7 @@ install_if_missing <- function(pkg) {
       install.packages(pkg)
     }, error = function(e) {
       if (!requireNamespace("BiocManager", quietly = TRUE)) {
-        install.packages("BiocManls /etc/apt/sources.list.d/ | grep -i cran
-ls /etc/apt/sources.list.d/ | grep -i r-project
-ager")
+        install.packages("BiocManager")
       }
       BiocManager::install(pkg, ask = FALSE)
     })
