@@ -1,14 +1,13 @@
-# Force R to use only conda libraries to avoid symbol conflicts
-# This prevents mixing system R packages with conda R packages
+# Use native R with user libraries
+user_lib <- "/root/R/x86_64-pc-linux-gnu-library"
+if (!dir.exists(user_lib)) {
+    dir.create(user_lib, recursive = TRUE)
+}
 
-# Set library paths to only use conda R
-.libPaths(c("/root/miniconda/lib/R/library"))
+.libPaths(c(user_lib, .libPaths()))
 
-# Set R_LIBS environment variable
-Sys.setenv(R_LIBS = "/root/miniconda/lib/R/library")
+# Set CRAN mirror
+options(repos = c(CRAN = "https://cloud.r-project.org/"))
 
-# Optional: Set R_LIBS_USER to avoid conflicts
-Sys.setenv(R_LIBS_USER = "/root/miniconda/lib/R/library")
-
-cat("R profile loaded: Using conda R libraries only\n")
-cat("Library paths:", paste(.libPaths(), collapse = ", "), "\n")
+# Welcome message
+cat("Native R 4.5.1 loaded with user libraries\n")
