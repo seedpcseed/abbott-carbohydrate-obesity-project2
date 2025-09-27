@@ -18,5 +18,7 @@
 *.fa.gz
 *.rds
 *.parquet
+*.meta.json
 
 
+microbiome_analysis/cache/strobelca/kmer_index_5e0c59bd7b810add.meta.json
