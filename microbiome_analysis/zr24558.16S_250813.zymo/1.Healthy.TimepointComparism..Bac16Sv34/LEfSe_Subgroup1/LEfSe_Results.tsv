@@ -1,3 +1,893 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:57cfe56e313e4ce574b2bd56a923511d64a113996b9b27a17f283f94de1cb7d6
-size 126689
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Christensenellaceae.g__Catabacter	1.89951255492	Healthy48H.1	2.19086752452	0.000461460868597	1.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Christensenellaceae.g__NA.s__sp30156	2.56529433572	Healthy48H.2	2.28704617277	0.00557111868682	2.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Blautia.s__hydrogenotrophica	2.76959993919			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Blautia.s__coccoides_producta	2.71454239707	Healthy48H.1	2.42195001839	0.00759869191206	3.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Lachnoclostridium.s__sp32380_sp32437	4.35975101501	Healthy48H.2	3.86368111913	3.57713413964e-08	4.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Lachnoclostridium.s__sp32417	2.68760408723	Healthy48H.1	2.42145888251	6.37928194602e-05	5.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Family_XIII.g__NA.s__sp31583	0.909395754935			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__Soleaferrea	2.60549001273	Healthy48H.1	2.33355029178	9.62448945094e-10	6.pdf
+k__Bacteria.p__Proteobacteria.c__Gammaproteobacteria.o__Enterobacteriales.f__Enterobacteriaceae.g__Citrobacter.s__braakii_freundii	2.75342888655	Healthy48H.1	2.48016866011	0.021098573765	7.pdf
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Porphyromonadaceae.g__Odoribacter.s__sp13171	2.44934039967	Healthy48H.1	2.22737037568	2.32922197456e-08	8.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp32859	1.79987438503	Healthy48H.1	2.27293464248	0.0399048514919	9.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Lachnoclostridium.s__sp32419	2.05250268229			0.0454886126974	
+k__Bacteria.p__Firmicutes.c__Erysipelotrichia.o__Erysipelotrichales.f__Erysipelotrichaceae.g__NA.s__sp36682	3.4601780808	Healthy48H.2	3.18807738372	0.0253301279059	10.pdf
+k__Bacteria.p__Firmicutes.c__Erysipelotrichia.o__Erysipelotrichales.f__Erysipelotrichaceae.g__NA.s__sp36685	0.597525392607			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Family_XI.g__NA.s__sp31397	1.1544001926			-	
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Lactobacillales.f__Carnobacteriaceae.g__Granulicatella.s__adiacens	1.05757233927			-	
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Porphyromonadaceae.g__Parabacteroides	4.46757019298	Healthy48H.1	4.16937713432	1.18457749534e-19	11.pdf
+k__Bacteria.p__Firmicutes.c__Erysipelotrichia.o__Erysipelotrichales.f__Erysipelotrichaceae.g__NA.s__sp36689	1.37438628807			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Clostridiaceae.g__Clostridium.s__perfringens	4.55003932364	Healthy48H.1	4.20762067399	5.48184845553e-14	12.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Family_XI.g__Anaerococcus.s__prevotii_tetradius	1.49910106579			0.021098573765	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35303	0.964761824837			-	
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales	5.05581620242	Healthy48H.1	4.75466599058	5.67834642829e-21	13.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Christensenellaceae.g__NA.s__sp30164_sp30431	0.499221289846			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35287_sp35305	2.25854281165			-	
+k__Bacteria.p__Actinobacteria.c__Coriobacteriia.o__Coriobacteriales.f__Coriobacteriaceae.g__Collinsella.s__intestinalis_stercoris	2.16528310299			-	
+k__Bacteria.p__Actinobacteria.c__Actinobacteria.o__Actinomycetales.f__Actinomycetaceae.g__Varibaculum.s__cambriense	2.14343517584			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35473	1.47978122864			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35472	2.55193509042	Healthy48H.2	2.28063640442	0.000612941707736	14.pdf
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Lactobacillales.f__Streptococcaceae	4.09703117069	Healthy48H.2	3.564466399	2.11835062659e-05	15.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Tyzzerella.s__sp33289	0.605824286208			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Roseburia.s__faecis_sp33781	2.31775827831			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp32812_sp32813_sp32814	1.34980839756	Healthy48H.2	2.85479803975	0.0253301279059	16.pdf
+k__Bacteria.p__Actinobacteria.c__Actinobacteria.o__Corynebacteriales.f__Corynebacteriaceae	2.60548827805	Healthy48H.1	2.3179803301	0.0494846848161	17.pdf
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Bacteroidaceae.g__Bacteroides.s__uniformis	3.88132132669	Healthy48H.1	3.56415463826	2.00130075024e-20	18.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Tyzzerella.s__sp33281	0.602460748969			-	
+k__Bacteria.p__Proteobacteria.c__Deltaproteobacteria.o__Desulfovibrionales	2.72359051466	Healthy48H.1	2.45010012982	0.000270029338948	19.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Family_XI.g__Finegoldia.s__magna	2.35035309616	Healthy48H.1	2.17360775197	0.000442688056459	20.pdf
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Lactobacillales.f__Lactobacillaceae.g__Lactobacillus	3.76207493778			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__Subdoligranulum.s__sp35580_sp35585_variabile	2.96667204887			-	
+k__Bacteria.p__Actinobacteria.c__Actinobacteria.o__Bifidobacteriales.f__Bifidobacteriaceae.g__Alloscardovia.s__omnicolens	0.893991072382			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp33373_sp33374	0.745716122227			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Family_XI.g__Peptoniphilus.s__gorbachii_rhinitidis	1.93345503865			0.00167253906913	
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Lactobacillales.f__Streptococcaceae.g__Streptococcus.s__cristatus	1.46019500629	Healthy48H.2	2.84446069293	0.00765748241984	21.pdf
+k__Bacteria.p__Firmicutes.c__Negativicutes.o__Selenomonadales.f__Veillonellaceae.g__Megasphaera.s__sp36950_sp36952	3.6384248956	Healthy48H.1	3.34930752503	0.021098573765	22.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Roseburia	3.09328820062			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Clostridiaceae.g__Clostridium.s__subterminale_sulfidigenes_thiosulfatireducens	2.34839162826	Healthy48H.1	2.09761766959	0.00316152471286	23.pdf
+k__Bacteria.p__Actinobacteria.c__Coriobacteriia.o__Coriobacteriales.f__Coriobacteriaceae.g__Gordonibacter.s__pamelaeae	2.34786617664			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35181	0.62555616569			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35183	0.445357668827			-	
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Lactobacillales.f__Lactobacillaceae.g__Lactobacillus.s__curvatus	0.464278759482			-	
+k__Bacteria.p__Tenericutes.c__Mollicutes.o__NA.f__NA.g__NA	0.838090243485			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp33761	2.0078098491	Healthy48H.2	2.71819934223	0.00314592417677	24.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Clostridiaceae.g__Clostridium.s__butyricum	3.57005234918	Healthy48H.1	3.26744506844	1.64244510991e-05	25.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__Ruminiclostridium.s__sp34950	1.75240667675	Healthy48H.1	2.13562982011	0.021098573765	26.pdf
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Rikenellaceae.g__NA	0.87708090094			-	
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Bacteroidaceae.g__Bacteroides.s__sp12288_thetaiotaomicron	3.7906336924	Healthy48H.1	3.47821906912	3.72670476646e-16	27.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35784	1.69289962299	Healthy48H.1	2.31606739486	0.000880895760588	28.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__Fastidiosipila	1.97994055068	Healthy48H.1	2.10560747952	0.0481211375678	29.pdf
+k__Bacteria.p__Actinobacteria.c__Coriobacteriia.o__Coriobacteriales.f__Coriobacteriaceae.g__Collinsella_Olsenella	1.68052960217			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp32173	0.549718470757			-	
+k__Bacteria.p__Firmicutes.c__Erysipelotrichia.o__Erysipelotrichales.f__Erysipelotrichaceae.g__Holdemanella.s__sp36738	3.83183722447			-	
+k__Bacteria.p__Actinobacteria.c__Actinobacteria.o__Actinomycetales.f__Actinomycetaceae.g__Actinomyces.s__graevenitzii	1.05014455338			-	
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Lactobacillales.f__Streptococcaceae.g__Streptococcus.s__NA	1.77238395984	Healthy48H.2	2.84998308603	0.00261809922953	30.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35155	0.587866946935			-	
+k__Bacteria.p__Actinobacteria.c__Actinobacteria.o__Bifidobacteriales.f__Bifidobacteriaceae.g__Bifidobacterium.s__angulatum	4.45030494592			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35257	0.95466360692			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Dorea	4.44023675052	Healthy48H.2	3.9481749901	1.80551252976e-15	31.pdf
+k__Bacteria.p__Proteobacteria.c__Gammaproteobacteria.o__Pseudomonadales.f__Moraxellaceae.g__Acinetobacter.s__radioresistens	1.04139137168			-	
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Rikenellaceae.g__Alistipes.s__onderdonkii	2.99411400827	Healthy48H.1	2.73957388164	9.22373605247e-13	32.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__Anaerotruncus.s__sp34437	1.50672552271	Healthy48H.1	2.35889579029	0.0112060808227	33.pdf
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Lactobacillales.f__Lactobacillaceae	3.76207493778			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Family_XIII.g__NA.s__sp31533_sp31552	1.96217561679	Healthy48H.1	2.21082351888	0.0222221104599	34.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35654	1.13761905306			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__NA.g__NA.s__NA	0.509554847295			-	
+k__Bacteria.p__Actinobacteria.c__Coriobacteriia.o__Coriobacteriales.f__Coriobacteriaceae.g__Denitrobacterium.s__detoxificans_sp10543	2.5863470976	Healthy48H.2	2.35358117596	0.0253301279059	35.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__Soleaferrea.s__sp34492	2.12143112343	Healthy48H.1	2.0912337616	8.23029015534e-06	36.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp32277	1.94090568956			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Christensenellaceae.g__NA.s__sp30180_sp30264_sp30301	0.474792741037			-	
+k__Bacteria.p__Firmicutes.c__Erysipelotrichia.o__Erysipelotrichales.f__Erysipelotrichaceae.g__Erysipelatoclostridium.s__ramosum	2.31965718919	Healthy48H.1	2.12785043982	0.0174741576914	37.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__NA.g__NA.s__sp30555	3.83140557171	Healthy48H.2	3.51100780149	0.030288755179	38.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Family_XIII.g__NA.s__sp31685	1.88244495856			0.0494846848161	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__Anaerotruncus.s__sp34439	3.07120773268	Healthy48H.1	2.70120641175	0.0472862792381	39.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Christensenellaceae.g__NA.s__sp30384	1.93312874727			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp34980	3.07002142144	Healthy48H.1	2.72720864737	0.00149551428513	40.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Family_XI.g__Tissierella	2.08945239647			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp33357	1.72697122087	Healthy48H.2	2.33152676972	0.0139188372942	41.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp34820	2.64886670438			-	
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Bacillales.f__Planococcaceae	2.44851369324	Healthy48H.2	2.21651567162	0.0253301279059	42.pdf
+k__Bacteria.p__Fusobacteria	1.68374016971			0.0481211375678	
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Rikenellaceae.g__Alistipes.s__putredinis	2.20951740995			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Family_XI.g__Peptoniphilus.s__sp31311	1.90842138218			0.000880895760588	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Coprococcus.s__eutactus	3.31514358889	Healthy48H.2	3.04277361484	0.0174730617832	43.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Clostridiaceae.g__Clostridium.s__tertium	4.58786207158	Healthy48H.1	4.27105500473	9.16736010009e-14	44.pdf
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Bacteroidaceae.g__Bacteroides.s__cellulosilyticus_intestinalis	0.451193073639			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Christensenellaceae.g__Christensenella	1.76350921699			0.00167253906913	
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Bacteroidaceae.g__Bacteroides.s__stercorirosoris	1.99816636098	Healthy48H.1	2.32329442441	0.00167253906913	45.pdf
+k__Archaea.p__Euryarchaeota.c__Methanobacteria.o__Methanobacteriales	3.89989214169	Healthy48H.2	3.61252720133	0.000187813568336	46.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Hungatella	3.42488139732	Healthy48H.1	3.10283098177	2.30877239429e-07	47.pdf
+k__Bacteria.p__Actinobacteria.c__Coriobacteriia.o__Coriobacteriales	4.69865405619			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Peptostreptococcaceae.g__Intestinibacter	4.13219569125			-	
+k__Bacteria.p__Firmicutes.c__Erysipelotrichia.o__Erysipelotrichales.f__Erysipelotrichaceae.g__NA.s__sp36687	2.49111990231	Healthy48H.2	2.29160186332	0.00125862699241	48.pdf
+k__Bacteria.p__Actinobacteria.c__Coriobacteriia.o__Coriobacteriales.f__Coriobacteriaceae.g__Enterorhabdus	2.04976186639			-	
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Bacteroidaceae.g__Bacteroides.s__ovatus	2.8996616612	Healthy48H.1	2.57972507972	4.1677493477e-06	49.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__Anaerofilum.s__sp34429	2.21183853208	Healthy48H.1	2.06163446706	4.73881011386e-07	50.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Howardella.s__ureilytica	2.01078130873	Healthy48H.2	2.32761893386	0.00125862699241	51.pdf
+k__Bacteria.p__Bacteroidetes.c__Flavobacteriia	0.685938217775			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Peptostreptococcaceae	4.96466825469			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Family_XI.g__Anaerococcus.s__NA	1.23184343218			-	
+k__Bacteria.p__Actinobacteria.c__Coriobacteriia.o__Coriobacteriales.f__Coriobacteriaceae.g__NA.s__sp10534	2.30235060936	Healthy48H.2	3.21992174185	5.69556975246e-10	52.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__NA	3.85775883061			-	
+k__Bacteria.p__Actinobacteria.c__Actinobacteria.o__Bifidobacteriales.f__Bifidobacteriaceae.g__Bifidobacterium.s__breve	2.25767599786			-	
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Bacillales.f__Bacillaceae.g__Bacillus	1.74272624095	Healthy48H.1	2.69141222496	0.0112060808227	53.pdf
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Bacteroidaceae.g__Bacteroides.s__faecichinchillae	1.2514121556			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__Ruminococcus	4.46616036901	Healthy48H.2	4.13442082314	2.30724016794e-06	54.pdf
+k__Bacteria.p__Tenericutes.c__Mollicutes	0.838090243485			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Family_XI.g__Peptoniphilus.s__duerdenii	2.06339696683			0.0442185333839	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35327	1.73359879825	Healthy48H.2	2.45726004006	0.00765748241984	55.pdf
+k__Bacteria.p__Actinobacteria.c__Coriobacteriia.o__Coriobacteriales.f__Coriobacteriaceae.g__Slackia.s__isoflavoniconvertens	3.45829676277			-	
+k__Bacteria.p__Tenericutes.c__Mollicutes.o__NA.f__NA	0.838090243485			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35323	2.50862573744	Healthy48H.2	2.28311676443	0.00765748241984	56.pdf
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Lactobacillales.f__Enterococcaceae.g__Enterococcus.s__NA	2.88900184454	Healthy48H.2	2.32424075181	0.017132868445	57.pdf
+k__Bacteria.p__Firmicutes.c__Negativicutes.o__Selenomonadales.f__Veillonellaceae	4.02192111016	Healthy48H.1	3.69178683775	0.0276174529515	58.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35328	1.7505985893	Healthy48H.2	2.50469722013	0.0459749250835	59.pdf
+k__Bacteria.p__Actinobacteria.c__Actinobacteria.o__Micrococcales	1.13428772992			-	
+k__Bacteria.p__Proteobacteria.c__Gammaproteobacteria.o__Enterobacteriales.f__Enterobacteriaceae.g__Buttiauxella_Kluyvera	1.92358415817			0.0399048514919	
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Lactobacillales.f__Streptococcaceae.g__Streptococcus.s__salivarius_vestibularis	3.85110617288	Healthy48H.2	3.38662601664	4.17016818848e-06	60.pdf
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Prevotellaceae	2.69447659619	Healthy48H.1	2.35958066685	0.0142304955203	61.pdf
+k__Bacteria.p__Bacteroidetes.c__Flavobacteriia.o__Flavobacteriales.f__Flavobacteriaceae.g__Cloacibacterium	0.685938217775			-	
+k__Bacteria.p__Proteobacteria.c__Deltaproteobacteria	2.72359051466	Healthy48H.1	2.45784745225	0.000270029338948	62.pdf
+k__Bacteria.p__Proteobacteria.c__Gammaproteobacteria.o__Enterobacteriales.f__Enterobacteriaceae.g__Enterobacter_Kluyvera.s__asburiae_ascorbata_cryocrescens	2.6131432528	Healthy48H.1	2.36173108914	0.0399048514919	63.pdf
+k__Bacteria.p__Firmicutes.c__Negativicutes.o__Selenomonadales	4.08832505102	Healthy48H.1	3.75459377079	0.000821532387615	64.pdf
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Bacteroidaceae.g__Bacteroides.s__eggerthii	1.37842094863			-	
+k__Bacteria.p__Bacteroidetes.c__Flavobacteriia.o__Flavobacteriales	0.685938217775			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Lachnoclostridium.s__sp32408	3.16352265556	Healthy48H.1	2.83110862993	0.0439961958451	65.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__Subdoligranulum.s__sp35591	1.19537942623			-	
+k__Bacteria.p__Actinobacteria.c__Actinobacteria.o__Actinomycetales.f__Actinomycetaceae.g__Actinomyces.s__naeslundii	1.28506661013	Healthy48H.2	2.65441995912	0.0463197488411	66.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Defluviitaleaceae.g__NA.s__sp31142	1.66447422065			-	
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Bacteroidaceae.g__Bacteroides.s__faecis	2.99430842869	Healthy48H.1	2.70236515402	0.000240261147332	67.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__Ruminococcus.s__bromii	4.46616036901	Healthy48H.2	4.1344514796	2.30724016794e-06	68.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Peptostreptococcaceae.g__Peptoclostridium.s__difficile	2.19970176226	Healthy48H.1	2.01783933712	0.00595682845403	69.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Clostridiaceae.g__Clostridium.s__sartagoforme	1.66587043599			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__Intestinimonas.s__sp34627_sp34863	1.28081717218			-	
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Porphyromonadaceae.g__Barnesiella	3.25330304409	Healthy48H.1	2.99038838803	1.42431623287e-13	70.pdf
+k__Bacteria.p__Actinobacteria.c__Coriobacteriia.o__Coriobacteriales.f__Coriobacteriaceae.g__Collinsella.s__intestinalis	1.59076194121			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__Intestinimonas.s__sp34627	1.83653731916	Healthy48H.1	2.0719916589	0.00316152471286	71.pdf
+k__Bacteria.p__Actinobacteria.c__Actinobacteria.o__Bifidobacteriales.f__Bifidobacteriaceae.g__Bifidobacterium.s__kashiwanohense	3.10863890917	Healthy48H.1	2.75091859319	0.00316152471286	72.pdf
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Lactobacillales.f__Streptococcaceae.g__Streptococcus.s__oralis_parasanguinis	2.22714411302	Healthy48H.2	2.86139985299	0.000729048735902	73.pdf
+k__Bacteria.p__Actinobacteria.c__Actinobacteria.o__Corynebacteriales.f__Corynebacteriaceae.g__NA	1.35836263855			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Family_XIII.g__Mogibacterium.s__sp31608	2.00859107314	Healthy48H.1	2.47409135881	0.021098573765	74.pdf
+k__Bacteria.p__Verrucomicrobia.c__Verrucomicrobiae.o__Verrucomicrobiales	4.02660293393	Healthy48H.1	3.60617848246	0.00778931978792	75.pdf
+k__Bacteria.p__Proteobacteria.c__Deltaproteobacteria.o__Desulfovibrionales.f__Desulfovibrionaceae.g__Desulfovibrio	0.877961240594			-	
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Lactobacillales.f__Carnobacteriaceae.g__Carnobacterium	4.32971707319	Healthy48H.1	4.04509290988	1.64244510991e-05	76.pdf
+k__Bacteria.p__Actinobacteria.c__Coriobacteriia.o__Coriobacteriales.f__Coriobacteriaceae.g__Adlercreutzia	2.50069243703	Healthy48H.2	2.5733697599	0.0019133819312	77.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Christensenellaceae.g__NA	3.57879348985	Healthy48H.2	3.0746046453	4.14783299255e-07	78.pdf
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Bacteroidaceae.g__Bacteroides.s__nordii	1.80355571179			0.00595682845403	
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Lactobacillales.f__Enterococcaceae.g__Enterococcus.s__avium	2.16620831302	Healthy48H.2	2.2617197604	0.0253301279059	79.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Family_XIII.g__NA.s__sp31533	3.26432785461	Healthy48H.2	2.7049894718	1.81079759571e-07	80.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35744	1.36132716726			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp33429_sp33761	1.45419518279	Healthy48H.2	2.97774674127	0.0253301279059	81.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp33692	2.93927495388			-	
+k__Bacteria.p__Bacteroidetes	5.05583473335	Healthy48H.1	4.75454967996	5.67834642829e-21	82.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Blautia_Marvinbryantia.s__sp31989_sp32992	1.51910788467			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35859	2.84213215741	Healthy48H.2	2.60179823405	0.00019820710738	83.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp33454	1.76835431524	Healthy48H.1	2.1281582345	0.00316152471286	84.pdf
+k__Bacteria.p__Proteobacteria.c__Betaproteobacteria.o__Burkholderiales.f__Alcaligenaceae.g__Sutterella.s__sp48257	1.11988183538			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__NA.g__NA.s__sp30526	3.11577648003	Healthy48H.1	2.79454467537	0.00595682845403	85.pdf
+k__Bacteria.p__Firmicutes.c__Negativicutes.o__Selenomonadales.f__Acidaminococcaceae.g__Succiniclasticum	2.62161231515			-	
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Porphyromonadaceae.g__Barnesiella.s__intestinihominis	2.72469147215	Healthy48H.1	2.53631321248	0.00167253906913	86.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp33697	0.432274500216			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Christensenellaceae.g__NA.s__sp30405	1.44932810036			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Christensenellaceae.g__NA.s__sp30402	1.1901803401			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp33517	3.18048602784	Healthy48H.1	2.87891087915	0.00654134318395	87.pdf
+k__Bacteria.p__Actinobacteria.c__Coriobacteriia.o__Coriobacteriales.f__Coriobacteriaceae.g__Atopobium.s__minutum	1.01513702358			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Lachnoclostridium.s__sp32367	2.32225216448	Healthy48H.2	2.37307180155	0.00596592104704	88.pdf
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Lactobacillales.f__Streptococcaceae.g__Streptococcus.s__sanguinis	0.961096195198			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Christensenellaceae.g__NA.s__sp30326	1.62411549876	Healthy48H.1	2.31798926532	0.00595682845403	89.pdf
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Bacillales.f__Bacillaceae.g__Bacillus.s__NA	1.74272624095	Healthy48H.1	2.70200827926	0.0112060808227	90.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Clostridiaceae.g__Clostridium.s__paraputrificum	3.92056275621	Healthy48H.1	3.60375815352	5.48184845553e-14	91.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Family_XI.g__Finegoldia	2.35035309616	Healthy48H.1	2.17141518305	0.000442688056459	92.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Christensenellaceae.g__Catabacter.s__hongkongensis	1.89951255492	Healthy48H.1	2.19864736909	0.000461460868597	93.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__Faecalibacterium.s__sp34558	3.04819299836			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Peptostreptococcaceae.g__Intestinibacter.s__bartlettii	4.13219569125			-	
+k__Bacteria.p__Actinobacteria.c__Coriobacteriia.o__Coriobacteriales.f__Coriobacteriaceae.g__Adlercreutzia_Asaccharobacter	3.08889371186	Healthy48H.2	2.68848693516	1.53420144834e-07	94.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Clostridiaceae.g__Clostridium.s__celatum	4.42217995546	Healthy48H.1	4.01060936502	0.0380308626568	95.pdf
+k__Bacteria.p__Proteobacteria.c__Betaproteobacteria.o__Burkholderiales.f__Alcaligenaceae.g__Sutterella.s__sp48257_sp48270	1.5121551067			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Family_XI.g__Anaerococcus.s__vaginalis	2.42428062439	Healthy48H.1	2.22433646952	0.00011986268001	96.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp34863	0.728629692627			-	
+k__Archaea.p__Euryarchaeota	3.89989214169	Healthy48H.2	3.60946099957	0.000187813568336	97.pdf
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Porphyromonadaceae.g__Butyricimonas.s__paravirosa	1.98911832636	Healthy48H.1	2.23600272242	0.000880895760588	98.pdf
+k__Bacteria.p__Actinobacteria.c__Actinobacteria.o__Actinomycetales.f__Actinomycetaceae.g__Actinomyces.s__turicensis	1.49251246578			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__NA.g__Sarcina	2.62189094281			-	
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Bacteroidaceae.g__Bacteroides.s__xylanisolvens	3.42225484549	Healthy48H.1	3.1099216074	9.22373605247e-13	99.pdf
+k__Bacteria.p__Proteobacteria.c__Gammaproteobacteria.o__Enterobacteriales.f__Enterobacteriaceae.g__Buttiauxella_Kluyvera.s__agrestis_intermedia_noackiae	1.92358415817			0.0399048514919	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp33422	2.45928750164			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Family_XI.g__Anaerococcus.s__sp31228	0.684788593606			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__Subdoligranulum.s__sp35590	3.30631603106	Healthy48H.1	3.02187676178	7.16575624491e-15	100.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__Anaerotruncus.s__sp34478	2.13606509197	Healthy48H.1	2.03035034083	0.000124252237977	101.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Lachnoclostridium.s__sp32440	2.71666818388	Healthy48H.1	2.42276951138	5.7836580386e-08	102.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Lachnoclostridium.s__sp32441	2.45380314391	Healthy48H.1	2.32172806743	2.17142885399e-09	103.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Lachnoclostridium.s__sp32442	0.970157779186			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Lachnoclostridium.s__sp32444	3.12913932581	Healthy48H.1	2.81399672179	0.000142508744833	104.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Lachnoclostridium.s__sp32445	2.59492124054			-	
+k__Bacteria.p__Actinobacteria.c__Actinobacteria.o__Bifidobacteriales.f__Bifidobacteriaceae.g__Gardnerella.s__vaginalis	1.20009642359			-	
+k__Bacteria.p__Actinobacteria.c__Coriobacteriia.o__Coriobacteriales.f__Coriobacteriaceae.g__Eggerthella_Gordonibacter.s__pamelaeae_sinensis	1.21327676196	Healthy48H.2	2.58333330996	0.0463197488411	105.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp32894	0.464695750759			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Family_XIII	3.50570514846	Healthy48H.2	2.99246502418	1.02800657769e-07	106.pdf
+k__Bacteria.p__Firmicutes.c__Erysipelotrichia	4.52583066352			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Family_XIII.g__NA.s__sp31528_sp31541	0.608365759271			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Lachnospira.s__sp32450	0.733452241108			-	
+None.Other.Other.Other.Other.Other	2.42090347368	Healthy48H.1	2.43146066865	0.00963636396521	107.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Peptostreptococcaceae.g__Peptoclostridium	2.32550925779	Healthy48H.1	2.10033743297	0.0378704005705	108.pdf
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Prevotellaceae.g__Prevotella.s__copri	1.78177013796	Healthy48H.1	2.1143709915	0.021098573765	109.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35083	2.12354191949	Healthy48H.1	2.24236195445	8.23029015534e-06	110.pdf
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Bacillales.f__Family_XI	0.75103326284			-	
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Porphyromonadaceae.g__Butyricimonas.s__virosa	2.33860669364	Healthy48H.1	2.17620036046	3.25006029772e-05	111.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35401	1.34015098083	Healthy48H.2	2.64868655207	0.0253301279059	112.pdf
+k__Bacteria.p__Proteobacteria.c__Gammaproteobacteria.o__Enterobacteriales.f__Enterobacteriaceae.g__Escherichia.s__coli	5.03218674671	Healthy48H.1	4.58041539882	1.12081493394e-13	113.pdf
+None.Other.Other.Other	2.42090347368	Healthy48H.1	2.44404289441	0.00963636396521	114.pdf
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Bacillales.f__Family_XI.g__Gemella	0.75103326284			-	
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Lactobacillales.f__Carnobacteriaceae.g__Granulicatella	1.05757233927			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Blautia.s__sp32054_wexlerae	3.958445548	Healthy48H.2	3.55146595273	2.67612829088e-08	115.pdf
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Lactobacillales.f__Streptococcaceae.g__Streptococcus.s__parasanguinis	2.77743700942	Healthy48H.2	2.71581838932	1.98127730186e-07	116.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35363	1.91629561315			-	
+k__Bacteria.p__Tenericutes.c__Mollicutes.o__NA.f__NA.g__NA.s__sp67892	0.838090243485			-	
+k__Bacteria.p__Actinobacteria.c__Coriobacteriia.o__Coriobacteriales.f__Coriobacteriaceae.g__Gordonibacter	2.41892272034			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp32486	2.03702423591	Healthy48H.1	2.16684459978	0.0017476607004	117.pdf
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Lactobacillales.f__Leuconostocaceae.g__Weissella.s__cibaria_confusa	1.27539525576			-	
+k__Bacteria.p__Proteobacteria.c__Gammaproteobacteria.o__Enterobacteriales.f__Enterobacteriaceae.g__Citrobacter.s__freundii	2.46420737893	Healthy48H.1	2.19217895155	0.0399048514919	118.pdf
+k__Bacteria.p__Actinobacteria.c__Actinobacteria.o__Actinomycetales.f__Actinomycetaceae.g__Mobiluncus	0.432274500216			-	
+k__Bacteria.p__Verrucomicrobia.c__Verrucomicrobiae.o__Verrucomicrobiales.f__Verrucomicrobiaceae	4.02660293393	Healthy48H.1	3.60617848246	0.00778931978792	119.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Lachnoclostridium.s__sp32343_sp32393_sp32423	2.30713367731	Healthy48H.1	2.22010512667	0.000880895760588	120.pdf
+k__Bacteria.p__Proteobacteria.c__Gammaproteobacteria.o__Pseudomonadales.f__Moraxellaceae.g__Acinetobacter	4.1370007783	Healthy48H.2	3.84549316928	0.0253301279059	121.pdf
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Bacillales.f__Paenibacillaceae	3.35149016074	Healthy48H.2	3.01439309031	5.73675403166e-13	122.pdf
+k__Bacteria.p__Firmicutes.c__Erysipelotrichia.o__Erysipelotrichales.f__Erysipelotrichaceae.g__Stoquefichus.s__sp36595	1.92991045963	Healthy48H.1	2.19289105686	0.00680608426514	123.pdf
+k__Bacteria.p__Firmicutes.c__Erysipelotrichia.o__Erysipelotrichales.f__Erysipelotrichaceae.g__Faecalitalea	2.66310066571			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Roseburia.s__inulinivorans	2.74254412041	Healthy48H.1	2.41380751241	5.33207808286e-05	124.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__Ruminococcus.s__flavefaciens	0.406462614471			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__Anaerofilum	2.21183853208	Healthy48H.1	2.06412285084	4.73881011386e-07	125.pdf
+k__Bacteria.p__Firmicutes.c__Erysipelotrichia.o__Erysipelotrichales.f__Erysipelotrichaceae.g__Holdemanella	3.83662890306			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Family_XI.g__NA	1.1544001926			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Anaerostipes.s__hadrus	4.48034619301	Healthy48H.2	4.07266269943	1.45445469418e-14	126.pdf
+k__Bacteria.p__Actinobacteria.c__Actinobacteria.o__Micrococcales.f__Micrococcaceae	1.13428772992			-	
+k__Bacteria.p__Firmicutes.c__Erysipelotrichia.o__Erysipelotrichales.f__Erysipelotrichaceae.g__Erysipelatoclostridium.s__sp36629	1.4037243323	Healthy48H.2	2.66453864548	0.0463197488411	127.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Blautia.s__sp32048	4.33305209598	Healthy48H.2	3.74063120629	1.77778879021e-08	128.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp34762	1.36938809473	Healthy48H.2	3.62536367576	0.0139188372942	129.pdf
+k__Bacteria.p__Actinobacteria.c__Coriobacteriia	4.69865405619			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Blautia.s__sp32046	1.11407184661			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp34765	1.98587483567	Healthy48H.1	2.1027620101	1.64244510991e-05	130.pdf
+k__Bacteria.p__Actinobacteria.c__Actinobacteria.o__Bifidobacteriales.f__Bifidobacteriaceae.g__Bifidobacterium.s__NA	0.751316428643			-	
+k__Bacteria.p__Actinobacteria.c__Coriobacteriia.o__Coriobacteriales.f__Coriobacteriaceae.g__NA.s__sp10494	2.9860612779			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Roseburia.s__sp33185	0.897161298518			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35100	1.77922682666	Healthy48H.2	2.21945928789	0.0329917537872	131.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Blautia_Lachnoclostridium.s__sp32052_sp32410	3.12796936917	Healthy48H.2	2.76280984949	1.21499302579e-06	132.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35669	2.3301752532			-	
+k__Bacteria.p__Actinobacteria.c__Coriobacteriia.o__Coriobacteriales.f__Coriobacteriaceae.g__Enterorhabdus.s__caecimuris	2.04976186639			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Roseburia.s__sp33161_sp33189_sp33275	1.6449567053			-	
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Bacteroidaceae.g__Bacteroides.s__sp12328_vulgatus	1.01512569519			-	
+k__Bacteria.p__Proteobacteria.c__Betaproteobacteria.o__Burkholderiales.f__Alcaligenaceae	3.50175246743	Healthy48H.1	3.21469034161	1.31301113734e-16	133.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp33371_sp33375	2.3188347496			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35665	2.81387426172	Healthy48H.2	2.49274196054	0.0113096999363	134.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35667	2.59195497096	Healthy48H.2	2.38471418637	0.0475840882353	135.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Family_XI.g__Parvimonas.s__sp31282	1.75579182478			-	
+None.Other.Other	2.42090347368	Healthy48H.1	2.42263749029	0.00963636396521	136.pdf
+k__Bacteria.p__Proteobacteria.c__Gammaproteobacteria.o__Pseudomonadales.f__Moraxellaceae.g__Acinetobacter.s__gyllenbergii_johnsonii	3.32417716612	Healthy48H.2	3.03396149528	0.0253301279059	137.pdf
+k__Bacteria.p__Actinobacteria.c__Coriobacteriia.o__Coriobacteriales.f__Coriobacteriaceae.g__Collinsella	4.62802406327			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp34859	2.2340934458	Healthy48H.2	2.15516180805	0.000100956307249	138.pdf
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Bacillales.f__Staphylococcaceae.g__Staphylococcus	1.27359176826			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Christensenellaceae.g__NA.s__sp30441	2.29247880415			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Blautia.s__luti	3.19885813069	Healthy48H.2	2.89539211135	4.50251196335e-10	139.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Christensenellaceae.g__NA.s__sp30444	0.454927210049			-	
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Bacteroidaceae.g__Bacteroides.s__finegoldii	2.80365063664	Healthy48H.1	2.52730205641	1.07265961702e-07	140.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp34850	2.11392249055			0.00316152471286	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp34851	2.65697413612	Healthy48H.1	2.43940377567	2.01224928681e-06	141.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Family_XI.g__Tissierella.s__praeacuta	2.08945239647			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Roseburia.s__hominis	1.8939319218			0.0112060808227	
+k__Bacteria.p__Actinobacteria.c__Coriobacteriia.o__Coriobacteriales.f__Coriobacteriaceae.g__Collinsella.s__aerofaciens	4.62229014148			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp33553	1.35662433064			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Family_XI.g__Gallicola.s__sp31243	1.70488515119			-	
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Lactobacillales.f__Lactobacillaceae.g__Lactobacillus.s__sakei	1.6735740749	Healthy48H.2	3.29965807255	0.0463197488411	142.pdf
+k__Bacteria.p__Cyanobacteria.c__Chloroplast	2.01269132627			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Hungatella.s__effluvii	1.34149874297			-	
+k__Bacteria.p__Actinobacteria	5.3831992023			-	
+k__Bacteria.p__Proteobacteria.c__Gammaproteobacteria.o__Enterobacteriales.f__Enterobacteriaceae.g__Escherichia	5.05372574892	Healthy48H.1	4.6059909626	1.12081493394e-13	143.pdf
+k__Bacteria.p__Firmicutes.c__Erysipelotrichia.o__Erysipelotrichales.f__Erysipelotrichaceae.g__Erysipelatoclostridium	2.59743050967	Healthy48H.2	2.24877657748	0.0216200492457	144.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Blautia.s__wexlerae	5.09964404522	Healthy48H.2	4.70850743229	7.70758009211e-15	145.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Lachnoclostridium.s__sp32336	2.38369673902	Healthy48H.1	2.13919495832	0.021098573765	146.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35288	1.21381677338			-	
+k__Bacteria.p__Actinobacteria.c__Actinobacteria.o__Bifidobacteriales.f__Bifidobacteriaceae.g__Bifidobacterium.s__sp4971	1.61238235482			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__NA.g__Sarcina.s__ventriculi	2.62189094281			-	
+k__Bacteria.p__Actinobacteria.c__Actinobacteria.o__Bifidobacteriales.f__Bifidobacteriaceae.g__Bifidobacterium.s__saguini	0.947675491287			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp32860	0.417092905482			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Peptostreptococcaceae.g__Peptostreptococcus.s__anaerobius	2.03643797671			-	
+k__Bacteria.p__Actinobacteria.c__Actinobacteria.o__Actinomycetales.f__Actinomycetaceae.g__Varibaculum	2.14343517584			-	
+k__Bacteria.p__Firmicutes.c__Erysipelotrichia.o__Erysipelotrichales.f__Erysipelotrichaceae.g__NA.s__sp36686_sp36689	3.88188239374	Healthy48H.2	3.46246845897	3.75424303014e-07	147.pdf
+k__Bacteria.p__Actinobacteria.c__Coriobacteriia.o__Coriobacteriales.f__Coriobacteriaceae.g__NA.s__sp10524	3.09482358736			-	
+k__Archaea.p__Euryarchaeota.c__Methanobacteria.o__Methanobacteriales.f__Methanobacteriaceae	3.89989214169	Healthy48H.2	3.60358844617	0.000187813568336	148.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Peptostreptococcaceae.g__Terrisporobacter.s__sp34393	3.48565358851	Healthy48H.2	3.05517333987	0.0441233109453	149.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Peptostreptococcaceae.g__Terrisporobacter.s__sp34390	2.76691145009			-	
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Porphyromonadaceae.g__Odoribacter	2.44934039967	Healthy48H.1	2.23442881956	2.32922197456e-08	150.pdf
+k__Bacteria.p__Actinobacteria.c__Actinobacteria.o__Propionibacteriales	1.70062606474			-	
+None	2.42090347368	Healthy48H.1	2.38519447491	0.00963636396521	151.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Eubacterium_Marvinbryantia	0.459362363466			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__Anaerotruncus.s__sp34434	1.65949257201	Healthy48H.1	2.26460912888	0.0112060808227	152.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__Anaerotruncus.s__sp34435	1.07749300204			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Fusicatenibacter	4.4372080159	Healthy48H.2	4.0098239126	4.62556096742e-07	153.pdf
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Bacillales.f__Staphylococcaceae.g__Staphylococcus.s__argenteus_aureus_simiae	0.929993506498			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__Anaerotruncus.s__colihominis	2.51775539126	Healthy48H.1	2.28390465907	4.73881011386e-07	154.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp32907	1.51153051795	Healthy48H.1	2.19042116766	0.00316152471286	155.pdf
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Porphyromonadaceae.g__Porphyromonas	0.675312548902			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Lachnoclostridium.s__sp32400	2.42748034489	Healthy48H.1	2.26951106361	0.00595682845403	156.pdf
+None.Other.Other.Other.Other.Other.Other	2.42090347368	Healthy48H.1	2.4713609235	0.00963636396521	157.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Lachnoclostridium_Roseburia.s__sp32368_sp33144	2.84529806543	Healthy48H.2	2.40299921126	1.19672484721e-08	158.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Peptostreptococcaceae.g__Peptostreptococcus	2.44621776345			-	
+k__Bacteria.p__Firmicutes	5.86580494263	Healthy48H.2	5.04880409868	1.04487576627e-08	159.pdf
+k__Bacteria.p__Actinobacteria.c__Actinobacteria.o__Actinomycetales.f__Actinomycetaceae.g__Actinomyces.s__oris_viscosus	0.931919227173			-	
+k__Bacteria.p__Actinobacteria.c__Actinobacteria	5.30073475763			-	
+k__Bacteria	5.99983663936			-	
+k__Bacteria.p__Actinobacteria.c__Actinobacteria.o__Bifidobacteriales.f__Bifidobacteriaceae.g__Bifidobacterium.s__catenulatum_kashiwanohense_pseudocatenulatum	4.33170847959			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Lachnoclostridium_Roseburia	2.84529806543	Healthy48H.2	2.40942568186	1.19672484721e-08	160.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Eisenbergiella	2.43392253376	Healthy48H.1	2.08749786135	0.00116293697644	161.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Peptococcaceae.g__NA	1.42106514545	Healthy48H.1	2.28386117984	0.00595682845403	162.pdf
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Lactobacillales.f__Lactobacillaceae.g__Lactobacillus.s__delbrueckii	0.834087981423			-	
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Prevotellaceae.g__NA.s__sp13927	1.22901135977			-	
+k__Bacteria.p__Firmicutes.c__Negativicutes	4.08832505102	Healthy48H.1	3.75482262822	0.000821532387615	163.pdf
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Bacteroidaceae.g__Bacteroides.s__caccae	4.25601665322	Healthy48H.1	3.95939353563	4.30799475646e-15	164.pdf
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Prevotellaceae.g__NA.s__sp13885	1.4378997876	Healthy48H.1	2.59442532937	0.021098573765	165.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Family_XI.g__Peptoniphilus.s__harei	1.61329923431			0.0399048514919	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp30728	2.1780671914	Healthy48H.1	2.37122282321	0.000461460868597	166.pdf
+k__Bacteria.p__Firmicutes.c__Negativicutes.o__Selenomonadales.f__Acidaminococcaceae.g__Succiniclasticum.s__sp36859	2.62161231515			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Peptostreptococcaceae.g__Romboutsia	4.85369823075	Healthy48H.2	4.45000651063	5.35387760738e-07	167.pdf
+k__Bacteria.p__Proteobacteria.c__Gammaproteobacteria.o__Enterobacteriales.f__Enterobacteriaceae.g__Pantoea.s__vagans	2.0146679898			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Family_XI.g__Anaerococcus.s__sp31224	0.697998272629			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35038	2.08763314937			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35037	2.93794948814			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35036	1.90189995611	Healthy48H.1	2.19019160114	0.00595682845403	168.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp34773_sp34790	1.90316868586			0.000124252237977	
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Bacillales.f__Planococcaceae.g__Lysinibacillus.s__NA	2.44851369324	Healthy48H.2	2.21962221503	0.0253301279059	169.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp33657	2.25076845705			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Family_XI.g__Peptoniphilus.s__grossensis	2.6082737138	Healthy48H.1	2.3116284204	0.000240261147332	170.pdf
+k__Bacteria.p__Actinobacteria.c__Coriobacteriia.o__Coriobacteriales.f__Coriobacteriaceae.g__Eggerthella.s__sinensis	2.06760688061	Healthy48H.2	2.44757328379	0.0253301279059	171.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Lactonifactor.s__sp32959	1.78306307771	Healthy48H.1	2.04525331917	0.0112060808227	172.pdf
+k__Bacteria.p__Actinobacteria.c__Coriobacteriia.o__Coriobacteriales.f__Coriobacteriaceae.g__NA	3.38618244087	Healthy48H.2	2.95292135761	0.000172462523639	173.pdf
+k__Bacteria.p__Actinobacteria.c__Actinobacteria.o__Bifidobacteriales.f__Bifidobacteriaceae.g__Bifidobacterium.s__animalis	4.27809708221			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp33381	1.42337840868	Healthy48H.1	2.0299709873	0.0399048514919	174.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__NA.g__NA	3.8317663427			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp33632	0.594694629047			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Family_XIII.g__NA.s__sp31541	0.612124123555			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Family_XIII.g__NA.s__sp31542	2.10574500291	Healthy48H.2	2.2010429775	0.000208180187119	175.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35305	1.12201619246			-	
+k__Bacteria.p__Cyanobacteria.c__Chloroplast.o__NA	2.01269132627			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp33635	1.26118193852			-	
+k__Bacteria.p__Actinobacteria.c__Actinobacteria.o__Corynebacteriales.f__Corynebacteriaceae.g__Corynebacterium.s__variabile	1.6845655708			-	
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Prevotellaceae.g__NA	2.35496559116	Healthy48H.1	2.20526747977	0.0117464210365	176.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Family_XI.g__Peptoniphilus	3.05422025235	Healthy48H.1	2.73777335044	8.20327845172e-06	177.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Clostridiaceae.g__Clostridium.s__sartagoforme_tertium	0.990321911442			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Marvinbryantia.s__sp32994	0.464695750759			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Fusicatenibacter.s__saccharivorans	4.4372080159	Healthy48H.2	4.0098239126	4.62556096742e-07	178.pdf
+k__Bacteria.p__Firmicutes.c__Erysipelotrichia.o__Erysipelotrichales.f__Erysipelotrichaceae.g__Faecalitalea.s__sp36732	0.889369892093			-	
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Porphyromonadaceae.g__Butyricimonas	2.56682976049	Healthy48H.1	2.31517316081	4.73881011386e-07	179.pdf
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Rikenellaceae.g__Alistipes.s__shahii	2.75957978262	Healthy48H.1	2.52062350952	3.6495062703e-13	180.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp32166	2.84680911478	Healthy48H.1	2.53169707406	0.00186228547075	181.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Marvinbryantia.s__sp32992	3.39201389732	Healthy48H.2	3.06862061236	3.7670933347e-12	182.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Marvinbryantia.s__sp32993	3.02563517749	Healthy48H.2	2.76312747285	1.21122302421e-12	183.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Blautia	5.46460438661	Healthy48H.2	5.07064688178	9.88685509228e-20	184.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Peptococcaceae.g__Peptococcus.s__niger	1.65477205371			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Epulopiscium	2.36654488867	Healthy48H.1	2.11557655084	0.0112060808227	185.pdf
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Lactobacillales.f__Streptococcaceae.g__Streptococcus	4.07731145252	Healthy48H.2	3.53655562867	3.61268416784e-05	186.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp33473_sp33677	1.3857818649			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp32738	0.453285088576			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Christensenellaceae.g__NA.s__sp30287	0.675312548902			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Peptostreptococcaceae.g__Paraclostridium_Peptoclostridium	4.77934433859	Healthy48H.1	4.47346565898	4.84294616026e-09	187.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp34799	1.46631366066			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Dorea.s__longicatena	4.34412119948	Healthy48H.2	3.87080228134	1.79382763099e-15	188.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35703	2.52541016528	Healthy48H.1	2.27890251002	0.000240261147332	189.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp34790	0.886663351595			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Eubacteriaceae.g__Anaerofustis.s__stercorihominis	0.811842435124			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp34795	3.67111504734			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp34794	1.90763489729	Healthy48H.2	2.36308106816	0.000369251110607	190.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Blautia.s__sp32006	0.544616035273			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp32821_sp33374_sp33380	0.945588107242			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Blautia.s__sp32002	3.8866792426	Healthy48H.2	3.49704144802	1.08828821949e-14	191.pdf
+k__Bacteria.p__Actinobacteria.c__Actinobacteria.o__Corynebacteriales.f__Corynebacteriaceae.g__Corynebacterium	2.5801806742			-	
+k__Bacteria.p__Verrucomicrobia.c__Verrucomicrobiae.o__Verrucomicrobiales.f__Verrucomicrobiaceae.g__Akkermansia	4.02660293393	Healthy48H.1	3.60617848246	0.00778931978792	192.pdf
+k__Bacteria.p__Firmicutes.c__Negativicutes.o__Selenomonadales.f__Veillonellaceae.g__Negativicoccus	2.49476642643	Healthy48H.1	2.34797127951	0.000240261147332	193.pdf
+k__Bacteria.p__Lentisphaerae	0.37280700168			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp32163_sp32172	1.80537873954			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Blautia.s__sp32009	4.85643868622	Healthy48H.2	4.49788542719	1.4865728193e-14	194.pdf
+k__Bacteria.p__Actinobacteria.c__Actinobacteria.o__Bifidobacteriales.f__Bifidobacteriaceae.g__Bifidobacterium.s__breve_callitrichos_indicum	0.79390035329			-	
+None.Other.Other.Other.Other	2.42090347368	Healthy48H.1	2.42701986794	0.00963636396521	195.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Eubacterium_Roseburia.s__NA	0.691984670346			-	
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Prevotellaceae.g__NA.s__sp13896_sp13916	1.47666403449			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__Subdoligranulum.s__sp35582	4.29728020082	Healthy48H.2	3.82715896945	2.29004087896e-06	196.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Lachnoclostridium.s__bolteae_sp32422_sp32431	2.9038688811	Healthy48H.1	2.63041559107	4.08810992235e-06	197.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Clostridiaceae.g__Clostridium	5.0618276665	Healthy48H.1	4.71702772425	2.13426496214e-10	198.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Lactonifactor	1.94865167364			0.00316152471286	
+k__Archaea.p__Euryarchaeota.c__Methanobacteria.o__Methanobacteriales.f__Methanobacteriaceae.g__Methanobrevibacter.s__smithii	3.89989214169	Healthy48H.2	3.61386999631	0.000187813568336	199.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35829	2.16091074238			0.0340790585509	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__Soleaferrea.s__sp34506	1.52994495043	Healthy48H.1	2.04810183817	0.021098573765	200.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Lachnoclostridium.s__sp32429	0.444443678748			-	
+k__Bacteria.p__Proteobacteria.c__Gammaproteobacteria.o__Enterobacteriales.f__Enterobacteriaceae.g__Citrobacter.s__murliniae	2.1574828791			0.0399048514919	
+k__Archaea.p__Euryarchaeota.c__Methanobacteria.o__Methanobacteriales.f__Methanobacteriaceae.g__Methanobrevibacter	3.89989214169	Healthy48H.2	3.60753833821	0.000187813568336	201.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__Soleaferrea.s__sp34501	2.32313026166	Healthy48H.1	2.10302414077	3.25006029772e-05	202.pdf
+k__Bacteria.p__Actinobacteria.c__Actinobacteria.o__Actinomycetales.f__Actinomycetaceae.g__Actinomyces.s__odontolyticus	2.63472141837	Healthy48H.2	2.74567510291	7.50445669485e-11	203.pdf
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Porphyromonadaceae.g__Parabacteroides.s__merdae	3.8043746945	Healthy48H.1	3.51296180774	1.45378711082e-15	204.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Blautia.s__sp31989	3.17601584836			-	
+k__Bacteria.p__Actinobacteria.c__Actinobacteria.o__Corynebacteriales	2.60548827805	Healthy48H.1	2.30038836611	0.0494846848161	205.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp33454_sp33553	0.63800896958			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Family_XI.g__Anaerococcus.s__lactolyticus	1.55249874202			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Lachnoclostridium.s__sp32353_sp32360	1.80978589548	Healthy48H.1	2.04551829322	0.00595682845403	206.pdf
+k__Bacteria.p__Proteobacteria.c__Betaproteobacteria.o__Burkholderiales.f__Alcaligenaceae.g__Sutterella.s__wadsworthensis	3.21831927365	Healthy48H.1	2.93899472201	2.26604880024e-07	207.pdf
+k__Bacteria.p__Proteobacteria.c__Gammaproteobacteria.o__Enterobacteriales.f__Enterobacteriaceae.g__Escherichia.s__coli_fergusonii_vulneris	3.73733493895	Healthy48H.1	3.45687180798	0.000880895760588	208.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp32519	2.85547802965	Healthy48H.1	2.49467737451	0.0131691292119	209.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp32167	3.31238387252	Healthy48H.2	2.68085249035	0.000214704946039	210.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Christensenellaceae.g__Christensenella.s__minuta	1.76350921699			0.00167253906913	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35038_sp35044	1.32187172791			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Blautia.s__sp32051_sp33395	2.73830829644	Healthy48H.2	2.47970677147	0.00420793195873	211.pdf
+k__Bacteria.p__Firmicutes.c__Erysipelotrichia.o__Erysipelotrichales.f__Erysipelotrichaceae.g__Coprobacillus	2.67775241745	Healthy48H.1	2.37261110558	0.000963901983773	212.pdf
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Lactobacillales.f__Lactobacillaceae.g__Lactobacillus.s__rhamnosus	3.00617204219			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__Soleaferrea.s__sp34499	1.42471518096			-	
+k__Bacteria.p__Actinobacteria.c__Actinobacteria.o__Propionibacteriales.f__Propionibacteriaceae.g__Propionibacterium.s__acnes	1.70062606474			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Shuttleworthia.s__sp33220_sp33232	0.432274500216			-	
+k__Bacteria.p__Firmicutes.c__Erysipelotrichia.o__Erysipelotrichales.f__Erysipelotrichaceae.g__Turicibacter.s__sanguinis	3.79299841405	Healthy48H.2	3.23540970477	0.0209113457406	213.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35297	3.18684870559	Healthy48H.2	2.89942033649	2.40655960634e-14	214.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__Faecalibacterium	4.31455903032	Healthy48H.1	3.48324289451	0.00792597478493	215.pdf
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Porphyromonadaceae.g__Barnesiella.s__sp13054	3.09610067273	Healthy48H.1	2.80237889655	1.82494366473e-10	216.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35896	1.60160462938	Healthy48H.2	2.49264313871	0.0459749250835	217.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35634	2.01759768513	Healthy48H.2	2.4321458031	0.0253301279059	218.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp33748	2.54520096177	Healthy48H.2	2.2013698271	0.0432112060217	219.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Eubacterium.s__hallii	4.40088545234	Healthy48H.2	4.03393861438	1.99166223714e-19	220.pdf
+k__Bacteria.p__Actinobacteria.c__Actinobacteria.o__Actinomycetales.f__Actinomycetaceae.g__Mobiluncus.s__curtisii	0.432274500216			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp32265	1.70838564261	Healthy48H.2	2.34101315819	0.0450944985496	221.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp33741	1.39851333557	Healthy48H.1	2.29982680812	0.0399048514919	222.pdf
+k__Bacteria.p__Firmicutes.c__Negativicutes.o__Selenomonadales.f__Acidaminococcaceae.g__Acidaminococcus.s__intestini	2.11315791953	Healthy48H.1	2.03656394405	0.021098573765	223.pdf
+k__Bacteria.p__Firmicutes.c__Erysipelotrichia.o__Erysipelotrichales.f__Erysipelotrichaceae.g__Erysipelatoclostridium.s__sp36611	1.2046034928			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales	5.83952829206	Healthy48H.2	5.11565685184	6.23755650162e-10	224.pdf
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Prevotellaceae.g__Alloprevotella	2.2124075799			-	
+k__Bacteria.p__Firmicutes.c__Negativicutes.o__Selenomonadales.f__Veillonellaceae.g__Dialister.s__invisus	2.79630778354	Healthy48H.2	2.57936920809	6.47186626542e-05	225.pdf
+k__Bacteria.p__Actinobacteria.c__Actinobacteria.o__Actinomycetales.f__Actinomycetaceae	2.85342769814	Healthy48H.2	2.56202398456	8.95349689337e-12	226.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp32640	1.98253767208			-	
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Lactobacillales.f__Streptococcaceae.g__Streptococcus.s__mutans	1.88825095158	Healthy48H.2	2.79821672593	0.000105682064172	227.pdf
+k__Bacteria.p__Proteobacteria.c__Alphaproteobacteria.o__Rhizobiales.f__Bradyrhizobiaceae.g__Afipia_Bradyrhizobium.s__NA	1.5019010806			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Family_XIII.g__Mogibacterium	2.00859107314	Healthy48H.1	2.49034948926	0.021098573765	228.pdf
+k__Bacteria.p__Proteobacteria	5.09538799672	Healthy48H.1	4.59545289226	8.69633670215e-16	229.pdf
+k__Bacteria.p__Actinobacteria.c__Coriobacteriia.o__Coriobacteriales.f__Coriobacteriaceae.g__Eggerthella_Gordonibacter	1.21327676196	Healthy48H.2	2.61195574421	0.0463197488411	230.pdf
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Lactobacillales.f__Lactobacillaceae.g__Lactobacillus.s__gasseri	3.10894047097	Healthy48H.1	2.81704357353	0.00167253906913	231.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Family_XI.g__Parvimonas.s__sp31279	0.557213236824			-	
+k__Bacteria.p__Actinobacteria.c__Coriobacteriia.o__Coriobacteriales.f__Coriobacteriaceae.g__Olsenella	2.05573342956	Healthy48H.2	2.02107486139	0.0253301279059	232.pdf
+k__Bacteria.p__Firmicutes.c__Erysipelotrichia.o__Erysipelotrichales.f__Erysipelotrichaceae.g__Solobacterium.s__sp36750_sp36752	0.678937485796			-	
+k__Bacteria.p__Actinobacteria.c__Actinobacteria.o__Actinomycetales.f__Actinomycetaceae.g__Actinomyces.s__viscosus	1.70272656006	Healthy48H.2	2.73736538968	0.00651428858158	233.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Eubacterium_Marvinbryantia.s__rectale_sp32989	0.459362363466			-	
+k__Bacteria.p__Actinobacteria.c__Coriobacteriia.o__Coriobacteriales.f__Coriobacteriaceae.g__Eggerthella.s__lenta	3.69014543763	Healthy48H.1	3.3188035251	3.84900298461e-08	234.pdf
+k__Bacteria.p__Actinobacteria.c__Coriobacteriia.o__Coriobacteriales.f__Coriobacteriaceae.g__Denitrobacterium	2.5863470976	Healthy48H.2	2.36503962049	0.0253301279059	235.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae	5.69617295397	Healthy48H.2	5.23562536995	2.21873296933e-18	236.pdf
+k__Bacteria.p__Cyanobacteria.c__Chloroplast.o__NA.f__NA.g__NA	2.01269132627			-	
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Bacillales.f__Staphylococcaceae	1.27359176826			-	
+k__Bacteria.p__Actinobacteria.c__Actinobacteria.o__Micrococcales.f__Micrococcaceae.g__Rothia.s__mucilaginosa	0.901801656684			-	
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Rikenellaceae.g__Alistipes	3.43990636746	Healthy48H.1	3.15874452317	1.68068999924e-14	237.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__NA.g__NA.s__sp30535	0.577362017295			-	
+k__Bacteria.p__Actinobacteria.c__Actinobacteria.o__Micrococcales.f__Micrococcaceae.g__Rothia.s__dentocariosa	1.13428772992			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Oribacterium	1.63752337438			-	
+k__Bacteria.p__Firmicutes.c__Erysipelotrichia.o__Erysipelotrichales.f__Erysipelotrichaceae.g__Erysipelatoclostridium.s__sp36616	2.43705923602	Healthy48H.2	2.66608965582	6.08383405342e-08	238.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Lachnoclostridium.s__bolteae_sp32431	3.32349150299	Healthy48H.1	3.04356062102	1.74962927624e-06	239.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Peptococcaceae.g__NA.s__sp34232	1.42106514545	Healthy48H.1	2.04707637714	0.00595682845403	240.pdf
+k__Bacteria.p__Fusobacteria.c__Fusobacteriia.o__Fusobacteriales.f__Fusobacteriaceae.g__Fusobacterium.s__gonidiaformans	1.68374016971			0.0481211375678	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__Fastidiosipila.s__sp34566	1.97994055068			0.0481211375678	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__Flavonifractor	3.58375485493	Healthy48H.1	3.27807315671	1.31301113734e-16	241.pdf
+k__Bacteria.p__Actinobacteria.c__Actinobacteria.o__Bifidobacteriales.f__Bifidobacteriaceae.g__Bifidobacterium.s__animalis_pseudolongum	0.492052423624			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp33333	4.01181649982	Healthy48H.2	3.62428280537	3.17008577278e-12	242.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Christensenellaceae.g__NA.s__sp30418	1.33101255412			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35770	3.10885642713	Healthy48H.1	2.86575176078	4.08810992235e-06	243.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Clostridiaceae.g__Clostridium.s__celatum_quinii	1.66124214427			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp33686	1.62142820607			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Howardella	2.01078130873	Healthy48H.2	2.32413460775	0.00125862699241	244.pdf
+k__Bacteria.p__Lentisphaerae.c__Lentisphaeria	0.37280700168			-	
+k__Bacteria.p__Firmicutes.c__Erysipelotrichia.o__Erysipelotrichales.f__Erysipelotrichaceae.g__Holdemania.s__massiliensis	2.68545817528	Healthy48H.1	2.41705859986	2.68429948644e-10	245.pdf
+k__Bacteria.p__Cyanobacteria.c__Chloroplast.o__NA.f__NA.g__NA.s__NA	2.01269132627			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp32615_sp32802	2.95704553284	Healthy48H.2	2.59114528631	0.000131522706908	246.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__Ruminiclostridium.s__sp34921	1.79767260668	Healthy48H.1	2.05637125378	0.000461460868597	247.pdf
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Rikenellaceae.g__Alistipes.s__senegalensis	2.16303902188	Healthy48H.1	2.02613888596	0.00595682845403	248.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Family_XI	3.34062561275	Healthy48H.1	3.00169642938	5.13729573113e-05	249.pdf
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Bacteroidaceae.g__Bacteroides.s__fragilis_ovatus	2.80896430977	Healthy48H.1	2.55634913415	1.5881381048e-12	250.pdf
+k__Bacteria.p__Actinobacteria.c__Actinobacteria.o__Corynebacteriales.f__Corynebacteriaceae.g__Corynebacterium.s__glutamicum	2.52111030633			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__NA.g__Sarcina.s__sp30952	0.709422771741			-	
+k__Bacteria.p__Proteobacteria.c__Betaproteobacteria.o__Burkholderiales.f__Alcaligenaceae.g__Sutterella	3.23016168511	Healthy48H.1	2.94754386348	1.07265961702e-07	251.pdf
+k__Bacteria.p__Lentisphaerae.c__Lentisphaeria.o__Victivallales.f__Victivallaceae.g__Victivallis.s__vadensis	0.37280700168			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Christensenellaceae.g__NA.s__sp30398	3.15597296623	Healthy48H.2	2.72263078628	1.90284391459e-06	252.pdf
+k__Bacteria.p__Bacteroidetes.c__Flavobacteriia.o__Flavobacteriales.f__Flavobacteriaceae.g__Cloacibacterium.s__normanense	0.685938217775			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Family_XI.g__Murdochiella	2.32840981969	Healthy48H.1	2.2359335464	0.0442185333839	253.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35306	0.766225609478			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Lachnoclostridium.s__sp32433	3.50366335952	Healthy48H.1	3.19359607735	3.66374063469e-06	254.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Lachnoclostridium.s__sp32435	3.01454037345	Healthy48H.1	2.74340882807	0.0129190055094	255.pdf
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Lactobacillales.f__Leuconostocaceae.g__Leuconostoc	1.19909055538			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Lachnoclostridium.s__sp32436	2.08248996978	Healthy48H.1	2.02721960371	0.00316152471286	256.pdf
+k__Bacteria.p__Firmicutes.c__Erysipelotrichia.o__Erysipelotrichales.f__Erysipelotrichaceae.g__Stoquefichus	1.92991045963	Healthy48H.1	2.21699789716	0.00680608426514	257.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Eubacterium_Roseburia	1.48292747305	Healthy48H.2	2.5378771911	0.0253301279059	258.pdf
+k__Bacteria.p__Actinobacteria.c__Coriobacteriia.o__Coriobacteriales.f__Coriobacteriaceae.g__Senegalimassilia	2.99082496006			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Peptostreptococcaceae.g__Peptoclostridium.s__sp34340	1.72604516448			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp32822	1.32777804287			-	
+k__Bacteria.p__Proteobacteria.c__Gammaproteobacteria.o__Enterobacteriales.f__Enterobacteriaceae.g__NA	2.19162220792	Healthy48H.1	2.02676153278	0.021098573765	259.pdf
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Prevotellaceae.g__Prevotella.s__stercorea	1.9800664247	Healthy48H.2	2.29847148997	0.0253301279059	260.pdf
+k__Bacteria.p__Actinobacteria.c__Coriobacteriia.o__Coriobacteriales.f__Coriobacteriaceae.g__Atopobium.s__sp10381	0.783036244402			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35056	2.86702964342	Healthy48H.1	2.604967871	3.29584291745e-11	261.pdf
+k__Bacteria.p__Firmicutes.c__Erysipelotrichia.o__Erysipelotrichales.f__Erysipelotrichaceae.g__NA.s__sp36741	2.80112948862	Healthy48H.1	2.5148151383	1.94147668229e-08	262.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__Faecalibacterium.s__prausnitzii	4.22790089326	Healthy48H.1	3.67494874425	0.00132655832971	263.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35866	0.994427206759			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35094	1.70507954993			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35860	2.32672520587			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Family_XI.g__Murdochiella.s__sp31271	2.23526963585			0.0442185333839	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Blautia.s__NA	1.86576406738	Healthy48H.2	2.35611493309	0.00230592389652	264.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Lactonifactor.s__longoviformis	1.44973097188	Healthy48H.1	2.31156390145	0.0112060808227	265.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Family_XI.g__Parvimonas	1.78244869251			-	
+k__Bacteria.p__Proteobacteria.c__Gammaproteobacteria.o__Enterobacteriales	5.08214148292	Healthy48H.1	4.65439096419	1.05860314309e-15	266.pdf
+k__Bacteria.p__Proteobacteria.c__Gammaproteobacteria.o__Enterobacteriales.f__Enterobacteriaceae.g__Klebsiella	1.33004687448			-	
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Lactobacillales.f__Lactobacillaceae.g__Lactobacillus.s__fermentum	2.35277242156			-	
+k__Bacteria.p__Actinobacteria.c__Actinobacteria.o__Actinomycetales.f__Actinomycetaceae.g__Actinomyces.s__oris	1.05282170668			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Family_XIII.g__NA	3.50570514846	Healthy48H.2	3.01014718828	2.01177750674e-08	267.pdf
+k__Bacteria.p__Lentisphaerae.c__Lentisphaeria.o__Victivallales.f__Victivallaceae.g__Victivallis	0.37280700168			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp32490	2.58934373937	Healthy48H.2	2.60452559377	0.00138037417795	268.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Dorea.s__formicigenerans	3.73492821449	Healthy48H.2	3.16795797929	8.26480746253e-08	269.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp33439	1.74738308185			-	
+k__Bacteria.p__Actinobacteria.c__Actinobacteria.o__Bifidobacteriales.f__Bifidobacteriaceae.g__Bifidobacterium.s__bifidum	4.15614986696	Healthy48H.2	3.59556240161	0.0151555849139	270.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA	4.20418032592			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Family_XI.g__Peptoniphilus.s__sp31312	1.11399938004			-	
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__NA	2.06335844624			0.021098573765	
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Bacteroidaceae.g__Bacteroides.s__sp12293_thetaiotaomicron	2.37085566438	Healthy48H.1	2.22317334494	0.021098573765	271.pdf
+k__Bacteria.p__Bacteroidetes.c__Flavobacteriia.o__Flavobacteriales.f__Flavobacteriaceae	0.685938217775			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Lachnoclostridium.s__sp32341_sp32430	3.29085800871			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Lachnoclostridium.s__sp32392	0.675312548902			-	
+k__Bacteria.p__Proteobacteria.c__Gammaproteobacteria.o__Enterobacteriales.f__Enterobacteriaceae.g__Enterobacter	3.75220887954	Healthy48H.1	3.48478413151	6.37928194602e-05	272.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35487	2.71323880141			-	
+k__Bacteria.p__Verrucomicrobia.c__Verrucomicrobiae	4.02660293393	Healthy48H.1	3.60617848246	0.00778931978792	273.pdf
+k__Bacteria.p__Verrucomicrobia.c__Verrucomicrobiae.o__Verrucomicrobiales.f__Verrucomicrobiaceae.g__Akkermansia.s__muciniphila	4.02660293393	Healthy48H.1	3.60617848246	0.00778931978792	274.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp32498	0.899530957138			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Roseburia.s__sp33151	2.70924315564	Healthy48H.2	2.53596882185	0.000349582025237	275.pdf
+k__Bacteria.p__Firmicutes.c__Negativicutes.o__Selenomonadales.f__Veillonellaceae.g__Dialister.s__propionicifaciens	2.86876313074	Healthy48H.1	2.53453736193	0.0497263430884	276.pdf
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Bacillales.f__Staphylococcaceae.g__Staphylococcus.s__epidermidis_hominis	0.613387550627			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Blautia_Marvinbryantia	2.33453725241	Healthy48H.2	2.23781231496	0.0463197488411	277.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35147_sp35148	1.72720548226			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__Intestinimonas.s__butyriciproducens	2.61673905958	Healthy48H.1	2.38159984537	6.37928194602e-05	278.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Lachnoclostridium.s__sp32369_sp32445	0.456460254852			-	
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__NA.g__NA.s__sp12662	2.06335844624			0.021098573765	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp32158	2.32728968047	Healthy48H.1	2.09103872348	0.0399048514919	279.pdf
+k__Bacteria.p__Actinobacteria.c__Actinobacteria.o__Bifidobacteriales.f__Bifidobacteriaceae.g__Bifidobacterium.s__breve_longum_sp4971	0.94634076051			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Christensenellaceae.g__NA.s__sp30299	1.61052335111	Healthy48H.1	2.15469961346	0.00595682845403	280.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Christensenellaceae.g__NA.s__sp30424	2.42719771492			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Christensenellaceae.g__NA.s__sp30425	2.01324997406	Healthy48H.2	2.36061149863	0.000208180187119	281.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35604	2.67187523202	Healthy48H.2	2.23360528598	0.00418487910172	282.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Coprococcus	3.96926008295	Healthy48H.2	3.3950925947	0.000425311142082	283.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp34734	0.608365759271			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp34736	0.453285088576			-	
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Lactobacillales.f__Streptococcaceae.g__Streptococcus.s__equinus_infantarius_lutetiensis	2.99596339485	Healthy48H.1	2.68604576401	0.000240261147332	284.pdf
+k__Bacteria.p__Actinobacteria.c__Actinobacteria.o__Bifidobacteriales	5.29936829758			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Christensenellaceae.g__NA.s__sp30221	1.88288474946	Healthy48H.2	2.26230577116	0.00344406211278	285.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Robinsoniella.s__peoriensis	3.00785513795	Healthy48H.1	2.67971743064	6.37928194602e-05	286.pdf
+k__Bacteria.p__Actinobacteria.c__Actinobacteria.o__Bifidobacteriales.f__Bifidobacteriaceae.g__Bifidobacterium.s__adolescentis_faecale	5.0210354094			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__Hydrogenoanaerobacterium	2.62903170902	Healthy48H.1	2.38753496513	0.000124252237977	287.pdf
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Prevotellaceae.g__Prevotella	2.02252887681			-	
+k__Bacteria.p__Proteobacteria.c__Gammaproteobacteria.o__Enterobacteriales.f__Enterobacteriaceae.g__Kluyvera	1.86060161507			0.0399048514919	
+k__Bacteria.p__Proteobacteria.c__Gammaproteobacteria.o__Enterobacteriales.f__Enterobacteriaceae.g__Citrobacter	3.00074553299	Healthy48H.1	2.71758530683	0.021098573765	288.pdf
+k__Bacteria.p__Actinobacteria.c__Coriobacteriia.o__Coriobacteriales.f__Coriobacteriaceae.g__Eggerthella.s__lenta_sinensis	1.59592278528	Healthy48H.2	2.9645673402	0.0253301279059	289.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Blautia.s__sp32032	2.24566933349			-	
+k__Bacteria.p__Firmicutes.c__Negativicutes.o__Selenomonadales.f__Acidaminococcaceae.g__Acidaminococcus	2.11315791953	Healthy48H.1	2.23690134005	0.021098573765	290.pdf
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Bacillales.f__Planococcaceae.g__Lysinibacillus	2.44851369324	Healthy48H.2	2.23799149015	0.0253301279059	291.pdf
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Bacteroidaceae.g__Bacteroides.s__salyersiae	1.80857134361			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp33375	0.68529842309			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp33374	2.40486080972	Healthy48H.2	2.57904146248	7.92314058199e-06	292.pdf
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Bacteroidaceae.g__Bacteroides.s__stercoris	2.2721591769	Healthy48H.1	2.04197215606	0.00316152471286	293.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp33271	2.73951365564	Healthy48H.2	2.50856493684	5.5947264961e-05	294.pdf
+k__Bacteria.p__Actinobacteria.c__Actinobacteria.o__Actinomycetales.f__Actinomycetaceae.g__Actinomyces	2.75717968066	Healthy48H.2	2.62252307914	2.47318371187e-11	295.pdf
+k__Bacteria.p__Actinobacteria.c__Coriobacteriia.o__Coriobacteriales.f__Coriobacteriaceae.g__Collinsella.s__sp10410	2.63417297039			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp33275	2.91937403497			-	
+k__Bacteria.p__Proteobacteria.c__Gammaproteobacteria.o__Pseudomonadales	4.13805837137	Healthy48H.2	3.83654908346	0.00230592389652	296.pdf
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Porphyromonadaceae.g__Porphyromonas.s__asaccharolytica	0.675312548902			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__Anaerotruncus.s__sp34451	0.37280700168			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__Anaerotruncus.s__sp34453	1.81091618148	Healthy48H.1	2.31064348669	0.000461460868597	297.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp34750	1.28214609251			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp32802	2.00297691636			-	
+k__Bacteria.p__Tenericutes.c__Mollicutes.o__NA	0.838090243485			-	
+k__Bacteria.p__Tenericutes	0.838090243485			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Lachnoclostridium.s__sp32345	2.37967028336			-	
+k__Bacteria.p__Firmicutes.c__Negativicutes.o__Selenomonadales.f__Acidaminococcaceae.g__Phascolarctobacterium.s__succinatutens	2.92121754709	Healthy48H.1	2.62365070151	8.23029015534e-06	298.pdf
+k__Bacteria.p__Proteobacteria.c__Gammaproteobacteria.o__Enterobacteriales.f__Enterobacteriaceae.g__Kluyvera.s__georgiana	1.86060161507			0.0399048514919	
+k__Bacteria.p__Fusobacteria.c__Fusobacteriia	1.68374016971			0.0481211375678	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Blautia.s__sp31973	1.04399832805			-	
+k__Bacteria.p__Proteobacteria.c__Betaproteobacteria.o__Burkholderiales.f__Oxalobacteraceae	0.775822736701			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Clostridiaceae	5.0618276665	Healthy48H.1	4.71702772425	2.13426496214e-10	299.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Marvinbryantia.s__NA	1.42912346398			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__Oscillibacter.s__ruminantium_valericigenes	0.746387664492			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Eubacteriaceae.g__Eubacterium	2.72467947846	Healthy48H.1	2.32300151552	0.0122434853322	300.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Robinsoniella	3.00785513795	Healthy48H.1	2.68766919801	6.37928194602e-05	301.pdf
+k__Bacteria.p__Firmicutes.c__Erysipelotrichia.o__Erysipelotrichales.f__Erysipelotrichaceae.g__Solobacterium	4.28240396031			-	
+k__Bacteria.p__Actinobacteria.c__Coriobacteriia.o__Coriobacteriales.f__Coriobacteriaceae.g__Atopobium.s__vaginae	1.29435241581			-	
+k__Bacteria.p__Actinobacteria.c__Actinobacteria.o__Bifidobacteriales.f__Bifidobacteriaceae.g__Alloscardovia	0.893991072382			-	
+k__Bacteria.p__Actinobacteria.c__Coriobacteriia.o__Coriobacteriales.f__Coriobacteriaceae.g__Slackia	3.45829676277			-	
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Porphyromonadaceae.g__Barnesiella.s__sp13054_sp13055	1.13594687488			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Peptostreptococcaceae.g__Paraclostridium_Peptoclostridium.s__bifermentans_difficile	4.77934433859	Healthy48H.1	4.48740355744	4.84294616026e-09	302.pdf
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Lactobacillales.f__Enterococcaceae	2.96430215422	Healthy48H.2	2.46547040796	0.017132868445	303.pdf
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Lactobacillales.f__Streptococcaceae.g__Streptococcus.s__salivarius_thermophilus	3.58212861409	Healthy48H.2	3.03329781566	0.00258799528069	304.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Lachnoclostridium.s__sp32346	1.23441521286			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Eubacteriaceae	2.72995550033	Healthy48H.1	2.29726067266	0.00774175794421	305.pdf
+k__Bacteria.p__Actinobacteria.c__Coriobacteriia.o__Coriobacteriales.f__Coriobacteriaceae.g__Adlercreutzia.s__equolifaciens	2.50069243703	Healthy48H.2	2.60467252049	0.0019133819312	306.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__Anaerotruncus	3.303370741	Healthy48H.1	2.95981834673	1.31904102884e-06	307.pdf
+k__Bacteria.p__Proteobacteria.c__Gammaproteobacteria	5.08214148292	Healthy48H.1	4.58071036457	3.32217289194e-15	308.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Family_XI.g__Ezakiella.s__sp31234	0.819440044176			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__Acetanaerobacterium.s__sp34408	1.87162201701	Healthy48H.1	2.22060267888	3.25006029772e-05	309.pdf
+k__Bacteria.p__Firmicutes.c__Erysipelotrichia.o__Erysipelotrichales.f__Erysipelotrichaceae.g__Holdemanella.s__biformis	1.87693863461	Healthy48H.2	2.12764690508	0.0253301279059	310.pdf
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Lactobacillales.f__Carnobacteriaceae	4.3299490922	Healthy48H.1	4.04686542608	8.23029015534e-06	311.pdf
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Bacteroidaceae.g__Bacteroides.s__intestinalis	2.13701069512			0.00167253906913	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Shuttleworthia	0.432274500216			-	
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Lactobacillales.f__Streptococcaceae.g__Lactococcus.s__lactis	2.74432501194	Healthy48H.2	2.56086311844	2.99210141357e-06	312.pdf
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Bacteroidaceae	4.89516457806	Healthy48H.1	4.5916237318	4.68721894179e-22	313.pdf
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Bacteroidaceae.g__Bacteroides	4.89516457806	Healthy48H.1	4.59163846492	4.68721894179e-22	314.pdf
+k__Bacteria.p__Proteobacteria.c__Gammaproteobacteria.o__Enterobacteriales.f__Enterobacteriaceae	5.08214148292	Healthy48H.1	4.64825896503	1.05860314309e-15	315.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp33756	2.64827233321	Healthy48H.2	2.86569392791	4.8605142923e-14	316.pdf
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Bacillales.f__Paenibacillaceae.g__Paenibacillus.s__borealis	3.35149016074	Healthy48H.2	3.01424428047	5.73675403166e-13	317.pdf
+k__Bacteria.p__Proteobacteria.c__Gammaproteobacteria.o__Enterobacteriales.f__Enterobacteriaceae.g__Escherichia.s__coli_fergusonii	1.14428616324			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Peptococcaceae	2.83024972922			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__Subdoligranulum	4.52301663291	Healthy48H.2	3.88461784624	0.000140569756869	318.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp33138_sp35147_sp35148	1.54057953892			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35127	1.75656428373	Healthy48H.2	2.23697193402	0.0305124182872	319.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35125	1.41927206683			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35124	0.713531438856			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35690	2.71391127119	Healthy48H.1	2.42378012931	2.26604880024e-07	320.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__Flavonifractor.s__plautii	3.58375485493	Healthy48H.1	3.27807318602	1.31301113734e-16	321.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Family_XI.g__Ezakiella	0.819440044176			-	
+k__Bacteria.p__Firmicutes.c__Erysipelotrichia.o__Erysipelotrichales.f__Erysipelotrichaceae.g__Dielma.s__sp36605	2.89806458329	Healthy48H.1	2.59195421982	1.06798652961e-08	322.pdf
+k__Bacteria.p__Actinobacteria.c__Actinobacteria.o__Bifidobacteriales.f__Bifidobacteriaceae.g__Bifidobacterium.s__longum_saguini	0.515516514281			-	
+k__Bacteria.p__Firmicutes.c__Negativicutes.o__Selenomonadales.f__Veillonellaceae.g__Dialister	2.88387439997			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Peptostreptococcaceae.g__Paeniclostridium.s__sordellii	3.02328712324	Healthy48H.1	2.65074432775	0.00595682845403	323.pdf
+k__Bacteria.p__Proteobacteria.c__Alphaproteobacteria	1.5019010806			-	
+k__Bacteria.p__Firmicutes.c__Erysipelotrichia.o__Erysipelotrichales.f__Erysipelotrichaceae.g__Holdemania	2.68545817528	Healthy48H.1	2.41717481078	2.68429948644e-10	324.pdf
+k__Bacteria.p__Actinobacteria.c__Actinobacteria.o__Micrococcales.f__Micrococcaceae.g__Rothia	1.13428772992			-	
+k__Bacteria.p__Proteobacteria.c__Gammaproteobacteria.o__Pseudomonadales.f__Moraxellaceae.g__Acinetobacter.s__ursingii	2.69395204365	Healthy48H.2	2.43485489751	0.0253301279059	325.pdf
+k__Bacteria.p__Actinobacteria.c__Coriobacteriia.o__Coriobacteriales.f__Coriobacteriaceae.g__Eggerthella	3.69014543763	Healthy48H.1	3.30131977863	8.53955491393e-08	326.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__Ruminiclostridium.s__sp34945	0.702328633964			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35046	2.73993234982	Healthy48H.1	2.3869535996	0.00473526467464	327.pdf
+k__Bacteria.p__Actinobacteria.c__Coriobacteriia.o__Coriobacteriales.f__Coriobacteriaceae.g__Atopobium	1.35025783061			-	
+k__Bacteria.p__Actinobacteria.c__Actinobacteria.o__Propionibacteriales.f__Propionibacteriaceae.g__Propionibacterium	1.70062606474			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35199_sp35257	1.89872661592			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35067	2.15269187947	Healthy48H.2	2.29218811538	0.000729860782324	328.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Family_XI.g__Gallicola	1.70488515119			-	
+k__Bacteria.p__Firmicutes.c__Erysipelotrichia.o__Erysipelotrichales.f__Erysipelotrichaceae.g__Turicibacter	3.79299841405	Healthy48H.2	3.23540970477	0.0209113457406	329.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp33395	4.21339119001			-	
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Bacillales.f__Bacillaceae	1.74272624095	Healthy48H.1	2.69644255495	0.0112060808227	330.pdf
+k__Bacteria.p__Proteobacteria.c__Gammaproteobacteria.o__Enterobacteriales.f__Enterobacteriaceae.g__Enterobacter_Kluyvera	2.6131432528	Healthy48H.1	2.33728054745	0.0399048514919	331.pdf
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Bacteroidaceae.g__Bacteroides.s__cellulosilyticus	2.40639499917	Healthy48H.1	2.21208433831	4.08810992235e-06	332.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Dorea.s__sp32214	1.4837278276	Healthy48H.2	2.83784656506	0.00420793195873	333.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__Subdoligranulum.s__sp35580_sp35585	4.09991144442	Healthy48H.2	3.2915041658	0.0017443077785	334.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Family_XIII.g__NA.s__sp31552	3.03557641685	Healthy48H.2	2.73477553799	1.98803153669e-10	335.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Cellulosilyticum	1.43842895361	Healthy48H.2	2.9184446763	0.0139188372942	336.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Blautia.s__hansenii_producta_sp32009	1.10657799003			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp33473	2.36789359824	Healthy48H.1	2.14399457311	0.00316152471286	337.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp33470	3.29139109218			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp32598_sp32693_sp32722	1.12732499534			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Peptococcaceae.g__Peptococcus.s__sp34121	2.79569110558			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Clostridiaceae.g__Clostridium.s__baratii	0.974915657047			-	
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Rikenellaceae.g__Alistipes.s__sp14388	2.06462211832	Healthy48H.1	2.26515156715	0.0399048514919	338.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Peptostreptococcaceae.g__Terrisporobacter	3.48693631712			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp33479	1.98522520246	Healthy48H.2	2.26571067455	0.0253301279059	339.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Coprococcus.s__comes_sp32193	3.86037354837	Healthy48H.2	3.15008893498	0.00145459963399	340.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp32154	0.963129223046			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Peptostreptococcaceae.g__Asaccharospora	2.6570097398			-	
+k__Bacteria.p__Firmicutes.c__Erysipelotrichia.o__Erysipelotrichales.f__Erysipelotrichaceae.g__Faecalitalea.s__cylindroides	2.66310066571			-	
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Bacteroidaceae.g__Bacteroides.s__vulgatus	4.11029896209	Healthy48H.1	3.81632885382	2.75558929849e-21	341.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Christensenellaceae.g__NA.s__sp30399	2.81114074663			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp33573	1.66442856358			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Roseburia.s__sp33175	2.58111001989	Healthy48H.2	2.51053687626	0.00022201081071	342.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp33575	1.54802054998			-	
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Lactobacillales.f__Streptococcaceae.g__Lactococcus	2.74432501194	Healthy48H.2	2.56463054149	2.99210141357e-06	343.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp34683	0.535534299178			-	
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia	5.05581620242	Healthy48H.1	4.75464430416	5.67834642829e-21	344.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Peptostreptococcaceae.g__Terrisporobacter.s__sp34390_sp34393	2.40842856647			-	
+k__Bacteria.p__Firmicutes.c__Erysipelotrichia.o__Erysipelotrichales.f__Erysipelotrichaceae	4.52583066352			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__Ruminiclostridium.s__sp34937	0.488337304521			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__Ruminiclostridium.s__sp34934	1.2854409556			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__Ruminiclostridium.s__sp34935	1.71763130195			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae	4.96830338905			-	
+k__Bacteria.p__Actinobacteria.c__Actinobacteria.o__Bifidobacteriales.f__Bifidobacteriaceae.g__Bifidobacterium.s__longum_saguini_sp4971	0.553370267859			-	
+k__Bacteria.p__Actinobacteria.c__Coriobacteriia.o__Coriobacteriales.f__Coriobacteriaceae.g__NA.s__sp10540	1.08091663674			-	
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Rikenellaceae.g__Alistipes.s__finegoldii	2.789955799	Healthy48H.1	2.52738248912	9.22373605247e-13	345.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Oribacterium.s__sp33049_sp33686	1.63752337438			-	
+k__Bacteria.p__Actinobacteria.c__Coriobacteriia.o__Coriobacteriales.f__Coriobacteriaceae.g__Senegalimassilia.s__anaerobia	2.99082496006			-	
+k__Bacteria.p__Proteobacteria.c__Gammaproteobacteria.o__Pseudomonadales.f__Pseudomonadaceae.g__Pseudomonas.s__azotoformans_fluorescens_synxantha	1.47620294114	Healthy48H.2	2.76362879161	0.00765748241984	346.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA	4.50552353331	Healthy48H.2	3.48872353162	0.049391455733	347.pdf
+k__Bacteria.p__Firmicutes.c__Negativicutes.o__Selenomonadales.f__Acidaminococcaceae.g__Phascolarctobacterium	3.07534186446	Healthy48H.1	2.78383749612	2.26604880024e-07	348.pdf
+k__Bacteria.p__Cyanobacteria	2.01269132627			-	
+k__Bacteria.p__Actinobacteria.c__Coriobacteriia.o__Coriobacteriales.f__Coriobacteriaceae.g__Slackia.s__piriformis	2.08522690396	Healthy48H.2	2.04214541026	0.0253301279059	349.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Blautia.s__luti_wexlerae	0.986942541399			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__Oscillibacter	0.746387664492			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp32840	2.39496914278	Healthy48H.1	2.19054199553	0.00316152471286	350.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Peptostreptococcaceae.g__Peptostreptococcus.s__anaerobius_stomatis	2.23208659767			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Christensenellaceae	3.57879348985	Healthy48H.2	3.04982959198	2.92501835914e-06	351.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Eubacteriaceae.g__Anaerofustis	0.811842435124			-	
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Lactobacillales.f__Leuconostocaceae.g__Leuconostoc.s__carnosum	1.19909055538			-	
+k__Bacteria.p__Actinobacteria.c__Actinobacteria.o__Bifidobacteriales.f__Bifidobacteriaceae.g__Bifidobacterium.s__longum	4.56136491241			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35834	2.83344466468	Healthy48H.1	2.55828691575	4.84294616026e-09	352.pdf
+k__Bacteria.p__Actinobacteria.c__Coriobacteriia.o__Coriobacteriales.f__Coriobacteriaceae.g__Gordonibacter.s__faecihominis	1.21313691102			-	
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Bacteroidaceae.g__Bacteroides.s__dorei	2.61281112267	Healthy48H.1	2.41776663394	4.73881011386e-07	353.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35830	2.0357266885			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Blautia.s__hansenii_producta	2.91249467258	Healthy48H.1	2.38521731572	0.00203527793219	354.pdf
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Porphyromonadaceae.g__Butyricimonas.s__sp13062	1.72617320314	Healthy48H.1	2.53149319724	0.021098573765	355.pdf
+k__Bacteria.p__Actinobacteria.c__Actinobacteria.o__Bifidobacteriales.f__Bifidobacteriaceae	5.29936829758			-	
+k__Bacteria.p__Proteobacteria.c__Betaproteobacteria.o__Burkholderiales.f__Oxalobacteraceae.g__Oxalobacter.s__formigenes	0.775822736701			-	
+k__Bacteria.p__Proteobacteria.c__Deltaproteobacteria.o__Desulfovibrionales.f__Desulfovibrionaceae.g__Bilophila.s__wadsworthia	2.71734925965	Healthy48H.1	2.43629951013	0.000374174675163	356.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp32476	1.71462334518	Healthy48H.2	2.23451877771	0.00420793195873	357.pdf
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Lactobacillales	4.50955971734			-	
+k__Bacteria.p__Actinobacteria.c__Actinobacteria.o__Corynebacteriales.f__Corynebacteriaceae.g__NA.s__sp5276	1.35836263855			-	
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Lactobacillales.f__Lactobacillaceae.g__Lactobacillus.s__ruminis	3.51148449635	Healthy48H.1	3.24698975662	0.0112060808227	358.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia	5.83952829206	Healthy48H.2	5.11565685184	6.23755650162e-10	359.pdf
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Porphyromonadaceae.g__Parabacteroides.s__goldsteinii	3.45148874288	Healthy48H.1	3.12604516336	2.26604880024e-07	360.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Family_XI.g__Parvimonas_Tissierella	1.66512087594			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Family_XI.g__Murdochiella.s__sp31269	1.61402448607	Healthy48H.1	2.02586307479	0.0399048514919	361.pdf
+k__Bacteria.p__Actinobacteria.c__Actinobacteria.o__Bifidobacteriales.f__Bifidobacteriaceae.g__Bifidobacterium.s__adolescentis_faecale_ruminantium	3.04906969667	Healthy48H.1	2.69290558794	0.00660229979856	362.pdf
+k__Bacteria.p__Verrucomicrobia	4.02660293393	Healthy48H.1	3.60617848246	0.00778931978792	363.pdf
+k__Bacteria.p__Firmicutes.c__Erysipelotrichia.o__Erysipelotrichales.f__Erysipelotrichaceae.g__Dielma	2.89806458329	Healthy48H.1	2.60351144485	1.06798652961e-08	364.pdf
+k__Bacteria.p__Proteobacteria.c__Alphaproteobacteria.o__Rhizobiales.f__Bradyrhizobiaceae.g__Afipia_Bradyrhizobium	1.5019010806			-	
+k__Bacteria.p__Proteobacteria.c__Gammaproteobacteria.o__Enterobacteriales.f__Enterobacteriaceae.g__Klebsiella.s__pneumoniae	0.885411373846			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__Ruminiclostridium.s__sp34903_sp34912_sp34921	1.06169134419			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__Ruminiclostridium.s__sp34903_sp34921	0.83056640851			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35388	1.92261724738	Healthy48H.2	2.77507911175	0.000369251110607	365.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Peptostreptococcaceae.g__Asaccharospora.s__sp34265	2.6570097398			-	
+k__Bacteria.p__Proteobacteria.c__Deltaproteobacteria.o__Desulfovibrionales.f__Desulfovibrionaceae	2.72359051466	Healthy48H.1	2.43970897662	0.000270029338948	366.pdf
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Lactobacillales.f__Leuconostocaceae.g__Weissella	1.27539525576			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Anaerostipes	4.48034619301	Healthy48H.2	4.07113459181	2.26022476472e-14	367.pdf
+k__Bacteria.p__Proteobacteria.c__Betaproteobacteria.o__Burkholderiales	3.5025680102	Healthy48H.1	3.214949534	3.21861615603e-16	368.pdf
+k__Bacteria.p__Actinobacteria.c__Coriobacteriia.o__Coriobacteriales.f__Coriobacteriaceae.g__Collinsella_Olsenella.s__intestinalis_sp10464_sp10466	1.68052960217			-	
+k__Bacteria.p__Proteobacteria.c__Gammaproteobacteria.o__Enterobacteriales.f__Enterobacteriaceae.g__NA.s__NA	2.19162220792	Healthy48H.1	2.02768207838	0.021098573765	369.pdf
+k__Bacteria.p__Proteobacteria.c__Gammaproteobacteria.o__Enterobacteriales.f__Enterobacteriaceae.g__Enterobacter.s__NA	3.75220887954	Healthy48H.1	3.48898084797	6.37928194602e-05	370.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp33656	2.0784285436			0.0112060808227	
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Rikenellaceae	3.44109313409	Healthy48H.1	3.15950405059	1.68068999924e-14	371.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Family_XIII.g__NA.s__sp31520	1.1613653224			-	
+k__Bacteria.p__Firmicutes.c__Erysipelotrichia.o__Erysipelotrichales	4.52583066352			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__Acetanaerobacterium	1.87162201701	Healthy48H.1	2.23835093394	3.25006029772e-05	372.pdf
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__NA.g__NA	2.06335844624			0.021098573765	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35241	0.37280700168			-	
+k__Bacteria.p__Actinobacteria.c__Actinobacteria.o__Propionibacteriales.f__Propionibacteriaceae	1.70062606474			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Tyzzerella	0.905175769497			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35796	2.18003217847	Healthy48H.1	2.18921650783	0.000880895760588	373.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35799	1.53148841284			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__Ruminiclostridium.s__sp34949	2.52741896655	Healthy48H.2	2.39602072221	0.0144407059279	374.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Lachnoclostridium.s__sp32425_sp32440	1.43550276434	Healthy48H.1	2.85761109209	0.0399048514919	375.pdf
+k__Bacteria.p__Actinobacteria.c__Coriobacteriia.o__Coriobacteriales.f__Coriobacteriaceae.g__Olsenella.s__scatoligenes_sp10465	2.05573342956			0.0253301279059	
+k__Bacteria.p__Firmicutes.c__Erysipelotrichia.o__Erysipelotrichales.f__Erysipelotrichaceae.g__Catenibacterium	2.77402892573			-	
+k__Archaea.p__Euryarchaeota.c__Methanobacteria	3.89989214169	Healthy48H.2	3.59865790197	0.000187813568336	376.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Christensenellaceae.g__NA.s__sp30266	0.454168582306			-	
+k__Bacteria.p__Proteobacteria.c__Gammaproteobacteria.o__Enterobacteriales.f__Enterobacteriaceae.g__Pantoea	2.40618294223			-	
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Prevotellaceae.g__NA.s__sp13940	0.668187250362			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Blautia.s__sp32048_sp32049	2.97367828299	Healthy48H.2	2.71287861656	0.0162973284098	377.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp33781	0.671669333908			-	
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Lactobacillales.f__Leuconostocaceae	1.27539525576			-	
+k__Bacteria.p__Actinobacteria.c__Actinobacteria.o__Bifidobacteriales.f__Bifidobacteriaceae.g__Bifidobacterium.s__breve_longum_saguini	0.945517579971			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35164	0.955153245496			-	
+k__Bacteria.p__Firmicutes.c__Erysipelotrichia.o__Erysipelotrichales.f__Erysipelotrichaceae.g__Solobacterium.s__sp36754	4.28229572425			-	
+k__Bacteria.p__Proteobacteria.c__Betaproteobacteria	3.5025680102	Healthy48H.1	3.21493583102	3.21861615603e-16	378.pdf
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Prevotellaceae.g__NA.s__sp13942	2.16869469675			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Marvinbryantia.s__sp32965	2.8349090213	Healthy48H.2	2.6588237122	7.44282950401e-13	379.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35765	2.45433354809	Healthy48H.1	2.17591605811	0.000880895760588	380.pdf
+k__Bacteria.p__Firmicutes.c__Erysipelotrichia.o__Erysipelotrichales.f__Erysipelotrichaceae.g__Catenibacterium.s__mitsuokai	2.77402892573			-	
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Bacillales	3.40362285904	Healthy48H.2	3.06228191062	3.90681401938e-13	381.pdf
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Bacteroidaceae.g__Bacteroides.s__intestinalis_stercorirosoris	1.87604803862	Healthy48H.1	2.13525208053	0.00595682845403	382.pdf
+k__Bacteria.p__Proteobacteria.c__Gammaproteobacteria.o__Pseudomonadales.f__Moraxellaceae.g__Acinetobacter.s__septicus_ursingii	4.0450919837	Healthy48H.2	3.75266971332	0.0253301279059	383.pdf
+k__Bacteria.p__Proteobacteria.c__Gammaproteobacteria.o__Enterobacteriales.f__Enterobacteriaceae.g__Klebsiella.s__pneumoniae_variicola	1.13675358532			-	
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Lactobacillales.f__Streptococcaceae.g__Streptococcus.s__infantis_sanguinis	1.65932238098			-	
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Porphyromonadaceae	4.50228420607	Healthy48H.1	4.20630119186	1.90018643436e-19	384.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Clostridiaceae.g__Clostridium.s__celatum_sp30555	3.35858981898	Healthy48H.1	3.03125135909	1.07265961702e-07	385.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Peptostreptococcaceae.g__Romboutsia.s__ilealis	4.85244748848	Healthy48H.2	4.44885612967	6.49381258787e-07	386.pdf
+k__Bacteria.p__Actinobacteria.c__Actinobacteria.o__Bifidobacteriales.f__Bifidobacteriaceae.g__Bifidobacterium	5.29933374108			-	
+k__Bacteria.p__Proteobacteria.c__Alphaproteobacteria.o__Rhizobiales.f__Bradyrhizobiaceae	1.5019010806			-	
+k__Bacteria.p__Fusobacteria.c__Fusobacteriia.o__Fusobacteriales	1.68374016971			0.0481211375678	
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Bacteroidaceae.g__Bacteroides.s__thetaiotaomicron	3.12741453619	Healthy48H.1	2.82921719191	1.07265961702e-07	387.pdf
+None.Other	2.42090347368	Healthy48H.1	2.45879507873	0.00963636396521	388.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Lachnospira	0.733452241108			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Dorea.s__sp32214_sp33575	0.955691181448			-	
+k__Bacteria.p__Fusobacteria.c__Fusobacteriia.o__Fusobacteriales.f__Fusobacteriaceae	1.68374016971			0.0481211375678	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Family_XIII.g__NA.s__sp31629	0.5618632379			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__Anaerotruncus.s__sp34464	2.32146453353	Healthy48H.1	2.04190368671	0.00346330868559	389.pdf
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Lactobacillales.f__Streptococcaceae.g__Streptococcus.s__anginosus	1.40602306828			-	
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Bacillales.f__Family_XI.g__Gemella.s__asaccharolytica	0.75103326284			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Family_XI.g__Peptoniphilus.s__lacrimalis	1.47903390361			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Defluviitaleaceae	1.66447422065			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Family_XIII.g__NA.s__sp31622	1.77996877309	Healthy48H.2	2.52483287346	0.00230592389652	390.pdf
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Bacillales.f__Paenibacillaceae.g__Paenibacillus	3.35149016074	Healthy48H.2	3.01486467476	5.73675403166e-13	391.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Eubacteriaceae.g__Eubacterium.s__callanderi_limosum	2.72467947846	Healthy48H.1	2.31650322862	0.0122434853322	392.pdf
+k__Bacteria.p__Actinobacteria.c__Actinobacteria.o__Actinomycetales	2.85342769814	Healthy48H.2	2.56384524319	8.95349689337e-12	393.pdf
+k__Bacteria.p__Firmicutes.c__Bacilli	4.51459630437			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35758	2.82185222135	Healthy48H.1	2.54911236	4.73881011386e-07	394.pdf
+k__Bacteria.p__Firmicutes.c__Negativicutes.o__Selenomonadales.f__Veillonellaceae.g__Megasphaera	3.97496706881	Healthy48H.1	3.68012845338	9.81227270153e-07	395.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__Hydrogenoanaerobacterium.s__sp34616	2.62489510884	Healthy48H.1	2.38242971067	0.000124252237977	396.pdf
+k__Bacteria.p__Proteobacteria.c__Gammaproteobacteria.o__Pseudomonadales.f__Pseudomonadaceae.g__Pseudomonas	1.52406396424	Healthy48H.2	2.74572698458	0.00765748241984	397.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Cellulosilyticum.s__sp32136	1.43842895361	Healthy48H.2	2.99244732736	0.0139188372942	398.pdf
+k__Bacteria.p__Lentisphaerae.c__Lentisphaeria.o__Victivallales.f__Victivallaceae	0.37280700168			-	
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Prevotellaceae.g__Alloprevotella.s__sp13519	2.2124075799			-	
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Rikenellaceae.g__Alistipes.s__indistinctus	1.723432296	Healthy48H.1	2.07611056751	0.00595682845403	399.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Eubacterium	4.66496934031	Healthy48H.2	4.29540001211	1.79791611353e-17	400.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Hungatella.s__sp32252	3.42077425029	Healthy48H.1	3.11014962688	9.8863331171e-07	401.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Lachnoclostridium.s__sp32428	2.64459880324			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Anaerostipes.s__caccae	1.85876286658			0.0399048514919	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__NA.g__NA.s__sp31117	1.70190494585			0.0467892978446	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Christensenellaceae.g__NA.s__sp30164	2.63569323674	Healthy48H.2	2.20428708927	0.00177519692128	402.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Lachnoclostridium.s__sp32424	2.80210392575			-	
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Rikenellaceae.g__Alistipes.s__sp14363	1.9964240345	Healthy48H.1	2.0365258469	0.00595682845403	403.pdf
+k__Bacteria.p__Actinobacteria.c__Coriobacteriia.o__Coriobacteriales.f__Coriobacteriaceae	4.69865405619			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Lachnoclostridium	4.39042380229			-	
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Rikenellaceae.g__NA.s__sp14461	0.87708090094			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp34857	1.93895894794	Healthy48H.1	2.09943280285	0.000880895760588	404.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Peptostreptococcaceae.g__Romboutsia.s__lituseburensis	2.31245652588			-	
+k__Bacteria.p__Proteobacteria.c__Gammaproteobacteria.o__Pseudomonadales.f__Moraxellaceae	4.1370007783	Healthy48H.2	3.83817076081	0.0253301279059	405.pdf
+k__Bacteria.p__Proteobacteria.c__Alphaproteobacteria.o__Rhizobiales	1.5019010806			-	
+k__Bacteria.p__Fusobacteria.c__Fusobacteriia.o__Fusobacteriales.f__Fusobacteriaceae.g__Fusobacterium	1.68374016971			0.0481211375678	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Family_XI.g__Peptoniphilus.s__koenoeneniae	0.717326539045			-	
+k__Bacteria.p__Firmicutes.c__Erysipelotrichia.o__Erysipelotrichales.f__Erysipelotrichaceae.g__NA.s__sp36776	0.432274500216			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Family_XI.g__Parvimonas_Tissierella.s__praeacuta_sp31283	1.66512087594			-	
+k__Bacteria.p__Cyanobacteria.c__Chloroplast.o__NA.f__NA	2.01269132627			-	
+k__Archaea	3.89989214169	Healthy48H.2	3.60417695895	0.000187813568336	406.pdf
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Lactobacillales.f__Lactobacillaceae.g__Lactobacillus.s__salivarius	0.874417405813			-	
+k__Bacteria.p__Actinobacteria.c__Actinobacteria.o__Actinomycetales.f__Actinomycetaceae.g__Actinomyces.s__meyeri_odontolyticus	1.11551356931			-	
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Porphyromonadaceae.g__Parabacteroides.s__distasonis	4.30418722369	Healthy48H.1	4.00783349595	1.16972026278e-20	407.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Blautia.s__sp33632_wexlerae	1.292454476			-	
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Lactobacillales.f__Streptococcaceae.g__Streptococcus.s__gordonii	0.591564072202			-	
+k__Bacteria.p__Actinobacteria.c__Coriobacteriia.o__Coriobacteriales.f__Coriobacteriaceae.g__NA.s__NA	1.30520500036	Healthy48H.2	2.70815263932	0.0253301279059	408.pdf
+k__Bacteria.p__Firmicutes.c__Erysipelotrichia.o__Erysipelotrichales.f__Erysipelotrichaceae.g__Coprobacillus.s__cateniformis	2.67775241745	Healthy48H.1	2.35203606435	0.000963901983773	409.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Clostridiaceae.g__Clostridium.s__malenominatum	0.644308806927			-	
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Bacteroidaceae.g__Bacteroides.s__massiliensis	2.86086138815	Healthy48H.1	2.62868893038	4.08810992235e-06	410.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Family_XI.g__Anaerococcus	2.55601102707	Healthy48H.1	2.26717846412	0.000417700993078	411.pdf
+k__Bacteria.p__Actinobacteria.c__Coriobacteriia.o__Coriobacteriales.f__Coriobacteriaceae.g__Adlercreutzia_Asaccharobacter.s__celatus_equolifaciens	3.08889371186	Healthy48H.2	2.68848693516	1.53420144834e-07	412.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35023	0.499221289846			-	
+k__Bacteria.p__Firmicutes.c__Negativicutes.o__Selenomonadales.f__Veillonellaceae.g__Negativicoccus.s__succinicivorans	2.49476642643	Healthy48H.1	2.32742928159	0.000240261147332	413.pdf
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Lactobacillales.f__Carnobacteriaceae.g__Carnobacterium.s__mobile	4.32971707319	Healthy48H.1	4.03215799089	1.64244510991e-05	414.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Eubacterium_Roseburia.s__faecis_rectale_sp33781	1.40625994009	Healthy48H.2	2.83344240174	0.0463197488411	415.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Family_XIII.g__NA.s__sp31561	1.75436219535	Healthy48H.2	2.40757642966	0.00420793195873	416.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Roseburia.s__intestinalis	1.93445517684			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp33610	1.98967993304			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Blautia.s__sp32056	4.66840340077	Healthy48H.2	4.31703474308	3.24560573651e-19	417.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Roseburia.s__sp33198	1.05521310087			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35059	2.98350019265	Healthy48H.1	2.30081649598	6.55699164286e-05	418.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__Hydrogenoanaerobacterium.s__sp34615_sp34616	0.605824286208			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Blautia_Lachnoclostridium	3.12796936917	Healthy48H.2	2.76280984949	1.21499302579e-06	419.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Peptococcaceae.g__Peptococcus	2.83024972922			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Roseburia.s__sp33193	2.12230355581			-	
+k__Bacteria.p__Proteobacteria.c__Deltaproteobacteria.o__Desulfovibrionales.f__Desulfovibrionaceae.g__Desulfovibrio.s__desulfuricans	0.877961240594			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Hungatella.s__effluvii_sp32252	0.489104835851			-	
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Bacillales.f__Staphylococcaceae.g__Staphylococcus.s__capitis_caprae_epidermidis	0.789478809682			-	
+k__Bacteria.p__Firmicutes.c__Erysipelotrichia.o__Erysipelotrichales.f__Erysipelotrichaceae.g__NA	4.03631145535	Healthy48H.2	3.63863335947	3.4011730478e-10	420.pdf
+k__Bacteria.p__Proteobacteria.c__Betaproteobacteria.o__Burkholderiales.f__Alcaligenaceae.g__Parasutterella	3.16914163075	Healthy48H.1	2.88534901411	3.29584291745e-11	421.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Eisenbergiella.s__sp32221	2.43392253376	Healthy48H.1	2.07419164904	0.00116293697644	422.pdf
+k__Bacteria.p__Lentisphaerae.c__Lentisphaeria.o__Victivallales	0.37280700168			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Eubacterium.s__rectale	4.32355545088	Healthy48H.2	3.95117418	8.63113604089e-12	423.pdf
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Bacteroidaceae.g__Bacteroides.s__fragilis	4.38327610042	Healthy48H.1	4.07472578446	7.46864082009e-13	424.pdf
+k__Bacteria.p__Proteobacteria.c__Gammaproteobacteria.o__Pseudomonadales.f__Pseudomonadaceae	1.52406396424	Healthy48H.2	2.734253606	0.00765748241984	425.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35598	0.379439231546			-	
+k__Bacteria.p__Proteobacteria.c__Gammaproteobacteria.o__Pseudomonadales.f__Pseudomonadaceae.g__Pseudomonas.s__costantinii_fluorescens_poae	0.542550867271			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Family_XI.g__Peptoniphilus.s__obesi	2.56857363584	Healthy48H.1	2.26944257162	0.00316152471286	426.pdf
+k__Bacteria.p__Actinobacteria.c__Actinobacteria.o__Bifidobacteriales.f__Bifidobacteriaceae.g__Bifidobacterium.s__biavatii	0.850473696468			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__Intestinimonas	2.70024944514	Healthy48H.1	2.47316329933	8.23029015534e-06	427.pdf
+k__Bacteria.p__Proteobacteria.c__Deltaproteobacteria.o__Desulfovibrionales.f__Desulfovibrionaceae.g__Bilophila	2.71734925965	Healthy48H.1	2.43408409813	0.000374174675163	428.pdf
+k__Bacteria.p__Proteobacteria.c__Gammaproteobacteria.o__Enterobacteriales.f__Enterobacteriaceae.g__Pantoea.s__ananatis	2.17999739899			-	
+k__Bacteria.p__Actinobacteria.c__Actinobacteria.o__Bifidobacteriales.f__Bifidobacteriaceae.g__Gardnerella	1.20009642359			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35646	1.05356513365			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__Ruminiclostridium.s__sp34921_sp34937	2.02968300287			0.00316152471286	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35076	1.22104603746	Healthy48H.2	2.57212990341	0.0463197488411	429.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__Ruminiclostridium	3.40251796157			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Marvinbryantia	3.62741370597	Healthy48H.2	3.31343835371	1.85005543556e-12	430.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__NA.s__sp32147	1.07644931865			-	
+k__Bacteria.p__Actinobacteria.c__Actinobacteria.o__Actinomycetales.f__Actinomycetaceae.g__Actinomyces.s__johnsonii_naeslundii_oris	0.614222901762			-	
+k__Bacteria.p__Firmicutes.c__Negativicutes.o__Selenomonadales.f__Acidaminococcaceae.g__Phascolarctobacterium.s__sp36826_sp36829	2.55064318633	Healthy48H.1	2.30537838948	0.021098573765	431.pdf
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Lactobacillales.f__Enterococcaceae.g__Enterococcus	2.96430215422	Healthy48H.2	2.4414015088	0.017132868445	432.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__Faecalibacterium.s__sp34544	3.86419714226	Healthy48H.2	3.43978424463	0.0396671664983	433.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Christensenellaceae.g__NA.s__sp30430	2.16510792351			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35202	0.610167917474			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Peptococcaceae.g__Peptococcus.s__sp34119	0.818342884418			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Christensenellaceae.g__NA.s__sp30434	0.75103326284			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Blautia_Marvinbryantia.s__sp32994_wexlerae	2.26244247992			-	
+k__Bacteria.p__Firmicutes.c__Negativicutes.o__Selenomonadales.f__Veillonellaceae.g__Megasphaera.s__sp36952	3.64793062011	Healthy48H.1	3.33651901451	1.64244510991e-05	434.pdf
+k__Bacteria.p__Firmicutes.c__Negativicutes.o__Selenomonadales.f__Veillonellaceae.g__Megasphaera.s__sp36950	2.8095160341	Healthy48H.1	2.5216950019	0.000124252237977	435.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp33136	2.34536382288			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp35759	2.4167136364	Healthy48H.1	2.23458968696	0.000124252237977	436.pdf
+k__Bacteria.p__Firmicutes.c__Negativicutes.o__Selenomonadales.f__Acidaminococcaceae	3.23995559146	Healthy48H.1	2.92440440933	4.75403771314e-07	437.pdf
+k__Bacteria.p__Firmicutes.c__Bacilli.o__Lactobacillales.f__Streptococcaceae.g__Streptococcus.s__australis_rubneri	1.11745354369			-	
+k__Bacteria.p__Proteobacteria.c__Betaproteobacteria.o__Burkholderiales.f__Alcaligenaceae.g__Parasutterella.s__excrementihominis	3.16914163075	Healthy48H.1	2.88534917714	3.29584291745e-11	438.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Christensenellaceae.g__NA.s__sp30337	1.38721132895	Healthy48H.2	3.43011119593	0.00765748241984	439.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__Ruminiclostridium.s__sp34903	0.905701207381			-	
+k__Bacteria.p__Actinobacteria.c__Coriobacteriia.o__Coriobacteriales.f__Coriobacteriaceae.g__Gordonibacter.s__urolithinfaciens	1.45301277048			-	
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Prevotellaceae.g__Prevotella.s__copri_sp13942	1.65149428317	Healthy48H.1	2.20557240995	0.021098573765	440.pdf
+k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Bacteroidaceae.g__Bacteroides.s__acidifaciens	2.51014787568	Healthy48H.1	2.29562023701	1.64244510991e-05	441.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Epulopiscium.s__sp32230	2.36654488867	Healthy48H.1	2.1041160097	0.0112060808227	442.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Family_XI.g__Peptoniphilus.s__senegalensis_tyrrelliae	0.37280700168			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Defluviitaleaceae.g__NA	1.66447422065			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__Ruminiclostridium.s__sp34909	3.29364982073			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Blautia.s__sp32026	1.16823728181			-	
+k__Bacteria.p__Proteobacteria.c__Betaproteobacteria.o__Burkholderiales.f__Oxalobacteraceae.g__Oxalobacter	0.775822736701			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Blautia.s__sp32020	3.68258932504			-	
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Peptostreptococcaceae.g__Paeniclostridium	3.02328712324	Healthy48H.1	2.6525423291	0.00595682845403	443.pdf
+k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__Ruminiclostridium.s__sp34900	0.844323948943			-	
