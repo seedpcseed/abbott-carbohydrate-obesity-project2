@@ -1,3 +1,10 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:40fc90727a18afaf420394aa4e85f8791ff158ba066ca1c1b739a6699664f907
-size 129
+{
+  "permissions": {
+    "allow": [
+      "Bash(Rscript:*)",
+      "Bash(ls:*)",
+      "Bash(echo:*)"
+    ],
+    "deny": []
+  }
+}

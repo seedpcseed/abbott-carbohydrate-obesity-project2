@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(R:*)",
+      "Bash(sudo rm:*)",
+      "Bash(conda install:*)",
+      "Bash(apt-get:*)",
+      "Bash(apt-get install:*)",
+      "Bash(radian:*)",
+      "Read(//usr/lib/R/library/**)",
+      "Read(//usr/lib/R/**)",
+      "Read(//root/miniconda/**)",
+      "Read(//root/**)",
+      "Read(//etc/R/**)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
