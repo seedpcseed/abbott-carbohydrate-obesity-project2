@@ -101,7 +101,7 @@ dir.create(outputs_dir, showWarnings = FALSE, recursive = TRUE)
 # Harmonized aesthetic ---------------------------------------------------
 
 palette_group <- setNames(scico::scico(2, palette = "berlin"), c("Healthy", "Obese"))
-palette_carbohydrate <- setNames(scico::scico(3, palette = "vik"), c("No Added Carb", "RDC", "SDC"))
+palette_carbohydrate <- setNames(c("#1f77b4", "#ff7f0e", "#2ca02c"), c("No Added Carb", "RDC", "SDC"))
 palette_timepoint <- setNames(scico::scico(2, palette = "roma"), c("0H", "48H"))
 
 palette_cluster <- setNames(scico::scico(6, palette = "batlow"), paste0("Cluster", seq_len(6)))
@@ -573,23 +573,103 @@ alpha_significance <- alpha_models %>%
 
 ```
 
+```{r alpha-pairwise-tests}
+# First, let's check the data structure
+cat("Checking alpha_long data structure:\n")
+cat("Total observations:", nrow(alpha_long), "\n")
+cat("Metrics:", paste(unique(alpha_long$metric), collapse = ", "), "\n")
+cat("Groups:", paste(unique(alpha_long$group), collapse = ", "), "\n")
+cat("Timepoints:", paste(unique(alpha_long$timepoint), collapse = ", "), "\n")
+cat("Carbohydrate levels:", paste(unique(alpha_long$carbohydrate), collapse = ", "), "\n")
+
+# Check sample sizes per group
+data_summary <- alpha_long %>%
+  dplyr::group_by(metric, group, timepoint, carbohydrate) %>%
+  dplyr::summarise(n = n(), .groups = "drop") %>%
+  dplyr::arrange(metric, group, timepoint, carbohydrate)
+
+cat("\nSample sizes per group:\n")
+print(data_summary)
+
+# Perform pairwise Wilcoxon tests for each metric across group-timepoint combinations
+alpha_pairwise_tests <- alpha_long %>%
+  dplyr::group_by(metric, group, timepoint) %>%
+  rstatix::wilcox_test(value ~ carbohydrate, p.adjust.method = "BH") %>%
+  rstatix::add_significance() %>%
+  dplyr::ungroup()
+
+cat("\nPairwise test results:\n")
+cat("Number of tests performed:", nrow(alpha_pairwise_tests), "\n")
+cat("Columns in results:", paste(names(alpha_pairwise_tests), collapse = ", "), "\n")
+
+# Calculate max values for positioning annotations
+alpha_max_values <- alpha_long %>%
+  dplyr::group_by(metric, group, timepoint) %>%
+  dplyr::summarise(max_val = max(value, na.rm = TRUE), .groups = "drop")
+
+# Filter out non-significant comparisons and add y-positions for significance annotations
+alpha_pairwise_tests <- alpha_pairwise_tests %>%
+  dplyr::filter(p.adj.signif != "ns") %>%  # Remove non-significant comparisons
+  dplyr::left_join(alpha_max_values, by = c("metric", "group", "timepoint")) %>%
+  dplyr::group_by(metric, group, timepoint) %>%
+  dplyr::mutate(
+    y.position = max_val * 1.15 + (dplyr::row_number() - 1) * (max_val * 0.08)
+  ) %>%
+  dplyr::ungroup()
+
+cat("After filtering non-significant comparisons:\n")
+cat("Number of significant comparisons:", nrow(alpha_pairwise_tests), "\n")
+
+cat("Final test data structure:\n")
+print(head(alpha_pairwise_tests))
+```
+
 ```{r alpha-figures}
-alpha_plot <- function(data, metric_name) {
-  data %>%
+alpha_plot <- function(data, metric_name, test_data) {
+  # Filter data for current metric
+  plot_data <- data %>%
+    dplyr::filter(metric == metric_name)
+  
+  # Filter test results for current metric and remove non-significant comparisons
+  test_data_metric <- test_data %>%
     dplyr::filter(metric == metric_name) %>%
+    dplyr::filter(p.adj.signif != "ns")
+  
+  # Create base plot
+  p <- plot_data %>%
     ggplot(aes(x = carbohydrate, y = value, fill = carbohydrate)) +
     geom_boxplot(alpha = 0.8, outlier.alpha = 0.4, width = 0.7) +
     geom_jitter(aes(color = group), width = 0.12, size = 1.5, alpha = 0.7, show.legend = FALSE) +
     scale_fill_manual(values = palette_carbohydrate) +
     scale_color_manual(values = palette_group) +
     labs(x = NULL, y = metric_name, title = metric_name) +
-    facet_grid(group ~ timepoint) +
+    facet_grid(group ~ timepoint, scales = "free_y") +
     custom_theme() +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  
+  # Add significance annotations only if there are significant comparisons
+  if (nrow(test_data_metric) > 0) {
+    p <- p +
+      ggpubr::stat_pvalue_manual(
+        test_data_metric,
+        label = "p.adj.signif",
+        tip.length = 0.005,
+        bracket.nudge.y = 0.01,
+        step.increase = 0.03
+      )
+  }
+  
+  return(p)
 }
 
-alpha_plots <- purrr::map(levels(alpha_long$metric), ~ alpha_plot(alpha_long, .x))
-alpha_plots[[1]] / alpha_plots[[2]] / alpha_plots[[3]] + plot_layout(guides = "collect") + plot_annotation(tag_levels = "A")
+# Create plots with significance annotations
+alpha_plots <- purrr::map(levels(alpha_long$metric), ~ alpha_plot(alpha_long, .x, alpha_pairwise_tests))
+
+alpha_plots[[2]]
+alpha_plots[[1]]
+alpha_plots[[3]]
+
+#alpha_plots[[1]] / alpha_plots[[2]] / alpha_plots[[3]] + plot_layout(guides = "collect") + plot_annotation(tag_levels = "A")
 ```
 
 ```{r alpha-interpretation, results='asis'}
@@ -622,6 +702,29 @@ alpha_models_collapsed %>%
   gt::fmt_number(columns = c(f_value), decimals = 2) %>%
   gt::fmt_number(columns = c(p_value, fdr), decimals = 3) %>%
   gt::cols_label(term = "Effect", num_df = "df num", den_df = "df den", f_value = "F", p_value = "p", fdr = "q")
+```
+
+```{r alpha-combined-plots}
+# Create combined data where healthy and obese groups are merged
+alpha_combined <- alpha_long %>%
+  dplyr::mutate(group = "Combined") %>%
+  dplyr::mutate(group = factor(group))
+
+# Create pairwise tests for the combined data
+alpha_combined_pairwise_tests <- alpha_combined %>%
+  dplyr::group_by(metric, group, timepoint) %>%
+  rstatix::wilcox_test(value ~ carbohydrate, p.adjust.method = "BH") %>%
+  rstatix::add_significance() %>%
+  rstatix::add_y_position(fun =  "max", scales = "free_y") %>%
+  dplyr::ungroup()
+
+# plot here but with the healthy and obese combined
+alpha_combined_plots <- purrr::map(levels(alpha_long$metric), ~ alpha_plot(alpha_combined, .x, alpha_combined_pairwise_tests))
+
+alpha_combined_plots[[1]]
+alpha_combined_plots[[2]]
+alpha_combined_plots[[3]]
+
 ```
 
 ```{r alpha-collapsed-interpretation, results='asis'}
@@ -798,26 +901,6 @@ dist_methods <- c("bray", "jaccard")
 
 pcoa_dfs <- purrr::map_dfr(dist_methods, ~ make_pcoa_df(ps_rel, .x))
 
-pcoa_plot <- function(df, method_name) {
-  df_subset <- df %>% dplyr::filter(distance_method == method_name)
-  var1 <- scales::percent(round(df_subset$axis1_var[1], 3))
-  var2 <- scales::percent(round(df_subset$axis2_var[1], 3))
-
-  ggplot(df_subset, aes(x = PC1, y = PC2, color = carbohydrate, shape = group)) +
-    geom_point(size = 2.5, alpha = 0.85) +
-    stat_ellipse(aes(group = interaction(carbohydrate, timepoint)), linewidth = 0.4, linetype = "dashed") +
-    facet_wrap(~ timepoint) +
-    scale_color_manual(values = palette_carbohydrate) +
-    scale_shape_manual(values = c(16, 17)) +
-    labs(
-      x = glue::glue("PC1 ({var1})"),
-      y = glue::glue("PC2 ({var2})"),
-      title = glue::glue("PCoA – {stringr::str_to_title(method_name)} distance")
-    ) +
-    custom_theme()
-}
-
-(pcoa_plot(pcoa_dfs, "bray") | pcoa_plot(pcoa_dfs, "jaccard")) + plot_annotation(tag_levels = "A")
 ```
 
 ```{r permanova}
@@ -864,6 +947,80 @@ permanova_results %>%
   gt::tab_header("PERMANOVA results (subject-level strata)")
 ```
 
+```{r pcoa-plot}
+pcoa_plot <- function(df, method_name) {
+  df_subset <- df %>% dplyr::filter(distance_method == method_name)
+  var1 <- scales::percent(round(df_subset$axis1_var[1], 3))
+  var2 <- scales::percent(round(df_subset$axis2_var[1], 3))
+
+  # Get PERMANOVA results for this distance method - use group:carbohydrate interaction
+  permanova_subset <- permanova_results %>%
+    dplyr::filter(distance == method_name, term == "group:carbohydrate")
+
+  # Create annotation text and position
+  if (nrow(permanova_subset) > 0) {
+    r2_val <- round(permanova_subset$r2[1], 3)
+    p_val <- round(permanova_subset$p_value[1], 3)
+    annotation_text <- glue::glue("R² = {r2_val}, p = {p_val}")
+
+    # Calculate per-facet label positions, guard against missing/flat ranges
+    annotation_df <- df_subset %>%
+      dplyr::filter(!is.na(PC1), !is.na(PC2)) %>%
+      dplyr::group_by(timepoint) %>%
+      dplyr::summarise(
+        x_min = min(PC1),
+        x_max = max(PC1),
+        y_min = min(PC2),
+        y_max = max(PC2),
+        .groups = "drop"
+      ) %>%
+      dplyr::mutate(
+        x_span = x_max - x_min,
+        y_span = y_max - y_min,
+        PC1 = ifelse(is.finite(x_span) & x_span > 0, x_min + 0.05 * x_span, x_min),
+        PC2 = ifelse(is.finite(y_span) & y_span > 0, y_max - 0.05 * y_span, y_max),
+        label = annotation_text
+      ) %>%
+      dplyr::select(timepoint, PC1, PC2, label)
+  } else {
+    annotation_df <- data.frame(
+      PC1 = numeric(0),
+      PC2 = numeric(0),
+      label = character(0),
+      timepoint = character(0)
+    )
+  }
+
+  p <- ggplot(df_subset, aes(x = PC1, y = PC2, color = carbohydrate, shape = group)) +
+    geom_point(size = 2.5, alpha = 0.85) +
+    stat_ellipse(aes(group = interaction(carbohydrate, timepoint), color = carbohydrate),
+      linewidth = 0.4, linetype = "dashed", show.legend = FALSE
+    ) +
+    facet_wrap(~timepoint) +
+    scale_color_manual(values = palette_carbohydrate) +
+    scale_shape_manual(values = c(16, 17)) +
+    labs(
+      x = glue::glue("PC1 ({var1})"),
+      y = glue::glue("PC2 ({var2})"),
+      title = glue::glue("PCoA – {stringr::str_to_title(method_name)} distance")
+    ) +
+    custom_theme()
+
+  if (nrow(annotation_df) > 0) {
+    p <- p + geom_label(
+      data = annotation_df,
+      aes(x = PC1, y = PC2, label = label),
+      hjust = 0, vjust = 1, size = 3, fontface = "bold",
+      inherit.aes = FALSE, fill = "white", alpha = 0.8
+    )
+  }
+
+  p
+}
+
+(pcoa_plot(pcoa_dfs, "bray") | pcoa_plot(pcoa_dfs, "jaccard")) + plot_annotation(tag_levels = "A")
+```
+
 ```{r dispersion-tests}
 betadisp_results <- purrr::map_dfr(
   dist_methods,
@@ -872,14 +1029,19 @@ betadisp_results <- purrr::map_dfr(
     df <- as(sample_data(ps_rel), "data.frame")
     bd <- vegan::betadisper(dist_mat, df$carbohydrate)
     perm <- vegan::permutest(bd, permutations = 999)
+
+    # Extract values more robustly
+    perm_df <- as.data.frame(perm$tab)
+    f_row <- which(rownames(perm_df) %in% c("F", "Groups"))
+
     tibble(
       distance = .x,
-      stat = perm$tab["F", "F"],
-      p_value = perm$tab["F", "Pr(>F)"],
-      q_value = fdr_adjust(p_value)
+      stat = perm_df[f_row[1], "F"],
+      p_value = perm_df[f_row[1], "Pr(>F)"]
     )
   }
-)
+) %>%
+  dplyr::mutate(q_value = fdr_adjust(p_value))
 
 betadisp_results %>%
   gt::gt() %>%
@@ -892,7 +1054,7 @@ betadisp_results %>%
 
 ```{r beta-interpretation, results='asis'}
 permanova_summary <- permanova_results %>%
-  dplyr::mutate(p_value = pr_greater_f_, q = fdr_adjust(p_value)) %>%
+  dplyr::mutate(q = fdr_adjust(p_value)) %>%
   dplyr::filter(term != "Residual" & q < 0.1) %>%
   dplyr::mutate(item = glue::glue("{stringr::str_to_title(distance)}: {term} (q = {format_p(q)})")) %>%
   dplyr::pull(item)
@@ -903,7 +1065,7 @@ if (length(permanova_summary) == 0) {
   cat(glue::glue_collapse(permanova_summary, sep = "\n"))
 }
 ```
-```
+
 ### 5.1 Beta Diversity at 48 h
 
 ```{r beta-48h}
@@ -914,7 +1076,7 @@ pcoa_48h <- make_pcoa_df(ps_48h, "bray")
 pcoa_48h %>%
   ggplot(aes(x = PC1, y = PC2, color = carbohydrate, shape = group)) +
   geom_point(size = 3, alpha = 0.9) +
-  stat_ellipse(aes(group = carbohydrate), linewidth = 0.5, linetype = "dashed") +
+  stat_ellipse(aes(group = carbohydrate, color = carbohydrate), linewidth = 0.8, linetype = "dashed", alpha = 0.8) +
   scale_color_manual(values = palette_carbohydrate) +
   scale_shape_manual(values = c(16, 17)) +
   labs(
@@ -935,14 +1097,20 @@ permanova_48h <- vegan::adonis2(
 )
 
 permanova_48h_tbl <- as.data.frame(permanova_48h) %>% rownames_to_column('term') %>% janitor::clean_names()
+
+# Find the correct column names for p-value, F-statistic, and R-squared
+permanova_48h_p_col <- intersect(c("pr_greater_f_", "pr_greater_f", "pr_f", "p_value"), names(permanova_48h_tbl))
+permanova_48h_f_col <- intersect(c("f", "f_model", "pseudo_f"), names(permanova_48h_tbl))
+permanova_48h_r2_col <- intersect(c("r2", "r_squared", "r2_adj"), names(permanova_48h_tbl))
+
 permanova_48h_tbl %>%
-  dplyr::mutate(p_value = pr_greater_f_, q = fdr_adjust(p_value)) %>%
+  dplyr::mutate(p_value = !!sym(permanova_48h_p_col), q = fdr_adjust(p_value)) %>%
   gt::gt() %>%
-  gt::fmt_number(columns = c(f, r2), decimals = 3) %>%
+  gt::fmt_number(columns = c(!!sym(permanova_48h_f_col), !!sym(permanova_48h_r2_col)), decimals = 3) %>%
   gt::fmt_number(columns = c(p_value, q), decimals = 3) %>%
-  gt::cols_label(term = "Effect", f = "F", r2 = "R2", p_value = "p", q = "q")
+  gt::cols_label(term = "Effect", !!sym(permanova_48h_f_col) := "F", !!sym(permanova_48h_r2_col) := "R2", p_value = "p", q = "q")
 ```
-```
+
 ## 6. Baseline Clustering and Trajectories
 
 ```{r cluster-baseline}
@@ -996,7 +1164,8 @@ metadata_with_cluster <- metadata %>%
 # propagate baseline cluster to all timepoints via subject_id
 subject_clusters <- cluster_assignments %>%
   dplyr::left_join(metadata %>% dplyr::select(SampleID, subject_id), by = "SampleID") %>%
-  dplyr::distinct(subject_id, baseline_cluster)
+  dplyr::group_by(subject_id) %>%
+  dplyr::summarise(baseline_cluster = dplyr::first(baseline_cluster), .groups = "drop")
 
 metadata_with_cluster <- metadata %>%
   dplyr::left_join(subject_clusters, by = "subject_id")
@@ -1006,22 +1175,54 @@ sample_data(ps_with_cluster)$baseline_cluster <- metadata_with_cluster$baseline_
 ```
 
 ```{r cluster-48h}
-ps_48h_cluster <- phyloseq::subset_samples(ps_with_cluster, Timepoint == "48H")
+# Only include subjects that have baseline cluster assignments
+subjects_with_clusters <- subject_clusters$subject_id
+ps_48h_cluster <- phyloseq::subset_samples(ps_with_cluster, Timepoint == "48H" & subject_id %in% subjects_with_clusters)
+
+# Check how many samples we have after filtering
+cat("48H samples with baseline cluster assignments:", nsamples(ps_48h_cluster), "\n")
+cat("Total 48H samples:", sum(sample_data(ps_with_cluster)$Timepoint == "48H"), "\n")
+
+# Show which subjects are missing baseline samples
+all_48h_subjects <- as(sample_data(ps_with_cluster), "data.frame") %>% 
+  dplyr::filter(Timepoint == "48H") %>% 
+  dplyr::pull(subject_id) %>% 
+  unique()
+
+missing_baseline_subjects <- setdiff(all_48h_subjects, subjects_with_clusters)
+if(length(missing_baseline_subjects) > 0) {
+  cat("Subjects missing baseline (0H) samples:", paste(missing_baseline_subjects, collapse = ", "), "\n")
+  cat("These subjects will be excluded from cluster-based 48H analysis.\n")
+} else {
+  cat("All 48H subjects have baseline cluster assignments.\n")
+}
+
 ord_48h_cluster <- make_pcoa_df(ps_48h_cluster, "bray") %>%
   dplyr::mutate(baseline_cluster = sample_data(ps_48h_cluster)$baseline_cluster[match(SampleID, sample_names(ps_48h_cluster))])
+
+# Create dynamic color palette based on actual clusters present
+actual_clusters <- levels(factor(ord_48h_cluster$baseline_cluster))
+cluster_palette_dynamic <- setNames(scico::scico(length(actual_clusters), palette = "batlow"), actual_clusters)
 
 ord_48h_cluster %>%
   ggplot(aes(x = PC1, y = PC2, color = baseline_cluster, shape = carbohydrate)) +
   geom_point(size = 3, alpha = 0.9) +
-  stat_ellipse(aes(group = interaction(baseline_cluster, carbohydrate)), linewidth = 0.5, linetype = "dotted") +
-  scale_color_manual(values = palette_cluster) +
-  scale_shape_manual(values = c(16, 17)) +
+  stat_ellipse(aes(group = interaction(baseline_cluster, carbohydrate)), 
+               linewidth = 0.5, linetype = "dotted", 
+               level = 0.95, type = "norm") +
+  scale_color_manual(values = cluster_palette_dynamic) +
+  scale_shape_manual(values = c(16, 17, 18)) +
   labs(
     title = "48 h beta diversity colored by baseline cluster",
     x = glue::glue("PC1 ({scales::percent(round(ord_48h_cluster$axis1_var[1], 3))})"),
     y = glue::glue("PC2 ({scales::percent(round(ord_48h_cluster$axis2_var[1], 3))})")
   ) +
   custom_theme()
+```
+```{r cluster-48h-facet-plots}
+ord_48h_cluster %>% ggplot(aes(PC1, PC2)) +
+  geom_point(aes(color = carbohydrate), size = 3) +
+  facet_wrap(~baseline_cluster)
 ```
 
 ```{r cluster-statistics}
@@ -1085,7 +1286,7 @@ cluster_text %>%
   glue::glue_collapse(sep = "\n") %>%
   cat()
 ```
-```
+
 ## 7. Community Composition Profiles
 
 ```{r composition-overview}
@@ -1140,6 +1341,236 @@ ggplot(psmelt(microbiome::transform(ps_cluster, "compositional")),
   ) +
   custom_theme() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+## Alluvial flow diagrams: Genus abundance changes from 0H to 48H
+
+```{r alluvial-diagram, fig.width=14, fig.height=10}
+# Install ggalluvial if not available
+if (!requireNamespace("ggalluvial", quietly = TRUE)) {
+  install.packages("ggalluvial")
+}
+library(ggalluvial)
+
+# Prepare data for alluvial diagrams
+ps_genus_rel <- transform_sample_counts(ps_genus, function(x) x / sum(x))
+
+# Extract data
+otu_mat <- as.matrix(otu_table(ps_genus_rel))
+if (!taxa_are_rows(ps_genus_rel)) {
+  otu_mat <- t(otu_mat)
+}
+
+tax_df <- as.data.frame(tax_table(ps_genus_rel))
+meta_df <- data.frame(sample_data(ps_genus_rel))
+
+# Create long format data
+alluvial_data <- otu_mat %>%
+  as.data.frame() %>%
+  tibble::rownames_to_column("ASV") %>%
+  tidyr::pivot_longer(-ASV, names_to = "SampleID", values_to = "Abundance") %>%
+  dplyr::left_join(
+    tax_df %>% tibble::rownames_to_column("ASV") %>% dplyr::select(ASV, Genus),
+    by = "ASV"
+  ) %>%
+  dplyr::left_join(
+    meta_df %>% tibble::rownames_to_column("SampleID") %>%
+      dplyr::select(SampleID, Timepoint, Carbohydrate),
+    by = "SampleID"
+  ) %>%
+  dplyr::group_by(Genus, Timepoint, Carbohydrate) %>%
+  dplyr::summarise(mean_abundance = mean(Abundance), .groups = "drop") %>%
+  dplyr::filter(mean_abundance > 0.01)  # Keep genera >1%
+
+# Get top genera
+top_genera <- alluvial_data %>%
+  dplyr::group_by(Genus) %>%
+  dplyr::summarise(max_abund = max(mean_abundance)) %>%
+  dplyr::arrange(desc(max_abund)) %>%
+  head(12) %>%
+  pull(Genus)
+
+# Filter to top genera and add "Other" category
+alluvial_plot_data <- alluvial_data %>%
+  dplyr::mutate(
+    Genus_grouped = ifelse(Genus %in% top_genera, as.character(Genus), "Other")
+  ) %>%
+  dplyr::group_by(Genus_grouped, Timepoint, Carbohydrate) %>%
+  dplyr::summarise(Abundance = sum(mean_abundance), .groups = "drop")
+
+# Create color palette
+genus_colors <- c(
+  scico::scico(length(top_genera), palette = "batlow"),
+  "Other" = "grey80"
+)
+names(genus_colors)[1:length(top_genera)] <- top_genera
+
+# Create alluvial plots for each carbohydrate
+plot_list <- list()
+
+for (carb in c("No Added Carb", "RDC", "SDC")) {
+  plot_data <- alluvial_plot_data %>%
+    dplyr::filter(Carbohydrate == carb) %>%
+    dplyr::mutate(
+      Genus_grouped = factor(Genus_grouped,
+                            levels = c(top_genera[top_genera %in% unique(Genus_grouped)], "Other")),
+      # Create label columns that show only on respective sides
+      label_left = ifelse(Timepoint == "0H", as.character(Genus_grouped), ""),
+      label_right = ifelse(Timepoint == "48H", as.character(Genus_grouped), "")
+    )
+
+  p <- ggplot(plot_data,
+              aes(x = Timepoint, y = Abundance,
+                  alluvium = Genus_grouped, stratum = Genus_grouped, fill = Genus_grouped)) +
+    geom_alluvium(alpha = 0.7, width = 0.3) +
+    geom_stratum(width = 0.3, alpha = 0.9) +
+    # Add labels to the left side (0H only)
+    stat_stratum(geom = "text", aes(label = label_left),
+                 size = 2.3, hjust = 1.3, fontface = "bold") +
+    # Add labels to the right side (48H only)
+    stat_stratum(geom = "text", aes(label = label_right),
+                 size = 2.3, hjust = -0.5, fontface = "bold") +
+    scale_fill_manual(values = genus_colors) +
+    scale_y_continuous(labels = scales::percent, expand = c(0, 0)) +
+    scale_x_discrete(expand = expansion(add = c(1.2, 1.2))) +
+    labs(
+      title = carb,
+      x = "Timepoint",
+      y = "Relative Abundance",
+      fill = "Genus"
+    ) +
+    custom_theme() +
+    theme(
+      legend.position = "none",
+      panel.grid.major.x = element_blank()
+    )
+
+  plot_list[[carb]] <- p
+}
+
+# Combine plots
+library(patchwork)
+combined_plot <- wrap_plots(plot_list, ncol = 3) +
+  plot_annotation(
+    title = "Genus Composition Changes from 0H to 48H by Carbohydrate Type",
+    subtitle = "Flow diagram showing relative abundance changes (top 12 genera)",
+    theme = theme(plot.title = element_text(size = 16, face = "bold"))
+  )
+
+print(combined_plot)
+```
+
+### Validation: Bar plots of genus abundances by timepoint and carbohydrate
+
+```{r chord-validation, fig.width=14, fig.height=10}
+# Extract genus-level data for validation
+ps_genus_rel <- transform_sample_counts(ps_genus, function(x) x / sum(x))
+
+# Get OTU table and metadata
+otu_mat <- as.matrix(otu_table(ps_genus_rel))
+if (!taxa_are_rows(ps_genus_rel)) {
+  otu_mat <- t(otu_mat)
+}
+otu_df <- as.data.frame(t(otu_mat))
+
+tax_df <- as.data.frame(tax_table(ps_genus_rel))
+meta_df <- data.frame(sample_data(ps_genus_rel))
+
+# Combine data
+genus_long <- otu_df %>%
+  tibble::rownames_to_column("SampleID") %>%
+  tidyr::pivot_longer(-SampleID, names_to = "ASV", values_to = "Abundance") %>%
+  dplyr::left_join(
+    tax_df %>% tibble::rownames_to_column("ASV") %>% dplyr::select(ASV, Genus),
+    by = "ASV"
+  ) %>%
+  dplyr::left_join(
+    meta_df %>% tibble::rownames_to_column("SampleID") %>%
+      dplyr::select(SampleID, Timepoint, Carbohydrate),
+    by = "SampleID"
+  )
+
+# Calculate mean abundance per genus, timepoint, and carbohydrate
+genus_summary <- genus_long %>%
+  group_by(Genus, Timepoint, Carbohydrate) %>%
+  summarise(
+    mean_abundance = mean(Abundance),
+    se_abundance = sd(Abundance) / sqrt(n()),
+    .groups = "drop"
+  ) %>%
+  filter(mean_abundance > 0.01)  # Only keep genera >1% mean abundance
+
+# Get top genera overall
+top_genera <- genus_summary %>%
+  group_by(Genus) %>%
+  summarise(max_abundance = max(mean_abundance), .groups = "drop") %>%
+  arrange(desc(max_abundance)) %>%
+  head(15) %>%
+  pull(Genus)
+
+# Filter to top genera
+genus_summary_top <- genus_summary %>%
+  filter(Genus %in% top_genera)
+
+# Create faceted bar plot
+p_validation <- ggplot(genus_summary_top,
+                       aes(x = Timepoint, y = mean_abundance, fill = Timepoint)) +
+  geom_col(position = "dodge", width = 0.7) +
+  geom_errorbar(aes(ymin = mean_abundance - se_abundance,
+                    ymax = mean_abundance + se_abundance),
+                width = 0.2, position = position_dodge(0.7)) +
+  facet_grid(Genus ~ Carbohydrate, scales = "free_y") +
+  scale_fill_manual(values = c("0H" = "#E69F00", "48H" = "#56B4E9")) +
+  labs(
+    title = "Validation: Genus Abundance by Timepoint and Carbohydrate Type",
+    subtitle = "Mean relative abundance ± SE for top 15 genera (>1% abundance)",
+    x = "Timepoint",
+    y = "Mean Relative Abundance",
+    fill = "Timepoint"
+  ) +
+  custom_theme() +
+  theme(
+    axis.text.x = element_text(angle = 0, hjust = 0.5),
+    strip.text.y = element_text(angle = 0, hjust = 0),
+    panel.spacing = unit(0.5, "lines")
+  )
+
+print(p_validation)
+
+# Print summary statistics for key changes
+cat("\n### Summary of abundance changes from 0H to 48H:\n\n")
+
+change_summary <- genus_summary_top %>%
+  dplyr::select(Genus, Timepoint, Carbohydrate, mean_abundance) %>%
+  pivot_wider(names_from = Timepoint, values_from = mean_abundance,
+              names_prefix = "T") %>%
+  mutate(
+    change = T48H - T0H,
+    pct_change = ((T48H - T0H) / T0H) * 100,
+    direction = case_when(
+      abs(change) < 0.005 ~ "No change",
+      change > 0 ~ "Increase",
+      change < 0 ~ "Decrease"
+    )
+  ) %>%
+  arrange(Carbohydrate, desc(abs(change)))
+
+# Print changes for each carbohydrate type
+for (carb in c("No Added Carb", "RDC", "SDC")) {
+  cat(paste0("\n", carb, ":\n"))
+  carb_changes <- change_summary %>%
+    filter(Carbohydrate == carb, abs(change) > 0.01) %>%
+    arrange(desc(abs(change))) %>%
+    head(10)
+
+  if (nrow(carb_changes) > 0) {
+    print(carb_changes %>%
+            dplyr::select(Genus, T0H, T48H, change, pct_change, direction) %>%
+            mutate(across(where(is.numeric), ~round(., 4))))
+  } else {
+    cat("  No major changes detected (>1% absolute change)\n")
+  }
+}
 ```
 
 ## 8. Differential Abundance and Predictive Modeling
