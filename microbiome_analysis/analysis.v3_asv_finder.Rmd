@@ -2030,6 +2030,292 @@ if (!is.null(ancombc_48h)) {
 ancombc48_tbl
 ```
 
+#### Forest Plot of ANCOM-BC2 48h Results
+
+```{r ancombc48_forest_plot}
+# Prepare data for forest plot (show all data initially)
+forest_data_48h <- ancombc48_tbl %>%
+  dplyr::mutate(
+    # Calculate confidence intervals
+    ci_lower = beta - 1.96 * se,
+    ci_upper = beta + 1.96 * se,
+    # Create effect labels
+    effect_label = case_when(
+      effect == "groupObese" ~ "Obese vs Normal",
+      effect == "carbohydrateRDC" ~ "RDC vs No Added Carb",
+      effect == "carbohydrateSDC" ~ "SDC vs No Added Carb",
+      TRUE ~ effect
+    ),
+    # Create taxon labels with significance
+    taxon_label = paste0(taxon, " (q=", round(q_value, 3), ")"),
+    # Color by significance level
+    significance = case_when(
+      q_value < 0.001 ~ "q < 0.001",
+      q_value < 0.01 ~ "q < 0.01", 
+      q_value < 0.05 ~ "q < 0.05",
+      q_value < 0.1 ~ "q < 0.1",
+      TRUE ~ "q ≥ 0.1"
+    )
+  ) %>%
+  # Order by effect size (absolute value)
+  dplyr::arrange(desc(abs(beta)))
+
+# Create forest plot for 48h results
+forest_plot_48h <- ggplot(forest_data_48h, aes(x = beta, y = reorder(taxon_label, beta))) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+  geom_errorbarh(aes(xmin = ci_lower, xmax = ci_upper, color = significance), 
+                 height = 0.15, size = 1) +
+  geom_point(aes(color = significance), size = 3, fill = "white", shape = 21, stroke = 1.5) +
+  facet_wrap(~ effect_label, scales = "free_x", ncol = 3) +
+  scale_color_manual(
+    values = c("q < 0.001" = "#d73027", 
+               "q < 0.01" = "#f46d43",
+               "q < 0.05" = "#fdae61", 
+               "q < 0.1" = "#fee08b",
+               "q ≥ 0.1" = "#d9d9d9"),
+    name = "FDR-adjusted\np-value"
+  ) +
+  labs(
+    title = "ANCOM-BC2 Results: 48h Timepoint Analysis",
+    subtitle = "Effect sizes (log-fold changes) with 95% confidence intervals\n(48h timepoint only)",
+    x = "Log-fold change (β)",
+    y = "Taxon"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.y = element_text(size = 9),
+    axis.text.x = element_text(size = 10),
+    strip.text = element_text(size = 11, face = "bold"),
+    plot.title = element_text(size = 14, face = "bold"),
+    plot.subtitle = element_text(size = 11),
+    legend.position = "bottom",
+    panel.grid.minor = element_blank(),
+    strip.background = element_rect(fill = "lightblue", color = "black")
+  )
+
+print(forest_plot_48h)
+
+# Summary statistics for 48h analysis
+cat("Summary of ANCOM-BC2 48h Results:\n")
+cat("Total taxa shown:", nrow(forest_data_48h), "\n")
+cat("By effect:\n")
+print(table(forest_data_48h$effect_label))
+
+# Show top effects by magnitude
+cat("\nTop 10 Effects by Magnitude (48h):\n")
+print(forest_data_48h %>%
+  dplyr::select(taxon, effect_label, beta, q_value) %>%
+  dplyr::arrange(desc(abs(beta))) %>%
+  dplyr::slice_head(n = 10))
+```
+
+### 8.4.1 ANCOM-BC2: RDC vs SDC at 48h
+
+```{r ancombc2_rdc_vs_sdc_48h}
+# Subset to 48h timepoint only
+ps_48h_counts <- subset_samples(ps_counts, Timepoint == "48H")
+
+# Further subset to only RDC and SDC groups (exclude No Added Carb)
+ps_48h_rdc_sdc <- subset_samples(ps_48h_counts, carbohydrate %in% c("RDC", "SDC"))
+
+ancombc2_rdc_sdc_path <- file.path(outputs_dir, "ancombc2_rdc_vs_sdc_48h_results.rds")
+
+ancombc2_rdc_sdc <- cache_rds(
+  ancombc2_rdc_sdc_path,
+  {
+    tryCatch({
+      # Remove samples with too many zeros that cause estimation issues
+      # Use a more lenient threshold since 48h data may have more zeros
+      sample_sums <- sample_sums(ps_48h_rdc_sdc)
+      zero_prop <- apply(otu_table(ps_48h_rdc_sdc), 2, function(x) sum(x == 0) / length(x))
+      problematic_samples <- names(zero_prop[zero_prop > 0.95])  # More lenient: 95% zeros
+      
+      if (length(problematic_samples) > 0) {
+        message("Removing samples with >95% zeros: ", paste(problematic_samples, collapse = ", "))
+        ps_48h_rdc_sdc_clean <- subset_samples(ps_48h_rdc_sdc, !sample_names(ps_48h_rdc_sdc) %in% problematic_samples)
+        
+        # Check if we still have enough samples
+        if (nsamples(ps_48h_rdc_sdc_clean) < 10) {
+          message("Too few samples after filtering, using original data")
+          ps_48h_rdc_sdc_clean <- ps_48h_rdc_sdc
+        }
+      } else {
+        ps_48h_rdc_sdc_clean <- ps_48h_rdc_sdc
+      }
+      
+      ANCOMBC::ancombc2(
+        data = ps_48h_rdc_sdc_clean,
+        tax_level = "Genus",
+        fix_formula = "group + carbohydrate",
+        rand_formula = "(1|subject_id)",
+        p_adj_method = "BH",
+        prv_cut = 0.10,
+        lib_cut = 0,
+        s0_perc = 0.05,
+        group = "carbohydrate",
+        struc_zero = TRUE,
+        neg_lb = TRUE,
+        alpha = 0.05,
+        global = TRUE
+      )
+    }, error = function(e) {
+      message("ANCOM-BC2 RDC vs SDC 48h failed: ", e$message)
+      NULL
+    })
+  }
+)
+
+if (!is.null(ancombc2_rdc_sdc)) {
+  # Extract results from the res component
+  res_data_rdc_sdc <- ancombc2_rdc_sdc$res
+  
+  # Get the effect names (focusing on carbohydrate comparison)
+  effect_names_rdc_sdc <- c("groupObese", "carbohydrateSDC")
+  
+  # Create a data frame from the results for each effect
+  ancombc2_rdc_sdc_tbl <- purrr::map_dfr(effect_names_rdc_sdc, function(effect) {
+    # Check if columns exist for this effect
+    lfc_col <- paste0("lfc_", effect)
+    se_col <- paste0("se_", effect)
+    W_col <- paste0("W_", effect)
+    p_col <- paste0("p_", effect)
+    q_col <- paste0("q_", effect)
+    diff_col <- paste0("diff_", effect)
+    
+    if (all(c(lfc_col, se_col, W_col, p_col, q_col, diff_col) %in% colnames(res_data_rdc_sdc))) {
+      tibble(
+        taxon = res_data_rdc_sdc$taxon,
+        effect = effect,
+        beta = res_data_rdc_sdc[[lfc_col]],
+        se = res_data_rdc_sdc[[se_col]],
+        W = res_data_rdc_sdc[[W_col]],
+        p_value = res_data_rdc_sdc[[p_col]],
+        q_value = res_data_rdc_sdc[[q_col]],
+        diff_abn = res_data_rdc_sdc[[diff_col]]
+      )
+    } else {
+      # Return empty tibble if columns don't exist
+      tibble()
+    }
+  }) %>% dplyr::arrange(q_value)
+} else {
+  ancombc2_rdc_sdc_tbl <- tibble()
+}
+
+if (nrow(ancombc2_rdc_sdc_tbl) > 0) {
+  ancombc2_rdc_sdc_tbl %>%
+    dplyr::filter(q_value < 0.1)
+} else {
+  cat("No results available - analysis may have failed due to insufficient data\n")
+  tibble()
+}
+```
+
+#### Forest Plot: RDC vs SDC at 48h
+
+```{r ancombc2_rdc_sdc_forest_plot}
+# Prepare data for forest plot
+if (nrow(ancombc2_rdc_sdc_tbl) > 0) {
+  forest_data_rdc_sdc <- ancombc2_rdc_sdc_tbl %>%
+    dplyr::filter(q_value < 0.1) %>%
+  dplyr::mutate(
+    # Calculate confidence intervals
+    ci_lower = beta - 1.96 * se,
+    ci_upper = beta + 1.96 * se,
+    # Create effect labels
+    effect_label = case_when(
+      effect == "groupObese" ~ "Obese vs Normal (48h)",
+      effect == "carbohydrateSDC" ~ "SDC vs RDC (48h)",
+      TRUE ~ effect
+    ),
+    # Create taxon labels with significance
+    taxon_label = paste0(taxon, " (q=", round(q_value, 3), ")"),
+    # Color by significance level
+    significance = case_when(
+      q_value < 0.001 ~ "q < 0.001",
+      q_value < 0.01 ~ "q < 0.01", 
+      q_value < 0.05 ~ "q < 0.05",
+      q_value < 0.1 ~ "q < 0.1",
+      TRUE ~ "q ≥ 0.1"
+    )
+  ) %>%
+  # Order by effect size (absolute value)
+  dplyr::arrange(desc(abs(beta)))
+} else {
+  forest_data_rdc_sdc <- tibble()
+}
+
+# Create forest plot for RDC vs SDC comparison
+if (nrow(forest_data_rdc_sdc) > 0) {
+forest_plot_rdc_sdc <- ggplot(forest_data_rdc_sdc, aes(x = beta, y = reorder(taxon_label, beta))) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+  geom_errorbarh(aes(xmin = ci_lower, xmax = ci_upper, color = significance), 
+                 height = 0.15, size = 1) +
+  geom_point(aes(color = significance), size = 3, fill = "white", shape = 21, stroke = 1.5) +
+  facet_wrap(~ effect_label, scales = "free_x", ncol = 2) +
+  scale_color_manual(
+    values = c("q < 0.001" = "#d73027", 
+               "q < 0.01" = "#f46d43",
+               "q < 0.05" = "#fdae61", 
+               "q < 0.1" = "#fee08b",
+               "q ≥ 0.1" = "#d9d9d9"),
+    name = "FDR-adjusted\np-value"
+  ) +
+  labs(
+    title = "ANCOM-BC2: RDC vs SDC Comparison at 48h",
+    subtitle = "Effect sizes (log-fold changes) with 95% confidence intervals\n(Direct comparison between RDC and SDC at 48h timepoint)",
+    x = "Log-fold change (β)",
+    y = "Taxon"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.y = element_text(size = 9),
+    axis.text.x = element_text(size = 10),
+    strip.text = element_text(size = 11, face = "bold"),
+    plot.title = element_text(size = 14, face = "bold"),
+    plot.subtitle = element_text(size = 11),
+    legend.position = "bottom",
+    panel.grid.minor = element_blank(),
+    strip.background = element_rect(fill = "lightgreen", color = "black")
+  )
+
+print(forest_plot_rdc_sdc)
+} else {
+  cat("No data available for forest plot - analysis may have failed\n")
+}
+
+# Summary statistics for RDC vs SDC comparison
+if (nrow(forest_data_rdc_sdc) > 0) {
+cat("Summary of RDC vs SDC 48h Comparison:\n")
+cat("Total significant taxa (q < 0.1):", nrow(forest_data_rdc_sdc), "\n")
+cat("By effect:\n")
+print(table(forest_data_rdc_sdc$effect_label))
+
+# Show top effects by magnitude
+cat("\nTop 10 Effects by Magnitude (RDC vs SDC 48h):\n")
+print(forest_data_rdc_sdc %>%
+  dplyr::select(taxon, effect_label, beta, q_value) %>%
+  dplyr::arrange(desc(abs(beta))) %>%
+  dplyr::slice_head(n = 10))
+
+# Focus on carbohydrate effect specifically
+carb_effect_rdc_sdc <- forest_data_rdc_sdc %>%
+  dplyr::filter(effect == "carbohydrateSDC")
+
+if(nrow(carb_effect_rdc_sdc) > 0) {
+  cat("\nCarbohydrate Effect (SDC vs RDC at 48h):\n")
+  cat("==========================================\n")
+  print(carb_effect_rdc_sdc %>%
+    dplyr::select(taxon, beta, q_value) %>%
+    dplyr::arrange(desc(abs(beta))))
+}
+} else {
+  cat("No summary statistics available - analysis may have failed\n")
+}
+```
+
+
+
 ### 8.5 ALDEx2 (48 h carbohydrate effect)
 
 ```{r aldex}
