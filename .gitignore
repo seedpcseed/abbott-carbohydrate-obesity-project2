@@ -19,6 +19,10 @@
 *.rds
 *.parquet
 *.meta.json
-
+streaming_index*
+pandoc*
+debian*
+outputs_v3/
+outputs_v4/
 
 microbiome_analysis/cache/strobelca/kmer_index_5e0c59bd7b810add.meta.json

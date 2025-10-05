@@ -1,0 +1,87 @@
+metadata:
+  report_version: 1.0.0
+  asv_finder_version: 0.1.0
+  generated_at: 2025-10-03T10:48:59.510896432+00:00
+  command_line: ./asv-finder taxonomy --method strobelca --input-fasta zr24558.16S_250813.zymo/00...AllSamples.Bac16Sv34/DADA2_ASV_Distribution/sv.seqs.fna --output zymo/strobelca_taxonomy --database references/SILVA_138.2.bacteria_only.fasta --threads 20
+  working_directory: /home/patcseed/projects/abbott-carbohydrate-obesity-project2/microbiome_analysis
+  analysis_type: taxonomy
+system_info:
+  hostname: DESKTOP-HLVGUPR
+  platform: linux
+  architecture: x86_64
+  cpu_count: 24
+  available_memory_gb: null
+  rust_version: unknown
+  git_commit: null
+input_data:
+  input_directory: zr24558.16S_250813.zymo/00...AllSamples.Bac16Sv34/DADA2_ASV_Distribution
+  paired_files_found: 1
+  total_sequences_input: 2620
+  total_bases_input: 1065461
+  samples:
+  - name: sv.seqs
+    forward_file: zr24558.16S_250813.zymo/00...AllSamples.Bac16Sv34/DADA2_ASV_Distribution/sv.seqs.fna
+    reverse_file: null
+    sequence_count: 2620
+    average_length: 406.6645038167939
+  file_formats:
+  - fasta
+method_configuration:
+  method_name: strobelca
+  parameters:
+    e_value_threshold: 1e-10
+    confidence_threshold: 0.01
+    database: references/SILVA_138.2.bacteria_only.fasta
+    coverage_threshold: 0.8
+    identity_threshold: 0.97
+    output_format: tsv
+    method: strobelca
+    reverse_complement: true
+  defaults_used: []
+  custom_parameters: []
+processing_steps:
+- step_name: Taxonomy Assignment
+  description: Assigning taxonomy using strobelca method
+  duration_seconds: 5.932676677
+  input_count: 2620
+  output_count: 2620
+  parameters:
+    method: strobelca
+    threads: 20
+    confidence_threshold: 0.01
+  statistics:
+    sequences_classified: 2620.0
+    classification_rate: 1.0
+results:
+  total_asvs_identified: null
+  total_variants: null
+  mean_asv_length: null
+  mean_asv_abundance: null
+  reads_assigned: null
+  reads_filtered: null
+  filtering_breakdown: null
+  taxonomic_assignments:
+    method: strobelca
+    database: references/SILVA_138.2.bacteria_only.fasta
+    total_classified: 2620
+    confidence_threshold: 0.01
+    classification_levels:
+      phylum: 2620
+      species: 2620
+      genus: 2620
+      family: 2620
+      order: 2620
+      kingdom: 2620
+      class: 2620
+performance:
+  total_runtime_seconds: 5.965753883
+  peak_memory_mb: null
+  threads_used: 20
+  sequences_per_second: 439.1733302082653
+  cpu_utilization: null
+files_generated:
+- filename: zymo/strobelca_taxonomy.tsv
+  file_type: tsv
+  size_bytes: 1888757
+  record_count: 2620
+  description: Taxonomy assignments in tsv format
