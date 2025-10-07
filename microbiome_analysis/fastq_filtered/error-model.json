@@ -1,10 +1,3 @@
-{
-  "use_quals": true,
-  "use_kmers": true,
-  "kdist_cutoff": 0.42,
-  "band_size": 16,
-  "gap_penalty": -8,
-  "homopolymer_gap_penalty": 0,
-  "pool_samples": false,
-  "threads": 14
-}
+version https://git-lfs.github.com/spec/v1
+oid sha256:bd44db6572a4318915432125fe867d2fbab6878a79fce4ac2fe3340890c03322
+size 182

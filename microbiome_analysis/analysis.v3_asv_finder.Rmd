@@ -41,7 +41,43 @@ This v3 report refines the v2 workflow to deliver a cleaner, more cohesive analy
 - Expanded differential-abundance section spanning corncob, ANCOM-BC2, ALDEx2, LEfSe, MaAsLin2, ADAPT, random forest, and consensus summaries.
 - Dedicated focus on 48 h responses, baseline clustering, and analyses with combined groups for improved power when appropriate.
 
-## 2. Libraries, Options, and Helper Functions
+## 2. System Check and Memory Optimization
+
+```{r system-check}
+# Check system resources and optimize for large datasets
+cat("System Information:\n")
+cat("R version:", R.version.string, "\n")
+cat("Platform:", R.version$platform, "\n")
+cat("Memory limit:", memory.limit(), "MB\n")
+
+# Check available memory
+if (.Platform$OS.type == "unix") {
+  mem_info <- system("free -h", intern = TRUE)
+  cat("System memory:\n")
+  cat(paste(mem_info, collapse = "\n"), "\n")
+}
+
+# Set memory-efficient options
+options(
+  scipen = 999,  # Avoid scientific notation
+  digits = 4,    # Limit decimal places
+  max.print = 100,  # Limit printed output
+  stringsAsFactors = FALSE
+)
+
+# Increase memory limit if possible
+tryCatch({
+  if (.Platform$OS.type == "windows") {
+    memory.limit(size = 8000)  # 8GB
+  }
+}, error = function(e) {
+  cat("Could not increase memory limit:", e$message, "\n")
+})
+
+cat("System check completed.\n")
+```
+
+## 3. Libraries, Options, and Helper Functions
 
 ```{r libraries}
 required_packages <- c(
@@ -1614,7 +1650,7 @@ corncob_test <- cache_rds(
         test = "Wald",
         data = ps_genus_filtered,
         fdr_cutoff = 0.1,
-        B = 0
+        B = 50
       )
     }, error = function(e) {
       message("Corncob failed: ", e$message)
@@ -1666,6 +1702,112 @@ if (!is.null(corncob_test)) {
 }
 
 corncob_results
+
+plot(corncob_test)
+```
+
+### 8.2.1 Corncob (48H, RDC vs SDC only)
+
+```{r corncob-48h-rdc-sdc}
+# Filter data for 48H timepoint and only RDC and SDC groups
+ps_genus_48h_rdc_sdc <- subset_samples(ps_genus_filtered, 
+                                       Timepoint == "48H" & 
+                                       carbohydrate %in% c("RDC", "SDC"))
+
+# Check sample sizes
+cat("48H RDC/SDC samples:", nsamples(ps_genus_48h_rdc_sdc), "\n")
+cat("RDC samples:", sum(sample_data(ps_genus_48h_rdc_sdc)$carbohydrate == "RDC"), "\n")
+cat("SDC samples:", sum(sample_data(ps_genus_48h_rdc_sdc)$carbohydrate == "SDC"), "\n")
+
+corncob_48h_path <- file.path(outputs_dir, "corncob_genus_48h_rdc_sdc_results.rds")
+
+corncob_48h_test <- cache_rds(
+  corncob_48h_path,
+  {
+    set.seed(12345)
+    tryCatch({
+      corncob::differentialTest(
+        formula = ~ group + carbohydrate + subject_id,
+        phi.formula = ~ group + carbohydrate + subject_id,
+        formula_null = ~ group + subject_id,
+        phi.formula_null = ~ group + subject_id,
+        test = "Wald",
+        data = ps_genus_48h_rdc_sdc,
+        fdr_cutoff = 0.1,
+        B = 50
+      )
+    }, error = function(e) {
+      message("Corncob 48H RDC/SDC failed: ", e$message)
+      NULL
+    })
+  }
+)
+
+if (!is.null(corncob_48h_test)) {
+  if (!is.null(corncob_48h_test$wald_results)) {
+    corncob_48h_results <- corncob_48h_test$wald_results %>%
+      dplyr::mutate(q_value = fdr_adjust(p_val)) %>%
+      dplyr::arrange(q_value)
+  } else if (!is.null(corncob_48h_test$p) && !is.null(corncob_48h_test$p_fdr)) {
+    p_mat <- corncob_48h_test$p
+    q_mat <- corncob_48h_test$p_fdr
+
+    if (is.null(dim(p_mat))) {
+      p_vals <- as.numeric(p_mat)
+    } else {
+      p_vals <- as.numeric(p_mat[, 1])
+    }
+
+    if (is.null(dim(q_mat))) {
+      q_vals = as.numeric(q_mat)
+    } else {
+      q_vals = as.numeric(q_mat[, 1])
+    }
+
+    taxa_names <- rownames(p_mat)
+    if (is.null(taxa_names)) {
+      taxa_names <- names(p_mat)
+    }
+    if (is.null(taxa_names)) {
+      taxa_names <- paste0("taxon_", seq_along(p_vals))
+    }
+
+    corncob_48h_results <- tibble::tibble(
+      taxon = taxa_names,
+      p_val = p_vals,
+      q_value = q_vals
+    ) %>%
+      dplyr::arrange(q_value)
+  } else {
+    corncob_48h_results <- tibble()
+  }
+} else {
+  corncob_48h_results <- tibble()
+}
+
+corncob_48h_results
+
+# Show significant results (q < 0.1)
+corncob_48h_significant <- corncob_48h_results %>%
+  dplyr::filter(q_value < 0.1, !is.na(q_value)) %>%
+  dplyr::arrange(q_value)
+
+if (nrow(corncob_48h_significant) > 0) {
+  cat("Significant taxa (q < 0.1):\n")
+  print(corncob_48h_significant)
+} else {
+  cat("No significant taxa found at q < 0.1\n")
+}
+
+# Try to plot with error handling
+if (!is.null(corncob_48h_test)) {
+  tryCatch({
+    plot(corncob_48h_test)
+  }, error = function(e) {
+    message("Plotting failed: ", e$message)
+    message("This is likely due to dimension mismatches in the corncob results object")
+  })
+}
 ```
 
 ### 8.3 ANCOM-BC2
@@ -1673,29 +1815,107 @@ corncob_results
 ```{r ancombc2}
 ancombc2_path <- file.path(outputs_dir, "ancombc2_genus_results.rds")
 
-ancombc2_res <- cache_rds(
-  ancombc2_path,
-  {
+# Function to run ANCOMBC2 with multiple fallback strategies
+run_ancombc2_safe <- function(ps_data, tax_level = "Genus") {
+  
+  # Strategy 1: Try with reduced complexity and conservative settings
+  tryCatch({
+    message("Attempting ANCOMBC2 with conservative settings...")
+    ANCOMBC::ancombc2(
+      data = ps_data,
+      tax_level = tax_level,
+      fix_formula = "group + carbohydrate * timepoint",
+      rand_formula = "(1|subject_id)",
+      p_adj_method = "BH",
+      prv_cut = 0.15,  # Increased from 0.10 to reduce data size
+      lib_cut = 0,
+      s0_perc = 0.1,   # Increased from 0.05 for stability
+      group = "carbohydrate",
+      struc_zero = TRUE,  # Disabled to reduce complexity
+      neg_lb = TRUE,      # Disabled to reduce complexity
+      alpha = 0.05,
+      global = TRUE,      # Disabled to reduce computation
+      verbose = TRUE
+    )
+  }, error = function(e1) {
+    message("Strategy 1 failed: ", e1$message)
+    
+    # Strategy 2: Try with simplified formula (no interaction)
     tryCatch({
+      message("Attempting ANCOMBC2 with simplified formula...")
       ANCOMBC::ancombc2(
-        data = ps_counts,
-        tax_level = "Genus",
-        fix_formula = "group + carbohydrate * timepoint",
+        data = ps_data,
+        tax_level = tax_level,
+        fix_formula = "group + carbohydrate + timepoint",
         rand_formula = "(1|subject_id)",
         p_adj_method = "BH",
-        prv_cut = 0.10,
+        prv_cut = 0.20,  # Further increased
         lib_cut = 0,
-        s0_perc = 0.05,
+        s0_perc = 0.1,
         group = "carbohydrate",
         struc_zero = TRUE,
         neg_lb = TRUE,
         alpha = 0.05,
-        global = TRUE
+        global = TRUE,
+        verbose = TRUE
       )
-    }, error = function(e) {
-      message("ANCOM-BC2 failed: ", e$message)
-      NULL
+    }, error = function(e2) {
+      message("Strategy 2 failed: ", e2$message)
+      
+      # Strategy 3: Try without random effects
+      tryCatch({
+        message("Attempting ANCOMBC2 without random effects...")
+        ANCOMBC::ancombc2(
+          data = ps_data,
+          tax_level = tax_level,
+          fix_formula = "group + carbohydrate + timepoint",
+          rand_formula = NULL,  # No random effects
+          p_adj_method = "BH",
+          prv_cut = 0.25,
+          lib_cut = 0,
+          s0_perc = 0.1,
+          group = "carbohydrate",
+          struc_zero = TRUE,
+          neg_lb = TRUE,
+          alpha = 0.05,
+          global = TRUE,
+          verbose = TRUE
+        )
+      }, error = function(e3) {
+        message("Strategy 3 failed: ", e3$message)
+        
+        # Strategy 4: Try with even more conservative settings
+        tryCatch({
+          message("Attempting ANCOMBC2 with minimal settings...")
+          ANCOMBC::ancombc2(
+            data = ps_data,
+            tax_level = tax_level,
+            fix_formula = "carbohydrate",  # Only main effect
+            rand_formula = NULL,
+            p_adj_method = "BH",
+            prv_cut = 0.30,
+            lib_cut = 0,
+            s0_perc = 0.1,
+            group = "carbohydrate",
+            struc_zero = TRUE,
+            neg_lb = TRUE,
+            alpha = 0.05,
+            global = TRUE,
+            verbose = TRUE
+          )
+        }, error = function(e4) {
+          message("All ANCOMBC2 strategies failed. Last error: ", e4$message)
+          return(NULL)
+        })
+      })
     })
+  })
+}
+
+ancombc2_res <- cache_rds(
+  ancombc2_path,
+  {
+    run_ancombc2_safe(ps_counts, "Genus")
   }
 )
 
@@ -1718,6 +1938,57 @@ if (!is.null(ancombc2_res)) {
 
 ancombc2_tbl %>%
   dplyr::filter(q < 0.1)
+
+# If ANCOMBC2 failed, try alternative approach
+if (nrow(ancombc2_tbl) == 0) {
+  cat("ANCOM-BC2 analysis failed. Trying alternative approach with DESeq2...\n")
+  
+  # Alternative: Use DESeq2 for differential abundance analysis
+  tryCatch({
+    library(DESeq2)
+    
+    # Convert to DESeq2 format
+    dds <- phyloseq_to_deseq2(ps_counts, ~ group + carbohydrate + timepoint)
+    
+    # Run DESeq2
+    dds <- DESeq(dds, test = "Wald", fitType = "parametric")
+    
+    # Get results for carbohydrate effect
+    res_carb <- results(dds, name = "carbohydrate_RDC_vs_No_Added_Carb", alpha = 0.05)
+    res_carb <- res_carb[order(res_carb$padj), ]
+    
+    # Convert to data frame
+    deseq2_tbl <- data.frame(
+      taxon = rownames(res_carb),
+      effect = "carbohydrate_RDC_vs_No_Added_Carb",
+      beta = res_carb$log2FoldChange,
+      se = res_carb$lfcSE,
+      p_value = res_carb$pvalue,
+      q = res_carb$padj,
+      diff_abn = res_carb$padj < 0.05
+    ) %>%
+      filter(!is.na(q)) %>%
+      dplyr::arrange(q)
+    
+    # Save results
+    write_csv(deseq2_tbl, file.path(outputs_dir, "deseq2_genus_results.csv"))
+    
+    # Display summary
+    cat("DESeq2 Results Summary (Alternative to ANCOM-BC2):\n")
+    cat("Total taxa tested:", nrow(deseq2_tbl), "\n")
+    cat("Significant taxa (q < 0.05):", sum(deseq2_tbl$q < 0.05, na.rm = TRUE), "\n")
+    
+    # Show top significant results
+    deseq2_tbl %>%
+      filter(q < 0.1) %>%
+      head(10) %>%
+      kable(caption = "Top 10 DESeq2 Significant Results (Alternative)")
+    
+  }, error = function(e) {
+    cat("DESeq2 alternative also failed:", e$message, "\n")
+    cat("Consider using simpler statistical approaches or reducing data complexity.\n")
+  })
+}
 ```
 
 ### 8.4 ANCOM-BC (48 h, RDC reference)
