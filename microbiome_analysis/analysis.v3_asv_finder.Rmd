@@ -1842,11 +1842,22 @@ run_ancombc2_safe <- function(ps_data, tax_level = "Genus") {
     
     # Strategy 2: Try with simplified formula (no interaction)
     tryCatch({
-      message("Attempting ANCOMBC2 with simplified formula...")
+      # Remove samples with too many zeros that cause estimation issues
+      sample_sums <- sample_sums(ps_counts)
+      zero_prop <- apply(otu_table(ps_counts), 2, function(x) sum(x == 0) / length(x))
+      problematic_samples <- names(zero_prop[zero_prop > 0.8])
+      
+      if (length(problematic_samples) > 0) {
+        message("Removing samples with >80% zeros: ", paste(problematic_samples, collapse = ", "))
+        ps_counts_clean <- subset_samples(ps_counts, !sample_names(ps_counts) %in% problematic_samples)
+      } else {
+        ps_counts_clean <- ps_counts
+      }
+      
       ANCOMBC::ancombc2(
-        data = ps_data,
-        tax_level = tax_level,
-        fix_formula = "group + carbohydrate + timepoint",
+        data = ps_counts_clean,
+        tax_level = "Genus",
+        fix_formula = "group + carbohydrate * timepoint",
         rand_formula = "(1|subject_id)",
         p_adj_method = "BH",
         prv_cut = 0.20,  # Further increased
@@ -1920,76 +1931,251 @@ ancombc2_res <- cache_rds(
 )
 
 if (!is.null(ancombc2_res)) {
-  ancombc2_tbl <- purrr::map_dfr(names(ancombc2_res$lfc), function(effect) {
-    tibble(
-      taxon = rownames(ancombc2_res$lfc[[effect]]),
-      effect = effect,
-      beta = ancombc2_res$lfc[[effect]][, 1],
-      se = ancombc2_res$se[[effect]][, 1],
-      W = ancombc2_res$W[[effect]][, 1],
-      p_value = ancombc2_res$p_val[[effect]][, 1],
-      q = ancombc2_res$q_val[[effect]][, 1],
-      diff_abn = ancombc2_res$diff_abn[[effect]][, 1]
-    )
-  }) %>% dplyr::arrange(q)
+  # Extract results from the res component
+  res_data <- ancombc2_res$res
+  
+  # Get the effect names (excluding Intercept for main effects)
+  effect_names <- c("groupObese", "carbohydrateRDC", "carbohydrateSDC", "timepoint48H", 
+                    "carbohydrateRDC:timepoint48H", "carbohydrateSDC:timepoint48H")
+  
+  # Create a data frame from the results for each effect
+  ancombc2_tbl <- purrr::map_dfr(effect_names, function(effect) {
+    # Check if columns exist for this effect
+    lfc_col <- paste0("lfc_", effect)
+    se_col <- paste0("se_", effect)
+    W_col <- paste0("W_", effect)
+    p_col <- paste0("p_", effect)
+    q_col <- paste0("q_", effect)
+    diff_col <- paste0("diff_", effect)
+    
+    if (all(c(lfc_col, se_col, W_col, p_col, q_col, diff_col) %in% colnames(res_data))) {
+      tibble(
+        taxon = res_data$taxon,
+        effect = effect,
+        beta = res_data[[lfc_col]],
+        se = res_data[[se_col]],
+        W = res_data[[W_col]],
+        p_value = res_data[[p_col]],
+        q_value = res_data[[q_col]],
+        diff_abn = res_data[[diff_col]]
+      )
+    } else {
+      # Return empty tibble if columns don't exist
+      tibble()
+    }
+  }) %>% dplyr::arrange(q_value)
 } else {
   ancombc2_tbl <- tibble()
 }
 
 ancombc2_tbl %>%
-  dplyr::filter(q < 0.1)
+  dplyr::filter(q_value < 0.1)
+```
 
-# If ANCOMBC2 failed, try alternative approach
-if (nrow(ancombc2_tbl) == 0) {
-  cat("ANCOM-BC2 analysis failed. Trying alternative approach with DESeq2...\n")
-  
-  # Alternative: Use DESeq2 for differential abundance analysis
-  tryCatch({
-    library(DESeq2)
-    
-    # Convert to DESeq2 format
-    dds <- phyloseq_to_deseq2(ps_counts, ~ group + carbohydrate + timepoint)
-    
-    # Run DESeq2
-    dds <- DESeq(dds, test = "Wald", fitType = "parametric")
-    
-    # Get results for carbohydrate effect
-    res_carb <- results(dds, name = "carbohydrate_RDC_vs_No_Added_Carb", alpha = 0.05)
-    res_carb <- res_carb[order(res_carb$padj), ]
-    
-    # Convert to data frame
-    deseq2_tbl <- data.frame(
-      taxon = rownames(res_carb),
-      effect = "carbohydrate_RDC_vs_No_Added_Carb",
-      beta = res_carb$log2FoldChange,
-      se = res_carb$lfcSE,
-      p_value = res_carb$pvalue,
-      q = res_carb$padj,
-      diff_abn = res_carb$padj < 0.05
-    ) %>%
-      filter(!is.na(q)) %>%
-      dplyr::arrange(q)
-    
-    # Save results
-    write_csv(deseq2_tbl, file.path(outputs_dir, "deseq2_genus_results.csv"))
-    
-    # Display summary
-    cat("DESeq2 Results Summary (Alternative to ANCOM-BC2):\n")
-    cat("Total taxa tested:", nrow(deseq2_tbl), "\n")
-    cat("Significant taxa (q < 0.05):", sum(deseq2_tbl$q < 0.05, na.rm = TRUE), "\n")
-    
-    # Show top significant results
-    deseq2_tbl %>%
-      filter(q < 0.1) %>%
-      head(10) %>%
-      kable(caption = "Top 10 DESeq2 Significant Results (Alternative)")
-    
-  }, error = function(e) {
-    cat("DESeq2 alternative also failed:", e$message, "\n")
-    cat("Consider using simpler statistical approaches or reducing data complexity.\n")
-  })
+#### Forest Plot of ANCOM-BC2 Results
+
+```{r ancombc2_forest_plot}
+# Prepare data for forest plot
+forest_data <- ancombc2_tbl %>%
+  dplyr::filter(q_value < 0.1) %>%
+  dplyr::mutate(
+    # Calculate confidence intervals
+    ci_lower = beta - 1.96 * se,
+    ci_upper = beta + 1.96 * se,
+    # Create effect labels
+    effect_label = case_when(
+      effect == "groupObese" ~ "Obese vs Normal",
+      effect == "carbohydrateRDC" ~ "RDC vs No Added Carb",
+      effect == "carbohydrateSDC" ~ "SDC vs No Added Carb", 
+      effect == "timepoint48H" ~ "48H vs Baseline",
+      effect == "carbohydrateRDC:timepoint48H" ~ "RDC × 48H Interaction",
+      effect == "carbohydrateSDC:timepoint48H" ~ "SDC × 48H Interaction",
+      TRUE ~ effect
+    ),
+    # Create taxon labels with significance
+    taxon_label = paste0(taxon, " (q=", round(q_value, 3), ")"),
+    # Color by significance level
+    significance = case_when(
+      q_value < 0.001 ~ "q < 0.001",
+      q_value < 0.01 ~ "q < 0.01", 
+      q_value < 0.05 ~ "q < 0.05",
+      q_value < 0.1 ~ "q < 0.1",
+      TRUE ~ "q ≥ 0.1"
+    )
+  ) %>%
+  # Order by effect size (absolute value)
+  dplyr::arrange(desc(abs(beta)))
+
+# Create forest plot
+forest_plot <- ggplot(forest_data, aes(x = beta, y = reorder(taxon_label, beta))) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+  geom_point(aes(color = significance), size = 2) +
+  geom_errorbarh(aes(xmin = ci_lower, xmax = ci_upper, color = significance), 
+                 height = 0.2) +
+  facet_wrap(~ effect_label, scales = "free_x", ncol = 2) +
+  scale_color_manual(
+    values = c("q < 0.001" = "#d73027", 
+               "q < 0.01" = "#f46d43",
+               "q < 0.05" = "#fdae61", 
+               "q < 0.1" = "#fee08b"),
+    name = "FDR-adjusted\np-value"
+  ) +
+  labs(
+    title = "ANCOM-BC2 Results: Forest Plot of Significant Taxa",
+    subtitle = "Effect sizes (log-fold changes) with 95% confidence intervals",
+    x = "Log-fold change (β)",
+    y = "Taxon"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.y = element_text(size = 8),
+    axis.text.x = element_text(size = 9),
+    strip.text = element_text(size = 10, face = "bold"),
+    plot.title = element_text(size = 14, face = "bold"),
+    plot.subtitle = element_text(size = 11),
+    legend.position = "bottom",
+    panel.grid.minor = element_blank()
+  )
+
+print(forest_plot)
+
+# Summary statistics
+cat("Summary of ANCOM-BC2 Results:\n")
+cat("Total significant taxa (q < 0.1):", nrow(forest_data), "\n")
+cat("By effect:\n")
+print(table(forest_data$effect_label))
+```
+
+#### Side-by-Side Comparison: RDC vs No Carb and SDC vs No Carb
+
+```{r ancombc2_carb_comparison}
+# First, create comparison table to identify taxa with opposite effects
+comparison_table <- ancombc2_tbl %>%
+  dplyr::filter(effect %in% c("carbohydrateRDC", "carbohydrateSDC")) %>%
+  dplyr::select(taxon, effect, beta, se, p_value, q_value, diff_abn) %>%
+  tidyr::pivot_wider(
+    names_from = effect,
+    values_from = c(beta, se, p_value, q_value, diff_abn),
+    names_sep = "_"
+  ) %>%
+  dplyr::mutate(
+    # Calculate difference between RDC and SDC effects
+    effect_difference = beta_carbohydrateRDC - beta_carbohydrateSDC,
+    # Determine which treatment has stronger effect
+    stronger_effect = case_when(
+      abs(beta_carbohydrateRDC) > abs(beta_carbohydrateSDC) ~ "RDC",
+      abs(beta_carbohydrateSDC) > abs(beta_carbohydrateRDC) ~ "SDC",
+      TRUE ~ "Equal"
+    ),
+    # Check if effects are opposite (different signs)
+    opposite_effects = sign(beta_carbohydrateRDC) != sign(beta_carbohydrateSDC),
+    # Check if either effect is significant
+    either_significant = (q_value_carbohydrateRDC < 0.1) | (q_value_carbohydrateSDC < 0.1)
+  )
+
+# Filter taxa: significant (q <= 0.1) OR opposite effects
+filtered_taxa <- comparison_table %>%
+  dplyr::filter(either_significant | opposite_effects) %>%
+  dplyr::pull(taxon)
+
+# Filter for carbohydrate main effects only, keeping only filtered taxa
+carb_data <- ancombc2_tbl %>%
+  dplyr::filter(effect %in% c("carbohydrateRDC", "carbohydrateSDC") & 
+                taxon %in% filtered_taxa) %>%
+  dplyr::mutate(
+    # Calculate confidence intervals
+    ci_lower = beta - 1.96 * se,
+    ci_upper = beta + 1.96 * se,
+    # Create treatment labels
+    treatment = case_when(
+      effect == "carbohydrateRDC" ~ "RDC vs No Added Carb",
+      effect == "carbohydrateSDC" ~ "SDC vs No Added Carb",
+      TRUE ~ effect
+    ),
+    # Create taxon labels with significance
+    taxon_label = paste0(taxon, " (q=", round(q_value, 3), ")"),
+    # Color by significance level
+    significance = case_when(
+      q_value < 0.001 ~ "q < 0.001",
+      q_value < 0.01 ~ "q < 0.01", 
+      q_value < 0.05 ~ "q < 0.05",
+      q_value < 0.1 ~ "q < 0.1",
+      TRUE ~ "q ≥ 0.1"
+    )
+  ) %>%
+  # Order by effect size (absolute value) for RDC first, then SDC
+  dplyr::arrange(treatment, desc(abs(beta)))
+
+# Create side-by-side forest plot with colored error bars
+carb_plot <- ggplot(carb_data, aes(x = beta, y = reorder(taxon_label, beta))) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+  geom_errorbarh(aes(xmin = ci_lower, xmax = ci_upper, color = significance), 
+                 height = 0.15, size = 1) +
+  geom_point(aes(color = significance), size = 3, fill = "white", shape = 21, stroke = 1.5) +
+  facet_wrap(~ treatment, scales = "free_x", ncol = 2) +
+  scale_color_manual(
+    values = c("q < 0.001" = "#d73027", 
+               "q < 0.01" = "#f46d43",
+               "q < 0.05" = "#fdae61", 
+               "q < 0.1" = "#fee08b",
+               "q ≥ 0.1" = "#d9d9d9"),
+    name = "FDR-adjusted\np-value"
+  ) +
+  labs(
+    title = "Carbohydrate Effects: RDC vs SDC Comparison",
+    subtitle = "Effect sizes (log-fold changes) with 95% confidence intervals\n(Showing significant taxa q ≤ 0.1 or taxa with opposite effects)",
+    x = "Log-fold change (β)",
+    y = "Taxon"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.y = element_text(size = 9),
+    axis.text.x = element_text(size = 10),
+    strip.text = element_text(size = 11, face = "bold"),
+    plot.title = element_text(size = 14, face = "bold"),
+    plot.subtitle = element_text(size = 11),
+    legend.position = "bottom",
+    panel.grid.minor = element_blank(),
+    strip.background = element_rect(fill = "lightgray", color = "black")
+  )
+
+print(carb_plot)
+
+# Filter comparison table to show only taxa in the plot
+filtered_comparison <- comparison_table %>%
+  dplyr::filter(taxon %in% filtered_taxa) %>%
+  dplyr::arrange(desc(abs(effect_difference)))
+
+cat("\nComparison Table: RDC vs SDC Effects (Filtered)\n")
+cat("================================================\n")
+print(filtered_comparison %>% 
+  dplyr::select(taxon, 
+                beta_carbohydrateRDC, q_value_carbohydrateRDC,
+                beta_carbohydrateSDC, q_value_carbohydrateSDC,
+                effect_difference, stronger_effect, opposite_effects) %>%
+  dplyr::slice_head(n = 20))
+
+# Summary statistics
+cat("\nSummary of Carbohydrate Effects (Filtered Data):\n")
+cat("Total taxa shown:", length(filtered_taxa), "\n")
+cat("RDC significant taxa (q < 0.1):", sum(carb_data$effect == "carbohydrateRDC" & carb_data$q_value < 0.1), "\n")
+cat("SDC significant taxa (q < 0.1):", sum(carb_data$effect == "carbohydrateSDC" & carb_data$q_value < 0.1), "\n")
+cat("Taxa with opposite effects:", sum(filtered_comparison$opposite_effects, na.rm = TRUE), "\n")
+cat("Taxa with stronger RDC effect:", sum(filtered_comparison$stronger_effect == "RDC", na.rm = TRUE), "\n")
+cat("Taxa with stronger SDC effect:", sum(filtered_comparison$stronger_effect == "SDC", na.rm = TRUE), "\n")
+
+# Show taxa with opposite effects
+opposite_taxa <- filtered_comparison %>%
+  dplyr::filter(opposite_effects) %>%
+  dplyr::select(taxon, beta_carbohydrateRDC, beta_carbohydrateSDC, effect_difference)
+
+if(nrow(opposite_taxa) > 0) {
+  cat("\nTaxa with Opposite Effects (RDC vs SDC):\n")
+  cat("========================================\n")
+  print(opposite_taxa)
 }
 ```
+
 
 ### 8.4 ANCOM-BC (48 h, RDC reference)
 
@@ -2002,11 +2188,13 @@ ancombc_48h <- cache_rds(
   ancombc48_path,
   {
     tryCatch({
-      ANCOMBC::ancombc(
-        phyloseq = ps_48h_counts,
-        formula = "group + carbohydrate",
+      ANCOMBC::ancombc2(
+        data = ps_48h_counts,
+        tax_level = "Genus",
+        fix_formula = "group + carbohydrate",
+        rand_formula = "(1|subject_id)",
         p_adj_method = "BH",
-        zero_cut = 0.90,
+        prv_cut = 0.10,
         lib_cut = 0,
         group = "carbohydrate",
         struc_zero = TRUE,
@@ -2022,24 +2210,330 @@ ancombc_48h <- cache_rds(
 )
 
 if (!is.null(ancombc_48h)) {
-  ancombc48_tbl <- purrr::map_dfr(names(ancombc_48h$beta), function(effect) {
-    tibble(
-      taxon = rownames(ancombc_48h$beta[[effect]]),
-      effect = effect,
-      beta = ancombc_48h$beta[[effect]][, 1],
-      se = ancombc_48h$se[[effect]][, 1],
-      W = ancombc_48h$W[[effect]][, 1],
-      p = ancombc_48h$p_val[[effect]][, 1],
-      q = ancombc_48h$q_val[[effect]][, 1]
-    )
-  }) %>%
-    dplyr::filter(q < 0.1)
+  # Extract results from the res component (ANCOM-BC2 structure)
+  res_data_48h <- ancombc_48h$res
+  
+  # Get the effect names (excluding Intercept for main effects)
+  effect_names_48h <- c("groupObese", "carbohydrateRDC", "carbohydrateSDC")
+  
+  # Create a data frame from the results for each effect
+  ancombc48_tbl <- purrr::map_dfr(effect_names_48h, function(effect) {
+    # Check if columns exist for this effect
+    lfc_col <- paste0("lfc_", effect)
+    se_col <- paste0("se_", effect)
+    W_col <- paste0("W_", effect)
+    p_col <- paste0("p_", effect)
+    q_col <- paste0("q_", effect)
+    diff_col <- paste0("diff_", effect)
+    
+    if (all(c(lfc_col, se_col, W_col, p_col, q_col, diff_col) %in% colnames(res_data_48h))) {
+      tibble(
+        taxon = res_data_48h$taxon,
+        effect = effect,
+        beta = res_data_48h[[lfc_col]],
+        se = res_data_48h[[se_col]],
+        W = res_data_48h[[W_col]],
+        p_value = res_data_48h[[p_col]],
+        q_value = res_data_48h[[q_col]],
+        diff_abn = res_data_48h[[diff_col]]
+      )
+    } else {
+      # Return empty tibble if columns don't exist
+      tibble()
+    }
+  }) %>% dplyr::filter(q_value < 0.1)
 } else {
   ancombc48_tbl <- tibble()
 }
 
 ancombc48_tbl
 ```
+
+#### Forest Plot of ANCOM-BC2 48h Results
+
+```{r ancombc48_forest_plot}
+# Prepare data for forest plot (show all data initially)
+forest_data_48h <- ancombc48_tbl %>%
+  dplyr::mutate(
+    # Calculate confidence intervals
+    ci_lower = beta - 1.96 * se,
+    ci_upper = beta + 1.96 * se,
+    # Create effect labels
+    effect_label = case_when(
+      effect == "groupObese" ~ "Obese vs Normal",
+      effect == "carbohydrateRDC" ~ "RDC vs No Added Carb",
+      effect == "carbohydrateSDC" ~ "SDC vs No Added Carb",
+      TRUE ~ effect
+    ),
+    # Create taxon labels with significance
+    taxon_label = paste0(taxon, " (q=", round(q_value, 3), ")"),
+    # Color by significance level
+    significance = case_when(
+      q_value < 0.001 ~ "q < 0.001",
+      q_value < 0.01 ~ "q < 0.01", 
+      q_value < 0.05 ~ "q < 0.05",
+      q_value < 0.1 ~ "q < 0.1",
+      TRUE ~ "q ≥ 0.1"
+    )
+  ) %>%
+  # Order by effect size (absolute value)
+  dplyr::arrange(desc(abs(beta)))
+
+# Create forest plot for 48h results
+forest_plot_48h <- ggplot(forest_data_48h, aes(x = beta, y = reorder(taxon_label, beta))) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+  geom_errorbarh(aes(xmin = ci_lower, xmax = ci_upper, color = significance), 
+                 height = 0.15, size = 1) +
+  geom_point(aes(color = significance), size = 3, fill = "white", shape = 21, stroke = 1.5) +
+  facet_wrap(~ effect_label, scales = "free_x", ncol = 3) +
+  scale_color_manual(
+    values = c("q < 0.001" = "#d73027", 
+               "q < 0.01" = "#f46d43",
+               "q < 0.05" = "#fdae61", 
+               "q < 0.1" = "#fee08b",
+               "q ≥ 0.1" = "#d9d9d9"),
+    name = "FDR-adjusted\np-value"
+  ) +
+  labs(
+    title = "ANCOM-BC2 Results: 48h Timepoint Analysis",
+    subtitle = "Effect sizes (log-fold changes) with 95% confidence intervals\n(48h timepoint only)",
+    x = "Log-fold change (β)",
+    y = "Taxon"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.y = element_text(size = 9),
+    axis.text.x = element_text(size = 10),
+    strip.text = element_text(size = 11, face = "bold"),
+    plot.title = element_text(size = 14, face = "bold"),
+    plot.subtitle = element_text(size = 11),
+    legend.position = "bottom",
+    panel.grid.minor = element_blank(),
+    strip.background = element_rect(fill = "lightblue", color = "black")
+  )
+
+print(forest_plot_48h)
+
+# Summary statistics for 48h analysis
+cat("Summary of ANCOM-BC2 48h Results:\n")
+cat("Total taxa shown:", nrow(forest_data_48h), "\n")
+cat("By effect:\n")
+print(table(forest_data_48h$effect_label))
+
+# Show top effects by magnitude
+cat("\nTop 10 Effects by Magnitude (48h):\n")
+print(forest_data_48h %>%
+  dplyr::select(taxon, effect_label, beta, q_value) %>%
+  dplyr::arrange(desc(abs(beta))) %>%
+  dplyr::slice_head(n = 10))
+```
+
+### 8.4.1 ANCOM-BC2: RDC vs SDC at 48h
+
+```{r ancombc2_rdc_vs_sdc_48h}
+# Subset to 48h timepoint only
+ps_48h_counts <- subset_samples(ps_counts, Timepoint == "48H")
+
+# Further subset to only RDC and SDC groups (exclude No Added Carb)
+ps_48h_rdc_sdc <- subset_samples(ps_48h_counts, carbohydrate %in% c("RDC", "SDC"))
+
+ancombc2_rdc_sdc_path <- file.path(outputs_dir, "ancombc2_rdc_vs_sdc_48h_results.rds")
+
+ancombc2_rdc_sdc <- cache_rds(
+  ancombc2_rdc_sdc_path,
+  {
+    tryCatch({
+      # Remove samples with too many zeros that cause estimation issues
+      # Use a more lenient threshold since 48h data may have more zeros
+      sample_sums <- sample_sums(ps_48h_rdc_sdc)
+      zero_prop <- apply(otu_table(ps_48h_rdc_sdc), 2, function(x) sum(x == 0) / length(x))
+      problematic_samples <- names(zero_prop[zero_prop > 0.95])  # More lenient: 95% zeros
+      
+      if (length(problematic_samples) > 0) {
+        message("Removing samples with >95% zeros: ", paste(problematic_samples, collapse = ", "))
+        ps_48h_rdc_sdc_clean <- subset_samples(ps_48h_rdc_sdc, !sample_names(ps_48h_rdc_sdc) %in% problematic_samples)
+        
+        # Check if we still have enough samples
+        if (nsamples(ps_48h_rdc_sdc_clean) < 10) {
+          message("Too few samples after filtering, using original data")
+          ps_48h_rdc_sdc_clean <- ps_48h_rdc_sdc
+        }
+      } else {
+        ps_48h_rdc_sdc_clean <- ps_48h_rdc_sdc
+      }
+      
+      ANCOMBC::ancombc2(
+        data = ps_48h_rdc_sdc_clean,
+        tax_level = "Genus",
+        fix_formula = "group + carbohydrate",
+        rand_formula = "(1|subject_id)",
+        p_adj_method = "BH",
+        prv_cut = 0.10,
+        lib_cut = 0,
+        s0_perc = 0.05,
+        group = "carbohydrate",
+        struc_zero = TRUE,
+        neg_lb = TRUE,
+        alpha = 0.05,
+        global = TRUE
+      )
+    }, error = function(e) {
+      message("ANCOM-BC2 RDC vs SDC 48h failed: ", e$message)
+      NULL
+    })
+  }
+)
+
+if (!is.null(ancombc2_rdc_sdc)) {
+  # Extract results from the res component
+  res_data_rdc_sdc <- ancombc2_rdc_sdc$res
+  
+  # Get the effect names (focusing on carbohydrate comparison)
+  effect_names_rdc_sdc <- c("groupObese", "carbohydrateSDC")
+  
+  # Create a data frame from the results for each effect
+  ancombc2_rdc_sdc_tbl <- purrr::map_dfr(effect_names_rdc_sdc, function(effect) {
+    # Check if columns exist for this effect
+    lfc_col <- paste0("lfc_", effect)
+    se_col <- paste0("se_", effect)
+    W_col <- paste0("W_", effect)
+    p_col <- paste0("p_", effect)
+    q_col <- paste0("q_", effect)
+    diff_col <- paste0("diff_", effect)
+    
+    if (all(c(lfc_col, se_col, W_col, p_col, q_col, diff_col) %in% colnames(res_data_rdc_sdc))) {
+      tibble(
+        taxon = res_data_rdc_sdc$taxon,
+        effect = effect,
+        beta = res_data_rdc_sdc[[lfc_col]],
+        se = res_data_rdc_sdc[[se_col]],
+        W = res_data_rdc_sdc[[W_col]],
+        p_value = res_data_rdc_sdc[[p_col]],
+        q_value = res_data_rdc_sdc[[q_col]],
+        diff_abn = res_data_rdc_sdc[[diff_col]]
+      )
+    } else {
+      # Return empty tibble if columns don't exist
+      tibble()
+    }
+  }) %>% dplyr::arrange(q_value)
+} else {
+  ancombc2_rdc_sdc_tbl <- tibble()
+}
+
+if (nrow(ancombc2_rdc_sdc_tbl) > 0) {
+  ancombc2_rdc_sdc_tbl %>%
+    dplyr::filter(q_value < 0.1)
+} else {
+  cat("No results available - analysis may have failed due to insufficient data\n")
+  tibble()
+}
+```
+
+#### Forest Plot: RDC vs SDC at 48h
+
+```{r ancombc2_rdc_sdc_forest_plot}
+# Prepare data for forest plot
+if (nrow(ancombc2_rdc_sdc_tbl) > 0) {
+  forest_data_rdc_sdc <- ancombc2_rdc_sdc_tbl %>%
+    dplyr::filter(q_value < 0.1) %>%
+  dplyr::mutate(
+    # Calculate confidence intervals
+    ci_lower = beta - 1.96 * se,
+    ci_upper = beta + 1.96 * se,
+    # Create effect labels
+    effect_label = case_when(
+      effect == "groupObese" ~ "Obese vs Normal (48h)",
+      effect == "carbohydrateSDC" ~ "SDC vs RDC (48h)",
+      TRUE ~ effect
+    ),
+    # Create taxon labels with significance
+    taxon_label = paste0(taxon, " (q=", round(q_value, 3), ")"),
+    # Color by significance level
+    significance = case_when(
+      q_value < 0.001 ~ "q < 0.001",
+      q_value < 0.01 ~ "q < 0.01", 
+      q_value < 0.05 ~ "q < 0.05",
+      q_value < 0.1 ~ "q < 0.1",
+      TRUE ~ "q ≥ 0.1"
+    )
+  ) %>%
+  # Order by effect size (absolute value)
+  dplyr::arrange(desc(abs(beta)))
+} else {
+  forest_data_rdc_sdc <- tibble()
+}
+
+# Create forest plot for RDC vs SDC comparison
+if (nrow(forest_data_rdc_sdc) > 0) {
+forest_plot_rdc_sdc <- ggplot(forest_data_rdc_sdc, aes(x = beta, y = reorder(taxon_label, beta))) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+  geom_errorbarh(aes(xmin = ci_lower, xmax = ci_upper, color = significance), 
+                 height = 0.15, size = 1) +
+  geom_point(aes(color = significance), size = 3, fill = "white", shape = 21, stroke = 1.5) +
+  facet_wrap(~ effect_label, scales = "free_x", ncol = 2) +
+  scale_color_manual(
+    values = c("q < 0.001" = "#d73027", 
+               "q < 0.01" = "#f46d43",
+               "q < 0.05" = "#fdae61", 
+               "q < 0.1" = "#fee08b",
+               "q ≥ 0.1" = "#d9d9d9"),
+    name = "FDR-adjusted\np-value"
+  ) +
+  labs(
+    title = "ANCOM-BC2: RDC vs SDC Comparison at 48h",
+    subtitle = "Effect sizes (log-fold changes) with 95% confidence intervals\n(Direct comparison between RDC and SDC at 48h timepoint)",
+    x = "Log-fold change (β)",
+    y = "Taxon"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.y = element_text(size = 9),
+    axis.text.x = element_text(size = 10),
+    strip.text = element_text(size = 11, face = "bold"),
+    plot.title = element_text(size = 14, face = "bold"),
+    plot.subtitle = element_text(size = 11),
+    legend.position = "bottom",
+    panel.grid.minor = element_blank(),
+    strip.background = element_rect(fill = "lightgreen", color = "black")
+  )
+
+print(forest_plot_rdc_sdc)
+} else {
+  cat("No data available for forest plot - analysis may have failed\n")
+}
+
+# Summary statistics for RDC vs SDC comparison
+if (nrow(forest_data_rdc_sdc) > 0) {
+cat("Summary of RDC vs SDC 48h Comparison:\n")
+cat("Total significant taxa (q < 0.1):", nrow(forest_data_rdc_sdc), "\n")
+cat("By effect:\n")
+print(table(forest_data_rdc_sdc$effect_label))
+
+# Show top effects by magnitude
+cat("\nTop 10 Effects by Magnitude (RDC vs SDC 48h):\n")
+print(forest_data_rdc_sdc %>%
+  dplyr::select(taxon, effect_label, beta, q_value) %>%
+  dplyr::arrange(desc(abs(beta))) %>%
+  dplyr::slice_head(n = 10))
+
+# Focus on carbohydrate effect specifically
+carb_effect_rdc_sdc <- forest_data_rdc_sdc %>%
+  dplyr::filter(effect == "carbohydrateSDC")
+
+if(nrow(carb_effect_rdc_sdc) > 0) {
+  cat("\nCarbohydrate Effect (SDC vs RDC at 48h):\n")
+  cat("==========================================\n")
+  print(carb_effect_rdc_sdc %>%
+    dplyr::select(taxon, beta, q_value) %>%
+    dplyr::arrange(desc(abs(beta))))
+}
+} else {
+  cat("No summary statistics available - analysis may have failed\n")
+}
+```
+
+
 
 ### 8.5 ALDEx2 (48 h carbohydrate effect)
 
