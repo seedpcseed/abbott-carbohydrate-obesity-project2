@@ -1,0 +1,87 @@
+metadata:
+  report_version: 1.0.0
+  asv_finder_version: 0.1.0
+  generated_at: 2025-10-07T13:34:27.662283844+00:00
+  command_line: ./asv-finder taxonomy --method raxtax --input-fasta zr24558.16S_250813.zymo/00...AllSamples.Bac16Sv34/DADA2_ASV_Distribution/sv.seqs.fna --output zymo/raxtax_taxonomy --database references/GSR-DB_V3-V4_cluster-1_silva_format.fasta.gz --threads 10
+  working_directory: /mnt/c/Users/pseed/Documents/GitHub/abbott-carbohydrate-obesity-project2/microbiome_analysis
+  analysis_type: taxonomy
+system_info:
+  hostname: LTP-GRLSFY3
+  platform: linux
+  architecture: x86_64
+  cpu_count: 20
+  available_memory_gb: null
+  rust_version: unknown
+  git_commit: null
+input_data:
+  input_directory: zr24558.16S_250813.zymo/00...AllSamples.Bac16Sv34/DADA2_ASV_Distribution
+  paired_files_found: 1
+  total_sequences_input: 2620
+  total_bases_input: 1065461
+  samples:
+  - name: sv.seqs
+    forward_file: zr24558.16S_250813.zymo/00...AllSamples.Bac16Sv34/DADA2_ASV_Distribution/sv.seqs.fna
+    reverse_file: null
+    sequence_count: 2620
+    average_length: 406.6645038167939
+  file_formats:
+  - fasta
+method_configuration:
+  method_name: raxtax
+  parameters:
+    method: raxtax
+    database: references/GSR-DB_V3-V4_cluster-1_silva_format.fasta.gz
+    identity_threshold: 0.97
+    output_format: tsv
+    confidence_threshold: 0.01
+    e_value_threshold: 1e-10
+    coverage_threshold: 0.8
+    reverse_complement: true
+  defaults_used: []
+  custom_parameters: []
+processing_steps:
+- step_name: Taxonomy Assignment
+  description: Assigning taxonomy using raxtax method
+  duration_seconds: 57.312205505
+  input_count: 2620
+  output_count: 2620
+  parameters:
+    threads: 10
+    method: raxtax
+    confidence_threshold: 0.01
+  statistics:
+    classification_rate: 1.0
+    sequences_classified: 2620.0
+results:
+  total_asvs_identified: null
+  total_variants: null
+  mean_asv_length: null
+  mean_asv_abundance: null
+  reads_assigned: null
+  reads_filtered: null
+  filtering_breakdown: null
+  taxonomic_assignments:
+    method: raxtax
+    database: references/GSR-DB_V3-V4_cluster-1_silva_format.fasta.gz
+    total_classified: 2620
+    confidence_threshold: 0.01
+    classification_levels:
+      order: 2616
+      class: 2616
+      kingdom: 2616
+      phylum: 2616
+      genus: 2616
+      family: 2616
+      species: 2616
+performance:
+  total_runtime_seconds: 93.580940741
+  peak_memory_mb: null
+  threads_used: 10
+  sequences_per_second: 27.997153899652094
+  cpu_utilization: null
+files_generated:
+- filename: zymo/raxtax_taxonomy.tsv
+  file_type: tsv
+  size_bytes: 1761466
+  record_count: 2620
+  description: Taxonomy assignments in tsv format
