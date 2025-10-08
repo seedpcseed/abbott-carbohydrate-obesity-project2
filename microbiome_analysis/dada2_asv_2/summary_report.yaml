@@ -1,9 +1,15 @@
 metadata:
   report_version: 1.0.0
   asv_finder_version: 0.1.0
+<<<<<<< HEAD
   generated_at: 2025-10-04T18:33:58.511740483+00:00
   command_line: ./asv-finder taxonomy --method raxtax --input-fasta dada2_asv_2/asvs.fasta --output dada2_asv_2/raxtax_taxonomy --database references/bacteria_archaea_sequences.fasta.gz --threads 20
   working_directory: /home/patcseed/projects/abbott-carbohydrate-obesity-project2/microbiome_analysis
+=======
+  generated_at: 2025-10-07T15:16:26.973189836+00:00
+  command_line: ./asv-finder taxonomy --method raxtax --input-fasta dada2_asv_2/asvs.fasta --output dada2_asv_2/raxtax_taxonomy --database references/GSR-DB_full-16S_filt_silva_format.fasta.gz --threads 10 --reverse-complement
+  working_directory: /mnt/c/Users/pseed/Documents/GitHub/abbott-carbohydrate-obesity-project2/microbiome_analysis
+>>>>>>> d9a843394337fca3e41ba3b36d80a4378ddd974f
   analysis_type: taxonomy
 system_info:
   hostname: DESKTOP-HLVGUPR
@@ -29,6 +35,7 @@ input_data:
 method_configuration:
   method_name: raxtax
   parameters:
+<<<<<<< HEAD
     method: raxtax
     e_value_threshold: 1e-10
     identity_threshold: 0.97
@@ -36,12 +43,22 @@ method_configuration:
     output_format: tsv
     database: references/bacteria_archaea_sequences.fasta.gz
     confidence_threshold: 0.01
+=======
+    output_format: tsv
+    method: raxtax
+    database: references/GSR-DB_full-16S_filt_silva_format.fasta.gz
+    confidence_threshold: 0.01
+    reverse_complement: true
+    identity_threshold: 0.97
+    e_value_threshold: 1e-10
+>>>>>>> d9a843394337fca3e41ba3b36d80a4378ddd974f
     coverage_threshold: 0.8
   defaults_used: []
   custom_parameters: []
 processing_steps:
 - step_name: Taxonomy Assignment
   description: Assigning taxonomy using raxtax method
+<<<<<<< HEAD
   duration_seconds: 168.357954744
   input_count: 28737
   output_count: 28737
@@ -52,6 +69,18 @@ processing_steps:
   statistics:
     classification_rate: 1.0
     sequences_classified: 28737.0
+=======
+  duration_seconds: 348.790975699
+  input_count: 19188
+  output_count: 19188
+  parameters:
+    confidence_threshold: 0.01
+    threads: 10
+    method: raxtax
+  statistics:
+    sequences_classified: 19188.0
+    classification_rate: 1.0
+>>>>>>> d9a843394337fca3e41ba3b36d80a4378ddd974f
 results:
   total_asvs_identified: null
   total_variants: null
@@ -62,6 +91,7 @@ results:
   filtering_breakdown: null
   taxonomic_assignments:
     method: raxtax
+<<<<<<< HEAD
     database: references/bacteria_archaea_sequences.fasta.gz
     total_classified: 28737
     confidence_threshold: 0.01
@@ -78,10 +108,33 @@ performance:
   peak_memory_mb: null
   threads_used: 20
   sequences_per_second: 170.29658762291254
+=======
+    database: references/GSR-DB_full-16S_filt_silva_format.fasta.gz
+    total_classified: 19188
+    confidence_threshold: 0.01
+    classification_levels:
+      kingdom: 12097
+      phylum: 12097
+      class: 12097
+      family: 12097
+      genus: 12097
+      order: 12097
+      species: 12097
+performance:
+  total_runtime_seconds: 585.580969317
+  peak_memory_mb: null
+  threads_used: 10
+  sequences_per_second: 32.76745831132486
+>>>>>>> d9a843394337fca3e41ba3b36d80a4378ddd974f
   cpu_utilization: null
 files_generated:
 - filename: dada2_asv_2/raxtax_taxonomy.tsv
   file_type: tsv
+<<<<<<< HEAD
   size_bytes: 16924763
   record_count: 28737
+=======
+  size_bytes: 11401632
+  record_count: 19188
+>>>>>>> d9a843394337fca3e41ba3b36d80a4378ddd974f
   description: Taxonomy assignments in tsv format

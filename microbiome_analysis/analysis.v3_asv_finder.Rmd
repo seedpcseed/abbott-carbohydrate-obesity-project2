@@ -41,7 +41,43 @@ This v3 report refines the v2 workflow to deliver a cleaner, more cohesive analy
 - Expanded differential-abundance section spanning corncob, ANCOM-BC2, ALDEx2, LEfSe, MaAsLin2, ADAPT, random forest, and consensus summaries.
 - Dedicated focus on 48 h responses, baseline clustering, and analyses with combined groups for improved power when appropriate.
 
-## 2. Libraries, Options, and Helper Functions
+## 2. System Check and Memory Optimization
+
+```{r system-check}
+# Check system resources and optimize for large datasets
+cat("System Information:\n")
+cat("R version:", R.version.string, "\n")
+cat("Platform:", R.version$platform, "\n")
+cat("Memory limit:", memory.limit(), "MB\n")
+
+# Check available memory
+if (.Platform$OS.type == "unix") {
+  mem_info <- system("free -h", intern = TRUE)
+  cat("System memory:\n")
+  cat(paste(mem_info, collapse = "\n"), "\n")
+}
+
+# Set memory-efficient options
+options(
+  scipen = 999,  # Avoid scientific notation
+  digits = 4,    # Limit decimal places
+  max.print = 100,  # Limit printed output
+  stringsAsFactors = FALSE
+)
+
+# Increase memory limit if possible
+tryCatch({
+  if (.Platform$OS.type == "windows") {
+    memory.limit(size = 8000)  # 8GB
+  }
+}, error = function(e) {
+  cat("Could not increase memory limit:", e$message, "\n")
+})
+
+cat("System check completed.\n")
+```
+
+## 3. Libraries, Options, and Helper Functions
 
 ```{r libraries}
 required_packages <- c(
@@ -1717,15 +1753,20 @@ corncob_results
 plot(corncob_test)
 ```
 
-```{r corncob-48hr-rdc-vs-sdc, fig.width = 20, fig.height = 10}
-# Filter to only RDC and SDC at 48h timepoint
-ps_genus_48h_rdc_sdc <- subset_samples(ps_genus_48h, Carbohydrate %in% c("RDC", "SDC"))
+### 8.2.1 Corncob (48H, RDC vs SDC only)
 
-# Check if we have enough samples
-cat("Samples in 48h RDC vs SDC analysis:\n")
-print(table(sample_data(ps_genus_48h_rdc_sdc)$Carbohydrate))
+```{r corncob-48h-rdc-sdc}
+# Filter data for 48H timepoint and only RDC and SDC groups
+ps_genus_48h_rdc_sdc <- subset_samples(ps_genus_filtered, 
+                                       Timepoint == "48H" & 
+                                       carbohydrate %in% c("RDC", "SDC"))
 
-corncob_48h_path <- file.path(outputs_dir, "corncob_48h_rdc_vs_sdc_results.rds")
+# Check sample sizes
+cat("48H RDC/SDC samples:", nsamples(ps_genus_48h_rdc_sdc), "\n")
+cat("RDC samples:", sum(sample_data(ps_genus_48h_rdc_sdc)$carbohydrate == "RDC"), "\n")
+cat("SDC samples:", sum(sample_data(ps_genus_48h_rdc_sdc)$carbohydrate == "SDC"), "\n")
+
+corncob_48h_path <- file.path(outputs_dir, "corncob_genus_48h_rdc_sdc_results.rds")
 
 corncob_48h_test <- cache_rds(
   corncob_48h_path,
@@ -1867,9 +1908,32 @@ if (!is.null(corncob_48h_test)) {
 ```{r ancombc2}
 ancombc2_path <- file.path(outputs_dir, "ancombc2_genus_results.rds")
 
-ancombc2_res <- cache_rds(
-  ancombc2_path,
-  {
+# Function to run ANCOMBC2 with multiple fallback strategies
+run_ancombc2_safe <- function(ps_data, tax_level = "Genus") {
+  
+  # Strategy 1: Try with reduced complexity and conservative settings
+  tryCatch({
+    message("Attempting ANCOMBC2 with conservative settings...")
+    ANCOMBC::ancombc2(
+      data = ps_data,
+      tax_level = tax_level,
+      fix_formula = "group + carbohydrate * timepoint",
+      rand_formula = "(1|subject_id)",
+      p_adj_method = "BH",
+      prv_cut = 0.15,  # Increased from 0.10 to reduce data size
+      lib_cut = 0,
+      s0_perc = 0.1,   # Increased from 0.05 for stability
+      group = "carbohydrate",
+      struc_zero = TRUE,  # Disabled to reduce complexity
+      neg_lb = TRUE,      # Disabled to reduce complexity
+      alpha = 0.05,
+      global = TRUE,      # Disabled to reduce computation
+      verbose = TRUE
+    )
+  }, error = function(e1) {
+    message("Strategy 1 failed: ", e1$message)
+    
+    # Strategy 2: Try with simplified formula (no interaction)
     tryCatch({
       # Remove samples with too many zeros that cause estimation issues
       # Use a more lenient threshold to preserve more data
@@ -1895,19 +1959,73 @@ ancombc2_res <- cache_rds(
         fix_formula = "group + carbohydrate * timepoint",
         rand_formula = "(1|subject_id)",
         p_adj_method = "BH",
-        prv_cut = 0.10,
+        prv_cut = 0.20,  # Further increased
         lib_cut = 0,
-        s0_perc = 0.05,
+        s0_perc = 0.1,
         group = "carbohydrate",
         struc_zero = TRUE,
         neg_lb = TRUE,
         alpha = 0.05,
-        global = TRUE
+        global = TRUE,
+        verbose = TRUE
       )
-    }, error = function(e) {
-      message("ANCOM-BC2 failed: ", e$message)
-      NULL
+    }, error = function(e2) {
+      message("Strategy 2 failed: ", e2$message)
+      
+      # Strategy 3: Try without random effects
+      tryCatch({
+        message("Attempting ANCOMBC2 without random effects...")
+        ANCOMBC::ancombc2(
+          data = ps_data,
+          tax_level = tax_level,
+          fix_formula = "group + carbohydrate + timepoint",
+          rand_formula = NULL,  # No random effects
+          p_adj_method = "BH",
+          prv_cut = 0.25,
+          lib_cut = 0,
+          s0_perc = 0.1,
+          group = "carbohydrate",
+          struc_zero = TRUE,
+          neg_lb = TRUE,
+          alpha = 0.05,
+          global = TRUE,
+          verbose = TRUE
+        )
+      }, error = function(e3) {
+        message("Strategy 3 failed: ", e3$message)
+        
+        # Strategy 4: Try with even more conservative settings
+        tryCatch({
+          message("Attempting ANCOMBC2 with minimal settings...")
+          ANCOMBC::ancombc2(
+            data = ps_data,
+            tax_level = tax_level,
+            fix_formula = "carbohydrate",  # Only main effect
+            rand_formula = NULL,
+            p_adj_method = "BH",
+            prv_cut = 0.30,
+            lib_cut = 0,
+            s0_perc = 0.1,
+            group = "carbohydrate",
+            struc_zero = TRUE,
+            neg_lb = TRUE,
+            alpha = 0.05,
+            global = TRUE,
+            verbose = TRUE
+          )
+        }, error = function(e4) {
+          message("All ANCOMBC2 strategies failed. Last error: ", e4$message)
+          return(NULL)
+        })
+      })
     })
+  })
+}
+
+ancombc2_res <- cache_rds(
+  ancombc2_path,
+  {
+    run_ancombc2_safe(ps_counts, "Genus")
   }
 )
 

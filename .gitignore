@@ -25,4 +25,7 @@ debian*
 outputs_v3/
 outputs_v4/
 
+streaming_index*
+GSR-DB*
+
 microbiome_analysis/cache/strobelca/kmer_index_5e0c59bd7b810add.meta.json
