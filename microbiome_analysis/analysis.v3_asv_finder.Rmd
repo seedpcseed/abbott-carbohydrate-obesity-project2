@@ -1588,7 +1588,7 @@ ps_genus_counts <- prune_taxa(taxa_sums(ps_genus_counts) > 0, ps_genus_counts)
 metadata_counts <- as(sample_data(ps_genus_counts), "data.frame") %>%
   as_tibble(rownames = "SampleID")
 
-prevalence_cutoff <- 0.05
+prevalence_cutoff <- 0.005
 min_prev <- ceiling(prevalence_cutoff * nsamples(ps_genus_counts))
 keep_taxa <- taxa_sums(ps_genus_counts) > 0 & rowSums(otu_table(ps_genus_counts) > 0) >= min_prev
 ps_genus_filtered <- prune_taxa(keep_taxa, ps_genus_counts)
