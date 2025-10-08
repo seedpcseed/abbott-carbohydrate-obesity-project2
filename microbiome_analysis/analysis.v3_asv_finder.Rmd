@@ -372,7 +372,6 @@ metadata_summary %>%
   gt::tab_header(title = "Sample counts by group, carbohydrate, and timepoint") %>%
   gt::fmt_number(columns = "n_samples", decimals = 0)
 ```
-
 ### 3.1 Amplicon Sequence Variants and Taxonomy
 
 ```{r phyloseq-import}
