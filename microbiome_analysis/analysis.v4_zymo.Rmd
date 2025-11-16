@@ -1,5 +1,5 @@
 ---
-title: "Microbiome Analysis v3 - ASV Finder"
+title: "Microbiome Analysis v3 - Zymo 16S"
 author: "Abbott Carbohydrate Obesity Project"
 date: "`r format(Sys.Date(), '%Y-%m-%d')`"
 output:
