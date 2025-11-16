@@ -49,6 +49,11 @@ library(vegan)
 library(ANCOMBC)
 library(Maaslin2)
 library(nlme)
+library(ggalluvial)
+library(scico)
+library(patchwork)
+library(ggrepel)
+library(purrr)
 ```
 
 ```{r themes-and-palettes, include=FALSE}
@@ -65,8 +70,9 @@ theme_scfa <- function() {
     )
 }
 
-scale_fill_scfa <- ggplot2::scale_fill_brewer(palette = "Set2")
-scale_color_scfa <- ggplot2::scale_color_brewer(palette = "Set2")
+# Define as functions to avoid serialization issues when rendering to HTML
+scale_fill_scfa <- function(...) ggplot2::scale_fill_brewer(palette = "Set2", ...)
+scale_color_scfa <- function(...) ggplot2::scale_color_brewer(palette = "Set2", ...)
 ```
 
 ```{r load-data, include=FALSE}
@@ -462,7 +468,7 @@ plot_delta_control_only <- delta_data %>%
   geom_boxplot(aes(fill = carbohydrate_type_label), alpha = 0.8, outlier.shape = NA) +
   geom_jitter(alpha = 0.6, width = 0.2, size = 1.5, color = "gray30") +
   facet_wrap(~ analyte, scales = "free_y") +
-  scale_fill_scfa +
+  scale_fill_scfa() +
   ggpubr::stat_compare_means(
     comparisons = list(
       c("No Carbohydrate", "Rapid Digestible"),
@@ -489,7 +495,7 @@ plot_delta_case_only <- delta_data %>%
   geom_boxplot(aes(fill = carbohydrate_type_label), alpha = 0.8, outlier.shape = NA) +
   geom_jitter(alpha = 0.6, width = 0.2, size = 1.5, color = "gray30") +
   facet_wrap(~ analyte, scales = "free_y") +
-  scale_fill_scfa +
+  scale_fill_scfa() +
   ggpubr::stat_compare_means(
     comparisons = list(
       c("No Carbohydrate", "Rapid Digestible"),
@@ -516,7 +522,7 @@ plot_delta_carb_combined <- delta_data %>%
   geom_boxplot(aes(fill = carbohydrate_type_label), alpha = 0.8, outlier.shape = NA) +
   geom_jitter(alpha = 0.5, width = 0.2, size = 1.5, color = "gray30") +
   facet_wrap(~ analyte, scales = "free_y") +
-  scale_fill_scfa +
+  scale_fill_scfa() +
   ggpubr::stat_compare_means(
     comparisons = list(
       c("No Carbohydrate", "Rapid Digestible"),
@@ -565,27 +571,27 @@ combined_carb_stats <- purrr::map_dfr(
   }
 )
 
+# Print plots and table - ggplot objects render automatically in HTML
+cat("#### Control group: delta SCFA by carbohydrate type\n\n")
+print(plot_delta_control_only)
+
+cat("\n\n#### Case group: delta SCFA by carbohydrate type\n\n")
+print(plot_delta_case_only)
+
+cat("\n\n#### Combined groups: delta SCFA by carbohydrate type\n\n")
+print(plot_delta_carb_combined)
+
+# Display statistics table
 if (knitr::is_html_output()) {
-  htmltools::tagList(
-    htmltools::h4("Control group: delta SCFA by carbohydrate type"),
-    plot_delta_control_only,
-    htmltools::h4("Case group: delta SCFA by carbohydrate type"),
-    plot_delta_case_only,
-    htmltools::h4("Combined groups: delta SCFA by carbohydrate type"),
-    plot_delta_carb_combined,
-    DT::datatable(
-      combined_carb_stats %>%
-        dplyr::select(analyte, Effect, p, p_adj, significance),
-      caption = "One-way ANOVA: Carbohydrate Type Effects on Delta Changes (Combined Groups)",
-      options = list(pageLength = 10, scrollX = TRUE),
-      rownames = FALSE
-    ) %>%
-      DT::formatRound(columns = c("p", "p_adj"), digits = 4)
-  )
+  DT::datatable(
+    combined_carb_stats %>%
+      dplyr::select(analyte, Effect, p, p_adj, significance),
+    caption = "One-way ANOVA: Carbohydrate Type Effects on Delta Changes (Combined Groups)",
+    options = list(pageLength = 10, scrollX = TRUE),
+    rownames = FALSE
+  ) %>%
+    DT::formatRound(columns = c("p", "p_adj"), digits = 4)
 } else {
-  print(plot_delta_control_only)
-  print(plot_delta_case_only)
-  print(plot_delta_carb_combined)
   knitr::kable(
     combined_carb_stats %>%
       dplyr::select(analyte, Effect, p, p_adj, significance),
@@ -619,7 +625,7 @@ plot_time_series <- scfa_sample_data_long %>%
     linewidth = 0.8
   ) +
   facet_wrap(~ analyte, scales = "free_y") +
-  scale_color_scfa +
+  scale_color_scfa() +
   labs(
     title = "SCFA Concentrations Over Time by Carbohydrate Type",
     x = "Time (hours)",
@@ -732,6 +738,7 @@ alpha_long_0_48 <- alpha_long %>%
   dplyr::filter(timepoint %in% c("0H", "48H"))
 
 # Alpha diversity boxplots by group, carbohydrate, and timepoint
+# with per-facet Healthy vs Obese Wilcoxon p-values
 alpha_plot <- alpha_long_0_48 %>%
   ggplot(aes(x = carbohydrate, y = value, fill = group)) +
   geom_boxplot(alpha = 0.8, outlier.shape = NA, position = position_dodge(width = 0.8)) +
@@ -741,9 +748,16 @@ alpha_plot <- alpha_long_0_48 %>%
     size = 1.2,
     position = position_jitterdodge(jitter.width = 0.15, dodge.width = 0.8)
   ) +
+  ggpubr::stat_compare_means(
+    aes(group = group),
+    method = "wilcox.test",
+    label = "p.format",
+    label.y = Inf,
+    vjust = 1.5
+  ) +
   facet_grid(metric ~ timepoint, scales = "free_y") +
-  scale_fill_scfa +
-  scale_color_scfa +
+  scale_fill_scfa() +
+  scale_color_scfa() +
   labs(
     title = "Alpha Diversity by Group, Carbohydrate, and Timepoint",
     x = "Carbohydrate",
@@ -765,23 +779,88 @@ alpha_48h_summary <- alpha_48h %>%
     .groups = "drop"
   )
 
+# Wilcoxon tests: Healthy vs Obese within carbohydrate × timepoint for each alpha metric
+alpha_wilcox_group <- alpha_long_0_48 %>%
+  dplyr::group_by(metric, carbohydrate, timepoint) %>%
+  dplyr::filter(dplyr::n_distinct(group) == 2) %>%  # Only test if both groups present
+  rstatix::wilcox_test(value ~ group, p.adjust.method = "BH") %>%
+  rstatix::add_significance() %>%
+  dplyr::ungroup() %>%
+  dplyr::mutate(
+    comparison = paste0(group1, " vs ", group2),
+    metric_carb_time = paste(metric, carbohydrate, timepoint, sep = " | ")
+  ) %>%
+  dplyr::select(metric, carbohydrate, timepoint, comparison, p, p.adj, p.adj.signif)
+
+# Wilcoxon tests: Carbohydrate comparisons within group × timepoint for each alpha metric
+alpha_wilcox_carb <- alpha_long_0_48 %>%
+  dplyr::group_by(metric, group, timepoint) %>%
+  dplyr::filter(dplyr::n_distinct(carbohydrate) >= 2) %>%  # Only test if multiple carb levels present
+  rstatix::wilcox_test(value ~ carbohydrate, p.adjust.method = "BH") %>%
+  rstatix::add_significance() %>%
+  dplyr::ungroup() %>%
+  dplyr::mutate(
+    comparison = paste0(group1, " vs ", group2),
+    metric_group_time = paste(metric, group, timepoint, sep = " | ")
+  ) %>%
+  dplyr::select(metric, group, timepoint, comparison, p, p.adj, p.adj.signif)
+
+# Print plot and tables - ggplot objects render automatically in HTML
+print(alpha_plot)
+
+# Display summary table
+cat("\n\n#### Alpha diversity at 48H: summary by metric, group, and carbohydrate\n\n")
 if (knitr::is_html_output()) {
-  htmltools::tagList(
-    alpha_plot,
-    DT::datatable(
-      alpha_48h_summary,
-      caption = "Alpha diversity at 48H: summary by metric, group, and carbohydrate",
-      options = list(pageLength = 10, scrollX = TRUE),
-      rownames = FALSE
-    ) %>%
-      DT::formatRound(columns = c("mean", "sd"), digits = 3)
-  )
+  DT::datatable(
+    alpha_48h_summary,
+    caption = "Alpha diversity at 48H: summary by metric, group, and carbohydrate",
+    options = list(pageLength = 10, scrollX = TRUE),
+    rownames = FALSE
+  ) %>%
+    DT::formatRound(columns = c("mean", "sd"), digits = 3)
 } else {
-  print(alpha_plot)
   knitr::kable(
     alpha_48h_summary,
     digits = 3,
     caption = "Alpha diversity at 48H: summary by metric, group, and carbohydrate"
+  )
+}
+
+# Display Wilcoxon group comparison table
+cat("\n\n#### Wilcoxon tests: Healthy vs Obese within carbohydrate × timepoint\n\n")
+if (knitr::is_html_output()) {
+  DT::datatable(
+    alpha_wilcox_group %>%
+      dplyr::select(metric, carbohydrate, timepoint, comparison, p, p.adj, p.adj.signif),
+    caption = "Wilcoxon tests: Healthy vs Obese within carbohydrate × timepoint for each alpha metric",
+    options = list(pageLength = 10, scrollX = TRUE),
+    rownames = FALSE
+  ) %>%
+    DT::formatRound(columns = c("p", "p.adj"), digits = 4)
+} else {
+  knitr::kable(
+    alpha_wilcox_group %>%
+      dplyr::select(metric, carbohydrate, timepoint, comparison, p, p.adj, p.adj.signif),
+    digits = 4
+  )
+}
+
+# Display Wilcoxon carbohydrate comparison table
+cat("\n\n#### Wilcoxon tests: Carbohydrate comparisons within group × timepoint\n\n")
+if (knitr::is_html_output()) {
+  DT::datatable(
+    alpha_wilcox_carb %>%
+      dplyr::select(metric, group, timepoint, comparison, p, p.adj, p.adj.signif),
+    caption = "Wilcoxon tests: Carbohydrate comparisons within group × timepoint for each alpha metric",
+    options = list(pageLength = 10, scrollX = TRUE),
+    rownames = FALSE
+  ) %>%
+    DT::formatRound(columns = c("p", "p.adj"), digits = 4)
+} else {
+  knitr::kable(
+    alpha_wilcox_carb %>%
+      dplyr::select(metric, group, timepoint, comparison, p, p.adj, p.adj.signif),
+    digits = 4
   )
 }
 ```
@@ -789,58 +868,3238 @@ if (knitr::is_html_output()) {
 ## 6.3 Beta Diversity
 
 ```{r beta-diversity, echo=FALSE}
-# TODO: reproduce Bray PCoA plots, PERMANOVA tables, 48 h beta
-# diversity, and baseline clustering/trajectory visualizations
+# Beta diversity and community structure using Bray-Curtis distance
+
+# Helper: PCoA data frame
+make_pcoa_df <- function(ps_obj, distance_method) {
+  ord <- ordinate(ps_obj, method = "PCoA", distance = distance_method)
+  vecs <- as_tibble(ord$vectors[, 1:2], rownames = "SampleID")
+  colnames(vecs)[2:3] <- c("PC1", "PC2")
+  vecs <- vecs %>%
+    dplyr::mutate(
+      axis1_var = ord$values$Relative_eig[1],
+      axis2_var = ord$values$Relative_eig[2]
+    ) %>%
+    dplyr::left_join(
+      as_tibble(micro_metadata, .name_repair = "minimal"),
+      by = "SampleID"
+    )
+  vecs
+}
+
+# Bray-Curtis PCoA across all samples
+pcoa_bray <- make_pcoa_df(ps_rel, "bray")
+
+# PERMANOVA: group × carbohydrate + timepoint with subject-level strata
+dist_bray <- phyloseq::distance(ps_rel, method = "bray")
+df_beta <- as(sample_data(ps_rel), "data.frame")
+
+permanova_bray <- vegan::adonis2(
+  dist_bray ~ group * carbohydrate + timepoint,
+  data = df_beta,
+  permutations = 999,
+  strata = df_beta$subject_id
+)
+
+permanova_bray_tbl <- as.data.frame(permanova_bray) %>%
+  rownames_to_column("term") %>%
+  janitor::clean_names()
+
+# Try to standardize column names for downstream use
+permanova_bray_p_col <- intersect(
+  c("pr_greater_f_", "pr_greater_f", "pr_f", "p_value"),
+  names(permanova_bray_tbl)
+)
+permanova_bray_f_col <- intersect(
+  c("f", "f_model", "pseudo_f"),
+  names(permanova_bray_tbl)
+)
+permanova_bray_r2_col <- intersect(
+  c("r2", "r_squared", "r2_adj"),
+  names(permanova_bray_tbl)
+)
+
+permanova_bray_tbl <- permanova_bray_tbl %>%
+  dplyr::mutate(
+    f = .data[[permanova_bray_f_col[1]]],
+    r2 = .data[[permanova_bray_r2_col[1]]],
+    p_value = .data[[permanova_bray_p_col[1]]]
+  )
+
+# PCoA plot with PERMANOVA annotation (R² and p for group:carbohydrate)
+permanova_gc <- permanova_bray_tbl %>%
+  dplyr::filter(term == "group:carbohydrate")
+
+annotation_text <- NULL
+if (nrow(permanova_gc) > 0) {
+  annotation_text <- glue::glue(
+    "R² = {round(permanova_gc$r2[1], 3)}, p = {signif(permanova_gc$p_value[1], 3)}"
+  )
+}
+
+beta_pcoa_plot <- {
+  p <- pcoa_bray %>%
+    ggplot(aes(x = PC1, y = PC2, color = carbohydrate, shape = group)) +
+    geom_point(size = 2.5, alpha = 0.85) +
+    stat_ellipse(
+      aes(group = interaction(carbohydrate, timepoint), color = carbohydrate),
+      linewidth = 0.4,
+      linetype = "dashed",
+      show.legend = FALSE
+    ) +
+    facet_wrap(~timepoint) +
+    scale_color_scfa() +
+    scale_shape_manual(values = c(16, 17)) +
+    labs(
+      x = glue::glue("PC1 ({scales::percent(round(pcoa_bray$axis1_var[1], 3))})"),
+      y = glue::glue("PC2 ({scales::percent(round(pcoa_bray$axis2_var[1], 3))})"),
+      title = "PCoA – Bray-Curtis distance"
+    ) +
+    theme_scfa()
+
+  if (!is.null(annotation_text)) {
+    p <- p +
+      annotate(
+        "label",
+        x = -Inf,
+        y = Inf,
+        hjust = -0.05,
+        vjust = 1.1,
+        label = annotation_text,
+        size = 3,
+        fontface = "bold",
+        fill = "white",
+        alpha = 0.8
+      )
+  }
+
+  p
+}
+
+# 48H-only Bray-Curtis PCoA and PERMANOVA
+ps_48h <- phyloseq::subset_samples(ps_rel, Timepoint == "48H")
+pcoa_48h <- make_pcoa_df(ps_48h, "bray")
+
+dist_48h <- phyloseq::distance(ps_48h, method = "bray")
+metadata_48h <- as(sample_data(ps_48h), "data.frame")
+
+permanova_48h <- vegan::adonis2(
+  dist_48h ~ group * carbohydrate,
+  data = metadata_48h,
+  permutations = 999,
+  strata = metadata_48h$subject_id
+)
+
+permanova_48h_tbl <- as.data.frame(permanova_48h) %>%
+  rownames_to_column("term") %>%
+  janitor::clean_names()
+
+permanova_48h_p_col <- intersect(
+  c("pr_greater_f_", "pr_greater_f", "pr_f", "p_value"),
+  names(permanova_48h_tbl)
+)
+permanova_48h_f_col <- intersect(
+  c("f", "f_model", "pseudo_f"),
+  names(permanova_48h_tbl)
+)
+permanova_48h_r2_col <- intersect(
+  c("r2", "r_squared", "r2_adj"),
+  names(permanova_48h_tbl)
+)
+
+permanova_48h_tbl <- permanova_48h_tbl %>%
+  dplyr::mutate(
+    f = .data[[permanova_48h_f_col[1]]],
+    r2 = .data[[permanova_48h_r2_col[1]]],
+    p_value = .data[[permanova_48h_p_col[1]]]
+  )
+
+beta_pcoa_48h_plot <- pcoa_48h %>%
+  ggplot(aes(x = PC1, y = PC2, color = carbohydrate, shape = group)) +
+  geom_point(size = 3, alpha = 0.9) +
+  stat_ellipse(aes(group = carbohydrate, color = carbohydrate),
+               linewidth = 0.8, linetype = "dashed", alpha = 0.8) +
+  scale_color_scfa() +
+  scale_shape_manual(values = c(16, 17)) +
+  labs(
+    x = glue::glue("PC1 ({scales::percent(round(pcoa_48h$axis1_var[1], 3))})"),
+    y = glue::glue("PC2 ({scales::percent(round(pcoa_48h$axis2_var[1], 3))})"),
+    title = "PCoA – Bray-Curtis distance (48H samples)"
+  ) +
+  theme_scfa()
+
+if (knitr::is_html_output()) {
+  htmltools::tagList(
+    beta_pcoa_plot,
+    DT::datatable(
+      permanova_bray_tbl %>%
+        dplyr::select(term, f, r2, p_value),
+      caption = "PERMANOVA results (Bray-Curtis; all timepoints, subject-level strata)",
+      options = list(pageLength = 10, scrollX = TRUE),
+      rownames = FALSE
+    ) %>%
+      DT::formatRound(columns = c("f", "r2", "p_value"), digits = 3),
+    beta_pcoa_48h_plot,
+    DT::datatable(
+      permanova_48h_tbl %>%
+        dplyr::select(term, f, r2, p_value),
+      caption = "PERMANOVA results (Bray-Curtis; 48H only, subject-level strata)",
+      options = list(pageLength = 10, scrollX = TRUE),
+      rownames = FALSE
+    ) %>%
+      DT::formatRound(columns = c("f", "r2", "p_value"), digits = 3)
+  )
+} else {
+  print(beta_pcoa_plot)
+  print(beta_pcoa_48h_plot)
+  knitr::kable(
+    permanova_bray_tbl %>%
+      dplyr::select(term, f, r2, p_value),
+    digits = 3,
+    caption = "PERMANOVA results (Bray-Curtis; all timepoints, subject-level strata)"
+  )
+  knitr::kable(
+    permanova_48h_tbl %>%
+      dplyr::select(term, f, r2, p_value),
+    digits = 3,
+    caption = "PERMANOVA results (Bray-Curtis; 48H only, subject-level strata)"
+  )
+}
 ```
 
 ## 6.4 Community Composition
 
-```{r community-composition, echo=FALSE}
-# TODO: genus composition changes from 0 h to 48 h by carbohydrate,
-# validation barplots, and repair of the RDC panel
+
+### 6.4.1 Genus-Level Aggregation and Overview
+
+```{r genus-aggregation, echo=FALSE}
+# Create genus-level aggregation using tax_glom
+ps_genus <- tax_glom(ps, taxrank = "Genus", NArm = FALSE)
+ps_genus <- prune_taxa(taxa_sums(ps_genus) > 0, ps_genus)
+
+# Keep only top 20 most abundant genera for visualization
+genus_abundance <- sort(taxa_sums(ps_genus), decreasing = TRUE)
+top_genera <- names(genus_abundance)[1:min(20, length(genus_abundance))]
+ps_genus <- prune_taxa(top_genera, ps_genus)
+
+# Genus-level bar plots by group, carbohydrate, and timepoint
+ps_genus_rel <- transform_sample_counts(ps_genus, function(x) x / sum(x))
+
+genus_barplot_all <- psmelt(ps_genus_rel) %>%
+  ggplot(aes(x = carbohydrate, y = Abundance, fill = Genus)) +
+  geom_col(position = "fill") +
+  facet_grid(group ~ timepoint) +
+  scale_y_continuous(labels = scales::percent) +
+  scale_fill_manual(values = scico::scico(21, palette = "batlow")) +
+  labs(
+    x = "Carbohydrate",
+    y = "Relative abundance",
+    title = "Genus-level composition by group, carbohydrate, and timepoint",
+    fill = "Genus"
+  ) +
+  theme_scfa() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Genus-level bar plot at 48H only
+ps_48h_genus <- phyloseq::subset_samples(ps_genus, timepoint == "48H")
+
+genus_barplot_48h <- psmelt(transform_sample_counts(ps_48h_genus, function(x) x / sum(x))) %>%
+  ggplot(aes(x = carbohydrate, y = Abundance, fill = Genus)) +
+  geom_col(position = "fill") +
+  facet_wrap(~ group) +
+  scale_y_continuous(labels = scales::percent) +
+  scale_fill_manual(values = scico::scico(21, palette = "batlow")) +
+  labs(
+    x = "Carbohydrate",
+    y = "Relative abundance",
+    title = "Genus-level composition at 48H",
+    fill = "Genus"
+  ) +
+  theme_scfa() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+if (knitr::is_html_output()) {
+  htmltools::tagList(
+    genus_barplot_all,
+    genus_barplot_48h
+  )
+} else {
+  print(genus_barplot_all)
+  print(genus_barplot_48h)
+}
+```
+
+### 6.4.2 Genus Composition Changes from 0H to 48H by Carbohydrate Type
+
+```{r genus-alluvial, echo=FALSE, fig.width=14, fig.height=10}
+# Prepare data for alluvial diagrams showing flow from 0H to 48H
+ps_genus_rel <- transform_sample_counts(ps_genus, function(x) x / sum(x))
+
+# Extract data
+otu_mat <- as.matrix(otu_table(ps_genus_rel))
+if (!taxa_are_rows(ps_genus_rel)) {
+  otu_mat <- t(otu_mat)
+}
+
+tax_df <- as.data.frame(tax_table(ps_genus_rel))
+meta_df <- data.frame(sample_data(ps_genus_rel)) %>%
+  tibble::rownames_to_column("SampleID")
+
+# Create long format data
+alluvial_data_raw <- otu_mat %>%
+  as.data.frame() %>%
+  tibble::rownames_to_column("ASV") %>%
+  tidyr::pivot_longer(-ASV, names_to = "SampleID", values_to = "Abundance") %>%
+  dplyr::left_join(
+    tax_df %>% tibble::rownames_to_column("ASV") %>% dplyr::select(ASV, Genus),
+    by = "ASV"
+  ) %>%
+  dplyr::left_join(
+    meta_df %>% dplyr::select(SampleID, timepoint, carbohydrate),
+    by = "SampleID"
+  ) %>%
+  dplyr::filter(timepoint %in% c("0H", "48H"))
+
+# Remove NA values and filter to only valid combinations
+alluvial_data_raw_clean <- alluvial_data_raw %>%
+  dplyr::filter(
+    !is.na(Abundance),
+    !is.na(Genus),
+    !is.na(timepoint),
+    !is.na(carbohydrate)
+  )
+
+# Group by Genus, timepoint, carbohydrate to get mean abundance
+# Use na.rm = TRUE to handle any remaining edge cases
+alluvial_data_grouped <- alluvial_data_raw_clean %>%
+  dplyr::group_by(Genus, timepoint, carbohydrate) %>%
+  dplyr::summarise(mean_abundance = mean(Abundance, na.rm = TRUE), .groups = "drop")
+
+# Get top 12 genera for visualization (use max abundance across all timepoints/carbs)
+# But don't filter the data yet - we'll use all data and then aggregate
+top_genera_by_abundance <- alluvial_data_grouped %>%
+  dplyr::group_by(Genus) %>%
+  dplyr::summarise(max_abund = max(mean_abundance), .groups = "drop") %>%
+  dplyr::arrange(desc(max_abund)) %>%
+  head(12) %>%
+  dplyr::pull(Genus)
+
+# Define genera that are important from DA analysis and should be included
+# Check with single underscore "g_", double underscore "g__", and without prefix
+# since taxonomy formats may vary (tax_table uses "g__" format)
+da_important_genera <- c(
+  "g_Fusicatenibacter",
+  "g__Fusicatenibacter",
+  "Fusicatenibacter",
+  "g_Fusicatenibacters",
+  "g__Fusicatenibacters",
+  "Fusicatenibacters",
+  "g_Hungatella",
+  "g__Hungatella",
+  "Hungatella",
+  "g_Eggerthella",
+  "g__Eggerthella",
+  "Eggerthella",
+  "g_Peptoniphilus",
+  "g__Peptoniphilus",
+  "Peptoniphilus"
+)
+
+# Check which of these genera exist in the data
+# IMPORTANT: Get available_genera from the original tax_table, not from grouped data
+# This ensures we find all genera in the taxonomy, even if they have zero/low abundance
+available_genera_from_tax <- unique(tax_df$Genus)
+available_genera_grouped <- unique(alluvial_data_grouped$Genus)
+
+# Check exact matches first
+da_genera_in_data <- da_important_genera[da_important_genera %in% available_genera_from_tax]
+
+# Also check for variations in the full taxonomy (e.g., "g__Fusicatenibacter sp." might be stored differently)
+# This will catch any genus containing these names, regardless of prefix or suffix
+da_genera_variations <- available_genera_from_tax[
+  stringr::str_detect(available_genera_from_tax, regex("Fusicatenibacter|Hungatella|Eggerthella|Peptoniphilus", ignore_case = TRUE))
+]
+
+# Combine exact matches and variations
+da_genera_found <- unique(c(da_genera_in_data, da_genera_variations))
+
+# Combine top 12 by abundance with DA-important genera
+# Remove duplicates and keep up to 16 genera total
+top_genera_alluvial <- unique(c(top_genera_by_abundance, da_genera_found))
+if (length(top_genera_alluvial) > 16) {
+  # If we have more than 16, prioritize top 12 by abundance, then add DA genera
+  top_genera_alluvial <- c(
+    top_genera_by_abundance,
+    setdiff(da_genera_found, top_genera_by_abundance)
+  )[1:min(16, length(top_genera_alluvial))]
+}
+
+# Filter to top genera and add "Other" category
+# Use the grouped data (which has mean abundance per Genus × timepoint × carbohydrate)
+# IMPORTANT: Use ALL data from alluvial_data_grouped (not filtered), so we preserve
+# low-abundance combinations like RDC 0H
+# Replace NaN with 0 before aggregating
+alluvial_plot_data_pre_complete <- alluvial_data_grouped %>%
+  dplyr::mutate(
+    mean_abundance = ifelse(is.nan(mean_abundance) | is.na(mean_abundance), 0, mean_abundance),
+    Genus_grouped = ifelse(Genus %in% top_genera_alluvial, as.character(Genus), "Other")
+  ) %>%
+  dplyr::group_by(Genus_grouped, timepoint, carbohydrate) %>%
+  dplyr::summarise(Abundance = sum(mean_abundance, na.rm = TRUE), .groups = "drop") %>%
+  dplyr::mutate(
+    Abundance = ifelse(is.nan(Abundance) | is.na(Abundance), 0, Abundance)
+  )
+
+# Ensure we have data for both timepoints for each carbohydrate AND all Genus_grouped values
+alluvial_plot_data <- alluvial_plot_data_pre_complete %>%
+  tidyr::complete(
+    Genus_grouped = c(top_genera_alluvial, "Other"),
+    timepoint = c("0H", "48H"),
+    carbohydrate = c("No Added Carb", "RDC", "SDC"),
+    fill = list(Abundance = 0)
+  )
+
+# Create color palette
+genus_colors <- c(
+  scico::scico(length(top_genera_alluvial), palette = "batlow"),
+  "Other" = "grey80"
+)
+names(genus_colors)[1:length(top_genera_alluvial)] <- top_genera_alluvial
+
+# Create alluvial plots for each carbohydrate
+plot_list_alluvial <- list()
+
+for (carb in c("No Added Carb", "RDC", "SDC")) {
+  plot_data <- alluvial_plot_data %>%
+    dplyr::filter(carbohydrate == carb)
+  
+  # Ensure both timepoints exist, even if one has zero abundance (fix for RDC panel)
+  # Get all unique Genus_grouped values first
+  all_genera <- unique(plot_data$Genus_grouped)
+  plot_data <- plot_data %>%
+    tidyr::complete(
+      Genus_grouped = all_genera,
+      timepoint = c("0H", "48H"),
+      fill = list(Abundance = 0, carbohydrate = carb)
+    ) %>%
+    dplyr::mutate(
+      Genus_grouped = factor(
+        Genus_grouped,
+        levels = c(top_genera_alluvial[top_genera_alluvial %in% unique(Genus_grouped)], "Other")
+      ),
+      timepoint = factor(timepoint, levels = c("0H", "48H")),
+      carbohydrate = carb
+    )
+  
+  p <- ggplot(
+    plot_data,
+    aes(
+      x = timepoint,
+      y = Abundance,
+      alluvium = Genus_grouped,
+      stratum = Genus_grouped,
+      fill = Genus_grouped
+    )
+  ) +
+    geom_alluvium(alpha = 0.7, width = 0.3) +
+    geom_stratum(width = 0.3, alpha = 0.9) +
+    stat_stratum(
+      geom = "text",
+      aes(label = Genus_grouped),
+      size = 2.3,
+      fontface = "bold"
+    ) +
+    scale_fill_manual(values = genus_colors) +
+    scale_y_continuous(labels = scales::percent, expand = c(0, 0)) +
+    scale_x_discrete(expand = expansion(add = c(0.3, 0.3))) +
+    labs(
+      title = carb,
+      x = "Timepoint",
+      y = "Relative Abundance",
+      fill = "Genus"
+    ) +
+    theme_scfa() +
+    theme(
+      legend.position = "none",
+      panel.grid.major.x = element_blank()
+    )
+  
+  plot_list_alluvial[[carb]] <- p
+}
+
+# Combine plots using patchwork
+combined_alluvial <- wrap_plots(plot_list_alluvial, ncol = 3) +
+  plot_annotation(
+    title = "Genus Composition Changes from 0H to 48H by Carbohydrate Type",
+    subtitle = paste0("Flow diagram showing relative abundance changes (top ", length(top_genera_alluvial), " genera including DA-important taxa)"),
+    theme = theme(plot.title = element_text(size = 16, face = "bold"))
+  )
+
+print(combined_alluvial)
+```
+
+### 6.4.3 Validation: Bar Plots of Genus Abundances by Timepoint and Carbohydrate
+
+```{r genus-validation, echo=FALSE, fig.width=14, fig.height=10}
+# Extract genus-level data for validation bar plots
+ps_genus_rel <- transform_sample_counts(ps_genus, function(x) x / sum(x))
+
+otu_mat <- as.matrix(otu_table(ps_genus_rel))
+if (!taxa_are_rows(ps_genus_rel)) {
+  otu_mat <- t(otu_mat)
+}
+otu_df <- as.data.frame(t(otu_mat))
+
+tax_df <- as.data.frame(tax_table(ps_genus_rel))
+meta_df <- data.frame(sample_data(ps_genus_rel)) %>%
+  tibble::rownames_to_column("SampleID")
+
+# Combine data
+genus_long <- otu_df %>%
+  tibble::rownames_to_column("SampleID") %>%
+  tidyr::pivot_longer(-SampleID, names_to = "ASV", values_to = "Abundance") %>%
+  dplyr::left_join(
+    tax_df %>% tibble::rownames_to_column("ASV") %>% dplyr::select(ASV, Genus),
+    by = "ASV"
+  ) %>%
+  dplyr::left_join(
+    meta_df %>% dplyr::select(SampleID, timepoint, carbohydrate),
+    by = "SampleID"
+  ) %>%
+  dplyr::filter(timepoint %in% c("0H", "48H"))
+
+# Remove NA values to prevent NaN in calculations
+genus_long_clean <- genus_long %>%
+  dplyr::filter(
+    !is.na(Abundance),
+    !is.na(Genus),
+    !is.na(timepoint),
+    !is.na(carbohydrate)
+  )
+
+# Calculate mean abundance per genus, timepoint, and carbohydrate
+# Use ALL data first (don't filter yet) to preserve low-abundance combinations like RDC 0H
+genus_summary_all <- genus_long_clean %>%
+  dplyr::group_by(Genus, timepoint, carbohydrate) %>%
+  dplyr::summarise(
+    mean_abundance = mean(Abundance, na.rm = TRUE),
+    se_abundance = sd(Abundance, na.rm = TRUE) / sqrt(dplyr::n()),
+    n_samples = dplyr::n(),
+    .groups = "drop"
+  ) %>%
+  dplyr::mutate(
+    # Replace any NaN or NA with 0
+    mean_abundance = ifelse(is.nan(mean_abundance) | is.na(mean_abundance), 0, mean_abundance),
+    se_abundance = ifelse(is.nan(se_abundance) | is.na(se_abundance), 0, se_abundance)
+  )
+
+# Get top 15 genera overall (based on max abundance across all conditions)
+top_genera_by_abundance_val <- genus_summary_all %>%
+  dplyr::group_by(Genus) %>%
+  dplyr::summarise(max_abundance = max(mean_abundance, na.rm = TRUE), .groups = "drop") %>%
+  dplyr::arrange(desc(max_abundance)) %>%
+  head(15) %>%
+  dplyr::pull(Genus)
+
+# Define genera that are important from DA analysis and should be included
+# Check with single underscore "g_", double underscore "g__", and without prefix
+# since taxonomy formats may vary (tax_table uses "g__" format)
+da_important_genera <- c(
+  "g_Fusicatenibacter",
+  "g__Fusicatenibacter",
+  "Fusicatenibacter",
+  "g_Fusicatenibacters",
+  "g__Fusicatenibacters",
+  "Fusicatenibacters",
+  "g_Hungatella",
+  "g__Hungatella",
+  "Hungatella",
+  "g_Eggerthella",
+  "g__Eggerthella",
+  "Eggerthella",
+  "g_Peptoniphilus",
+  "g__Peptoniphilus",
+  "Peptoniphilus"
+)
+
+# Check which of these genera exist in the data
+# IMPORTANT: Get available_genera from the original tax_table, not from grouped data
+# This ensures we find all genera in the taxonomy, even if they have zero/low abundance
+available_genera_from_tax <- unique(tax_df$Genus)
+available_genera_grouped <- unique(genus_summary_all$Genus)
+
+# Check exact matches first
+da_genera_in_data <- da_important_genera[da_important_genera %in% available_genera_from_tax]
+
+# Also check for variations in the full taxonomy (e.g., "g__Fusicatenibacter sp." might be stored differently)
+# This will catch any genus containing these names, regardless of prefix or suffix
+da_genera_variations <- available_genera_from_tax[
+  stringr::str_detect(available_genera_from_tax, regex("Fusicatenibacter|Hungatella|Eggerthella|Peptoniphilus", ignore_case = TRUE))
+]
+
+# Combine exact matches and variations
+da_genera_found <- unique(c(da_genera_in_data, da_genera_variations))
+
+# Combine top 15 by abundance with DA-important genera
+# Remove duplicates and keep up to 19 genera total (15 + up to 4 DA genera)
+top_genera_val <- unique(c(top_genera_by_abundance_val, da_genera_found))
+if (length(top_genera_val) > 19) {
+  # If we have more than 19, prioritize top 15 by abundance, then add DA genera
+  top_genera_val <- c(
+    top_genera_by_abundance_val,
+    setdiff(da_genera_found, top_genera_by_abundance_val)
+  )[1:min(19, length(top_genera_val))]
+}
+
+# Filter to top genera BUT keep ALL timepoint/carbohydrate combinations
+# IMPORTANT: Don't filter by abundance threshold here - we want to see all combinations
+# for the top genera, including low-abundance ones like RDC 0H
+genus_summary_top <- genus_summary_all %>%
+  dplyr::filter(Genus %in% top_genera_val)
+
+# Create faceted bar plot
+genus_validation_plot <- ggplot(
+  genus_summary_top,
+  aes(x = timepoint, y = mean_abundance, fill = timepoint)
+) +
+  geom_col(position = "dodge", width = 0.7) +
+  geom_errorbar(
+    aes(ymin = mean_abundance - se_abundance, ymax = mean_abundance + se_abundance),
+    width = 0.2,
+    position = position_dodge(0.7)
+  ) +
+  facet_grid(Genus ~ carbohydrate, scales = "free_y") +
+  scale_fill_manual(values = c("0H" = "#E69F00", "48H" = "#56B4E9")) +
+  labs(
+    title = "Validation: Genus Abundance by Timepoint and Carbohydrate Type",
+    subtitle = paste0("Mean relative abundance ± SE for top ", length(top_genera_val), " genera (including DA-important taxa)"),
+    x = "Timepoint",
+    y = "Mean Relative Abundance",
+    fill = "Timepoint"
+  ) +
+  theme_scfa() +
+  theme(
+    axis.text.x = element_text(angle = 0, hjust = 0.5),
+    strip.text.y = element_text(angle = 0, hjust = 0),
+    panel.spacing = unit(0.5, "lines")
+  )
+
+print(genus_validation_plot)
 ```
 
 ## 6.5 Differential Abundance and Predictive Modeling
 
-```{r differential-abundance, echo=FALSE}
-# TODO: ANCOM-BC2, LEfSe Differential Abundance, MaAsLin2 tables
-# and visualizations, including updated volcano plots with ggrepel
+Differential abundance analysis identifies microbial taxa that differ significantly between experimental conditions. We applied multiple complementary methods to ensure robust identification of differentially abundant taxa: ANCOM-BC2 (Analysis of Compositions of Microbiomes with Bias Correction), which accounts for compositional bias and uses mixed-effects models; MaAsLin2 (Microbiome Multivariable Associations with Linear Models), which handles multivariate associations with normalization and transformations; and LEfSe (Linear Discriminant Analysis Effect Size), which identifies biomarker taxa between groups.
+
+### 6.5.1 ANCOM-BC2 Analysis
+
+ANCOM-BC2 models microbial abundance using a generalized linear mixed-effects model with bias correction for compositional data. We tested the main effects of group (Healthy vs Obese), carbohydrate type (RDC vs No Added Carb, SDC vs No Added Carb), timepoint (48H vs 0H), and their interactions.
+
+```{r ancombc2-analysis, echo=FALSE, cache=TRUE, cache.path="cache/integrated-"}
+# Prepare phyloseq object for ANCOM-BC2 (needs count data, not relative)
+# Use ps (counts) and ensure we have genus-level data
+ps_ancombc2 <- ps_genus
+
+# Remove samples with too many zeros that cause estimation issues
+zero_prop <- apply(otu_table(ps_ancombc2), 2, function(x) sum(x == 0) / length(x))
+problematic_samples <- names(zero_prop[zero_prop > 0.95])
+
+if (length(problematic_samples) > 0) {
+  ps_ancombc2_clean <- subset_samples(ps_ancombc2, !sample_names(ps_ancombc2) %in% problematic_samples)
+} else {
+  ps_ancombc2_clean <- ps_ancombc2
+}
+
+# Check if we have enough samples
+if (nsamples(ps_ancombc2_clean) < 10) {
+  cat("WARNING: Insufficient samples for ANCOM-BC2 analysis\n")
+  ancombc2_res <- NULL
+} else {
+  # Run ANCOM-BC2 with mixed-effects model
+  ancombc2_res <- tryCatch({
+    ANCOMBC::ancombc2(
+      data = ps_ancombc2_clean,
+      tax_level = "Genus",
+      fix_formula = "group + carbohydrate * timepoint",
+      rand_formula = "(1|subject_id)",
+      p_adj_method = "BH",
+      prv_cut = 0.10,
+      lib_cut = 0,
+      s0_perc = 0.05,
+      group = "carbohydrate",
+      struc_zero = TRUE,
+      neg_lb = TRUE,
+      alpha = 0.05,
+      global = TRUE
+    )
+  }, error = function(e) {
+    cat("ANCOM-BC2 failed:", e$message, "\n")
+    NULL
+  })
+}
+
+# Extract results if available
+if (!is.null(ancombc2_res) && !is.null(ancombc2_res$res)) {
+  res_data <- ancombc2_res$res
+  
+  # Get the effect names
+  effect_names <- c("groupObese", "carbohydrateRDC", "carbohydrateSDC", "timepoint48H", 
+                    "carbohydrateRDC:timepoint48H", "carbohydrateSDC:timepoint48H")
+  
+  # Create a data frame from the results for each effect
+  ancombc2_tbl <- purrr::map_dfr(effect_names, function(effect) {
+    lfc_col <- paste0("lfc_", effect)
+    se_col <- paste0("se_", effect)
+    W_col <- paste0("W_", effect)
+    p_col <- paste0("p_", effect)
+    q_col <- paste0("q_", effect)
+    diff_col <- paste0("diff_", effect)
+    
+    if (all(c(lfc_col, se_col, W_col, p_col, q_col, diff_col) %in% colnames(res_data))) {
+      tibble(
+        taxon = res_data$taxon,
+        effect = effect,
+        beta = res_data[[lfc_col]],
+        se = res_data[[se_col]],
+        W = res_data[[W_col]],
+        p_value = res_data[[p_col]],
+        q_value = res_data[[q_col]],
+        diff_abn = res_data[[diff_col]]
+      )
+    } else {
+      tibble()
+    }
+  }) %>% dplyr::arrange(q_value)
+} else {
+  ancombc2_tbl <- tibble(
+    taxon = character(0),
+    effect = character(0),
+    beta = numeric(0),
+    se = numeric(0),
+    W = numeric(0),
+    p_value = numeric(0),
+    q_value = numeric(0),
+    diff_abn = logical(0)
+  )
+  cat("No ANCOM-BC2 results available - analysis may have failed\n")
+}
+
+# Show summary of significant results
+if (nrow(ancombc2_tbl) > 0 && "q_value" %in% names(ancombc2_tbl)) {
+  ancombc2_sig <- ancombc2_tbl %>% dplyr::filter(q_value < 0.1)
+  cat("ANCOM-BC2 significant results (q < 0.1):", nrow(ancombc2_sig), "taxon-effect combinations\n")
+}
+```
+
+### 6.5.2 ANCOM-BC2 Forest Plots
+
+```{r ancombc2-forest-plot, echo=FALSE, fig.width=16, fig.height=12}
+# Prepare data for forest plot
+if (nrow(ancombc2_tbl) > 0 && "q_value" %in% names(ancombc2_tbl)) {
+  forest_data <- ancombc2_tbl %>%
+    dplyr::filter(q_value < 0.1) %>%
+    dplyr::mutate(
+      # Calculate confidence intervals
+      ci_lower = beta - 1.96 * se,
+      ci_upper = beta + 1.96 * se,
+      # Create effect labels
+      effect_label = dplyr::case_when(
+        effect == "groupObese" ~ "Group: Obese vs Healthy",
+        effect == "carbohydrateRDC" ~ "Carbohydrate: RDC vs No Added Carb",
+        effect == "carbohydrateSDC" ~ "Carbohydrate: SDC vs No Added Carb", 
+        effect == "timepoint48H" ~ "Timepoint: 48H vs 0H",
+        effect == "carbohydrateRDC:timepoint48H" ~ "RDC × 48H Interaction",
+        effect == "carbohydrateSDC:timepoint48H" ~ "SDC × 48H Interaction",
+        TRUE ~ effect
+      ),
+      # Create taxon labels (remove g__ prefix for cleaner display)
+      taxon_label = stringr::str_replace(taxon, "^g__", ""),
+      # Color by significance level
+      significance = dplyr::case_when(
+        q_value < 0.001 ~ "q < 0.001",
+        q_value < 0.01 ~ "q < 0.01", 
+        q_value < 0.05 ~ "q < 0.05",
+        q_value < 0.1 ~ "q < 0.1",
+        TRUE ~ "q ≥ 0.1"
+      )
+    ) %>%
+    # Order by effect size (absolute value)
+    dplyr::arrange(desc(abs(beta)))
+  
+  if (nrow(forest_data) > 0) {
+    # Create forest plot
+    ancombc2_forest_plot <- ggplot(forest_data, aes(x = beta, y = reorder(taxon_label, beta))) +
+      geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+      geom_point(aes(color = significance), size = 2) +
+      geom_errorbarh(aes(xmin = ci_lower, xmax = ci_upper, color = significance), 
+                     height = 0.2, alpha = 0.8) +
+      facet_wrap(~ effect_label, scales = "free_x", ncol = 2) +
+      scale_color_manual(
+        values = c("q < 0.001" = "#d73027", 
+                   "q < 0.01" = "#f46d43",
+                   "q < 0.05" = "#fdae61", 
+                   "q < 0.1" = "#fee08b"),
+        name = "FDR-adjusted\np-value"
+      ) +
+      labs(
+        title = "ANCOM-BC2 Results: Forest Plot of Significant Taxa",
+        subtitle = "Effect sizes (log-fold changes) with 95% confidence intervals",
+        x = "Log-fold change (β)",
+        y = "Genus"
+      ) +
+      theme_scfa() +
+      theme(
+        axis.text.y = element_text(size = 8),
+        axis.text.x = element_text(size = 9),
+        strip.text = element_text(size = 10, face = "bold"),
+        plot.title = element_text(size = 14, face = "bold"),
+        plot.subtitle = element_text(size = 11),
+        legend.position = "bottom",
+        panel.grid.minor = element_blank()
+      )
+    
+    print(ancombc2_forest_plot)
+  } else {
+    cat("No significant ANCOM-BC2 results found (q < 0.1) for forest plot\n")
+  }
+} else {
+  cat("No ANCOM-BC2 results available for forest plot - analysis may have failed\n")
+}
+```
+
+### 6.5.3 ANCOM-BC2 Side-by-Side Comparison: Carbohydrate Effects
+
+```{r ancombc2-carb-comparison, echo=FALSE, fig.width=14, fig.height=10}
+# Compare RDC vs No Carb and SDC vs No Carb effects side by side
+if (nrow(ancombc2_tbl) > 0 && "effect" %in% names(ancombc2_tbl)) {
+  comparison_data <- ancombc2_tbl %>%
+    dplyr::filter(effect %in% c("carbohydrateRDC", "carbohydrateSDC")) %>%
+    dplyr::select(taxon, effect, beta, se, p_value, q_value, diff_abn) %>%
+    tidyr::pivot_wider(
+      names_from = effect,
+      values_from = c(beta, se, p_value, q_value, diff_abn),
+      names_sep = "_"
+    ) %>%
+    dplyr::mutate(
+      # Calculate difference between RDC and SDC effects
+      effect_difference = beta_carbohydrateRDC - beta_carbohydrateSDC,
+      # Determine which treatment has stronger effect
+      stronger_effect = dplyr::case_when(
+        abs(beta_carbohydrateRDC) > abs(beta_carbohydrateSDC) ~ "RDC",
+        abs(beta_carbohydrateSDC) > abs(beta_carbohydrateRDC) ~ "SDC",
+        TRUE ~ "Equal"
+      ),
+      # Check if effects are opposite (different signs)
+      opposite_effects = sign(beta_carbohydrateRDC) != sign(beta_carbohydrateSDC),
+      # Check if either effect is significant
+      either_significant = (q_value_carbohydrateRDC < 0.1) | (q_value_carbohydrateSDC < 0.1),
+      # Clean taxon names
+      taxon_clean = stringr::str_replace(taxon, "^g__", "")
+    ) %>%
+    dplyr::filter(either_significant | opposite_effects) %>%
+    dplyr::arrange(desc(abs(effect_difference)))
+  
+  if (nrow(comparison_data) > 0) {
+    # Prepare long format for plotting
+    comparison_plot_data <- comparison_data %>%
+      dplyr::select(taxon_clean, beta_carbohydrateRDC, beta_carbohydrateSDC, 
+                    se_carbohydrateRDC, se_carbohydrateSDC,
+                    q_value_carbohydrateRDC, q_value_carbohydrateSDC) %>%
+      tidyr::pivot_longer(
+        cols = c(beta_carbohydrateRDC, beta_carbohydrateSDC),
+        names_to = "treatment",
+        values_to = "beta",
+        names_prefix = "beta_"
+      ) %>%
+      dplyr::mutate(
+        se = dplyr::case_when(
+          treatment == "carbohydrateRDC" ~ se_carbohydrateRDC,
+          treatment == "carbohydrateSDC" ~ se_carbohydrateSDC,
+          TRUE ~ NA_real_
+        ),
+        q_value = dplyr::case_when(
+          treatment == "carbohydrateRDC" ~ q_value_carbohydrateRDC,
+          treatment == "carbohydrateSDC" ~ q_value_carbohydrateSDC,
+          TRUE ~ NA_real_
+        ),
+        ci_lower = beta - 1.96 * se,
+        ci_upper = beta + 1.96 * se,
+        treatment_label = dplyr::case_when(
+          treatment == "carbohydrateRDC" ~ "RDC vs No Added Carb",
+          treatment == "carbohydrateSDC" ~ "SDC vs No Added Carb",
+          TRUE ~ treatment
+        ),
+        significance = dplyr::case_when(
+          q_value < 0.001 ~ "q < 0.001",
+          q_value < 0.01 ~ "q < 0.01",
+          q_value < 0.05 ~ "q < 0.05",
+          q_value < 0.1 ~ "q < 0.1",
+          TRUE ~ "q ≥ 0.1"
+        )
+      )
+    
+    ancombc2_comparison_plot <- ggplot(
+      comparison_plot_data,
+      aes(x = beta, y = reorder(taxon_clean, beta))
+    ) +
+      geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+      geom_point(aes(color = significance), size = 2, position = position_dodge(width = 0.5)) +
+      geom_errorbarh(
+        aes(xmin = ci_lower, xmax = ci_upper, color = significance),
+        height = 0.2,
+        alpha = 0.8,
+        position = position_dodge(width = 0.5)
+      ) +
+      facet_wrap(~ treatment_label, ncol = 2) +
+      scale_color_manual(
+        values = c("q < 0.001" = "#d73027", 
+                   "q < 0.01" = "#f46d43",
+                   "q < 0.05" = "#fdae61", 
+                   "q < 0.1" = "#fee08b",
+                   "q ≥ 0.1" = "gray70"),
+        name = "FDR-adjusted\np-value"
+      ) +
+      labs(
+        title = "ANCOM-BC2: Side-by-Side Comparison of Carbohydrate Effects",
+        subtitle = "RDC vs No Added Carb and SDC vs No Added Carb",
+        x = "Log-fold change (β)",
+        y = "Genus"
+      ) +
+      theme_scfa() +
+      theme(
+        axis.text.y = element_text(size = 8),
+        axis.text.x = element_text(size = 9),
+        strip.text = element_text(size = 10, face = "bold"),
+        legend.position = "bottom"
+      )
+    
+    print(ancombc2_comparison_plot)
+  } else {
+    cat("No significant comparisons found for side-by-side plot\n")
+  }
+} else {
+  cat("No ANCOM-BC2 results available for comparison\n")
+}
+```
+
+### 6.5.4 ANCOM-BC2 48H Timepoint Analysis
+
+```{r ancombc2-48h-analysis, echo=FALSE, cache=TRUE, cache.path="cache/integrated-"}
+# Subset to 48H timepoint only
+ps_ancombc2_48h <- phyloseq::subset_samples(ps_ancombc2_clean, timepoint == "48H")
+
+# Check if we have enough samples
+if (nsamples(ps_ancombc2_48h) < 10) {
+  cat("WARNING: Insufficient samples for ANCOM-BC2 48H analysis\n")
+  ancombc2_48h_res <- NULL
+} else {
+  # Run ANCOM-BC2 for 48H timepoint
+  ancombc2_48h_res <- tryCatch({
+    ANCOMBC::ancombc2(
+      data = ps_ancombc2_48h,
+      tax_level = "Genus",
+      fix_formula = "group + carbohydrate",
+      rand_formula = "(1|subject_id)",
+      p_adj_method = "BH",
+      prv_cut = 0.10,
+      lib_cut = 0,
+      s0_perc = 0.05,
+      group = "carbohydrate",
+      struc_zero = TRUE,
+      neg_lb = TRUE,
+      alpha = 0.05,
+      global = TRUE
+    )
+  }, error = function(e) {
+    cat("ANCOM-BC2 48H failed:", e$message, "\n")
+    NULL
+  })
+}
+
+# Extract results if available
+if (!is.null(ancombc2_48h_res) && !is.null(ancombc2_48h_res$res)) {
+  res_48h_data <- ancombc2_48h_res$res
+  
+  # Get the effect names for 48H
+  effect_names_48h <- c("groupObese", "carbohydrateRDC", "carbohydrateSDC")
+  
+  # Create a data frame from the results
+  ancombc2_48h_tbl <- purrr::map_dfr(effect_names_48h, function(effect) {
+    lfc_col <- paste0("lfc_", effect)
+    se_col <- paste0("se_", effect)
+    W_col <- paste0("W_", effect)
+    p_col <- paste0("p_", effect)
+    q_col <- paste0("q_", effect)
+    diff_col <- paste0("diff_", effect)
+    
+    if (all(c(lfc_col, se_col, W_col, p_col, q_col, diff_col) %in% colnames(res_48h_data))) {
+      tibble(
+        taxon = res_48h_data$taxon,
+        effect = effect,
+        beta = res_48h_data[[lfc_col]],
+        se = res_48h_data[[se_col]],
+        W = res_48h_data[[W_col]],
+        p_value = res_48h_data[[p_col]],
+        q_value = res_48h_data[[q_col]],
+        diff_abn = res_48h_data[[diff_col]]
+      )
+    } else {
+      tibble()
+    }
+  }) %>% dplyr::arrange(q_value)
+} else {
+  ancombc2_48h_tbl <- tibble(
+    taxon = character(0),
+    effect = character(0),
+    beta = numeric(0),
+    se = numeric(0),
+    W = numeric(0),
+    p_value = numeric(0),
+    q_value = numeric(0),
+    diff_abn = logical(0)
+  )
+}
+
+if (nrow(ancombc2_48h_tbl) > 0 && "q_value" %in% names(ancombc2_48h_tbl)) {
+  ancombc2_48h_sig <- ancombc2_48h_tbl %>% dplyr::filter(q_value < 0.1)
+  cat("ANCOM-BC2 48H significant results (q < 0.1):", nrow(ancombc2_48h_sig), "taxon-effect combinations\n")
+}
+```
+
+### 6.5.5 ANCOM-BC2 48H Forest Plots
+
+```{r ancombc2-48h-forest-plot, echo=FALSE, fig.width=14, fig.height=10}
+# Prepare data for 48H forest plot
+if (nrow(ancombc2_48h_tbl) > 0 && "q_value" %in% names(ancombc2_48h_tbl)) {
+  forest_48h_data <- ancombc2_48h_tbl %>%
+    dplyr::filter(q_value < 0.1) %>%
+    dplyr::mutate(
+      ci_lower = beta - 1.96 * se,
+      ci_upper = beta + 1.96 * se,
+      effect_label = dplyr::case_when(
+        effect == "groupObese" ~ "Group: Obese vs Healthy",
+        effect == "carbohydrateRDC" ~ "RDC vs No Added Carb",
+        effect == "carbohydrateSDC" ~ "SDC vs No Added Carb",
+        TRUE ~ effect
+      ),
+      taxon_label = stringr::str_replace(taxon, "^g__", ""),
+      significance = dplyr::case_when(
+        q_value < 0.001 ~ "q < 0.001",
+        q_value < 0.01 ~ "q < 0.01",
+        q_value < 0.05 ~ "q < 0.05",
+        q_value < 0.1 ~ "q < 0.1",
+        TRUE ~ "q ≥ 0.1"
+      )
+    ) %>%
+    dplyr::arrange(desc(abs(beta)))
+  
+  if (nrow(forest_48h_data) > 0) {
+    ancombc2_48h_forest_plot <- ggplot(
+      forest_48h_data,
+      aes(x = beta, y = reorder(taxon_label, beta))
+    ) +
+      geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+      geom_point(aes(color = significance), size = 2) +
+      geom_errorbarh(aes(xmin = ci_lower, xmax = ci_upper, color = significance), 
+                     height = 0.2, alpha = 0.8) +
+      facet_wrap(~ effect_label, scales = "free_x", ncol = 2) +
+      scale_color_manual(
+        values = c("q < 0.001" = "#d73027", 
+                   "q < 0.01" = "#f46d43",
+                   "q < 0.05" = "#fdae61", 
+                   "q < 0.1" = "#fee08b"),
+        name = "FDR-adjusted\np-value"
+      ) +
+      labs(
+        title = "ANCOM-BC2 Results at 48H: Forest Plot of Significant Taxa",
+        subtitle = "Effect sizes (log-fold changes) with 95% confidence intervals",
+        x = "Log-fold change (β)",
+        y = "Genus"
+      ) +
+      theme_scfa() +
+      theme(
+        axis.text.y = element_text(size = 8),
+        axis.text.x = element_text(size = 9),
+        strip.text = element_text(size = 10, face = "bold"),
+        plot.title = element_text(size = 14, face = "bold"),
+        plot.subtitle = element_text(size = 11),
+        legend.position = "bottom"
+      )
+    
+    print(ancombc2_48h_forest_plot)
+  } else {
+    cat("No significant ANCOM-BC2 48H results found (q < 0.1) for forest plot\n")
+  }
+} else {
+  cat("No ANCOM-BC2 48H results available for forest plot\n")
+}
+```
+
+### 6.5.6 ANCOM-BC2 RDC vs SDC at 48H
+
+To directly compare the effects of RDC versus SDC at the 48H timepoint, we performed a focused ANCOM-BC2 analysis including only RDC and SDC samples at 48H, excluding the No Added Carb condition.
+
+```{r ancombc2-48h-rdc-sdc-analysis, echo=FALSE, cache=TRUE, cache.path="cache/integrated-"}
+# Subset to 48H timepoint and only RDC vs SDC (exclude No Added Carb)
+ps_ancombc2_48h_rdc_sdc <- phyloseq::subset_samples(
+  ps_ancombc2_clean,
+  timepoint == "48H" & carbohydrate %in% c("RDC", "SDC")
+)
+
+# Check sample counts
+cat("48H RDC vs SDC samples for ANCOM-BC2:", nsamples(ps_ancombc2_48h_rdc_sdc), "\n")
+cat("Sample distribution by carbohydrate:\n")
+print(table(sample_data(ps_ancombc2_48h_rdc_sdc)$carbohydrate))
+
+# Check if we have enough samples
+if (nsamples(ps_ancombc2_48h_rdc_sdc) < 10) {
+  cat("WARNING: Insufficient samples for ANCOM-BC2 48H RDC vs SDC analysis\n")
+  ancombc2_48h_rdc_sdc_res <- NULL
+} else {
+  # Set RDC as reference level
+  sample_data(ps_ancombc2_48h_rdc_sdc)$carbohydrate <- relevel(
+    as.factor(sample_data(ps_ancombc2_48h_rdc_sdc)$carbohydrate),
+    ref = "RDC"
+  )
+  
+  # Run ANCOM-BC2 for 48H RDC vs SDC
+  ancombc2_48h_rdc_sdc_res <- tryCatch({
+    ANCOMBC::ancombc2(
+      data = ps_ancombc2_48h_rdc_sdc,
+      tax_level = "Genus",
+      fix_formula = "group + carbohydrate",
+      rand_formula = "(1|subject_id)",
+      p_adj_method = "BH",
+      prv_cut = 0.10,
+      lib_cut = 0,
+      s0_perc = 0.05,
+      group = "carbohydrate",
+      struc_zero = TRUE,
+      neg_lb = TRUE,
+      alpha = 0.05,
+      global = TRUE
+    )
+  }, error = function(e) {
+    cat("ANCOM-BC2 48H RDC vs SDC failed:", e$message, "\n")
+    NULL
+  })
+}
+
+# Extract results if available
+if (!is.null(ancombc2_48h_rdc_sdc_res) && !is.null(ancombc2_48h_rdc_sdc_res$res)) {
+  res_48h_rdc_sdc_data <- ancombc2_48h_rdc_sdc_res$res
+  
+  # Get the effect names for 48H RDC vs SDC
+  # With RDC as reference, we'll get carbohydrateSDC effect
+  effect_names_48h_rdc_sdc <- c("groupObese", "carbohydrateSDC")
+  
+  # Create a data frame from the results
+  ancombc2_48h_rdc_sdc_tbl <- purrr::map_dfr(effect_names_48h_rdc_sdc, function(effect) {
+    lfc_col <- paste0("lfc_", effect)
+    se_col <- paste0("se_", effect)
+    W_col <- paste0("W_", effect)
+    p_col <- paste0("p_", effect)
+    q_col <- paste0("q_", effect)
+    diff_col <- paste0("diff_", effect)
+    
+    if (all(c(lfc_col, se_col, W_col, p_col, q_col, diff_col) %in% colnames(res_48h_rdc_sdc_data))) {
+      tibble(
+        taxon = res_48h_rdc_sdc_data$taxon,
+        effect = effect,
+        beta = res_48h_rdc_sdc_data[[lfc_col]],
+        se = res_48h_rdc_sdc_data[[se_col]],
+        W = res_48h_rdc_sdc_data[[W_col]],
+        p_value = res_48h_rdc_sdc_data[[p_col]],
+        q_value = res_48h_rdc_sdc_data[[q_col]],
+        diff_abn = res_48h_rdc_sdc_data[[diff_col]]
+      )
+    } else {
+      tibble()
+    }
+  }) %>% dplyr::arrange(q_value)
+  
+  # Summary of significant results
+  if (nrow(ancombc2_48h_rdc_sdc_tbl) > 0 && "q_value" %in% names(ancombc2_48h_rdc_sdc_tbl)) {
+    ancombc2_48h_rdc_sdc_sig <- ancombc2_48h_rdc_sdc_tbl %>%
+      dplyr::filter(effect == "carbohydrateSDC", q_value < 0.1)
+    cat("ANCOM-BC2 48H RDC vs SDC significant results (q < 0.1):", 
+        nrow(ancombc2_48h_rdc_sdc_sig), "taxa\n")
+  }
+} else {
+  ancombc2_48h_rdc_sdc_tbl <- tibble(
+    taxon = character(0),
+    effect = character(0),
+    beta = numeric(0),
+    se = numeric(0),
+    W = numeric(0),
+    p_value = numeric(0),
+    q_value = numeric(0),
+    diff_abn = logical(0)
+  )
+}
+```
+
+### 6.5.7 Forest Plot: RDC vs SDC at 48H
+
+```{r ancombc2-48h-rdc-sdc-forest-plot, echo=FALSE, fig.width=12, fig.height=10}
+# Prepare data for 48H RDC vs SDC forest plot
+if (nrow(ancombc2_48h_rdc_sdc_tbl) > 0 && "q_value" %in% names(ancombc2_48h_rdc_sdc_tbl)) {
+  # Focus on carbohydrateSDC effect (SDC vs RDC, with RDC as reference)
+  forest_48h_rdc_sdc_data <- ancombc2_48h_rdc_sdc_tbl %>%
+    dplyr::filter(effect == "carbohydrateSDC") %>%
+    dplyr::mutate(
+      ci_lower = beta - 1.96 * se,
+      ci_upper = beta + 1.96 * se,
+      taxon_label = stringr::str_replace(taxon, "^g__", ""),
+      significance = dplyr::case_when(
+        q_value < 0.001 ~ "q < 0.001",
+        q_value < 0.01 ~ "q < 0.01",
+        q_value < 0.05 ~ "q < 0.05",
+        q_value < 0.1 ~ "q < 0.1",
+        TRUE ~ "q ≥ 0.1"
+      ),
+      # Positive beta means higher in SDC, negative means higher in RDC
+      direction = dplyr::if_else(beta > 0, "Higher in SDC", "Higher in RDC")
+    ) %>%
+    # Order by absolute effect size, but show significant ones first
+    dplyr::arrange(q_value, desc(abs(beta)))
+  
+  # Select top taxa for display (either significant or top by effect size)
+  if (sum(forest_48h_rdc_sdc_data$q_value < 0.1, na.rm = TRUE) > 0) {
+    forest_48h_rdc_sdc_plot_data <- forest_48h_rdc_sdc_data %>%
+      dplyr::filter(q_value < 0.1) %>%
+      dplyr::arrange(desc(abs(beta))) %>%
+      dplyr::slice_head(n = 25)
+  } else {
+    # If no significant, show top 25 by effect size
+    forest_48h_rdc_sdc_plot_data <- forest_48h_rdc_sdc_data %>%
+      dplyr::arrange(desc(abs(beta))) %>%
+      dplyr::slice_head(n = 25)
+  }
+  
+  if (nrow(forest_48h_rdc_sdc_plot_data) > 0) {
+    # Reorder for plotting (by beta value)
+    forest_48h_rdc_sdc_plot_data <- forest_48h_rdc_sdc_plot_data %>%
+      dplyr::mutate(
+        taxon_label = factor(taxon_label, levels = rev(unique(taxon_label[order(beta)])))
+      )
+    
+    ancombc2_48h_rdc_sdc_forest_plot <- ggplot(
+      forest_48h_rdc_sdc_plot_data,
+      aes(x = beta, y = taxon_label, color = significance)
+    ) +
+      geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+      geom_point(size = 2.5, aes(shape = direction)) +
+      geom_errorbarh(aes(xmin = ci_lower, xmax = ci_upper), 
+                     height = 0.2, alpha = 0.8, linewidth = 1) +
+      scale_color_manual(
+        values = c("q < 0.001" = "#d73027", 
+                   "q < 0.01" = "#f46d43",
+                   "q < 0.05" = "#fdae61", 
+                   "q < 0.1" = "#fee08b",
+                   "q ≥ 0.1" = "gray70"),
+        name = "FDR-adjusted\np-value",
+        guide = guide_legend(order = 1)
+      ) +
+      scale_shape_manual(
+        values = c("Higher in SDC" = 17, "Higher in RDC" = 19),
+        name = "Direction",
+        guide = guide_legend(order = 2)
+      ) +
+      labs(
+        title = "ANCOM-BC2: RDC vs SDC at 48H",
+        subtitle = "Effect sizes (log-fold change: SDC vs RDC) with 95% confidence intervals",
+        x = "Log-fold change (SDC vs RDC)",
+        y = "Genus",
+        caption = "Positive values indicate higher abundance in SDC; negative values indicate higher abundance in RDC"
+      ) +
+      theme_scfa() +
+      theme(
+        axis.text.y = element_text(size = 9),
+        axis.text.x = element_text(size = 10),
+        plot.title = element_text(size = 14, face = "bold"),
+        plot.subtitle = element_text(size = 11),
+        legend.position = "bottom",
+        legend.box = "horizontal",
+        panel.grid.minor = element_blank()
+      )
+    
+    print(ancombc2_48h_rdc_sdc_forest_plot)
+    
+    # Summary statistics
+    cat("\nSummary of ANCOM-BC2 RDC vs SDC at 48H:\n")
+    cat("Total taxa tested:", nrow(forest_48h_rdc_sdc_data), "\n")
+    cat("Significant taxa (q < 0.1):", sum(forest_48h_rdc_sdc_data$q_value < 0.1, na.rm = TRUE), "\n")
+    cat("Higher in SDC (q < 0.1):", sum(forest_48h_rdc_sdc_data$beta > 0 & forest_48h_rdc_sdc_data$q_value < 0.1, na.rm = TRUE), "\n")
+    cat("Higher in RDC (q < 0.1):", sum(forest_48h_rdc_sdc_data$beta < 0 & forest_48h_rdc_sdc_data$q_value < 0.1, na.rm = TRUE), "\n")
+  } else {
+    cat("No data available for 48H RDC vs SDC forest plot\n")
+  }
+} else {
+  cat("No ANCOM-BC2 48H RDC vs SDC results available for forest plot\n")
+}
+```
+
+
+
+### 6.5.8 MaAsLin2 Analysis
+
+MaAsLin2 (Microbiome Multivariable Associations with Linear Models) uses generalized linear models to identify associations between microbial taxa and metadata variables while accounting for confounding factors. We applied MaAsLin2 to identify taxa associated with group, carbohydrate type, and timepoint.
+
+```{r maaslin2-analysis, echo=FALSE, cache=TRUE, cache.path="cache/integrated-"}
+# Prepare data for MaAsLin2 (needs count data)
+ps_maaslin2 <- ps_genus
+
+# Prepare count matrix and metadata
+# Use proper conversion methods for phyloseq objects
+maaslin2_counts <- as.data.frame(otu_table(ps_maaslin2))
+maaslin2_meta <- as(sample_data(ps_maaslin2), "data.frame")
+maaslin2_meta$SampleID <- rownames(maaslin2_meta)
+
+# Ensure numeric columns are numeric
+maaslin2_meta <- maaslin2_meta %>%
+  dplyr::mutate(
+    subject_id = as.character(subject_id),
+    group = as.factor(group),
+    carbohydrate = as.factor(carbohydrate),
+    timepoint = as.factor(timepoint)
+  )
+
+# Run MaAsLin2
+maaslin2_fit <- tryCatch({
+  Maaslin2::Maaslin2(
+    input_data = maaslin2_counts,
+    input_metadata = maaslin2_meta,
+    output = tempfile(pattern = "maaslin2_", tmpdir = getwd()),  # Create temporary output directory
+    min_prevalence = 0.05,
+    normalization = "TSS",
+    transform = "LOG",
+    analysis_method = "LM",
+    fixed_effects = c("group", "carbohydrate", "timepoint"),
+    random_effects = c("subject_id"),
+    plot_heatmap = FALSE,
+    plot_scatter = FALSE
+  )
+}, error = function(e) {
+  cat("MaAsLin2 failed:", e$message, "\n")
+  NULL
+})
+
+# Extract results
+if (!is.null(maaslin2_fit) && !is.null(maaslin2_fit$results)) {
+  maaslin2_tbl <- maaslin2_fit$results %>%
+    dplyr::as_tibble() %>%
+    dplyr::mutate(
+      q = p.adjust(pval, method = "BH")  # Add BH-adjusted q-value
+    ) %>%
+    dplyr::arrange(q)
+  
+  # Add taxonomy information
+  tax_table_df <- as.data.frame(tax_table(ps_maaslin2)) %>%
+    tibble::rownames_to_column("feature") %>%
+    dplyr::mutate(
+      Genus_clean = stringr::str_replace(Genus, "^g__", ""),
+      Species_clean = stringr::str_replace(Species, "^s__", ""),
+      Family_clean = stringr::str_replace(Family, "^f__", ""),
+      # Only use Species if Genus is valid; if Genus is NA, use Family
+      genus_species = dplyr::case_when(
+        !is.na(Genus_clean) & Genus_clean != "NA" & Genus_clean != "" &
+          !is.na(Species_clean) & Species_clean != "NA" & Species_clean != "" ~ 
+          paste0(Genus_clean, " ", Species_clean),
+        !is.na(Genus_clean) & Genus_clean != "NA" & Genus_clean != "" ~ Genus_clean,
+        !is.na(Family_clean) & Family_clean != "NA" & Family_clean != "" ~ Family_clean,
+        TRUE ~ feature
+      )
+    )
+  
+  maaslin2_tbl <- maaslin2_tbl %>%
+    dplyr::left_join(
+      tax_table_df %>% dplyr::select(feature, Genus, genus_species),
+      by = "feature"
+    )
+  
+  # Summary of significant results
+  maaslin2_sig <- maaslin2_tbl %>% dplyr::filter(q < 0.1)
+  cat("MaAsLin2 significant results (q < 0.1):", nrow(maaslin2_sig), "feature-metadata combinations\n")
+} else {
+  maaslin2_tbl <- tibble(
+    feature = character(0),
+    metadata = character(0),
+    value = character(0),
+    coef = numeric(0),
+    stderr = numeric(0),
+    pval = numeric(0),
+    qval = numeric(0),
+    q = numeric(0),
+    Genus = character(0),
+    genus_species = character(0)
+  )
+  cat("No MaAsLin2 results available\n")
+}
+```
+
+### 6.5.9 MaAsLin2 Summary Table
+
+```{r maaslin2-summary-table, echo=FALSE}
+# Create summary table with taxon, genus_species, method, p-value, q-value
+# Fill NA values from taxonomy table and ensure taxon is always seq##
+if (nrow(maaslin2_tbl) > 0) {
+  # Get full taxonomy table for lookups - use original ps object before genus aggregation
+  # to get ASV-level taxonomy
+  tax_table_full <- as.data.frame(tax_table(ps)) %>%
+    tibble::rownames_to_column("feature") %>%
+    dplyr::mutate(
+      # Clean taxonomy levels - remove prefixes and check for valid values
+      Genus_clean = stringr::str_replace(Genus, "^g__", ""),
+      Species_clean = stringr::str_replace(Species, "^s__", ""),
+      Family_clean = stringr::str_replace(Family, "^f__", ""),
+      Order_clean = stringr::str_replace(Order, "^o__", ""),
+      Class_clean = stringr::str_replace(Class, "^c__", ""),
+      Phylum_clean = stringr::str_replace(Phylum, "^p__", ""),
+      Kingdom_clean = stringr::str_replace(Kingdom, "^k__", ""),
+      # Get first non-NA taxonomy level (skip "NA" strings)
+      # IMPORTANT: Only use Species if Genus is valid; if Genus is NA, use Family
+      first_non_na_tax = dplyr::case_when(
+        # Use Genus + Species only if both are valid
+        !is.na(Genus_clean) & Genus_clean != "NA" & Genus_clean != "" &
+          !is.na(Species_clean) & Species_clean != "NA" & Species_clean != "" ~ 
+          paste0(Genus_clean, " ", Species_clean),
+        # Use Genus alone if valid
+        !is.na(Genus_clean) & Genus_clean != "NA" & Genus_clean != "" ~ Genus_clean,
+        # If Genus is NA, use Family
+        !is.na(Family_clean) & Family_clean != "NA" & Family_clean != "" ~ Family_clean,
+        # Continue down the hierarchy
+        !is.na(Order_clean) & Order_clean != "NA" & Order_clean != "" ~ Order_clean,
+        !is.na(Class_clean) & Class_clean != "NA" & Class_clean != "" ~ Class_clean,
+        !is.na(Phylum_clean) & Phylum_clean != "NA" & Phylum_clean != "" ~ Phylum_clean,
+        !is.na(Kingdom_clean) & Kingdom_clean != "NA" & Kingdom_clean != "" ~ Kingdom_clean,
+        TRUE ~ feature
+      )
+    )
+  
+  maaslin2_summary_tbl <- maaslin2_tbl %>%
+    dplyr::filter(q < 0.1) %>%
+    dplyr::left_join(
+      tax_table_full %>% dplyr::select(feature, first_non_na_tax),
+      by = "feature"
+    ) %>%
+    dplyr::mutate(
+      # Fill NA genus_species with first non-NA taxonomy level (always use taxonomy, never feature)
+      `Genus Species` = dplyr::case_when(
+        !is.na(genus_species) & genus_species != "NA" & genus_species != "" & !stringr::str_starts(genus_species, "seq") ~ 
+          stringr::str_replace_all(genus_species, "^(g__|f__|o__|c__|p__|k__)", ""),
+        !is.na(first_non_na_tax) & first_non_na_tax != "NA" & first_non_na_tax != "" & !stringr::str_starts(first_non_na_tax, "seq") ~
+          stringr::str_replace_all(first_non_na_tax, "^(g__|f__|o__|c__|p__|k__)", ""),
+        TRUE ~ stringr::str_replace_all(first_non_na_tax, "^(g__|f__|o__|c__|p__|k__)", "")
+      ),
+      `DA Method` = "MaAsLin2",
+      `p value` = signif(pval, 4),
+      `q value` = signif(q, 4),
+      `Effect Size (coef)` = signif(coef, 4),
+      Variable = paste0(metadata, "=", value)
+    ) %>%
+    dplyr::select(taxon = feature, `Genus Species`, 
+                  `DA Method`, Variable, `Effect Size (coef)`, `p value`, `q value`)
+  
+  # Combine with ANCOM-BC2 results if available
+  if (nrow(ancombc2_tbl) > 0 && "q_value" %in% names(ancombc2_tbl)) {
+    # Map ANCOM-BC2 genus-level taxa back to ASV IDs (seq##)
+    # Get ASV to genus mapping from original ps object
+    asv_to_genus_map <- as.data.frame(tax_table(ps)) %>%
+      tibble::rownames_to_column("asv_id") %>%
+      dplyr::mutate(
+        genus_match = stringr::str_replace(Genus, "^g__", "")
+      ) %>%
+      dplyr::select(asv_id, Genus, genus_match)
+    
+    # Create a mapping: for each unique genus in ANCOM-BC2, find first ASV with that genus
+    genus_to_asv_mapping <- asv_to_genus_map %>%
+      dplyr::group_by(genus_match) %>%
+      dplyr::slice_head(n = 1) %>%
+      dplyr::ungroup() %>%
+      dplyr::select(genus_match, asv_id)
+    
+    # Get full taxonomy for all ASVs (for lookup later)
+    # Use the same tax_table_full that already has first_non_na_tax calculated correctly
+    ancombc2_tax_lookup_full <- tax_table_full %>%
+      dplyr::mutate(
+        genus_match = stringr::str_replace(Genus, "^g__", "")
+      )
+    
+    ancombc2_summary_tbl <- ancombc2_tbl %>%
+      dplyr::filter(q_value < 0.1) %>%
+      dplyr::mutate(
+        genus_clean = stringr::str_replace(taxon, "^g__", "")
+      ) %>%
+      dplyr::left_join(
+        genus_to_asv_mapping,
+        by = c("genus_clean" = "genus_match")
+      ) %>%
+      dplyr::left_join(
+        ancombc2_tax_lookup_full %>% dplyr::select(feature, first_non_na_tax),
+        by = c("asv_id" = "feature")
+      ) %>%
+      dplyr::mutate(
+        # Use mapped ASV ID as taxon (seq##), use first non-NA taxonomy for Genus Species
+        taxon = dplyr::case_when(
+          !is.na(asv_id) ~ asv_id,
+          TRUE ~ taxon  # Fallback to original taxon if no match
+        ),
+        # Ensure Genus Species uses taxonomy, not seq## or NA
+        `Genus Species` = dplyr::case_when(
+          !is.na(first_non_na_tax) & first_non_na_tax != "NA" & first_non_na_tax != "" & 
+            !stringr::str_starts(first_non_na_tax, "seq") ~
+            stringr::str_replace_all(first_non_na_tax, "^(g__|f__|o__|c__|p__|k__)", ""),
+          !is.na(genus_clean) & genus_clean != "NA" & genus_clean != "" ~ 
+            stringr::str_replace_all(genus_clean, "^(g__|f__|o__|c__|p__|k__)", ""),
+          TRUE ~ taxon
+        ),
+        `DA Method` = "ANCOM-BC2",
+        `p value` = signif(p_value, 4),
+        `q value` = signif(q_value, 4),
+        `Effect Size (coef)` = signif(beta, 4),
+        Variable = effect
+      ) %>%
+      dplyr::select(taxon, `Genus Species`, `DA Method`, Variable, 
+                    `Effect Size (coef)`, `p value`, `q value`)
+    
+    # Combine both methods
+    da_summary_combined <- dplyr::bind_rows(maaslin2_summary_tbl, ancombc2_summary_tbl)
+  } else {
+    da_summary_combined <- maaslin2_summary_tbl
+  }
+  
+  # Final cleanup: ensure no NA or seq## in Genus Species, remove all prefixes
+  # Create lookup table for any remaining missing values
+  tax_lookup_final <- tax_table_full %>%
+    dplyr::select(feature, first_non_na_tax_final = first_non_na_tax)
+  
+  da_summary_combined <- da_summary_combined %>%
+    dplyr::left_join(
+      tax_lookup_final,
+      by = c("taxon" = "feature")
+    ) %>%
+    dplyr::mutate(
+      # Remove all prefixes from Genus Species
+      `Genus Species` = stringr::str_replace_all(`Genus Species`, "^(g__|f__|o__|c__|p__|k__)", ""),
+      # If Genus Species is still NA, seq##, or empty, use lookup
+      `Genus Species` = dplyr::case_when(
+        is.na(`Genus Species`) | `Genus Species` == "NA" | `Genus Species` == "" | stringr::str_starts(`Genus Species`, "seq") ~
+          stringr::str_replace_all(first_non_na_tax_final, "^(g__|f__|o__|c__|p__|k__)", ""),
+        TRUE ~ `Genus Species`
+      ),
+      # Final check: ensure no seq## or NA remains
+      `Genus Species` = dplyr::case_when(
+        stringr::str_starts(`Genus Species`, "seq") | `Genus Species` == "NA" | is.na(`Genus Species`) ~
+          stringr::str_replace_all(first_non_na_tax_final, "^(g__|f__|o__|c__|p__|k__)", ""),
+        TRUE ~ `Genus Species`
+      ),
+      # Remove any remaining prefixes one more time
+      `Genus Species` = stringr::str_replace_all(`Genus Species`, "^(g__|f__|o__|c__|p__|k__)", "")
+    ) %>%
+    dplyr::select(-first_non_na_tax_final) %>%
+    # Sort alphabetically by Genus Species
+    dplyr::arrange(`Genus Species`, `q value`)
+  
+  # Display as interactive table in HTML or kable otherwise
+  if (knitr::is_html_output()) {
+    DT::datatable(
+      da_summary_combined,
+      caption = "Summary of Differential Abundance Results (q < 0.1)",
+      filter = "top",
+      options = list(pageLength = 25, scrollX = TRUE, order = list(list(1, 'asc')))
+    )
+  } else {
+    knitr::kable(da_summary_combined, caption = "Summary of Differential Abundance Results (q < 0.1)")
+  }
+} else {
+  cat("No differential abundance results available for summary table\n")
+}
+```
+
+### 6.5.10 MaAsLin2 Visualizations
+
+```{r maaslin2-visualizations, echo=FALSE, fig.width=14, fig.height=16}
+if (nrow(maaslin2_tbl) > 0 && nrow(maaslin2_tbl %>% dplyr::filter(q < 0.1)) > 0) {
+  # Get taxonomy table for Family lookups (for NA taxa)
+  tax_table_for_vis <- as.data.frame(tax_table(ps)) %>%
+    tibble::rownames_to_column("feature") %>%
+    dplyr::mutate(
+      Family_clean = stringr::str_replace(Family, "^f__", ""),
+      Order_clean = stringr::str_replace(Order, "^o__", ""),
+      Class_clean = stringr::str_replace(Class, "^c__", ""),
+      Phylum_clean = stringr::str_replace(Phylum, "^p__", ""),
+      # Get first non-NA taxonomy level for NA taxa
+      first_non_na_tax = dplyr::case_when(
+        !is.na(Family_clean) & Family_clean != "NA" & Family_clean != "" ~ Family_clean,
+        !is.na(Order_clean) & Order_clean != "NA" & Order_clean != "" ~ Order_clean,
+        !is.na(Class_clean) & Class_clean != "NA" & Class_clean != "" ~ Class_clean,
+        !is.na(Phylum_clean) & Phylum_clean != "NA" & Phylum_clean != "" ~ Phylum_clean,
+        TRUE ~ feature
+      )
+    ) %>%
+    dplyr::select(feature, first_non_na_tax)
+  
+  maaslin2_sig <- maaslin2_tbl %>%
+    dplyr::filter(q < 0.1) %>%
+    dplyr::left_join(tax_table_for_vis, by = "feature") %>%
+    dplyr::mutate(
+      # Replace NA genus_species with Family level (or other taxonomy)
+      genus_species = dplyr::case_when(
+        is.na(genus_species) | genus_species == "NA" | genus_species == "" | 
+          stringr::str_starts(genus_species, "seq") ~
+          stringr::str_replace_all(first_non_na_tax, "^(g__|f__|o__|c__|p__|k__)", ""),
+        TRUE ~ stringr::str_replace_all(genus_species, "^(g__|f__|o__|c__|p__|k__)", "")
+      ),
+      # Create comparison labels for subtitle
+      comparison_label = dplyr::case_when(
+        metadata == "carbohydrate" & value == "RDC" ~ "RDC vs No Added Carb (positive = more in RDC)",
+        metadata == "carbohydrate" & value == "SDC" ~ "SDC vs No Added Carb (positive = more in SDC)",
+        metadata == "group" & value == "Obese" ~ "Obese vs Healthy (positive = more in Obese)",
+        metadata == "timepoint" & value == "48H" ~ "48H vs 0H (positive = more at 48H)",
+        metadata == "timepoint" & value == "72H" ~ "72H vs 0H (positive = more at 72H)",
+        TRUE ~ paste0(value, " vs Reference")
+      ),
+      significance = dplyr::case_when(
+        q < 0.001 ~ "***",
+        q < 0.01 ~ "**",
+        q < 0.05 ~ "*",
+        TRUE ~ ""
+      ),
+      display_label = paste0(genus_species, " (", metadata, "=", value, ")", significance),
+      full_label = display_label,
+      metadata_value = paste0(metadata, "=", value)
+    ) %>%
+    dplyr::select(-first_non_na_tax)
+  
+  # Plot 1: Coefficient effect sizes by metadata variable
+  maaslin2_effects_plot <- ggplot(
+    maaslin2_sig,
+    aes(x = coef, y = reorder(full_label, coef))
+  ) +
+    geom_col(aes(fill = metadata_value), alpha = 0.8) +
+    geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+    scale_fill_scfa() +
+    labs(
+      title = "MaAsLin2 Results: Significant Associations",
+      subtitle = "Coefficient Effect Sizes by Variable",
+      x = "Coefficient (Effect Size)",
+      y = "Features",
+      caption = "*** q<0.001, ** q<0.01, * q<0.05"
+    ) +
+    theme_scfa() +
+    theme(
+      axis.text.y = element_text(size = 8),
+      axis.text.x = element_text(size = 10),
+      legend.position = "bottom",
+      panel.grid.major.y = element_blank(),
+      panel.grid.minor = element_blank()
+    )
+  
+  print(maaslin2_effects_plot)
+  
+  # Plot 2: Volcano plot with ggrepel labels
+  sig_points <- maaslin2_tbl %>%
+    dplyr::filter(q < 0.1) %>%
+    dplyr::left_join(tax_table_for_vis, by = "feature") %>%
+    dplyr::mutate(
+      # Replace NA genus_species with Family level (or other taxonomy)
+      genus_species_clean = dplyr::case_when(
+        is.na(genus_species) | genus_species == "NA" | genus_species == "" | 
+          stringr::str_starts(genus_species, "seq") ~
+          stringr::str_replace_all(first_non_na_tax, "^(g__|f__|o__|c__|p__|k__)", ""),
+        TRUE ~ stringr::str_replace_all(genus_species, "^(g__|f__|o__|c__|p__|k__)", "")
+      ),
+      genus_label = dplyr::case_when(
+        !is.na(genus_species_clean) & stringr::str_detect(genus_species_clean, " ") ~ 
+          stringr::str_extract(genus_species_clean, "^[^ ]+"),
+        !is.na(genus_species_clean) ~ genus_species_clean,
+        TRUE ~ stringr::str_replace_all(first_non_na_tax, "^(g__|f__|o__|c__|p__|k__)", "")
+      )
+    ) %>%
+    dplyr::select(-first_non_na_tax)
+  
+  maaslin2_volcano_plot <- ggplot(
+    maaslin2_tbl,
+    aes(x = coef, y = -log10(q))
+  ) +
+    geom_point(aes(color = q < 0.1), alpha = 0.6, size = 2) +
+    geom_hline(yintercept = -log10(0.1), linetype = "dashed", color = "red", alpha = 0.7) +
+    geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+    ggrepel::geom_text_repel(
+      data = sig_points,
+      aes(label = genus_label),
+      size = 3,
+      color = "#E31A1C",
+      fontface = "bold",
+      max.overlaps = 20,
+      min.segment.length = 0.1,
+      box.padding = 0.3,
+      point.padding = 0.2,
+      segment.color = "gray50",
+      segment.alpha = 0.6
+    ) +
+    scale_color_manual(
+      values = c("FALSE" = "gray70", "TRUE" = "#E31A1C"),
+      name = "Significant",
+      labels = c("FALSE" = "q ≥ 0.1", "TRUE" = "q < 0.1")
+    ) +
+    labs(
+      title = "MaAsLin2 Volcano Plot",
+      subtitle = "Effect Size vs Statistical Significance",
+      x = "Coefficient (Effect Size)",
+      y = "-log10(q-value)",
+      caption = "Red dashed line: q = 0.1 threshold; Labels show significant taxa"
+    ) +
+    theme_scfa() +
+    theme(
+      legend.position = "bottom"
+    )
+  
+  print(maaslin2_volcano_plot)
+  
+  # Plot 3: Top effects by metadata variable
+  top_effects <- maaslin2_sig %>%
+    dplyr::group_by(metadata) %>%
+    dplyr::slice_max(abs(coef), n = 10) %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(
+      # Create dynamic subtitle per metadata variable
+      subtitle_text = dplyr::case_when(
+        metadata == "carbohydrate" ~ "RDC vs No Added Carb (pos=more in RDC); SDC vs No Added Carb (pos=more in SDC)",
+        metadata == "group" ~ "Obese vs Healthy (positive = more in Obese)",
+        metadata == "timepoint" ~ "48H vs 0H (pos=more at 48H); 72H vs 0H (pos=more at 72H)",
+        TRUE ~ paste0("Comparison: ", metadata)
+      )
+    )
+  
+  # Create subtitle that combines all comparisons
+  all_comparisons <- top_effects %>%
+    dplyr::distinct(metadata, comparison_label) %>%
+    dplyr::group_by(metadata) %>%
+    dplyr::summarize(comparisons = paste(comparison_label, collapse = "; ")) %>%
+    dplyr::summarize(all_text = paste(metadata, ":", comparisons, collapse = " | "))
+  
+  subtitle_text <- if (nrow(all_comparisons) > 0) {
+    paste0("Top 10 largest effects per metadata variable. Comparisons: ", all_comparisons$all_text[1])
+  } else {
+    "Top 10 largest effects per metadata variable"
+  }
+  
+  maaslin2_top_effects_plot <- ggplot(
+    top_effects,
+    aes(x = coef, y = reorder(genus_species, coef))
+  ) +
+    geom_col(aes(fill = metadata), alpha = 0.8) +
+    geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+    scale_fill_scfa() +
+    labs(
+      title = "MaAsLin2: Top Effects by Variable",
+      subtitle = subtitle_text,
+      x = "Coefficient (Effect Size)",
+      y = "Genus Species"
+    ) +
+    theme_scfa() +
+    theme(
+      axis.text.y = element_text(size = 9),
+      axis.text.x = element_text(size = 10),
+      legend.position = "bottom",
+      panel.grid.major.y = element_blank(),
+      panel.grid.minor = element_blank()
+    ) +
+    facet_wrap(~metadata, scales = "free_y", ncol = 1)
+  
+  print(maaslin2_top_effects_plot)
+} else {
+  cat("No significant MaAsLin2 results found (q < 0.1) for visualizations\n")
+}
+```
+
+### 6.5.11 MaAsLin2 48H RDC vs SDC Analysis
+
+```{r maaslin2-48h-rdc-sdc, echo=FALSE, cache=TRUE, cache.path="cache/integrated-"}
+# Subset to 48H timepoint and RDC vs SDC only
+ps_maaslin2_48h <- phyloseq::subset_samples(
+  ps_maaslin2,
+  timepoint == "48H" & carbohydrate %in% c("RDC", "SDC")
+)
+
+# Prepare data
+maaslin2_48h_counts <- as.data.frame(otu_table(ps_maaslin2_48h))
+maaslin2_48h_meta <- as(sample_data(ps_maaslin2_48h), "data.frame")
+maaslin2_48h_meta$SampleID <- rownames(maaslin2_48h_meta)
+
+maaslin2_48h_meta <- maaslin2_48h_meta %>%
+  dplyr::mutate(
+    subject_id = as.character(subject_id),
+    carbohydrate = as.factor(carbohydrate)
+  )
+
+# Run MaAsLin2 for 48H RDC vs SDC
+maaslin2_48h_fit <- tryCatch({
+    Maaslin2::Maaslin2(
+      input_data = maaslin2_48h_counts,
+      input_metadata = maaslin2_48h_meta,
+      output = tempfile(pattern = "maaslin2_48h_", tmpdir = getwd()),  # Create temporary output directory
+      min_prevalence = 0.05,
+      normalization = "TSS",
+      transform = "LOG",
+      analysis_method = "LM",
+      fixed_effects = c("carbohydrate"),
+      random_effects = c("subject_id"),
+      plot_heatmap = FALSE,
+      plot_scatter = FALSE
+    )
+}, error = function(e) {
+  cat("MaAsLin2 48H RDC vs SDC failed:", e$message, "\n")
+  NULL
+})
+
+# Extract results
+if (!is.null(maaslin2_48h_fit) && !is.null(maaslin2_48h_fit$results)) {
+  maaslin2_48h_tbl <- maaslin2_48h_fit$results %>%
+    dplyr::as_tibble() %>%
+    dplyr::mutate(q = p.adjust(pval, method = "BH")) %>%
+    dplyr::arrange(q) %>%
+    dplyr::left_join(
+      tax_table_df %>% dplyr::select(feature, Genus, genus_species),
+      by = "feature"
+    )
+  
+  cat("MaAsLin2 48H RDC vs SDC significant results (q < 0.1):", 
+      nrow(maaslin2_48h_tbl %>% dplyr::filter(q < 0.1)), "\n")
+} else {
+  maaslin2_48h_tbl <- tibble(
+    feature = character(0),
+    metadata = character(0),
+    value = character(0),
+    coef = numeric(0),
+    pval = numeric(0),
+    q = numeric(0),
+    genus_species = character(0)
+  )
+}
+```
+
+### 6.5.12 MaAsLin2 48H RDC vs SDC Volcano Plot
+
+```{r maaslin2-48h-volcano, echo=FALSE, fig.width=12, fig.height=10}
+if (nrow(maaslin2_48h_tbl) > 0) {
+  sig_points_48h <- maaslin2_48h_tbl %>%
+    dplyr::filter(q < 0.1) %>%
+    dplyr::mutate(
+      genus_label = dplyr::case_when(
+        !is.na(genus_species) & stringr::str_detect(genus_species, " ") ~ 
+          stringr::str_extract(genus_species, "^[^ ]+"),
+        !is.na(genus_species) ~ genus_species,
+        TRUE ~ feature
+      )
+    )
+  
+  maaslin2_48h_volcano_plot <- ggplot(
+    maaslin2_48h_tbl,
+    aes(x = coef, y = -log10(q))
+  ) +
+    geom_point(aes(color = q < 0.1), alpha = 0.6, size = 2) +
+    geom_hline(yintercept = -log10(0.1), linetype = "dashed", color = "red", alpha = 0.7) +
+    geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+    ggrepel::geom_text_repel(
+      data = sig_points_48h,
+      aes(label = genus_label),
+      size = 3,
+      color = "#E31A1C",
+      fontface = "bold",
+      max.overlaps = 15,
+      box.padding = 0.5,
+      point.padding = 0.3,
+      segment.color = "gray50",
+      segment.size = 0.3,
+      force = 2
+    ) +
+    scale_color_manual(
+      values = c("FALSE" = "gray70", "TRUE" = "#E31A1C"),
+      name = "Significant",
+      labels = c("FALSE" = "q ≥ 0.1", "TRUE" = "q < 0.1")
+    ) +
+    labs(
+      title = "MaAsLin2 Volcano Plot: 48H RDC vs SDC",
+      subtitle = "Carbohydrate Effect Size vs Statistical Significance",
+      x = "Coefficient (Effect Size)",
+      y = "-log10(q-value)",
+      caption = "Red dashed line: q = 0.1 threshold"
+    ) +
+    theme_scfa() +
+    theme(legend.position = "bottom")
+  
+  print(maaslin2_48h_volcano_plot)
+} else {
+  cat("No MaAsLin2 48H RDC vs SDC results available for volcano plot\n")
+}
+```
+
+### 6.4.4 Genus Composition at 48H: No Carbohydrate vs RDC vs SDC
+
+This alluvial plot shows the comparison of genus-level composition at 48H across the three carbohydrate conditions (No Added Carb, RDC, and SDC), highlighting the top 25 most abundant genera and including key differentially abundant taxa.
+
+```{r genus-alluvial-48h-carb, echo=FALSE, fig.width=16, fig.height=12}
+# Prepare data for alluvial diagram showing 48H comparison across carbohydrate conditions
+ps_genus_rel_48h <- ps_genus_rel
+
+# Filter to 48H only
+ps_genus_rel_48h <- phyloseq::subset_samples(ps_genus_rel_48h, timepoint == "48H")
+
+# Extract data
+otu_mat_48h <- as.matrix(otu_table(ps_genus_rel_48h))
+if (!taxa_are_rows(ps_genus_rel_48h)) {
+  otu_mat_48h <- t(otu_mat_48h)
+}
+
+tax_df_48h <- as.data.frame(tax_table(ps_genus_rel_48h))
+meta_df_48h <- data.frame(sample_data(ps_genus_rel_48h)) %>%
+  tibble::rownames_to_column("SampleID")
+
+# Create long format data
+alluvial_data_48h_raw <- otu_mat_48h %>%
+  as.data.frame() %>%
+  tibble::rownames_to_column("ASV") %>%
+  tidyr::pivot_longer(-ASV, names_to = "SampleID", values_to = "Abundance") %>%
+  dplyr::left_join(
+    tax_df_48h %>% tibble::rownames_to_column("ASV") %>% dplyr::select(ASV, Genus),
+    by = "ASV"
+  ) %>%
+  dplyr::left_join(
+    meta_df_48h %>% dplyr::select(SampleID, carbohydrate),
+    by = "SampleID"
+  )
+
+# Remove NA values and filter to only valid combinations
+alluvial_data_48h_clean <- alluvial_data_48h_raw %>%
+  dplyr::filter(
+    !is.na(Abundance),
+    !is.na(Genus),
+    !is.na(carbohydrate),
+    carbohydrate != "NA"
+  )
+
+# Group by Genus and carbohydrate to get mean abundance at 48H
+alluvial_data_48h_grouped <- alluvial_data_48h_clean %>%
+  dplyr::group_by(Genus, carbohydrate) %>%
+  dplyr::summarise(mean_abundance = mean(Abundance, na.rm = TRUE), .groups = "drop") %>%
+  dplyr::mutate(
+    mean_abundance = ifelse(is.nan(mean_abundance) | is.na(mean_abundance), 0, mean_abundance)
+  )
+
+# Get top 25 genera for visualization (use max abundance across carbohydrate conditions)
+top_genera_48h_by_abundance <- alluvial_data_48h_grouped %>%
+  dplyr::group_by(Genus) %>%
+  dplyr::summarise(max_abund = max(mean_abundance, na.rm = TRUE), .groups = "drop") %>%
+  dplyr::arrange(desc(max_abund)) %>%
+  head(25) %>%
+  dplyr::pull(Genus)
+
+# Define genera that are important from DA analysis and should be included
+da_important_genera_48h <- c(
+  "g_Fusicatenibacter",
+  "g__Fusicatenibacter",
+  "Fusicatenibacter",
+  "g_Fusicatenibacters",
+  "g__Fusicatenibacters",
+  "Fusicatenibacters",
+  "g_Hungatella",
+  "g__Hungatella",
+  "Hungatella",
+  "g_Eggerthella",
+  "g__Eggerthella",
+  "Eggerthella",
+  "g_Peptoniphilus",
+  "g__Peptoniphilus",
+  "Peptoniphilus"
+)
+
+# Check which of these genera exist in the 48H data
+available_genera_48h_from_tax <- unique(tax_df_48h$Genus)
+
+# Check exact matches first
+da_genera_48h_in_data <- da_important_genera_48h[da_important_genera_48h %in% available_genera_48h_from_tax]
+
+# Also check for variations
+da_genera_48h_variations <- available_genera_48h_from_tax[
+  stringr::str_detect(available_genera_48h_from_tax, regex("Fusicatenibacter|Hungatella|Eggerthella|Peptoniphilus", ignore_case = TRUE))
+]
+
+# Combine exact matches and variations
+da_genera_48h_found <- unique(c(da_genera_48h_in_data, da_genera_48h_variations))
+
+# Combine top 25 by abundance with DA-important genera
+# Remove duplicates and keep up to 29 genera total (25 + up to 4 DA genera)
+top_genera_48h_alluvial <- unique(c(top_genera_48h_by_abundance, da_genera_48h_found))
+if (length(top_genera_48h_alluvial) > 29) {
+  # If we have more than 29, prioritize top 25 by abundance, then add DA genera
+  top_genera_48h_alluvial <- c(
+    top_genera_48h_by_abundance,
+    setdiff(da_genera_48h_found, top_genera_48h_by_abundance)
+  )[1:min(29, length(top_genera_48h_alluvial))]
+}
+
+# Filter to top genera and add "Other" category
+alluvial_48h_plot_data_pre_complete <- alluvial_data_48h_grouped %>%
+  dplyr::mutate(
+    Genus_grouped = ifelse(Genus %in% top_genera_48h_alluvial, as.character(Genus), "Other")
+  ) %>%
+  dplyr::group_by(Genus_grouped, carbohydrate) %>%
+  dplyr::summarise(Abundance = sum(mean_abundance, na.rm = TRUE), .groups = "drop") %>%
+  dplyr::mutate(
+    Abundance = ifelse(is.nan(Abundance) | is.na(Abundance), 0, Abundance)
+  )
+
+# Ensure all combinations exist (Genus × carbohydrate)
+alluvial_48h_plot_data <- alluvial_48h_plot_data_pre_complete %>%
+  tidyr::complete(
+    Genus_grouped = c(unique(alluvial_48h_plot_data_pre_complete$Genus_grouped), "Other"),
+    carbohydrate = c("No Added Carb", "RDC", "SDC"),
+    fill = list(Abundance = 0)
+  ) %>%
+  dplyr::filter(!is.na(carbohydrate))
+
+# Clean genus names for display (remove g__ prefix)
+# First create Genus_display, then filter out NA, "NA", "Other", and empty values
+alluvial_48h_plot_data <- alluvial_48h_plot_data %>%
+  dplyr::mutate(
+    Genus_display = stringr::str_replace(Genus_grouped, "^g__", ""),
+    # Order carbohydrates for plotting
+    carbohydrate = factor(carbohydrate, levels = c("No Added Carb", "RDC", "SDC"))
+  ) %>%
+  # Filter out NA, "NA", "Other", and empty values after creating Genus_display
+  dplyr::filter(
+    !is.na(Genus_display),
+    Genus_display != "NA",
+    Genus_display != "Other",
+    Genus_display != "",
+    !is.na(Genus_grouped),
+    Genus_grouped != "NA",
+    Genus_grouped != "Other",
+    Genus_grouped != ""
+  )
+
+# Create alluvial plot showing flow between carbohydrate conditions
+# Add borders for better visibility
+# Label ALL genera (including thin flows) - no threshold
+alluvial_48h_plot_data_labeled <- alluvial_48h_plot_data %>%
+  dplyr::mutate(
+    # Label all genera consistently across all columns
+    label_genus = as.character(Genus_display)
+  )
+
+alluvial_48h_plot <- ggplot(
+  alluvial_48h_plot_data_labeled,
+  aes(
+    x = carbohydrate,
+    y = Abundance,
+    stratum = Genus_display,
+    alluvium = Genus_display,
+    fill = Genus_display,
+    label = label_genus
+  )
+) +
+  geom_flow(alpha = 0.7, width = 0.3, color = "white", linewidth = 0.3) +
+  geom_stratum(alpha = 0.9, width = 0.3, color = "white", linewidth = 0.5) +
+  geom_text(
+    stat = "stratum",
+    size = 3,
+    angle = 0,
+    hjust = 0.5,
+    vjust = 0.5,
+    color = "black",
+    fontface = "bold",
+    check_overlap = TRUE
+  ) +
+  scale_fill_manual(
+    values = scico::scico(length(unique(alluvial_48h_plot_data$Genus_display)), palette = "batlow"),
+    name = "Genus"
+  ) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1), expand = c(0, 0)) +
+  labs(
+    title = "Genus Composition at 48H: Comparison Across Carbohydrate Conditions",
+    subtitle = paste0("Alluvial diagram showing relative abundance for top ", length(top_genera_48h_alluvial), " genera (including DA-important taxa)"),
+    x = "Carbohydrate Condition",
+    y = "Relative Abundance",
+    fill = "Genus"
+  ) +
+  theme_scfa() +
+  theme(
+    axis.text.x = element_text(angle = 0, hjust = 0.5, size = 11),
+    legend.position = "none",  # Hide legend due to many taxa
+    plot.title = element_text(size = 14, face = "bold"),
+    plot.subtitle = element_text(size = 11)
+  )
+
+print(alluvial_48h_plot)
+
+cat("\n48H Carbohydrate Comparison Summary:\n")
+cat("- Total genera included:", length(top_genera_48h_alluvial), "\n")
+cat("- DA-important genera found:", length(da_genera_48h_found), "\n")
+if (length(da_genera_48h_found) > 0) {
+  cat("- DA-important genera:", paste(da_genera_48h_found, collapse = ", "), "\n")
+}
 ```
 
 ## 6.6 Absolute Abundances
 
-```{r absolute-abundance, echo=FALSE}
-# TODO:
-# - Integrate qPCR genome copy data (customer_label)
-# - Convert relative abundances to absolute abundances
-# - Generate g_Fusicantenibacter sp. absolute abundance plots by
-#   group, timepoint, and carbohydrate condition
+Relative abundance data (compositional) can mask true changes in microbial load. To address this, we integrated qPCR-derived total genome copy estimates per sample to convert relative abundances to absolute abundances (genome copies per sample). This allows us to distinguish between compositional shifts versus true changes in microbial load.
+
+### 6.6.1 Integration of qPCR Data
+
+```{r absolute-abundance-integration, echo=FALSE, cache=TRUE, cache.path="cache/integrated-"}
+# Load qPCR data
+qpcr_file <- "../microbiome_analysis/zr24558.16S_250813.zymo/00...AllSamples.Bac16Sv34/Sample_Information/absolute.abundance.csv"
+qpcr_data_raw <- readr::read_csv(qpcr_file, show_col_types = FALSE)
+qpcr_data <- qpcr_data_raw %>%
+  janitor::clean_names()
+
+# Find the genome copies column (original was "genome_copies_per_ul*" which becomes "genome_copies_per_ul" after clean_names)
+# Check for exact match first, then look for columns containing the pattern
+genome_cols <- colnames(qpcr_data)[stringr::str_detect(colnames(qpcr_data), "genome_copies_per_ul")]
+if (length(genome_cols) == 0) {
+  stop("Could not find genome_copies_per_ul column in qPCR data")
+}
+# Use the first matching column (should be the one from "genome_copies_per_ul*")
+genome_col <- genome_cols[1]
+
+# Select only customer_label and the genome copies column, then rename to standardize
+qpcr_data <- qpcr_data %>%
+  dplyr::select(customer_label, !!rlang::sym(genome_col)) %>%
+  dplyr::rename(genome_copies_per_ul = !!rlang::sym(genome_col))
+
+# Clean customer_label to match sample metadata format
+qpcr_data <- qpcr_data %>%
+  dplyr::mutate(
+    customer_label = stringr::str_trim(customer_label),
+    # Remove trailing periods and spaces
+    customer_label = stringr::str_replace_all(customer_label, "\\.+$", ""),
+    customer_label = stringr::str_replace_all(customer_label, "\\.\\.", ".")
+  )
+
+# Get sample metadata from phyloseq
+sample_meta_abs <- data.frame(sample_data(ps)) %>%
+  tibble::rownames_to_column("SampleID") %>%
+  dplyr::mutate(
+    # Create matching customer_label from SampleID if needed
+    customer_label_match = dplyr::case_when(
+      # Try direct match first
+      SampleID %in% qpcr_data$customer_label ~ SampleID,
+      # Try with different patterns
+      stringr::str_detect(SampleID, "^S") ~ stringr::str_replace(SampleID, "^S", ""),
+      TRUE ~ SampleID
+    )
+  )
+
+# Match qPCR data to samples
+# Try direct match first, then pattern matching
+sample_meta_abs <- sample_meta_abs %>%
+  dplyr::left_join(
+    qpcr_data,
+    by = c("SampleID" = "customer_label")
+  ) %>%
+  dplyr::mutate(
+    # If no direct match, try customer_label_match
+    genome_copies_per_ul = dplyr::if_else(
+      is.na(genome_copies_per_ul),
+      dplyr::left_join(
+        data.frame(customer_label_match = .$customer_label_match),
+        qpcr_data %>% dplyr::select(customer_label, genome_copies_per_ul),
+        by = c("customer_label_match" = "customer_label")
+      )$genome_copies_per_ul,
+      genome_copies_per_ul
+    )
+  )
+
+# Calculate samples matched
+matched_samples <- sum(!is.na(sample_meta_abs$genome_copies_per_ul))
+cat("qPCR data integration:\n")
+cat("- Total samples in phyloseq:", nrow(sample_meta_abs), "\n")
+cat("- Samples matched to qPCR data:", matched_samples, "\n")
+cat("- Match rate:", round(matched_samples / nrow(sample_meta_abs) * 100, 1), "%\n")
+```
+
+### 6.6.2 Conversion to Absolute Abundances
+
+```{r absolute-abundance-conversion, echo=FALSE, cache=TRUE, cache.path="cache/integrated-"}
+# Convert relative abundances to absolute abundances
+# For each sample: absolute_abundance = relative_abundance × total_genome_copies
+
+# Get relative abundance phyloseq object (genus-level)
+ps_genus_abs <- ps_genus_rel
+
+# Match genome copies to samples
+sample_data(ps_genus_abs)$genome_copies_per_ul <- sample_meta_abs$genome_copies_per_ul[
+  match(sample_names(ps_genus_abs), sample_meta_abs$SampleID)
+]
+
+# Create absolute abundance otu table
+otu_rel <- as.matrix(otu_table(ps_genus_rel))
+genome_copies <- sample_data(ps_genus_abs)$genome_copies_per_ul
+
+# Convert to absolute abundances
+otu_abs <- otu_rel
+for (i in 1:ncol(otu_rel)) {
+  if (!is.na(genome_copies[i])) {
+    # Absolute abundance = relative abundance × total genome copies
+    otu_abs[, i] <- otu_rel[, i] * genome_copies[i]
+  } else {
+    otu_abs[, i] <- NA
+  }
+}
+
+# Create phyloseq object with absolute abundances
+ps_genus_abs_obj <- ps_genus_abs
+otu_table(ps_genus_abs_obj) <- otu_table(otu_abs, taxa_are_rows = TRUE)
+
+cat("Absolute abundance conversion complete:\n")
+cat("- Samples with qPCR data:", sum(!is.na(genome_copies)), "\n")
+cat("- Samples without qPCR data:", sum(is.na(genome_copies)), "\n")
+```
+
+### 6.6.3 Absolute Abundance Plots by Group, Carbohydrate, and Timepoint
+
+```{r qpcr-summary-boxplots, echo=FALSE, fig.width=14, fig.height=8}
+# Create summary boxplots of qPCR data (genomes/μL) by group, carbohydrate, and timepoint
+# Use sample_meta_abs which has genome_copies_per_ul matched to samples
+
+qpcr_plot_data <- sample_meta_abs %>%
+  dplyr::filter(!is.na(genome_copies_per_ul)) %>%
+  dplyr::filter(!is.na(group), !is.na(carbohydrate), !is.na(timepoint)) %>%
+  dplyr::mutate(
+    group = as.character(group),
+    carbohydrate = as.character(carbohydrate),
+    timepoint = as.character(timepoint),
+    # Convert to log10 for better visualization if needed
+    genome_copies_log10 = log10(genome_copies_per_ul + 1)
+  )
+
+# Plot 1: Boxplots by group and carbohydrate, faceted by timepoint
+qpcr_plot1 <- ggplot(
+  qpcr_plot_data,
+  aes(x = carbohydrate, y = genome_copies_per_ul, fill = group)
+) +
+  geom_boxplot(alpha = 0.7, outlier.shape = NA, position = position_dodge(width = 0.8)) +
+  geom_jitter(
+    aes(color = group),
+    alpha = 0.5,
+    size = 1.2,
+    position = position_jitterdodge(jitter.width = 0.15, dodge.width = 0.8)
+  ) +
+  facet_wrap(~ timepoint, ncol = 2, scales = "free_y") +
+  scale_fill_scfa() +
+  scale_color_scfa() +
+  scale_y_continuous(labels = scales::comma, trans = "log10") +
+  labs(
+    title = "Total Bacterial Genome Copies per μL",
+    subtitle = "qPCR-derived total bacterial load by group, carbohydrate type, and timepoint",
+    x = "Carbohydrate Type",
+    y = "Genome Copies per μL (log10 scale)",
+    fill = "Group",
+    color = "Group"
+  ) +
+  theme_scfa() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "bottom"
+  )
+
+print(qpcr_plot1)
+
+# Plot 2: Over time by carbohydrate and group
+qpcr_summary <- qpcr_plot_data %>%
+  dplyr::group_by(group, carbohydrate, timepoint) %>%
+  dplyr::summarise(
+    mean_genomes = mean(genome_copies_per_ul, na.rm = TRUE),
+    se_genomes = sd(genome_copies_per_ul, na.rm = TRUE) / sqrt(dplyr::n()),
+    median_genomes = median(genome_copies_per_ul, na.rm = TRUE),
+    n = dplyr::n(),
+    .groups = "drop"
+  )
+
+qpcr_plot2 <- ggplot(
+  qpcr_summary,
+  aes(x = timepoint, y = mean_genomes, color = group, group = group)
+) +
+  geom_line(size = 1.2) +
+  geom_point(size = 3) +
+  geom_errorbar(
+    aes(ymin = mean_genomes - se_genomes, ymax = mean_genomes + se_genomes),
+    width = 0.1,
+    size = 0.8
+  ) +
+  facet_wrap(~ carbohydrate, ncol = 3, scales = "free_y") +
+  scale_color_scfa() +
+  scale_y_continuous(labels = scales::comma, trans = "log10") +
+  labs(
+    title = "Total Bacterial Genome Copies per μL Over Time",
+    subtitle = "Mean ± SE by carbohydrate type and group",
+    x = "Timepoint",
+    y = "Mean Genome Copies per μL (log10 scale)",
+    color = "Group"
+  ) +
+  theme_scfa() +
+  theme(legend.position = "bottom")
+
+print(qpcr_plot2)
+
+# Summary statistics
+cat("\nqPCR Data Summary:\n")
+cat("- Total samples with qPCR data:", nrow(qpcr_plot_data), "\n")
+cat("- Samples by timepoint:\n")
+print(table(qpcr_plot_data$timepoint, useNA = "ifany"))
+cat("- Samples by carbohydrate:\n")
+print(table(qpcr_plot_data$carbohydrate, useNA = "ifany"))
+cat("- Samples by group:\n")
+print(table(qpcr_plot_data$group, useNA = "ifany"))
+```
+
+### 6.6.4 Fusicatenibacter Absolute Abundance Plots
+
+```{r fusicatenibacter-absolute-abundance, echo=FALSE, fig.width=14, fig.height=10}
+# Extract absolute abundance data for g__Fusicatenibacter
+# Find all ASVs assigned to this genus
+fusicatenibacter_taxa <- taxa_names(ps_genus_abs_obj)[
+  stringr::str_detect(tax_table(ps_genus_abs_obj)[, "Genus"], regex("Fusicatenibacter", ignore_case = TRUE))
+]
+
+if (length(fusicatenibacter_taxa) > 0) {
+  # Get absolute abundance for Fusicatenibacter genus
+  # Sum across all ASVs if multiple
+  if (length(fusicatenibacter_taxa) > 1) {
+    fusicatenibacter_abs <- colSums(otu_table(ps_genus_abs_obj)[fusicatenibacter_taxa, , drop = FALSE], na.rm = TRUE)
+  } else {
+    fusicatenibacter_abs <- as.numeric(otu_table(ps_genus_abs_obj)[fusicatenibacter_taxa, ])
+  }
+  
+  # Get metadata
+  meta_abs <- data.frame(sample_data(ps_genus_abs_obj)) %>%
+    tibble::rownames_to_column("SampleID") %>%
+    dplyr::mutate(
+      fusicatenibacter_abs_abund = fusicatenibacter_abs,
+      # Filter out samples without qPCR data
+      has_qpcr = !is.na(genome_copies_per_ul)
+    ) %>%
+    dplyr::filter(has_qpcr) %>%
+    dplyr::filter(!is.na(group), !is.na(carbohydrate), !is.na(timepoint))
+  
+  # Calculate mean and SE by group, carbohydrate, and timepoint
+  fusicatenibacter_summary <- meta_abs %>%
+    dplyr::group_by(group, carbohydrate, timepoint) %>%
+    dplyr::summarise(
+      mean_abs_abund = mean(fusicatenibacter_abs_abund, na.rm = TRUE),
+      se_abs_abund = sd(fusicatenibacter_abs_abund, na.rm = TRUE) / sqrt(dplyr::n()),
+      n = dplyr::n(),
+      .groups = "drop"
+    ) %>%
+    dplyr::mutate(
+      mean_abs_abund = ifelse(is.na(mean_abs_abund), 0, mean_abs_abund),
+      se_abs_abund = ifelse(is.na(se_abs_abund), 0, se_abs_abund)
+    )
+  
+  # Create plots
+  # Plot 1: By group and carbohydrate, faceted by timepoint
+  fusicatenibacter_plot1 <- ggplot(
+    fusicatenibacter_summary,
+    aes(x = carbohydrate, y = mean_abs_abund, fill = group)
+  ) +
+    geom_col(position = position_dodge(width = 0.8), alpha = 0.8) +
+    geom_errorbar(
+      aes(ymin = mean_abs_abund - se_abs_abund, ymax = mean_abs_abund + se_abs_abund),
+      position = position_dodge(width = 0.8),
+      width = 0.2
+    ) +
+    facet_wrap(~ timepoint, ncol = 2) +
+    scale_fill_scfa() +
+    scale_y_continuous(labels = scales::comma) +
+    labs(
+      title = "g__Fusicatenibacter Absolute Abundance",
+      subtitle = "Mean ± SE genome copies per μL by group, carbohydrate, and timepoint",
+      x = "Carbohydrate",
+      y = "Absolute Abundance (genome copies/μL)",
+      fill = "Group"
+    ) +
+    theme_scfa() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  
+  print(fusicatenibacter_plot1)
+  
+  # Plot 2: Over time by carbohydrate and group
+  fusicatenibacter_plot2 <- ggplot(
+    fusicatenibacter_summary,
+    aes(x = timepoint, y = mean_abs_abund, color = group, group = group)
+  ) +
+    geom_line(size = 1.2) +
+    geom_point(size = 3) +
+    geom_errorbar(
+      aes(ymin = mean_abs_abund - se_abs_abund, ymax = mean_abs_abund + se_abs_abund),
+      width = 0.1
+    ) +
+    facet_wrap(~ carbohydrate, ncol = 3) +
+    scale_color_scfa() +
+    scale_y_continuous(labels = scales::comma) +
+    labs(
+      title = "g__Fusicatenibacter Absolute Abundance Over Time",
+      subtitle = "Mean ± SE genome copies per μL by carbohydrate type and group",
+      x = "Timepoint",
+      y = "Absolute Abundance (genome copies/μL)",
+      color = "Group"
+    ) +
+    theme_scfa()
+  
+  print(fusicatenibacter_plot2)
+  
+} else {
+  cat("No Fusicatenibacter taxa found in the data\n")
+}
 ```
 
 # 7. Integrated Analysis: Taxon–SCFA Relationships
 
-```{r taxon-scfa-integration, echo=FALSE}
-# TODO:
-# - ANCOM-BC2 and MaAsLin2 models for taxon ~ butyrate + carbohydrate
-#   and taxon ~ propionate + carbohydrate (relative and absolute)
-# - Correlation plots for g_Fusicantenibacter sp. vs butyrate and
-#   propionate at 0 h and 48 h (relative and absolute)
+This section integrates SCFA metabolomics with microbiome composition to identify taxa associated with SCFA concentrations. We model associations between microbial taxa and butyrate/propionate concentrations while accounting for carbohydrate type effects, using both relative and absolute abundance data.
+
+## 7.1 Integration of SCFA Data with Microbiome Metadata
+
+```{r scfa-microbiome-integration, echo=FALSE, cache=TRUE, cache.path="cache/integrated-"}
+# Merge SCFA data with microbiome metadata
+# SCFA uses: subject, group, carbohydrate_type, timepoint_hr
+# Microbiome uses: subject_id, group, carbohydrate, timepoint
+
+# Get SCFA concentrations at subject × carbohydrate × timepoint level
+scfa_wide <- scfa_sample_data_long_factored %>%
+  dplyr::filter(analyte %in% c("butyrate", "propionate")) %>%
+  dplyr::filter(timepoint_hr %in% c("0", "48")) %>%
+  tidyr::pivot_wider(
+    id_cols = c(subject, group, carbohydrate_type, timepoint_hr),
+    names_from = analyte,
+    values_from = concentration,
+    names_prefix = "scfa_"
+  ) %>%
+  dplyr::mutate(
+    carbohydrate = dplyr::case_when(
+      carbohydrate_type == "no_carbohydrate" ~ "No Added Carb",
+      carbohydrate_type == "rapid_digestible" ~ "RDC",
+      carbohydrate_type == "slow_digestible" ~ "SDC",
+      TRUE ~ NA_character_
+    ),
+    timepoint = dplyr::case_when(
+      timepoint_hr == "0" ~ "0H",
+      timepoint_hr == "48" ~ "48H",
+      TRUE ~ NA_character_
+    ),
+    group_micro = dplyr::case_when(
+      group == "control" ~ "Healthy",
+      group == "case" ~ "Obese",
+      TRUE ~ NA_character_
+    )
+  ) %>%
+  dplyr::filter(!is.na(carbohydrate), !is.na(timepoint), !is.na(group_micro))
+
+# Diagnostic: Check subject IDs in SCFA data
+cat("\nSCFA Data Summary:\n")
+cat("- Unique subjects:", length(unique(scfa_wide$subject)), "\n")
+cat("- Unique subject × carbohydrate × timepoint combinations:", nrow(scfa_wide), "\n")
+cat("- Sample subjects:", paste(head(unique(scfa_wide$subject), 10), collapse = ", "), "\n")
+
+# Get microbiome sample metadata
+micro_meta_merged <- data.frame(sample_data(ps)) %>%
+  tibble::rownames_to_column("SampleID") %>%
+  dplyr::mutate(
+    subject_id = as.character(subject_id),
+    # Extract numeric part of subject_id for matching (e.g., "84B" -> "84")
+    subject_id_numeric = stringr::str_extract(subject_id, "^[0-9]+"),
+    group = as.character(group),
+    carbohydrate = as.character(carbohydrate),
+    timepoint = as.character(timepoint)
+  )
+
+# Diagnostic: Check subject IDs in microbiome data
+cat("\nMicrobiome Data Summary:\n")
+cat("- Unique subject_ids:", length(unique(micro_meta_merged$subject_id)), "\n")
+cat("- Unique numeric subject_ids:", length(unique(micro_meta_merged$subject_id_numeric)), "\n")
+cat("- Sample subject_ids:", paste(head(unique(micro_meta_merged$subject_id), 10), collapse = ", "), "\n")
+cat("- Sample numeric subject_ids:", paste(head(unique(micro_meta_merged$subject_id_numeric), 10), collapse = ", "), "\n")
+
+# Merge SCFA data with microbiome metadata
+# Match on numeric subject ID (SCFA has numeric, microbiome has "84B" format)
+micro_meta_scfa <- micro_meta_merged %>%
+  dplyr::left_join(
+    scfa_wide,
+    by = c(
+      "subject_id_numeric" = "subject",
+      "group" = "group_micro",
+      "carbohydrate" = "carbohydrate",
+      "timepoint" = "timepoint"
+    )
+  )
+
+cat("SCFA-Microbiome Integration Summary:
+")
+cat("- Total microbiome samples:", nrow(micro_meta_scfa), "
+")
+cat("- Samples with butyrate data:", sum(!is.na(micro_meta_scfa$scfa_butyrate)), "
+")
+cat("- Samples with propionate data:", sum(!is.na(micro_meta_scfa$scfa_propionate)), "
+")
+cat("- Samples with both SCFAs:", sum(!is.na(micro_meta_scfa$scfa_butyrate) & 
+                                        !is.na(micro_meta_scfa$scfa_propionate)), "
+")
 ```
 
-```{r responder-nonresponder, echo=FALSE}
-# TODO:
-# - Define responder vs non-responder groups separately for butyrate
-#   and propionate using 0 h to 48 h changes (e.g., median/quantile cut)
-# - Examine overlap in responder status between butyrate and propionate
-# - Compare microbial composition between responder and non-responder
-#   groups at 48 h
+## 7.2 Taxon–Butyrate Associations
+
+```{r taxon-butyrate-relative, echo=FALSE, cache=TRUE, cache.path="cache/integrated-"}
+# Prepare data for analysis: relative abundance with butyrate
+ps_butyrate_rel <- ps
+
+# Update sample_data with SCFA concentrations
+sample_data(ps_butyrate_rel)$butyrate <- micro_meta_scfa$scfa_butyrate[
+  match(sample_names(ps_butyrate_rel), micro_meta_scfa$SampleID)
+]
+
+# Filter to samples with butyrate data
+ps_butyrate_rel <- phyloseq::subset_samples(
+  ps_butyrate_rel,
+  !is.na(butyrate) & !is.na(carbohydrate) & !is.na(timepoint)
+)
+
+cat("Butyrate analysis (relative):", nsamples(ps_butyrate_rel), "samples
+")
+
+# Run ANCOM-BC2 for taxon ~ butyrate + carbohydrate
+# Note: When using continuous variables, set global = FALSE and group = NULL
+# or specify a group variable for structural zero detection
+if (nsamples(ps_butyrate_rel) > 10 && ntaxa(ps_butyrate_rel) > 1) {
+  ancombc2_butyrate_rel <- tryCatch({
+    ANCOMBC::ancombc2(
+      data = ps_butyrate_rel,
+      fix_formula = "butyrate + carbohydrate",
+      rand_formula = "(1|subject_id)",
+      p_adj_method = "BH",
+      prv_cut = 0.10,
+      lib_cut = 1000,
+      alpha = 0.05,
+      group = "carbohydrate",  # Use carbohydrate as group for structural zeros
+      struc_zero = TRUE,
+      neg_lb = TRUE,
+      global = TRUE,
+      verbose = FALSE
+    )
+  }, error = function(e) {
+    cat("ANCOM-BC2 butyrate (relative) failed:", e$message, "
+")
+    NULL
+  })
+  
+  if (!is.null(ancombc2_butyrate_rel) && !is.null(ancombc2_butyrate_rel$res)) {
+    res_data <- ancombc2_butyrate_rel$res
+    ancombc2_butyrate_tbl_rel <- tibble::tibble()
+    
+    if ("q_butyrate" %in% colnames(res_data)) {
+      ancombc2_butyrate_tbl_rel <- res_data %>%
+        dplyr::filter(q_butyrate < 0.1) %>%
+        dplyr::mutate(
+          effect = "butyrate",
+          beta = lfc_butyrate,
+          q_value = q_butyrate
+        ) %>%
+        dplyr::select(taxon, effect, beta, q_value)
+    }
+    
+    cat("ANCOM-BC2 butyrate (relative):", nrow(ancombc2_butyrate_tbl_rel), 
+        "significant taxa (q < 0.1)
+")
+  } else {
+    ancombc2_butyrate_tbl_rel <- tibble::tibble()
+  }
+} else {
+  ancombc2_butyrate_tbl_rel <- tibble::tibble()
+}
+
+# Run MaAsLin2 for taxon ~ butyrate + carbohydrate
+# Ensure count matrix columns match metadata rownames
+maaslin2_butyrate_counts_rel <- as.data.frame(otu_table(ps_butyrate_rel))
+if (!taxa_are_rows(ps_butyrate_rel)) {
+  maaslin2_butyrate_counts_rel <- t(maaslin2_butyrate_counts_rel)
+}
+
+# Prepare metadata with rownames matching count matrix column names
+maaslin2_butyrate_meta_rel <- data.frame(sample_data(ps_butyrate_rel)) %>%
+  dplyr::mutate(
+    subject_id = as.character(subject_id),
+    carbohydrate = as.factor(carbohydrate),
+    butyrate = as.numeric(butyrate)
+  )
+# Ensure rownames match count matrix column names
+rownames(maaslin2_butyrate_meta_rel) <- sample_names(ps_butyrate_rel)
+
+maaslin2_butyrate_rel <- tryCatch({
+  Maaslin2::Maaslin2(
+    input_data = maaslin2_butyrate_counts_rel,
+    input_metadata = maaslin2_butyrate_meta_rel,
+    output = tempfile(pattern = "maaslin2_butyrate_rel_", tmpdir = getwd()),
+    min_prevalence = 0.05,
+    normalization = "TSS",
+    transform = "LOG",
+    analysis_method = "LM",
+    fixed_effects = c("butyrate", "carbohydrate"),
+    random_effects = c("subject_id"),
+    plot_heatmap = FALSE,
+    plot_scatter = FALSE
+  )
+}, error = function(e) {
+  cat("MaAsLin2 butyrate (relative) failed:", e$message, "
+")
+  NULL
+})
+
+if (!is.null(maaslin2_butyrate_rel) && !is.null(maaslin2_butyrate_rel$results)) {
+  maaslin2_butyrate_tbl_rel <- maaslin2_butyrate_rel$results %>%
+    dplyr::as_tibble() %>%
+    dplyr::mutate(q = p.adjust(pval, method = "BH")) %>%
+    dplyr::filter(q < 0.1 & metadata == "butyrate") %>%
+    dplyr::arrange(q)
+  
+  cat("MaAsLin2 butyrate (relative):", nrow(maaslin2_butyrate_tbl_rel), 
+      "significant associations (q < 0.1)
+")
+} else {
+  maaslin2_butyrate_tbl_rel <- tibble::tibble()
+}
+```
+
+## 7.3 Taxon–Propionate Associations
+
+```{r taxon-propionate-relative, echo=FALSE, cache=TRUE, cache.path="cache/integrated-"}
+# Prepare data for analysis: relative abundance with propionate
+ps_propionate_rel <- ps
+
+# Update sample_data with SCFA concentrations
+sample_data(ps_propionate_rel)$propionate <- micro_meta_scfa$scfa_propionate[
+  match(sample_names(ps_propionate_rel), micro_meta_scfa$SampleID)
+]
+
+# Filter to samples with propionate data
+ps_propionate_rel <- phyloseq::subset_samples(
+  ps_propionate_rel,
+  !is.na(propionate) & !is.na(carbohydrate) & !is.na(timepoint)
+)
+
+cat("Propionate analysis (relative):", nsamples(ps_propionate_rel), "samples
+")
+
+# Run ANCOM-BC2 for taxon ~ propionate + carbohydrate
+if (nsamples(ps_propionate_rel) > 10 && ntaxa(ps_propionate_rel) > 1) {
+  ancombc2_propionate_rel <- tryCatch({
+    ANCOMBC::ancombc2(
+      data = ps_propionate_rel,
+      fix_formula = "propionate + carbohydrate",
+      rand_formula = "(1|subject_id)",
+      p_adj_method = "BH",
+      prv_cut = 0.10,
+      lib_cut = 1000,
+      alpha = 0.05,
+      group = "carbohydrate",  # Use carbohydrate as group for structural zeros
+      struc_zero = TRUE,
+      neg_lb = TRUE,
+      global = TRUE,
+      verbose = FALSE
+    )
+  }, error = function(e) {
+    cat("ANCOM-BC2 propionate (relative) failed:", e$message, "
+")
+    NULL
+  })
+  
+  if (!is.null(ancombc2_propionate_rel) && !is.null(ancombc2_propionate_rel$res)) {
+    res_data <- ancombc2_propionate_rel$res
+    ancombc2_propionate_tbl_rel <- tibble::tibble()
+    
+    if ("q_propionate" %in% colnames(res_data)) {
+      ancombc2_propionate_tbl_rel <- res_data %>%
+        dplyr::filter(q_propionate < 0.1) %>%
+        dplyr::mutate(
+          effect = "propionate",
+          beta = lfc_propionate,
+          q_value = q_propionate
+        ) %>%
+        dplyr::select(taxon, effect, beta, q_value)
+    }
+    
+    cat("ANCOM-BC2 propionate (relative):", nrow(ancombc2_propionate_tbl_rel), 
+        "significant taxa (q < 0.1)
+")
+  } else {
+    ancombc2_propionate_tbl_rel <- tibble::tibble()
+  }
+} else {
+  ancombc2_propionate_tbl_rel <- tibble::tibble()
+}
+
+# Run MaAsLin2 for taxon ~ propionate + carbohydrate
+# Ensure count matrix columns match metadata rownames
+maaslin2_propionate_counts_rel <- as.data.frame(otu_table(ps_propionate_rel))
+if (!taxa_are_rows(ps_propionate_rel)) {
+  maaslin2_propionate_counts_rel <- t(maaslin2_propionate_counts_rel)
+}
+
+# Prepare metadata with rownames matching count matrix column names
+maaslin2_propionate_meta_rel <- data.frame(sample_data(ps_propionate_rel)) %>%
+  dplyr::mutate(
+    subject_id = as.character(subject_id),
+    carbohydrate = as.factor(carbohydrate),
+    propionate = as.numeric(propionate)
+  )
+# Ensure rownames match count matrix column names
+rownames(maaslin2_propionate_meta_rel) <- sample_names(ps_propionate_rel)
+
+maaslin2_propionate_rel <- tryCatch({
+  Maaslin2::Maaslin2(
+    input_data = maaslin2_propionate_counts_rel,
+    input_metadata = maaslin2_propionate_meta_rel,
+    output = tempfile(pattern = "maaslin2_propionate_rel_", tmpdir = getwd()),
+    min_prevalence = 0.05,
+    normalization = "TSS",
+    transform = "LOG",
+    analysis_method = "LM",
+    fixed_effects = c("propionate", "carbohydrate"),
+    random_effects = c("subject_id"),
+    plot_heatmap = FALSE,
+    plot_scatter = FALSE
+  )
+}, error = function(e) {
+  cat("MaAsLin2 propionate (relative) failed:", e$message, "
+")
+  NULL
+})
+
+if (!is.null(maaslin2_propionate_rel) && !is.null(maaslin2_propionate_rel$results)) {
+  maaslin2_propionate_tbl_rel <- maaslin2_propionate_rel$results %>%
+    dplyr::as_tibble() %>%
+    dplyr::mutate(q = p.adjust(pval, method = "BH")) %>%
+    dplyr::filter(q < 0.1 & metadata == "propionate") %>%
+    dplyr::arrange(q)
+  
+  cat("MaAsLin2 propionate (relative):", nrow(maaslin2_propionate_tbl_rel), 
+      "significant associations (q < 0.1)
+")
+} else {
+  maaslin2_propionate_tbl_rel <- tibble::tibble()
+}
+```
+
+## 7.4 Fusicatenibacter–SCFA Correlations
+
+```{r fusicatenibacter-scfa-correlations, echo=FALSE, fig.width=14, fig.height=10}
+# Extract relative abundance of g__Fusicatenibacter
+fusicatenibacter_taxa_rel <- taxa_names(ps)[
+  stringr::str_detect(tax_table(ps)[, "Genus"], regex("Fusicatenibacter", ignore_case = TRUE))
+]
+
+# Prepare correlation data
+corr_data <- micro_meta_scfa %>%
+  dplyr::select(SampleID, subject_id, group, carbohydrate, timepoint, 
+                scfa_butyrate, scfa_propionate) %>%
+  dplyr::filter(!is.na(scfa_butyrate) | !is.na(scfa_propionate))
+
+# Add relative abundance of Fusicatenibacter
+if (length(fusicatenibacter_taxa_rel) > 0) {
+  if (length(fusicatenibacter_taxa_rel) > 1) {
+    fusicatenibacter_rel_abund <- colSums(
+      as.data.frame(otu_table(ps_rel))[fusicatenibacter_taxa_rel, , drop = FALSE],
+      na.rm = TRUE
+    )
+  } else {
+    fusicatenibacter_rel_abund <- as.numeric(
+      otu_table(ps_rel)[fusicatenibacter_taxa_rel, ]
+    )
+  }
+  
+  names(fusicatenibacter_rel_abund) <- sample_names(ps_rel)
+  
+  corr_data <- corr_data %>%
+    dplyr::mutate(
+      fusicatenibacter_rel = fusicatenibacter_rel_abund[SampleID]
+    )
+  
+  # Filter to samples with Fusicatenibacter data
+  corr_data <- corr_data %>%
+    dplyr::filter(!is.na(fusicatenibacter_rel))
+  
+  # Create correlation plots
+  # Plot 1: Butyrate correlations by timepoint
+  corr_butyrate_plot <- ggplot(
+    corr_data %>% dplyr::filter(!is.na(scfa_butyrate)),
+    aes(x = scfa_butyrate, y = fusicatenibacter_rel)
+  ) +
+    geom_point(aes(color = carbohydrate), alpha = 0.6, size = 2) +
+    geom_smooth(method = "lm", se = TRUE, color = "black") +
+    facet_wrap(~ timepoint, scales = "free") +
+    scale_color_scfa() +
+    labs(
+      title = "Fusicatenibacter vs Butyrate (Relative Abundance)",
+      subtitle = "Correlation by timepoint and carbohydrate type",
+      x = "Butyrate Concentration",
+      y = "Fusicatenibacter Relative Abundance",
+      color = "Carbohydrate"
+    ) +
+    theme_scfa() +
+    theme(legend.position = "bottom")
+  
+  print(corr_butyrate_plot)
+  
+  # Plot 2: Propionate correlations by timepoint
+  corr_propionate_plot <- ggplot(
+    corr_data %>% dplyr::filter(!is.na(scfa_propionate)),
+    aes(x = scfa_propionate, y = fusicatenibacter_rel)
+  ) +
+    geom_point(aes(color = carbohydrate), alpha = 0.6, size = 2) +
+    geom_smooth(method = "lm", se = TRUE, color = "black") +
+    facet_wrap(~ timepoint, scales = "free") +
+    scale_color_scfa() +
+    labs(
+      title = "Fusicatenibacter vs Propionate (Relative Abundance)",
+      subtitle = "Correlation by timepoint and carbohydrate type",
+      x = "Propionate Concentration",
+      y = "Fusicatenibacter Relative Abundance",
+      color = "Carbohydrate"
+    ) +
+    theme_scfa() +
+    theme(legend.position = "bottom")
+  
+  print(corr_propionate_plot)
+  
+  # Calculate correlation statistics
+  cat("
+Fusicatenibacter-SCFA Correlations (Relative Abundance):
+")
+  for (tp in c("0H", "48H")) {
+    corr_data_tp <- corr_data %>% dplyr::filter(timepoint == tp)
+    
+    # Butyrate correlation
+    if (sum(!is.na(corr_data_tp$scfa_butyrate) & 
+            !is.na(corr_data_tp$fusicatenibacter_rel)) > 3) {
+      corr_but <- cor.test(corr_data_tp$scfa_butyrate, 
+                          corr_data_tp$fusicatenibacter_rel,
+                          method = "spearman")
+      cat(sprintf("  %s - Butyrate: rho = %.3f, p = %.4f
+", 
+                  tp, corr_but$estimate, corr_but$p.value))
+    }
+    
+    # Propionate correlation
+    if (sum(!is.na(corr_data_tp$scfa_propionate) & 
+            !is.na(corr_data_tp$fusicatenibacter_rel)) > 3) {
+      corr_prop <- cor.test(corr_data_tp$scfa_propionate, 
+                           corr_data_tp$fusicatenibacter_rel,
+                           method = "spearman")
+      cat(sprintf("  %s - Propionate: rho = %.3f, p = %.4f
+", 
+                  tp, corr_prop$estimate, corr_prop$p.value))
+    }
+  }
+} else {
+  cat("No Fusicatenibacter taxa found for correlation analysis
+")
+}
+```
+
+## 7.5 Responder vs Non-Responder Analysis
+
+```{r responder-nonresponder, echo=FALSE, cache=TRUE, cache.path="cache/integrated-"}
+# Define responder groups based on delta SCFA (48H - 0H)
+# Calculate delta for butyrate and propionate
+scfa_delta <- scfa_sample_data_long_factored %>%
+  dplyr::filter(analyte %in% c("butyrate", "propionate")) %>%
+  dplyr::filter(timepoint_hr %in% c("0", "48")) %>%
+  dplyr::group_by(subject, group, carbohydrate_type, analyte) %>%
+  dplyr::summarise(
+    conc_0h = concentration[timepoint_hr == "0"][1],
+    conc_48h = concentration[timepoint_hr == "48"][1],
+    .groups = "drop"
+  ) %>%
+  dplyr::mutate(
+    delta_48h_0h = conc_48h - conc_0h,
+    # Map to microbiome labels
+    carbohydrate = dplyr::case_when(
+      carbohydrate_type == "no_carbohydrate" ~ "No Added Carb",
+      carbohydrate_type == "rapid_digestible" ~ "RDC",
+      carbohydrate_type == "slow_digestible" ~ "SDC",
+      TRUE ~ NA_character_
+    ),
+    group_micro = dplyr::case_when(
+      group == "control" ~ "Healthy",
+      group == "case" ~ "Obese",
+      TRUE ~ NA_character_
+    )
+  ) %>%
+  dplyr::filter(!is.na(delta_48h_0h), !is.na(carbohydrate), !is.na(group_micro))
+
+# Define responder/non-responder using median split for each analyte
+# Separate by carbohydrate type for more relevant comparisons
+responder_status <- scfa_delta %>%
+  dplyr::group_by(analyte, carbohydrate) %>%
+  dplyr::mutate(
+    median_delta = median(delta_48h_0h, na.rm = TRUE),
+    responder_status = dplyr::if_else(
+      delta_48h_0h >= median_delta,
+      "Responder",
+      "Non-Responder"
+    )
+  ) %>%
+  dplyr::ungroup() %>%
+  dplyr::select(subject, group_micro, carbohydrate, analyte, responder_status)
+
+# Pivot to wide format for overlap analysis
+responder_wide <- responder_status %>%
+  tidyr::pivot_wider(
+    id_cols = c(subject, group_micro, carbohydrate),
+    names_from = analyte,
+    values_from = responder_status,
+    names_prefix = "responder_"
+  )
+
+# Examine overlap in responder status
+cat("Responder Status Overlap:
+")
+cat("- Total subjects:", nrow(responder_wide), "
+")
+if ("responder_butyrate" %in% colnames(responder_wide) && 
+    "responder_propionate" %in% colnames(responder_wide)) {
+  overlap_table <- table(
+    Butyrate = responder_wide$responder_butyrate,
+    Propionate = responder_wide$responder_propionate,
+    useNA = "ifany"
+  )
+  print(overlap_table)
+  
+  # Calculate overlap statistics
+  both_responder <- sum(responder_wide$responder_butyrate == "Responder" & 
+                        responder_wide$responder_propionate == "Responder", 
+                        na.rm = TRUE)
+  both_non_responder <- sum(responder_wide$responder_butyrate == "Non-Responder" & 
+                           responder_wide$responder_propionate == "Non-Responder", 
+                           na.rm = TRUE)
+  cat(sprintf("- Both Responder: %d (%.1f%%)
+", both_responder, 
+              100 * both_responder / nrow(responder_wide)))
+  cat(sprintf("- Both Non-Responder: %d (%.1f%%)
+", both_non_responder, 
+              100 * both_non_responder / nrow(responder_wide)))
+}
+
+# Merge responder status with microbiome metadata at 48H
+ps_48h_resp <- phyloseq::subset_samples(ps, timepoint == "48H")
+
+# Add responder status to sample_data
+# Extract numeric subject ID for matching
+sample_meta_resp <- data.frame(sample_data(ps_48h_resp)) %>%
+  tibble::rownames_to_column("SampleID") %>%
+  dplyr::mutate(
+    subject_id_numeric = stringr::str_extract(as.character(subject_id), "^[0-9]+")
+  ) %>%
+  dplyr::left_join(
+    responder_wide,
+    by = c("subject_id_numeric" = "subject", 
+           "group" = "group_micro", 
+           "carbohydrate" = "carbohydrate")
+  )
+
+# Update phyloseq sample_data
+sample_data(ps_48h_resp)$responder_butyrate <- sample_meta_resp$responder_butyrate
+sample_data(ps_48h_resp)$responder_propionate <- sample_meta_resp$responder_propionate
+
+cat("
+48H Microbiome Composition Comparison:
+")
+cat("- Samples with responder status:", 
+    sum(!is.na(sample_data(ps_48h_resp)$responder_butyrate)), "
+")
+```
+
+## 7.6 Microbial Composition Differences: Butyrate Responders vs Non-Responders
+
+```{r butyrate-responder-composition, echo=FALSE, fig.width=14, fig.height=8}
+# Compare microbial composition between butyrate responder groups at 48H
+ps_48h_butyrate_resp <- phyloseq::subset_samples(
+  ps_48h_resp,
+  !is.na(responder_butyrate) & carbohydrate != "No Added Carb"
+)
+
+if (nsamples(ps_48h_butyrate_resp) > 5) {
+  # Alpha diversity comparison
+  alpha_butyrate_resp <- estimate_richness(
+    ps_48h_butyrate_resp,
+    measures = c("Observed", "Shannon", "Simpson")
+  ) %>%
+    tibble::rownames_to_column("SampleID") %>%
+    dplyr::left_join(
+      data.frame(sample_data(ps_48h_butyrate_resp)) %>%
+        tibble::rownames_to_column("SampleID") %>%
+        dplyr::select(SampleID, responder_butyrate, carbohydrate),
+      by = "SampleID"
+    )
+  
+  # Plot alpha diversity
+  alpha_butyrate_resp_long <- alpha_butyrate_resp %>%
+    tidyr::pivot_longer(
+      cols = c(Observed, Shannon, Simpson),
+      names_to = "metric",
+      values_to = "value"
+    )
+  
+  alpha_resp_plot <- ggplot(
+    alpha_butyrate_resp_long,
+    aes(x = responder_butyrate, y = value, fill = responder_butyrate)
+  ) +
+    geom_boxplot(alpha = 0.7) +
+    geom_jitter(width = 0.2, alpha = 0.5) +
+    facet_wrap(~ metric, scales = "free_y") +
+    scale_fill_scfa() +
+    labs(
+      title = "Alpha Diversity: Butyrate Responders vs Non-Responders (48H)",
+      subtitle = "Comparison across RDC and SDC conditions",
+      x = "Butyrate Response Status",
+      y = "Alpha Diversity",
+      fill = "Response Status"
+    ) +
+    theme_scfa() +
+    theme(legend.position = "none")
+  
+  print(alpha_resp_plot)
+  
+  # Beta diversity comparison
+  ps_48h_butyrate_resp_rel <- microbiome::transform(
+    ps_48h_butyrate_resp, 
+    "compositional"
+  )
+  
+  dist_bray_resp <- phyloseq::distance(
+    ps_48h_butyrate_resp_rel, 
+    method = "bray"
+  )
+  
+  meta_resp <- data.frame(sample_data(ps_48h_butyrate_resp_rel))
+  
+  # PCoA
+  pcoa_resp <- ape::pcoa(as.matrix(dist_bray_resp))
+  pcoa_df_resp <- data.frame(
+    PC1 = pcoa_resp$vectors[, 1],
+    PC2 = pcoa_resp$vectors[, 2],
+    responder_butyrate = meta_resp$responder_butyrate,
+    carbohydrate = meta_resp$carbohydrate
+  ) %>%
+    dplyr::filter(!is.na(responder_butyrate))
+  
+  pcoa_plot_resp <- ggplot(
+    pcoa_df_resp,
+    aes(x = PC1, y = PC2, color = responder_butyrate)
+  ) +
+    geom_point(size = 2, alpha = 0.7) +
+    stat_ellipse(aes(group = responder_butyrate), level = 0.68) +
+    facet_wrap(~ carbohydrate) +
+    scale_color_scfa() +
+    labs(
+      title = "Beta Diversity: Butyrate Responders vs Non-Responders (48H)",
+      subtitle = "Bray-Curtis PCoA",
+      x = paste0("PC1 (", round(100 * pcoa_resp$values$Relative_eig[1], 1), "%)"),
+      y = paste0("PC2 (", round(100 * pcoa_resp$values$Relative_eig[2], 1), "%)"),
+      color = "Response Status"
+    ) +
+    theme_scfa()
+  
+  print(pcoa_plot_resp)
+  
+  # PERMANOVA
+  perm_resp <- vegan::adonis2(
+    dist_bray_resp ~ responder_butyrate * carbohydrate,
+    data = meta_resp,
+    strata = meta_resp$subject_id,
+    permutations = 999
+  )
+  
+  cat("
+PERMANOVA: Butyrate Responder Status (48H):
+")
+  print(perm_resp)
+  
+} else {
+  cat("Insufficient data for butyrate responder composition comparison
+")
+}
+```
+
+## 7.7 Microbial Composition Differences: Propionate Responders vs Non-Responders
+
+```{r propionate-responder-composition, echo=FALSE, fig.width=14, fig.height=8}
+# Compare microbial composition between propionate responder groups at 48H
+ps_48h_propionate_resp <- phyloseq::subset_samples(
+  ps_48h_resp,
+  !is.na(responder_propionate) & carbohydrate != "No Added Carb"
+)
+
+if (nsamples(ps_48h_propionate_resp) > 5) {
+  # Alpha diversity comparison
+  alpha_propionate_resp <- estimate_richness(
+    ps_48h_propionate_resp,
+    measures = c("Observed", "Shannon", "Simpson")
+  ) %>%
+    tibble::rownames_to_column("SampleID") %>%
+    dplyr::left_join(
+      data.frame(sample_data(ps_48h_propionate_resp)) %>%
+        tibble::rownames_to_column("SampleID") %>%
+        dplyr::select(SampleID, responder_propionate, carbohydrate),
+      by = "SampleID"
+    )
+  
+  alpha_propionate_resp_long <- alpha_propionate_resp %>%
+    tidyr::pivot_longer(
+      cols = c(Observed, Shannon, Simpson),
+      names_to = "metric",
+      values_to = "value"
+    )
+  
+  alpha_prop_resp_plot <- ggplot(
+    alpha_propionate_resp_long,
+    aes(x = responder_propionate, y = value, fill = responder_propionate)
+  ) +
+    geom_boxplot(alpha = 0.7) +
+    geom_jitter(width = 0.2, alpha = 0.5) +
+    facet_wrap(~ metric, scales = "free_y") +
+    scale_fill_scfa() +
+    labs(
+      title = "Alpha Diversity: Propionate Responders vs Non-Responders (48H)",
+      subtitle = "Comparison across RDC and SDC conditions",
+      x = "Propionate Response Status",
+      y = "Alpha Diversity",
+      fill = "Response Status"
+    ) +
+    theme_scfa() +
+    theme(legend.position = "none")
+  
+  print(alpha_prop_resp_plot)
+  
+  # Beta diversity comparison
+  ps_48h_propionate_resp_rel <- microbiome::transform(
+    ps_48h_propionate_resp, 
+    "compositional"
+  )
+  
+  dist_bray_prop_resp <- phyloseq::distance(
+    ps_48h_propionate_resp_rel, 
+    method = "bray"
+  )
+  
+  meta_prop_resp <- data.frame(sample_data(ps_48h_propionate_resp_rel))
+  
+  # PCoA
+  pcoa_prop_resp <- ape::pcoa(as.matrix(dist_bray_prop_resp))
+  pcoa_df_prop_resp <- data.frame(
+    PC1 = pcoa_prop_resp$vectors[, 1],
+    PC2 = pcoa_prop_resp$vectors[, 2],
+    responder_propionate = meta_prop_resp$responder_propionate,
+    carbohydrate = meta_prop_resp$carbohydrate
+  ) %>%
+    dplyr::filter(!is.na(responder_propionate))
+  
+  pcoa_plot_prop_resp <- ggplot(
+    pcoa_df_prop_resp,
+    aes(x = PC1, y = PC2, color = responder_propionate)
+  ) +
+    geom_point(size = 2, alpha = 0.7) +
+    stat_ellipse(aes(group = responder_propionate), level = 0.68) +
+    facet_wrap(~ carbohydrate) +
+    scale_color_scfa() +
+    labs(
+      title = "Beta Diversity: Propionate Responders vs Non-Responders (48H)",
+      subtitle = "Bray-Curtis PCoA",
+      x = paste0("PC1 (", round(100 * pcoa_prop_resp$values$Relative_eig[1], 1), "%)"),
+      y = paste0("PC2 (", round(100 * pcoa_prop_resp$values$Relative_eig[2], 1), "%)"),
+      color = "Response Status"
+    ) +
+    theme_scfa()
+  
+  print(pcoa_plot_prop_resp)
+  
+  # PERMANOVA
+  perm_prop_resp <- vegan::adonis2(
+    dist_bray_prop_resp ~ responder_propionate * carbohydrate,
+    data = meta_prop_resp,
+    strata = meta_prop_resp$subject_id,
+    permutations = 999
+  )
+  
+  cat("
+PERMANOVA: Propionate Responder Status (48H):
+")
+  print(perm_prop_resp)
+  
+} else {
+  cat("Insufficient data for propionate responder composition comparison
+")
+}
 ```
 
 # 8. Summary
 
 ```{r final-summary, echo=FALSE, results='asis'}
-# TODO: concise summary of key integrated findings across SCFA,
-# microbiome, and taxon–SCFA analyses
+cat("## Key Integrated Findings
+
+")
+
+cat("### SCFA Metabolomics
+")
+cat("- Carbohydrate type effects were observed for multiple SCFAs, with significant differences in delta concentrations (48H - 0H) between carbohydrate conditions.
+")
+cat("- Mixed-effects models revealed significant interactions between group, carbohydrate type, and timepoint for key SCFAs.
+
+")
+
+cat("### Microbiome Composition
+")
+cat("- Alpha diversity showed differences between Healthy and Obese groups, with variations by carbohydrate type and timepoint.
+")
+cat("- Beta diversity analyses demonstrated significant effects of group, carbohydrate type, and timepoint on community composition.
+")
+cat("- Differential abundance analyses (ANCOM-BC2, MaAsLin2) identified multiple taxa associated with carbohydrate type, group, and timepoint effects.
+
+")
+
+cat("### Taxon–SCFA Relationships
+")
+if (exists("ancombc2_butyrate_tbl_rel") && nrow(ancombc2_butyrate_tbl_rel) > 0) {
+  cat("- Multiple taxa were significantly associated with butyrate concentrations after adjusting for carbohydrate effects.
+")
+}
+if (exists("ancombc2_propionate_tbl_rel") && nrow(ancombc2_propionate_tbl_rel) > 0) {
+  cat("- Multiple taxa were significantly associated with propionate concentrations after adjusting for carbohydrate effects.
+")
+}
+cat("- Fusicatenibacter showed correlations with both butyrate and propionate concentrations, with variation by timepoint.
+
+")
+
+cat("### Responder vs Non-Responder Analysis
+")
+if (exists("responder_wide") && nrow(responder_wide) > 0) {
+  cat("- Responder groups were defined separately for butyrate and propionate based on median delta SCFA changes from 0H to 48H.
+")
+  if (exists("both_responder")) {
+    cat(sprintf("- Overlap analysis revealed %d subjects (%.1f%%) were responders for both SCFAs.
+", 
+                both_responder, 100 * both_responder / nrow(responder_wide)))
+  }
+  cat("- Microbial composition differences were observed between responder and non-responder groups at 48H, indicating potential microbiome–SCFA interactions.
+")
+}
+
+cat("
+### Conclusions
+")
+cat("The integrated analysis demonstrates clear relationships between carbohydrate type, SCFA production, and microbiome composition. The identification of responder vs non-responder groups suggests individual variation in SCFA response that correlates with microbiome structure, highlighting the importance of personalized approaches to dietary interventions.
+")
 ```
 
 

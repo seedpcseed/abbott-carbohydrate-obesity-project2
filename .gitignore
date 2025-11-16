@@ -33,3 +33,7 @@ microbiome_analysis/cache/strobelca/kmer_index_5e0c59bd7b810add.meta.json
 # Large reference database files
 *.sintax_cache.bin
 microbiome_analysis/references/SILVA_138.2.bacteria_only.sintax_cache.bin
+
+
+integrated/cache/
+integrated/maaslin2*

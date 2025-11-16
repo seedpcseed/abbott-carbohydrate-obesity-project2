@@ -1,0 +1,76 @@
+# 7. Integrated Analysis: Taxon–SCFA Relationships
+
+This section integrates SCFA metabolomics with microbiome composition to identify taxa associated with SCFA concentrations. We model associations between microbial taxa and butyrate/propionate concentrations while accounting for carbohydrate type effects, using both relative and absolute abundance data.
+
+## 7.1 Integration of SCFA Data with Microbiome Metadata
+
+```{r scfa-microbiome-integration, echo=FALSE, cache=TRUE, cache.path="cache/integrated-"}
+# Merge SCFA data with microbiome metadata
+# First, create a mapping between SCFA sample IDs and microbiome sample IDs
+# SCFA uses: subject, group, carbohydrate_type, timepoint_hr
+# Microbiome uses: subject_id, group, carbohydrate, timepoint
+
+# Get SCFA concentrations at subject × carbohydrate × timepoint level
+scfa_wide <- scfa_sample_data_long_factored %>%
+  dplyr::filter(analyte %in% c("butyrate", "propionate")) %>%
+  dplyr::filter(timepoint_hr %in% c("0", "48")) %>%
+  tidyr::pivot_wider(
+    id_cols = c(subject, group, carbohydrate_type, timepoint_hr),
+    names_from = analyte,
+    values_from = concentration,
+    names_prefix = "scfa_"
+  ) %>%
+  dplyr::mutate(
+    # Map carbohydrate_type to microbiome carbohydrate levels
+    carbohydrate = dplyr::case_when(
+      carbohydrate_type == "no_carbohydrate" ~ "No Added Carb",
+      carbohydrate_type == "rapid_digestible" ~ "RDC",
+      carbohydrate_type == "slow_digestible" ~ "SDC",
+      TRUE ~ NA_character_
+    ),
+    # Map timepoint_hr to microbiome timepoint
+    timepoint = dplyr::case_when(
+      timepoint_hr == "0" ~ "0H",
+      timepoint_hr == "48" ~ "48H",
+      TRUE ~ NA_character_
+    ),
+    # Map group
+    group_micro = dplyr::case_when(
+      group == "control" ~ "Healthy",
+      group == "case" ~ "Obese",
+      TRUE ~ NA_character_
+    )
+  ) %>%
+  dplyr::filter(!is.na(carbohydrate), !is.na(timepoint), !is.na(group_micro))
+
+# Get microbiome sample metadata
+micro_meta_merged <- data.frame(sample_data(ps)) %>%
+  tibble::rownames_to_column("SampleID") %>%
+  dplyr::mutate(
+    subject_id = as.character(subject_id),
+    group = as.character(group),
+    carbohydrate = as.character(carbohydrate),
+    timepoint = as.character(timepoint)
+  )
+
+# Merge SCFA data with microbiome metadata
+micro_meta_scfa <- micro_meta_merged %>%
+  dplyr::left_join(
+    scfa_wide,
+    by = c(
+      "subject_id" = "subject",
+      "group" = "group_micro",
+      "carbohydrate" = "carbohydrate",
+      "timepoint" = "timepoint"
+    )
+  )
+
+# Summary of merged data
+cat("SCFA-Microbiome Integration Summary:\n")
+cat("- Total microbiome samples:", nrow(micro_meta_scfa), "\n")
+cat("- Samples with butyrate data:", sum(!is.na(micro_meta_scfa$scfa_butyrate)), "\n")
+cat("- Samples with propionate data:", sum(!is.na(micro_meta_scfa$scfa_propionate)), "\n")
+cat("- Samples with both SCFAs:", sum(!is.na(micro_meta_scfa$scfa_butyrate) & 
+                                        !is.na(micro_meta_scfa$scfa_propionate)), "\n")
+```
+
