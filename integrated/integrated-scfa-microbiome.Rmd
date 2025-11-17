@@ -4959,15 +4959,25 @@ if (nsamples(ps_butyrate_resp_genus) > 5 && ntaxa(ps_butyrate_resp_genus) > 1) {
 # ANCOM-BC2 Forest Plot
 if (exists("ancombc2_butyrate_resp_tbl") && nrow(ancombc2_butyrate_resp_tbl) > 0) {
   # Get taxonomy table for creating proper labels
-  # For genus-level analysis, taxon names are genus names (e.g., "g__GenusName")
-  # Get unique genus taxonomy from ps_genus
-  tax_table_butyrate_resp <- as.data.frame(tax_table(ps_genus)) %>%
-    dplyr::distinct(Genus, .keep_all = TRUE) %>%
+  # For genus-level analysis, taxon names are genus names (e.g., "g__GenusName" or "g__NA")
+  # We need to handle cases where Genus is NA - use Family in those cases
+  tax_table_butyrate_resp <- as.data.frame(tax_table(ps_butyrate_resp_genus)) %>%
     dplyr::mutate(
-      taxon = Genus,  # Match on Genus column since ANCOM-BC2 uses genus names
-      Genus_clean = stringr::str_replace(Genus, "^g__", ""),
-      Species_clean = stringr::str_replace(Species, "^s__", ""),
-      Family_clean = stringr::str_replace(Family, "^f__", ""),
+      Genus_value = as.character(Genus),
+      Family_value = as.character(Family),
+      Species_value = as.character(Species),
+      # Create taxon key for matching (handle NA genera)
+      taxon = dplyr::if_else(
+        is.na(Genus_value) | Genus_value == "NA" | Genus_value == "g__NA",
+        paste0("f__", stringr::str_replace(Family_value, "^f__", "")),
+        Genus_value
+      )
+    ) %>%
+    dplyr::distinct(taxon, .keep_all = TRUE) %>%
+    dplyr::mutate(
+      Genus_clean = stringr::str_replace(Genus_value, "^g__", ""),
+      Species_clean = stringr::str_replace(Species_value, "^s__", ""),
+      Family_clean = stringr::str_replace(Family_value, "^f__", ""),
       # Create label: Genus_Species if both available, otherwise Family if Genus is NA
       taxon_label = dplyr::case_when(
         !is.na(Genus_clean) & Genus_clean != "NA" & Genus_clean != "" &
@@ -4980,8 +4990,41 @@ if (exists("ancombc2_butyrate_resp_tbl") && nrow(ancombc2_butyrate_resp_tbl) > 0
     ) %>%
     dplyr::select(taxon, taxon_label)
   
+  # Also create a mapping for NA genera - map "g__NA" to Family-based taxon key
+  # ANCOM-BC2 might return "g__NA" for taxa without genus assignments
+  na_genus_mapping <- as.data.frame(tax_table(ps_butyrate_resp_genus)) %>%
+    dplyr::filter(is.na(Genus) | Genus == "NA" | Genus == "g__NA") %>%
+    dplyr::mutate(
+      taxon_na = "g__NA",
+      Family_value = as.character(Family),
+      Family_clean = stringr::str_replace(Family_value, "^f__", ""),
+      taxon_label = dplyr::if_else(
+        !is.na(Family_clean) & Family_clean != "NA" & Family_clean != "",
+        Family_clean,
+        "Unclassified"
+      )
+    ) %>%
+    dplyr::distinct(taxon_na, taxon_label, .keep_all = TRUE) %>%
+    dplyr::select(taxon = taxon_na, taxon_label)
+  
+  # Combine both mappings
+  tax_table_butyrate_resp <- dplyr::bind_rows(tax_table_butyrate_resp, na_genus_mapping) %>%
+    dplyr::distinct(taxon, .keep_all = TRUE)
+  
   forest_butyrate_resp_data <- ancombc2_butyrate_resp_tbl %>%
     dplyr::left_join(tax_table_butyrate_resp, by = "taxon") %>%
+    # If join failed, try to create label from taxon name directly
+    dplyr::mutate(
+      taxon_label = dplyr::if_else(
+        is.na(taxon_label) | taxon_label == "NA",
+        dplyr::case_when(
+          stringr::str_detect(taxon, "^f__") ~ stringr::str_replace(taxon, "^f__", ""),
+          stringr::str_detect(taxon, "^g__") ~ stringr::str_replace(taxon, "^g__", ""),
+          TRUE ~ taxon
+        ),
+        taxon_label
+      )
+    ) %>%
     dplyr::mutate(
       ci_lower = beta - 1.96 * se,
       ci_upper = beta + 1.96 * se,
@@ -5482,15 +5525,25 @@ if (nsamples(ps_prop_resp_genus) > 5 && ntaxa(ps_prop_resp_genus) > 1) {
 # ANCOM-BC2 Forest Plot
 if (exists("ancombc2_prop_resp_tbl") && nrow(ancombc2_prop_resp_tbl) > 0) {
   # Get taxonomy table for creating proper labels
-  # For genus-level analysis, taxon names are genus names (e.g., "g__GenusName")
-  # Get unique genus taxonomy from ps_genus
-  tax_table_prop_resp <- as.data.frame(tax_table(ps_genus)) %>%
-    dplyr::distinct(Genus, .keep_all = TRUE) %>%
+  # For genus-level analysis, taxon names are genus names (e.g., "g__GenusName" or "g__NA")
+  # We need to handle cases where Genus is NA - use Family in those cases
+  tax_table_prop_resp <- as.data.frame(tax_table(ps_prop_resp_genus)) %>%
     dplyr::mutate(
-      taxon = Genus,  # Match on Genus column since ANCOM-BC2 uses genus names
-      Genus_clean = stringr::str_replace(Genus, "^g__", ""),
-      Species_clean = stringr::str_replace(Species, "^s__", ""),
-      Family_clean = stringr::str_replace(Family, "^f__", ""),
+      Genus_value = as.character(Genus),
+      Family_value = as.character(Family),
+      Species_value = as.character(Species),
+      # Create taxon key for matching (handle NA genera)
+      taxon = dplyr::if_else(
+        is.na(Genus_value) | Genus_value == "NA" | Genus_value == "g__NA",
+        paste0("f__", stringr::str_replace(Family_value, "^f__", "")),
+        Genus_value
+      )
+    ) %>%
+    dplyr::distinct(taxon, .keep_all = TRUE) %>%
+    dplyr::mutate(
+      Genus_clean = stringr::str_replace(Genus_value, "^g__", ""),
+      Species_clean = stringr::str_replace(Species_value, "^s__", ""),
+      Family_clean = stringr::str_replace(Family_value, "^f__", ""),
       # Create label: Genus_Species if both available, otherwise Family if Genus is NA
       taxon_label = dplyr::case_when(
         !is.na(Genus_clean) & Genus_clean != "NA" & Genus_clean != "" &
@@ -5503,8 +5556,41 @@ if (exists("ancombc2_prop_resp_tbl") && nrow(ancombc2_prop_resp_tbl) > 0) {
     ) %>%
     dplyr::select(taxon, taxon_label)
   
+  # Also create a mapping for NA genera - map "g__NA" to Family-based taxon key
+  # ANCOM-BC2 might return "g__NA" for taxa without genus assignments
+  na_genus_mapping <- as.data.frame(tax_table(ps_prop_resp_genus)) %>%
+    dplyr::filter(is.na(Genus) | Genus == "NA" | Genus == "g__NA") %>%
+    dplyr::mutate(
+      taxon_na = "g__NA",
+      Family_value = as.character(Family),
+      Family_clean = stringr::str_replace(Family_value, "^f__", ""),
+      taxon_label = dplyr::if_else(
+        !is.na(Family_clean) & Family_clean != "NA" & Family_clean != "",
+        Family_clean,
+        "Unclassified"
+      )
+    ) %>%
+    dplyr::distinct(taxon_na, taxon_label, .keep_all = TRUE) %>%
+    dplyr::select(taxon = taxon_na, taxon_label)
+  
+  # Combine both mappings
+  tax_table_prop_resp <- dplyr::bind_rows(tax_table_prop_resp, na_genus_mapping) %>%
+    dplyr::distinct(taxon, .keep_all = TRUE)
+  
   forest_prop_resp_data <- ancombc2_prop_resp_tbl %>%
     dplyr::left_join(tax_table_prop_resp, by = "taxon") %>%
+    # If join failed, try to create label from taxon name directly
+    dplyr::mutate(
+      taxon_label = dplyr::if_else(
+        is.na(taxon_label) | taxon_label == "NA",
+        dplyr::case_when(
+          stringr::str_detect(taxon, "^f__") ~ stringr::str_replace(taxon, "^f__", ""),
+          stringr::str_detect(taxon, "^g__") ~ stringr::str_replace(taxon, "^g__", ""),
+          TRUE ~ taxon
+        ),
+        taxon_label
+      )
+    ) %>%
     dplyr::mutate(
       ci_lower = beta - 1.96 * se,
       ci_upper = beta + 1.96 * se,
