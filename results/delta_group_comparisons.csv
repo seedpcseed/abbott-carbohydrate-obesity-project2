@@ -1,6 +1,0 @@
-"analyte",".y.","group1","group2","n1","n2","statistic","df","p","p.adj","p.adj.signif"
-"5aminovalerate","delta_48h_0h","control","case",24,24,0.402988031006276,40.3836991081679,0.689,0.689,"ns"
-"acetate","delta_48h_0h","control","case",24,24,-1.17011946941647,41.8753069293024,0.249,0.6525,"ns"
-"butyrate","delta_48h_0h","control","case",24,24,0.419989302183872,42.5160995978542,0.677,0.689,"ns"
-"propionate","delta_48h_0h","control","case",24,24,-1.1374813779271,45.5565488606313,0.261,0.6525,"ns"
-"succinate","delta_48h_0h","control","case",24,24,0.507934162849473,44.3471755908994,0.614,0.689,"ns"

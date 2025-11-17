@@ -1,0 +1,726 @@
+<style>td, th { padding : 6px } th { background-color :#00843D ; color : white; border : 2px solid black; } td {background-color: white;  color : black ; border : 2px solid black }</style><table>
+ <thead>
+  <tr>
+   <th style="text-align:left;"> internal_id </th>
+   <th style="text-align:left;"> customer_label </th>
+   <th style="text-align:right;"> rawseqs(R1+R2) </th>
+   <th style="text-align:right;"> trimmed_seqs(R1+R2) </th>
+   <th style="text-align:right;"> dada2_infered </th>
+   <th style="text-align:right;"> chimera_seqs </th>
+   <th style="text-align:right;"> chimera_free_seqs </th>
+   <th style="text-align:right;"> unique_seqs </th>
+   <th style="text-align:right;"> seqs(after_size_filtration) </th>
+   <th style="text-align:right;"> final_unique_seqs </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> zr24558_1V3V4 </td>
+   <td style="text-align:left;"> 84B.R1.48H </td>
+   <td style="text-align:right;"> 126020 </td>
+   <td style="text-align:right;"> 126020 </td>
+   <td style="text-align:right;"> 60831 </td>
+   <td style="text-align:right;"> 6857 </td>
+   <td style="text-align:right;"> 53974 </td>
+   <td style="text-align:right;"> 225 </td>
+   <td style="text-align:right;"> 53584 </td>
+   <td style="text-align:right;"> 136 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> zr24558_2V3V4 </td>
+   <td style="text-align:left;"> 84B.R2.48H </td>
+   <td style="text-align:right;"> 226262 </td>
+   <td style="text-align:right;"> 226256 </td>
+   <td style="text-align:right;"> 107855 </td>
+   <td style="text-align:right;"> 14624 </td>
+   <td style="text-align:right;"> 93231 </td>
+   <td style="text-align:right;"> 451 </td>
+   <td style="text-align:right;"> 92462 </td>
+   <td style="text-align:right;"> 242 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> zr24558_11V3V4 </td>
+   <td style="text-align:left;"> 73B.R1.48H </td>
+   <td style="text-align:right;"> 142494 </td>
+   <td style="text-align:right;"> 142492 </td>
+   <td style="text-align:right;"> 68513 </td>
+   <td style="text-align:right;"> 7540 </td>
+   <td style="text-align:right;"> 60973 </td>
+   <td style="text-align:right;"> 262 </td>
+   <td style="text-align:right;"> 60614 </td>
+   <td style="text-align:right;"> 151 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> zr24558_12V3V4 </td>
+   <td style="text-align:left;"> 73B.R2.48H </td>
+   <td style="text-align:right;"> 143944 </td>
+   <td style="text-align:right;"> 143944 </td>
+   <td style="text-align:right;"> 71142 </td>
+   <td style="text-align:right;"> 13076 </td>
+   <td style="text-align:right;"> 58066 </td>
+   <td style="text-align:right;"> 72 </td>
+   <td style="text-align:right;"> 57963 </td>
+   <td style="text-align:right;"> 49 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> zr24558_21V3V4 </td>
+   <td style="text-align:left;"> 66A.R1.48H </td>
+   <td style="text-align:right;"> 207408 </td>
+   <td style="text-align:right;"> 207408 </td>
+   <td style="text-align:right;"> 100414 </td>
+   <td style="text-align:right;"> 17464 </td>
+   <td style="text-align:right;"> 82950 </td>
+   <td style="text-align:right;"> 373 </td>
+   <td style="text-align:right;"> 82365 </td>
+   <td style="text-align:right;"> 203 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> zr24558_22V3V4 </td>
+   <td style="text-align:left;"> 66A.R2.48H </td>
+   <td style="text-align:right;"> 143722 </td>
+   <td style="text-align:right;"> 143720 </td>
+   <td style="text-align:right;"> 70975 </td>
+   <td style="text-align:right;"> 11574 </td>
+   <td style="text-align:right;"> 59401 </td>
+   <td style="text-align:right;"> 71 </td>
+   <td style="text-align:right;"> 59259 </td>
+   <td style="text-align:right;"> 46 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> zr24558_37V3V4 </td>
+   <td style="text-align:left;"> 67A.R2.48H </td>
+   <td style="text-align:right;"> 126676 </td>
+   <td style="text-align:right;"> 126676 </td>
+   <td style="text-align:right;"> 61190 </td>
+   <td style="text-align:right;"> 7238 </td>
+   <td style="text-align:right;"> 53952 </td>
+   <td style="text-align:right;"> 221 </td>
+   <td style="text-align:right;"> 53667 </td>
+   <td style="text-align:right;"> 126 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> zr24558_41V3V4 </td>
+   <td style="text-align:left;"> 92A.R1.48H </td>
+   <td style="text-align:right;"> 158258 </td>
+   <td style="text-align:right;"> 158256 </td>
+   <td style="text-align:right;"> 76544 </td>
+   <td style="text-align:right;"> 10034 </td>
+   <td style="text-align:right;"> 66510 </td>
+   <td style="text-align:right;"> 284 </td>
+   <td style="text-align:right;"> 66117 </td>
+   <td style="text-align:right;"> 169 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> zr24558_42V3V4 </td>
+   <td style="text-align:left;"> 92A.R2.48H </td>
+   <td style="text-align:right;"> 101234 </td>
+   <td style="text-align:right;"> 101232 </td>
+   <td style="text-align:right;"> 49315 </td>
+   <td style="text-align:right;"> 9860 </td>
+   <td style="text-align:right;"> 39455 </td>
+   <td style="text-align:right;"> 105 </td>
+   <td style="text-align:right;"> 39338 </td>
+   <td style="text-align:right;"> 72 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> zr24558_46V3V4 </td>
+   <td style="text-align:left;"> 92B.R1.48H </td>
+   <td style="text-align:right;"> 148742 </td>
+   <td style="text-align:right;"> 148738 </td>
+   <td style="text-align:right;"> 71210 </td>
+   <td style="text-align:right;"> 11138 </td>
+   <td style="text-align:right;"> 60072 </td>
+   <td style="text-align:right;"> 291 </td>
+   <td style="text-align:right;"> 59570 </td>
+   <td style="text-align:right;"> 157 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> zr24558_47V3V4 </td>
+   <td style="text-align:left;"> 92B.R2.48H </td>
+   <td style="text-align:right;"> 120362 </td>
+   <td style="text-align:right;"> 120362 </td>
+   <td style="text-align:right;"> 59256 </td>
+   <td style="text-align:right;"> 14466 </td>
+   <td style="text-align:right;"> 44790 </td>
+   <td style="text-align:right;"> 109 </td>
+   <td style="text-align:right;"> 44629 </td>
+   <td style="text-align:right;"> 70 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> zr24558_56V3V4 </td>
+   <td style="text-align:left;"> 66B.R1.48H </td>
+   <td style="text-align:right;"> 154792 </td>
+   <td style="text-align:right;"> 154792 </td>
+   <td style="text-align:right;"> 75676 </td>
+   <td style="text-align:right;"> 8158 </td>
+   <td style="text-align:right;"> 67518 </td>
+   <td style="text-align:right;"> 172 </td>
+   <td style="text-align:right;"> 67311 </td>
+   <td style="text-align:right;"> 113 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> zr24558_57V3V4 </td>
+   <td style="text-align:left;"> 66B.R2.48H </td>
+   <td style="text-align:right;"> 126390 </td>
+   <td style="text-align:right;"> 126390 </td>
+   <td style="text-align:right;"> 62537 </td>
+   <td style="text-align:right;"> 6040 </td>
+   <td style="text-align:right;"> 56497 </td>
+   <td style="text-align:right;"> 72 </td>
+   <td style="text-align:right;"> 56404 </td>
+   <td style="text-align:right;"> 52 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> zr24558_76V3V4 </td>
+   <td style="text-align:left;"> 276B.R1.48H </td>
+   <td style="text-align:right;"> 126242 </td>
+   <td style="text-align:right;"> 126242 </td>
+   <td style="text-align:right;"> 59999 </td>
+   <td style="text-align:right;"> 9697 </td>
+   <td style="text-align:right;"> 50302 </td>
+   <td style="text-align:right;"> 264 </td>
+   <td style="text-align:right;"> 49964 </td>
+   <td style="text-align:right;"> 170 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> zr24558_77V3V4 </td>
+   <td style="text-align:left;"> 276B.R2.48H </td>
+   <td style="text-align:right;"> 119832 </td>
+   <td style="text-align:right;"> 119830 </td>
+   <td style="text-align:right;"> 59445 </td>
+   <td style="text-align:right;"> 3402 </td>
+   <td style="text-align:right;"> 56043 </td>
+   <td style="text-align:right;"> 56 </td>
+   <td style="text-align:right;"> 55906 </td>
+   <td style="text-align:right;"> 27 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> zr24558_86V3V4 </td>
+   <td style="text-align:left;"> 116A.R1.48H </td>
+   <td style="text-align:right;"> 153048 </td>
+   <td style="text-align:right;"> 153046 </td>
+   <td style="text-align:right;"> 74546 </td>
+   <td style="text-align:right;"> 6931 </td>
+   <td style="text-align:right;"> 67615 </td>
+   <td style="text-align:right;"> 234 </td>
+   <td style="text-align:right;"> 67182 </td>
+   <td style="text-align:right;"> 124 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> zr24558_87V3V4 </td>
+   <td style="text-align:left;"> 116A.R2.48H </td>
+   <td style="text-align:right;"> 100830 </td>
+   <td style="text-align:right;"> 100828 </td>
+   <td style="text-align:right;"> 48552 </td>
+   <td style="text-align:right;"> 6455 </td>
+   <td style="text-align:right;"> 42097 </td>
+   <td style="text-align:right;"> 240 </td>
+   <td style="text-align:right;"> 41712 </td>
+   <td style="text-align:right;"> 128 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> zr24558_97V3V4 </td>
+   <td style="text-align:left;"> 176A.R1.48H </td>
+   <td style="text-align:right;"> 116434 </td>
+   <td style="text-align:right;"> 116434 </td>
+   <td style="text-align:right;"> 56514 </td>
+   <td style="text-align:right;"> 4736 </td>
+   <td style="text-align:right;"> 51778 </td>
+   <td style="text-align:right;"> 206 </td>
+   <td style="text-align:right;"> 51457 </td>
+   <td style="text-align:right;"> 128 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> zr24558_98V3V4 </td>
+   <td style="text-align:left;"> 176A.R2.48H </td>
+   <td style="text-align:right;"> 112046 </td>
+   <td style="text-align:right;"> 112044 </td>
+   <td style="text-align:right;"> 55388 </td>
+   <td style="text-align:right;"> 6454 </td>
+   <td style="text-align:right;"> 48934 </td>
+   <td style="text-align:right;"> 94 </td>
+   <td style="text-align:right;"> 48789 </td>
+   <td style="text-align:right;"> 51 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> zr24558_102V3V4 </td>
+   <td style="text-align:left;"> 276A.R1.48H </td>
+   <td style="text-align:right;"> 127826 </td>
+   <td style="text-align:right;"> 127826 </td>
+   <td style="text-align:right;"> 62279 </td>
+   <td style="text-align:right;"> 5992 </td>
+   <td style="text-align:right;"> 56287 </td>
+   <td style="text-align:right;"> 217 </td>
+   <td style="text-align:right;"> 55941 </td>
+   <td style="text-align:right;"> 112 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> zr24558_103V3V4 </td>
+   <td style="text-align:left;"> 276A.R2.48H </td>
+   <td style="text-align:right;"> 124964 </td>
+   <td style="text-align:right;"> 124962 </td>
+   <td style="text-align:right;"> 61853 </td>
+   <td style="text-align:right;"> 3559 </td>
+   <td style="text-align:right;"> 58294 </td>
+   <td style="text-align:right;"> 97 </td>
+   <td style="text-align:right;"> 58093 </td>
+   <td style="text-align:right;"> 47 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> zr24558_107V3V4 </td>
+   <td style="text-align:left;"> 84A.R1.48H </td>
+   <td style="text-align:right;"> 167818 </td>
+   <td style="text-align:right;"> 167816 </td>
+   <td style="text-align:right;"> 80645 </td>
+   <td style="text-align:right;"> 13548 </td>
+   <td style="text-align:right;"> 67097 </td>
+   <td style="text-align:right;"> 412 </td>
+   <td style="text-align:right;"> 66345 </td>
+   <td style="text-align:right;"> 207 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> zr24558_108V3V4 </td>
+   <td style="text-align:left;"> 84A.R2.48H </td>
+   <td style="text-align:right;"> 146080 </td>
+   <td style="text-align:right;"> 146080 </td>
+   <td style="text-align:right;"> 70080 </td>
+   <td style="text-align:right;"> 12378 </td>
+   <td style="text-align:right;"> 57702 </td>
+   <td style="text-align:right;"> 336 </td>
+   <td style="text-align:right;"> 57149 </td>
+   <td style="text-align:right;"> 178 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> zr24558_132V3V4 </td>
+   <td style="text-align:left;"> 73A.R1.48H </td>
+   <td style="text-align:right;"> 132414 </td>
+   <td style="text-align:right;"> 132412 </td>
+   <td style="text-align:right;"> 63962 </td>
+   <td style="text-align:right;"> 10057 </td>
+   <td style="text-align:right;"> 53905 </td>
+   <td style="text-align:right;"> 344 </td>
+   <td style="text-align:right;"> 53244 </td>
+   <td style="text-align:right;"> 172 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> zr24558_133V3V4 </td>
+   <td style="text-align:left;"> 73A.R2.48H </td>
+   <td style="text-align:right;"> 158928 </td>
+   <td style="text-align:right;"> 158924 </td>
+   <td style="text-align:right;"> 76849 </td>
+   <td style="text-align:right;"> 15230 </td>
+   <td style="text-align:right;"> 61619 </td>
+   <td style="text-align:right;"> 289 </td>
+   <td style="text-align:right;"> 61250 </td>
+   <td style="text-align:right;"> 177 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> zr24558_157V3V4 </td>
+   <td style="text-align:left;"> 67B.R1.48H </td>
+   <td style="text-align:right;"> 128586 </td>
+   <td style="text-align:right;"> 128586 </td>
+   <td style="text-align:right;"> 62162 </td>
+   <td style="text-align:right;"> 9961 </td>
+   <td style="text-align:right;"> 52201 </td>
+   <td style="text-align:right;"> 266 </td>
+   <td style="text-align:right;"> 51734 </td>
+   <td style="text-align:right;"> 140 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> zr24558_158V3V4 </td>
+   <td style="text-align:left;"> 67B.R2.48H </td>
+   <td style="text-align:right;"> 128416 </td>
+   <td style="text-align:right;"> 128414 </td>
+   <td style="text-align:right;"> 63231 </td>
+   <td style="text-align:right;"> 9457 </td>
+   <td style="text-align:right;"> 53774 </td>
+   <td style="text-align:right;"> 105 </td>
+   <td style="text-align:right;"> 53642 </td>
+   <td style="text-align:right;"> 68 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> zr24558_147V3V4 </td>
+   <td style="text-align:left;"> 176B.R1.48H </td>
+   <td style="text-align:right;"> 149296 </td>
+   <td style="text-align:right;"> 149296 </td>
+   <td style="text-align:right;"> 71246 </td>
+   <td style="text-align:right;"> 7976 </td>
+   <td style="text-align:right;"> 63270 </td>
+   <td style="text-align:right;"> 319 </td>
+   <td style="text-align:right;"> 62836 </td>
+   <td style="text-align:right;"> 201 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> zr24558_148V3V4 </td>
+   <td style="text-align:left;"> 176B.R2.48H </td>
+   <td style="text-align:right;"> 111590 </td>
+   <td style="text-align:right;"> 111590 </td>
+   <td style="text-align:right;"> 55313 </td>
+   <td style="text-align:right;"> 5519 </td>
+   <td style="text-align:right;"> 49794 </td>
+   <td style="text-align:right;"> 77 </td>
+   <td style="text-align:right;"> 49681 </td>
+   <td style="text-align:right;"> 45 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> zr24558_3V3V4 </td>
+   <td style="text-align:left;"> 84B.S1.48H </td>
+   <td style="text-align:right;"> 159572 </td>
+   <td style="text-align:right;"> 159564 </td>
+   <td style="text-align:right;"> 75671 </td>
+   <td style="text-align:right;"> 12163 </td>
+   <td style="text-align:right;"> 63508 </td>
+   <td style="text-align:right;"> 407 </td>
+   <td style="text-align:right;"> 62909 </td>
+   <td style="text-align:right;"> 229 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> zr24558_4V3V4 </td>
+   <td style="text-align:left;"> 84B.S2.48H </td>
+   <td style="text-align:right;"> 104054 </td>
+   <td style="text-align:right;"> 104054 </td>
+   <td style="text-align:right;"> 50226 </td>
+   <td style="text-align:right;"> 6883 </td>
+   <td style="text-align:right;"> 43343 </td>
+   <td style="text-align:right;"> 183 </td>
+   <td style="text-align:right;"> 42998 </td>
+   <td style="text-align:right;"> 88 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> zr24558_13V3V4 </td>
+   <td style="text-align:left;"> 73B.S1.48H </td>
+   <td style="text-align:right;"> 154276 </td>
+   <td style="text-align:right;"> 154274 </td>
+   <td style="text-align:right;"> 74469 </td>
+   <td style="text-align:right;"> 9690 </td>
+   <td style="text-align:right;"> 64779 </td>
+   <td style="text-align:right;"> 205 </td>
+   <td style="text-align:right;"> 64506 </td>
+   <td style="text-align:right;"> 130 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> zr24558_14V3V4 </td>
+   <td style="text-align:left;"> 73B.S2.48H </td>
+   <td style="text-align:right;"> 98416 </td>
+   <td style="text-align:right;"> 98416 </td>
+   <td style="text-align:right;"> 48359 </td>
+   <td style="text-align:right;"> 8394 </td>
+   <td style="text-align:right;"> 39965 </td>
+   <td style="text-align:right;"> 93 </td>
+   <td style="text-align:right;"> 39807 </td>
+   <td style="text-align:right;"> 51 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> zr24558_23V3V4 </td>
+   <td style="text-align:left;"> 66A.S1.48H </td>
+   <td style="text-align:right;"> 176694 </td>
+   <td style="text-align:right;"> 176694 </td>
+   <td style="text-align:right;"> 86272 </td>
+   <td style="text-align:right;"> 15766 </td>
+   <td style="text-align:right;"> 70506 </td>
+   <td style="text-align:right;"> 186 </td>
+   <td style="text-align:right;"> 70238 </td>
+   <td style="text-align:right;"> 108 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> zr24558_24V3V4 </td>
+   <td style="text-align:left;"> 66A.S2.48H </td>
+   <td style="text-align:right;"> 141980 </td>
+   <td style="text-align:right;"> 141978 </td>
+   <td style="text-align:right;"> 68394 </td>
+   <td style="text-align:right;"> 10137 </td>
+   <td style="text-align:right;"> 58257 </td>
+   <td style="text-align:right;"> 354 </td>
+   <td style="text-align:right;"> 57587 </td>
+   <td style="text-align:right;"> 184 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> zr24558_38V3V4 </td>
+   <td style="text-align:left;"> 67A.S1.48H </td>
+   <td style="text-align:right;"> 130686 </td>
+   <td style="text-align:right;"> 130684 </td>
+   <td style="text-align:right;"> 63176 </td>
+   <td style="text-align:right;"> 5602 </td>
+   <td style="text-align:right;"> 57574 </td>
+   <td style="text-align:right;"> 236 </td>
+   <td style="text-align:right;"> 57229 </td>
+   <td style="text-align:right;"> 134 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> zr24558_39V3V4 </td>
+   <td style="text-align:left;"> 67A.S2.48H </td>
+   <td style="text-align:right;"> 120616 </td>
+   <td style="text-align:right;"> 120614 </td>
+   <td style="text-align:right;"> 58315 </td>
+   <td style="text-align:right;"> 7121 </td>
+   <td style="text-align:right;"> 51194 </td>
+   <td style="text-align:right;"> 256 </td>
+   <td style="text-align:right;"> 50795 </td>
+   <td style="text-align:right;"> 147 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> zr24558_43V3V4 </td>
+   <td style="text-align:left;"> 92A.S1.48H </td>
+   <td style="text-align:right;"> 129116 </td>
+   <td style="text-align:right;"> 129116 </td>
+   <td style="text-align:right;"> 62105 </td>
+   <td style="text-align:right;"> 9333 </td>
+   <td style="text-align:right;"> 52772 </td>
+   <td style="text-align:right;"> 253 </td>
+   <td style="text-align:right;"> 52390 </td>
+   <td style="text-align:right;"> 158 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> zr24558_44V3V4 </td>
+   <td style="text-align:left;"> 92A.S2.48H </td>
+   <td style="text-align:right;"> 110464 </td>
+   <td style="text-align:right;"> 110464 </td>
+   <td style="text-align:right;"> 54402 </td>
+   <td style="text-align:right;"> 5683 </td>
+   <td style="text-align:right;"> 48719 </td>
+   <td style="text-align:right;"> 78 </td>
+   <td style="text-align:right;"> 48656 </td>
+   <td style="text-align:right;"> 60 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> zr24558_48V3V4 </td>
+   <td style="text-align:left;"> 92B.S1.48H </td>
+   <td style="text-align:right;"> 117814 </td>
+   <td style="text-align:right;"> 117812 </td>
+   <td style="text-align:right;"> 57974 </td>
+   <td style="text-align:right;"> 5295 </td>
+   <td style="text-align:right;"> 52679 </td>
+   <td style="text-align:right;"> 121 </td>
+   <td style="text-align:right;"> 52470 </td>
+   <td style="text-align:right;"> 74 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> zr24558_49V3V4 </td>
+   <td style="text-align:left;"> 92B.S2.48H </td>
+   <td style="text-align:right;"> 165012 </td>
+   <td style="text-align:right;"> 165010 </td>
+   <td style="text-align:right;"> 79749 </td>
+   <td style="text-align:right;"> 9190 </td>
+   <td style="text-align:right;"> 70559 </td>
+   <td style="text-align:right;"> 291 </td>
+   <td style="text-align:right;"> 70098 </td>
+   <td style="text-align:right;"> 161 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> zr24558_58V3V4 </td>
+   <td style="text-align:left;"> 66B.S1.48H </td>
+   <td style="text-align:right;"> 141696 </td>
+   <td style="text-align:right;"> 141694 </td>
+   <td style="text-align:right;"> 68062 </td>
+   <td style="text-align:right;"> 7118 </td>
+   <td style="text-align:right;"> 60944 </td>
+   <td style="text-align:right;"> 260 </td>
+   <td style="text-align:right;"> 60524 </td>
+   <td style="text-align:right;"> 149 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> zr24558_59V3V4 </td>
+   <td style="text-align:left;"> 66B.S2.48H </td>
+   <td style="text-align:right;"> 148782 </td>
+   <td style="text-align:right;"> 148782 </td>
+   <td style="text-align:right;"> 73671 </td>
+   <td style="text-align:right;"> 6697 </td>
+   <td style="text-align:right;"> 66974 </td>
+   <td style="text-align:right;"> 74 </td>
+   <td style="text-align:right;"> 66853 </td>
+   <td style="text-align:right;"> 48 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> zr24558_78V3V4 </td>
+   <td style="text-align:left;"> 276B.S1.48H </td>
+   <td style="text-align:right;"> 117624 </td>
+   <td style="text-align:right;"> 117624 </td>
+   <td style="text-align:right;"> 56222 </td>
+   <td style="text-align:right;"> 6483 </td>
+   <td style="text-align:right;"> 49739 </td>
+   <td style="text-align:right;"> 234 </td>
+   <td style="text-align:right;"> 49409 </td>
+   <td style="text-align:right;"> 143 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> zr24558_79V3V4 </td>
+   <td style="text-align:left;"> 276B.S2.48H </td>
+   <td style="text-align:right;"> 146676 </td>
+   <td style="text-align:right;"> 146676 </td>
+   <td style="text-align:right;"> 72583 </td>
+   <td style="text-align:right;"> 2549 </td>
+   <td style="text-align:right;"> 70034 </td>
+   <td style="text-align:right;"> 106 </td>
+   <td style="text-align:right;"> 69874 </td>
+   <td style="text-align:right;"> 62 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> zr24558_88V3V4 </td>
+   <td style="text-align:left;"> 116A.S1.48H </td>
+   <td style="text-align:right;"> 137340 </td>
+   <td style="text-align:right;"> 137338 </td>
+   <td style="text-align:right;"> 66714 </td>
+   <td style="text-align:right;"> 6960 </td>
+   <td style="text-align:right;"> 59754 </td>
+   <td style="text-align:right;"> 198 </td>
+   <td style="text-align:right;"> 59432 </td>
+   <td style="text-align:right;"> 107 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> zr24558_89V3V4 </td>
+   <td style="text-align:left;"> 116A.S2.48H </td>
+   <td style="text-align:right;"> 137076 </td>
+   <td style="text-align:right;"> 137074 </td>
+   <td style="text-align:right;"> 67316 </td>
+   <td style="text-align:right;"> 9523 </td>
+   <td style="text-align:right;"> 57793 </td>
+   <td style="text-align:right;"> 164 </td>
+   <td style="text-align:right;"> 57502 </td>
+   <td style="text-align:right;"> 76 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> zr24558_99V3V4 </td>
+   <td style="text-align:left;"> 176A.S1.48H </td>
+   <td style="text-align:right;"> 128810 </td>
+   <td style="text-align:right;"> 128810 </td>
+   <td style="text-align:right;"> 62614 </td>
+   <td style="text-align:right;"> 7091 </td>
+   <td style="text-align:right;"> 55523 </td>
+   <td style="text-align:right;"> 218 </td>
+   <td style="text-align:right;"> 55159 </td>
+   <td style="text-align:right;"> 120 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> zr24558_100V3V4 </td>
+   <td style="text-align:left;"> 176A.S2.48H </td>
+   <td style="text-align:right;"> 121880 </td>
+   <td style="text-align:right;"> 121876 </td>
+   <td style="text-align:right;"> 59881 </td>
+   <td style="text-align:right;"> 7201 </td>
+   <td style="text-align:right;"> 52680 </td>
+   <td style="text-align:right;"> 120 </td>
+   <td style="text-align:right;"> 52512 </td>
+   <td style="text-align:right;"> 70 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> zr24558_104V3V4 </td>
+   <td style="text-align:left;"> 276A.S1.48H </td>
+   <td style="text-align:right;"> 135188 </td>
+   <td style="text-align:right;"> 135186 </td>
+   <td style="text-align:right;"> 66027 </td>
+   <td style="text-align:right;"> 6028 </td>
+   <td style="text-align:right;"> 59999 </td>
+   <td style="text-align:right;"> 219 </td>
+   <td style="text-align:right;"> 59715 </td>
+   <td style="text-align:right;"> 116 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> zr24558_105V3V4 </td>
+   <td style="text-align:left;"> 276A.S2.48H </td>
+   <td style="text-align:right;"> 107608 </td>
+   <td style="text-align:right;"> 107608 </td>
+   <td style="text-align:right;"> 53182 </td>
+   <td style="text-align:right;"> 3175 </td>
+   <td style="text-align:right;"> 50007 </td>
+   <td style="text-align:right;"> 88 </td>
+   <td style="text-align:right;"> 49851 </td>
+   <td style="text-align:right;"> 54 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> zr24558_109V3V4 </td>
+   <td style="text-align:left;"> 84A.S1.48H </td>
+   <td style="text-align:right;"> 142636 </td>
+   <td style="text-align:right;"> 142636 </td>
+   <td style="text-align:right;"> 68348 </td>
+   <td style="text-align:right;"> 11159 </td>
+   <td style="text-align:right;"> 57189 </td>
+   <td style="text-align:right;"> 342 </td>
+   <td style="text-align:right;"> 56583 </td>
+   <td style="text-align:right;"> 187 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> zr24558_110V3V4 </td>
+   <td style="text-align:left;"> 84A.S2.48H </td>
+   <td style="text-align:right;"> 127008 </td>
+   <td style="text-align:right;"> 127008 </td>
+   <td style="text-align:right;"> 61225 </td>
+   <td style="text-align:right;"> 11387 </td>
+   <td style="text-align:right;"> 49838 </td>
+   <td style="text-align:right;"> 242 </td>
+   <td style="text-align:right;"> 49432 </td>
+   <td style="text-align:right;"> 125 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> zr24558_134V3V4 </td>
+   <td style="text-align:left;"> 73A.S1.48H </td>
+   <td style="text-align:right;"> 168932 </td>
+   <td style="text-align:right;"> 168932 </td>
+   <td style="text-align:right;"> 80756 </td>
+   <td style="text-align:right;"> 12815 </td>
+   <td style="text-align:right;"> 67941 </td>
+   <td style="text-align:right;"> 395 </td>
+   <td style="text-align:right;"> 67414 </td>
+   <td style="text-align:right;"> 229 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> zr24558_135V3V4 </td>
+   <td style="text-align:left;"> 73A.S2.48H </td>
+   <td style="text-align:right;"> 119848 </td>
+   <td style="text-align:right;"> 119846 </td>
+   <td style="text-align:right;"> 57412 </td>
+   <td style="text-align:right;"> 13423 </td>
+   <td style="text-align:right;"> 43989 </td>
+   <td style="text-align:right;"> 247 </td>
+   <td style="text-align:right;"> 43609 </td>
+   <td style="text-align:right;"> 151 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> zr24558_159V3V4 </td>
+   <td style="text-align:left;"> 67B.S1.48H </td>
+   <td style="text-align:right;"> 111566 </td>
+   <td style="text-align:right;"> 111566 </td>
+   <td style="text-align:right;"> 54355 </td>
+   <td style="text-align:right;"> 6732 </td>
+   <td style="text-align:right;"> 47623 </td>
+   <td style="text-align:right;"> 190 </td>
+   <td style="text-align:right;"> 47424 </td>
+   <td style="text-align:right;"> 126 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> zr24558_160V3V4 </td>
+   <td style="text-align:left;"> 67B.S2.48H </td>
+   <td style="text-align:right;"> 113676 </td>
+   <td style="text-align:right;"> 113674 </td>
+   <td style="text-align:right;"> 55265 </td>
+   <td style="text-align:right;"> 6949 </td>
+   <td style="text-align:right;"> 48316 </td>
+   <td style="text-align:right;"> 217 </td>
+   <td style="text-align:right;"> 48043 </td>
+   <td style="text-align:right;"> 131 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> zr24558_149V3V4 </td>
+   <td style="text-align:left;"> 176B.S1.48H </td>
+   <td style="text-align:right;"> 135344 </td>
+   <td style="text-align:right;"> 135344 </td>
+   <td style="text-align:right;"> 65328 </td>
+   <td style="text-align:right;"> 9144 </td>
+   <td style="text-align:right;"> 56184 </td>
+   <td style="text-align:right;"> 252 </td>
+   <td style="text-align:right;"> 55831 </td>
+   <td style="text-align:right;"> 167 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> zr24558_150V3V4 </td>
+   <td style="text-align:left;"> 176B.S2.48H </td>
+   <td style="text-align:right;"> 141384 </td>
+   <td style="text-align:right;"> 141384 </td>
+   <td style="text-align:right;"> 69544 </td>
+   <td style="text-align:right;"> 5977 </td>
+   <td style="text-align:right;"> 63567 </td>
+   <td style="text-align:right;"> 156 </td>
+   <td style="text-align:right;"> 63332 </td>
+   <td style="text-align:right;"> 73 </td>
+  </tr>
+</tbody>
+</table>

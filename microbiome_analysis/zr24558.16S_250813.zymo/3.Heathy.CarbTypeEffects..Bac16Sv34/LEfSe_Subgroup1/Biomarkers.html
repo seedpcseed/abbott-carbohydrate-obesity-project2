@@ -1,0 +1,55 @@
+<html>
+<head>
+<img  src='./lefse_legend.png' align='left'>
+</head>
+<script src='https://canvasjs.com/assets/script/canvasjs.min.js'></script> <script type='text/javascript'>
+window.onload = function () {
+        var chart = new CanvasJS.Chart('chartContainer', {
+                axisY: {
+                title:'LDA Score',
+                titleFontSize: 30,
+                titleFontColor: 'Black',
+                labelFontSize: 10,
+                gridThickness: 0,
+                },
+                axisX:{
+                interval: 1,
+                labelMaxWidth: 1000,
+ labelFontColor: 'Black',
+                labelFontSize: 15,
+                },
+                legend:{
+                  fontSize: 15,
+                  verticalAlign: 'bottom',
+                },
+                theme: 'theme1',
+                title:{
+                        text: 'Biomarkers Ordered by Effect Size (LDA Score)',
+                        fontSize: 30,
+                },
+                subtitles: [
+                {
+                        text: 'Click on Each Bar to View the Taxa Abundance Distribution in Different Groups',
+                        fontSize: 20,
+                        fontColor: 'red'
+                },
+                ],
+                animationEnabled: false,
+                height: 250 ,
+                width: 1300,
+                dataPointWidth: 20,
+                data: [
+                {
+                type: 'bar',
+                click: onClick,
+                dataPoints:
+                                 [{"label":"k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Ruminococcaceae.g__NA.s__sp34795","y":3.23280028613,"link":"./Figures/4.pdf","color":"#377EB8","name":"SDCs"},{"label":"k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Fusicatenibacter","y":3.79010027356,"link":"./Figures/1.pdf","color":"#377EB8","name":"SDCs"},{"label":"k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Lachnospiraceae.g__Fusicatenibacter.s__saccharivorans","y":3.79010027356,"link":"./Figures/3.pdf","color":"#377EB8","name":"SDCs"},{"label":"k__Bacteria.p__Bacteroidetes.c__Bacteroidia.o__Bacteroidales.f__Porphyromonadaceae.g__Parabacteroides.s__distasonis","y":3.93878580628,"link":"./Figures/5.pdf","color":"#377EB8","name":"SDCs"},{"label":"k__Bacteria.p__Firmicutes.c__Clostridia.o__Clostridiales.f__Christensenellaceae.g__NA.s__sp30326","y":3.78157730997,"link":"./Figures/2.pdf","color":"#E41A1C","name":"RDCs"}]
+                              }        ]
+        });
+        chart.render();
+        function onClick(e){
+        window.open(e.dataPoint.link,'_blank');
+}
+}
+</script> </head> <body> <div id='chartContainer' style='height: 300px; width: 100%;'></div>
+</html>

@@ -129,7 +129,7 @@ options(dplyr.summarise.inform = FALSE)
 set.seed(12345)
 
 # Output directory for derived artefacts
-outputs_dir <- here::here("outputs")
+outputs_dir <- here::here("outputs_v3")
 dir.create(outputs_dir, showWarnings = FALSE, recursive = TRUE)
 ```
 
@@ -372,7 +372,6 @@ metadata_summary %>%
   gt::tab_header(title = "Sample counts by group, carbohydrate, and timepoint") %>%
   gt::fmt_number(columns = "n_samples", decimals = 0)
 ```
-```
 ### 3.1 Amplicon Sequence Variants and Taxonomy
 
 ```{r phyloseq-import}
@@ -387,7 +386,8 @@ otu_mat <- asv_raw %>%
 colnames(otu_mat) <- stringr::str_remove(colnames(otu_mat), "_filtered$")
 rownames(otu_mat) <- asv_ids
 
-taxonomy_raw <- readr::read_tsv("dada2_asv_2/strobelca_taxonomy.tsv", show_col_types = FALSE)
+taxonomy_raw <- readr::read_tsv("dada2_asv_2/raxtax_taxonomy.tsv", show_col_types = FALSE)
+rownames(taxonomy_raw) <- paste0("ASV_", 1:nrow(taxonomy_raw))
 
 taxonomy_mat <- taxonomy_raw %>%
   dplyr::mutate(ASV = stringr::str_extract(ASV_ID, "ASV_\\d+")) %>%
@@ -983,7 +983,7 @@ permanova_results %>%
   gt::tab_header("PERMANOVA results (subject-level strata)")
 ```
 
-```{r pcoa-plot}
+```{r pcoa-plot, fig.width = 20, fig.height = 16}
 pcoa_plot <- function(df, method_name) {
   df_subset <- df %>% dplyr::filter(distance_method == method_name)
   var1 <- scales::percent(round(df_subset$axis1_var[1], 3))
@@ -1623,7 +1623,7 @@ ps_genus_counts <- prune_taxa(taxa_sums(ps_genus_counts) > 0, ps_genus_counts)
 metadata_counts <- as(sample_data(ps_genus_counts), "data.frame") %>%
   as_tibble(rownames = "SampleID")
 
-prevalence_cutoff <- 0.05
+prevalence_cutoff <- 0.005
 min_prev <- ceiling(prevalence_cutoff * nsamples(ps_genus_counts))
 keep_taxa <- taxa_sums(ps_genus_counts) > 0 & rowSums(otu_table(ps_genus_counts) > 0) >= min_prev
 ps_genus_filtered <- prune_taxa(keep_taxa, ps_genus_counts)
@@ -1634,7 +1634,7 @@ ps_genus_0h <- subset_samples(ps_genus_filtered, Timepoint == "0H")
 
 ### 8.2 Corncob (beta-binomial)
 
-```{r corncob}
+```{r corncob, fig.width = 20, fig.height = 10}
 corncob_path <- file.path(outputs_dir, "corncob_genus_results.rds")
 
 corncob_test <- cache_rds(
@@ -1661,8 +1661,31 @@ corncob_test <- cache_rds(
 
 if (!is.null(corncob_test)) {
   if (!is.null(corncob_test$wald_results)) {
+    # Get taxonomy information for genus-species conversion
+    tax_table_df <- as.data.frame(tax_table(ps_genus_filtered))
+    tax_table_df$feature <- rownames(tax_table_df)
+    
+    # Create taxonomic display names
+    tax_table_df <- tax_table_df %>%
+      dplyr::mutate(
+        # Create genus_species display name
+        genus_species = case_when(
+          !is.na(Species) & Species != "Unassigned" & Species != "" ~ paste0(Genus, " ", Species),
+          !is.na(Genus) & Genus != "Unassigned" & Genus != "" ~ paste0(Genus, " sp."),
+          !is.na(Family) & Family != "Unassigned" & Family != "" ~ paste0(Family, " (family)"),
+          !is.na(Order) & Order != "Unassigned" & Order != "" ~ paste0(Order, " (order)"),
+          TRUE ~ feature  # Fallback to ASV ID if no good taxonomy
+        )
+      )
+    
     corncob_results <- corncob_test$wald_results %>%
       dplyr::mutate(q_value = fdr_adjust(p_val)) %>%
+      dplyr::left_join(tax_table_df %>% dplyr::select(feature, genus_species), by = c("taxon" = "feature")) %>%
+      dplyr::mutate(
+        # Use genus_species if available, otherwise fall back to taxon
+        taxon_display = ifelse(!is.na(genus_species), genus_species, taxon)
+      ) %>%
+      dplyr::select(taxon, taxon_display, p_val, q_value) %>%
       dplyr::arrange(q_value)
   } else if (!is.null(corncob_test$p) && !is.null(corncob_test$p_fdr)) {
     p_mat <- corncob_test$p
@@ -1688,11 +1711,34 @@ if (!is.null(corncob_test)) {
       taxa_names <- paste0("taxon_", seq_along(p_vals))
     }
 
+    # Get taxonomy information for genus-species conversion
+    tax_table_df <- as.data.frame(tax_table(ps_genus_filtered))
+    tax_table_df$feature <- rownames(tax_table_df)
+    
+    # Create taxonomic display names
+    tax_table_df <- tax_table_df %>%
+      dplyr::mutate(
+        # Create genus_species display name
+        genus_species = case_when(
+          !is.na(Species) & Species != "Unassigned" & Species != "" ~ paste0(Genus, " ", Species),
+          !is.na(Genus) & Genus != "Unassigned" & Genus != "" ~ paste0(Genus, " sp."),
+          !is.na(Family) & Family != "Unassigned" & Family != "" ~ paste0(Family, " (family)"),
+          !is.na(Order) & Order != "Unassigned" & Order != "" ~ paste0(Order, " (order)"),
+          TRUE ~ feature  # Fallback to ASV ID if no good taxonomy
+        )
+      )
+    
     corncob_results <- tibble::tibble(
       taxon = taxa_names,
       p_val = p_vals,
       q_value = q_vals
     ) %>%
+      dplyr::left_join(tax_table_df %>% dplyr::select(feature, genus_species), by = c("taxon" = "feature")) %>%
+      dplyr::mutate(
+        # Use genus_species if available, otherwise fall back to taxon
+        taxon_display = ifelse(!is.na(genus_species), genus_species, taxon)
+      ) %>%
+      dplyr::select(taxon, taxon_display, p_val, q_value) %>%
       dplyr::arrange(q_value)
   } else {
     corncob_results <- tibble()
@@ -1727,17 +1773,17 @@ corncob_48h_test <- cache_rds(
     set.seed(12345)
     tryCatch({
       corncob::differentialTest(
-        formula = ~ group + carbohydrate + subject_id,
-        phi.formula = ~ group + carbohydrate + subject_id,
-        formula_null = ~ group + subject_id,
-        phi.formula_null = ~ group + subject_id,
+        formula = ~ carbohydrate + subject_id,
+        phi.formula = ~ carbohydrate + subject_id,
+        formula_null = ~ subject_id,
+        phi.formula_null = ~ subject_id,
         test = "Wald",
         data = ps_genus_48h_rdc_sdc,
         fdr_cutoff = 0.1,
         B = 50
       )
     }, error = function(e) {
-      message("Corncob 48H RDC/SDC failed: ", e$message)
+      message("Corncob 48h RDC vs SDC failed: ", e$message)
       NULL
     })
   }
@@ -1745,38 +1791,84 @@ corncob_48h_test <- cache_rds(
 
 if (!is.null(corncob_48h_test)) {
   if (!is.null(corncob_48h_test$wald_results)) {
+    # Get taxonomy information for genus-species conversion
+    tax_table_df_48h <- as.data.frame(tax_table(ps_genus_48h_rdc_sdc))
+    tax_table_df_48h$feature <- rownames(tax_table_df_48h)
+    
+    # Create taxonomic display names
+    tax_table_df_48h <- tax_table_df_48h %>%
+      dplyr::mutate(
+        # Create genus_species display name
+        genus_species = case_when(
+          !is.na(Species) & Species != "Unassigned" & Species != "" ~ paste0(Genus, " ", Species),
+          !is.na(Genus) & Genus != "Unassigned" & Genus != "" ~ paste0(Genus, " sp."),
+          !is.na(Family) & Family != "Unassigned" & Family != "" ~ paste0(Family, " (family)"),
+          !is.na(Order) & Order != "Unassigned" & Order != "" ~ paste0(Order, " (order)"),
+          TRUE ~ feature  # Fallback to ASV ID if no good taxonomy
+        )
+      )
+    
     corncob_48h_results <- corncob_48h_test$wald_results %>%
       dplyr::mutate(q_value = fdr_adjust(p_val)) %>%
+      dplyr::left_join(tax_table_df_48h %>% dplyr::select(feature, genus_species), by = c("taxon" = "feature")) %>%
+      dplyr::mutate(
+        # Use genus_species if available, otherwise fall back to taxon
+        taxon_display = ifelse(!is.na(genus_species), genus_species, taxon)
+      ) %>%
+      dplyr::select(taxon, taxon_display, p_val, q_value) %>%
       dplyr::arrange(q_value)
   } else if (!is.null(corncob_48h_test$p) && !is.null(corncob_48h_test$p_fdr)) {
-    p_mat <- corncob_48h_test$p
-    q_mat <- corncob_48h_test$p_fdr
+    p_mat_48h <- corncob_48h_test$p
+    q_mat_48h <- corncob_48h_test$p_fdr
 
-    if (is.null(dim(p_mat))) {
-      p_vals <- as.numeric(p_mat)
+    if (is.null(dim(p_mat_48h))) {
+      p_vals_48h <- as.numeric(p_mat_48h)
     } else {
-      p_vals <- as.numeric(p_mat[, 1])
+      p_vals_48h <- as.numeric(p_mat_48h[, 1])
     }
 
-    if (is.null(dim(q_mat))) {
-      q_vals = as.numeric(q_mat)
+    if (is.null(dim(q_mat_48h))) {
+      q_vals_48h = as.numeric(q_mat_48h)
     } else {
-      q_vals = as.numeric(q_mat[, 1])
+      q_vals_48h = as.numeric(q_mat_48h[, 1])
     }
 
-    taxa_names <- rownames(p_mat)
-    if (is.null(taxa_names)) {
-      taxa_names <- names(p_mat)
+    taxa_names_48h <- rownames(p_mat_48h)
+    if (is.null(taxa_names_48h)) {
+      taxa_names_48h <- names(p_mat_48h)
     }
-    if (is.null(taxa_names)) {
-      taxa_names <- paste0("taxon_", seq_along(p_vals))
+    if (is.null(taxa_names_48h)) {
+      taxa_names_48h <- paste0("taxon_", seq_along(p_vals_48h))
     }
 
+    # Get taxonomy information for genus-species conversion
+    tax_table_df_48h <- as.data.frame(tax_table(ps_genus_48h_rdc_sdc))
+    tax_table_df_48h$feature <- rownames(tax_table_df_48h)
+    
+    # Create taxonomic display names
+    tax_table_df_48h <- tax_table_df_48h %>%
+      dplyr::mutate(
+        # Create genus_species display name
+        genus_species = case_when(
+          !is.na(Species) & Species != "Unassigned" & Species != "" ~ paste0(Genus, " ", Species),
+          !is.na(Genus) & Genus != "Unassigned" & Genus != "" ~ paste0(Genus, " sp."),
+          !is.na(Family) & Family != "Unassigned" & Family != "" ~ paste0(Family, " (family)"),
+          !is.na(Order) & Order != "Unassigned" & Order != "" ~ paste0(Order, " (order)"),
+          TRUE ~ feature  # Fallback to ASV ID if no good taxonomy
+        )
+      )
+    
     corncob_48h_results <- tibble::tibble(
-      taxon = taxa_names,
-      p_val = p_vals,
-      q_value = q_vals
+      taxon = taxa_names_48h,
+      p_val = p_vals_48h,
+      q_value = q_vals_48h
     ) %>%
+      dplyr::left_join(tax_table_df_48h %>% dplyr::select(feature, genus_species), by = c("taxon" = "feature")) %>%
+      dplyr::mutate(
+        # Use genus_species if available, otherwise fall back to taxon
+        taxon_display = ifelse(!is.na(genus_species), genus_species, taxon)
+      ) %>%
+      dplyr::select(taxon, taxon_display, p_val, q_value) %>%
       dplyr::arrange(q_value)
   } else {
     corncob_48h_results <- tibble()
@@ -1785,28 +1877,28 @@ if (!is.null(corncob_48h_test)) {
   corncob_48h_results <- tibble()
 }
 
-corncob_48h_results
+# Display results
+cat("Corncob 48h RDC vs SDC Results:\n")
+print(corncob_48h_results)
 
-# Show significant results (q < 0.1)
-corncob_48h_significant <- corncob_48h_results %>%
-  dplyr::filter(q_value < 0.1, !is.na(q_value)) %>%
-  dplyr::arrange(q_value)
-
-if (nrow(corncob_48h_significant) > 0) {
-  cat("Significant taxa (q < 0.1):\n")
-  print(corncob_48h_significant)
+# Show significant results
+if (nrow(corncob_48h_results) > 0) {
+  sig_results_48h <- corncob_48h_results %>% dplyr::filter(q_value < 0.1)
+  cat("\nSignificant results (q < 0.1):\n")
+  print(sig_results_48h)
+  
+  if (nrow(sig_results_48h) > 0) {
+    cat("\nNumber of significant taxa:", nrow(sig_results_48h), "\n")
+  } else {
+    cat("\nNo significant taxa found at q < 0.1\n")
+  }
 } else {
-  cat("No significant taxa found at q < 0.1\n")
+  cat("No results available\n")
 }
 
-# Try to plot with error handling
+# Plot results if available
 if (!is.null(corncob_48h_test)) {
-  tryCatch({
-    plot(corncob_48h_test)
-  }, error = function(e) {
-    message("Plotting failed: ", e$message)
-    message("This is likely due to dimension mismatches in the corncob results object")
-  })
+  plot(corncob_48h_test)
 }
 ```
 
@@ -1843,15 +1935,21 @@ run_ancombc2_safe <- function(ps_data, tax_level = "Genus") {
     # Strategy 2: Try with simplified formula (no interaction)
     tryCatch({
       # Remove samples with too many zeros that cause estimation issues
+      # Use a more lenient threshold to preserve more data
       sample_sums <- sample_sums(ps_counts)
       zero_prop <- apply(otu_table(ps_counts), 2, function(x) sum(x == 0) / length(x))
-      problematic_samples <- names(zero_prop[zero_prop > 0.8])
+      problematic_samples <- names(zero_prop[zero_prop > 0.95])  # More lenient: 95% zeros
       
       if (length(problematic_samples) > 0) {
-        message("Removing samples with >80% zeros: ", paste(problematic_samples, collapse = ", "))
+        message("Removing samples with >95% zeros: ", paste(problematic_samples, collapse = ", "))
         ps_counts_clean <- subset_samples(ps_counts, !sample_names(ps_counts) %in% problematic_samples)
       } else {
         ps_counts_clean <- ps_counts
+      }
+      
+      # Check if we have enough samples left
+      if (nsamples(ps_counts_clean) < 10) {
+        stop("Insufficient samples remaining after filtering (", nsamples(ps_counts_clean), " samples)")
       }
       
       ANCOMBC::ancombc2(
@@ -1968,16 +2066,22 @@ if (!is.null(ancombc2_res)) {
   ancombc2_tbl <- tibble()
 }
 
-ancombc2_tbl %>%
-  dplyr::filter(q_value < 0.1)
+if (nrow(ancombc2_tbl) > 0 && "q_value" %in% names(ancombc2_tbl)) {
+  ancombc2_tbl %>%
+    dplyr::filter(q_value < 0.1)
+} else {
+  cat("No ANCOM-BC2 results available - analysis may have failed\n")
+  tibble()
+}
 ```
 
 #### Forest Plot of ANCOM-BC2 Results
 
-```{r ancombc2_forest_plot}
+```{r ancombc2_forest_plot, fig.width = 20, fig.height = 10}
 # Prepare data for forest plot
-forest_data <- ancombc2_tbl %>%
-  dplyr::filter(q_value < 0.1) %>%
+if (nrow(ancombc2_tbl) > 0 && "q_value" %in% names(ancombc2_tbl)) {
+  forest_data <- ancombc2_tbl %>%
+    dplyr::filter(q_value < 0.1) %>%
   dplyr::mutate(
     # Calculate confidence intervals
     ci_lower = beta - 1.96 * se,
@@ -2037,21 +2141,25 @@ forest_plot <- ggplot(forest_data, aes(x = beta, y = reorder(taxon_label, beta))
     panel.grid.minor = element_blank()
   )
 
-print(forest_plot)
+  print(forest_plot)
 
-# Summary statistics
-cat("Summary of ANCOM-BC2 Results:\n")
-cat("Total significant taxa (q < 0.1):", nrow(forest_data), "\n")
-cat("By effect:\n")
-print(table(forest_data$effect_label))
+  # Summary statistics
+  cat("Summary of ANCOM-BC2 Results:\n")
+  cat("Total significant taxa (q < 0.1):", nrow(forest_data), "\n")
+  cat("By effect:\n")
+  print(table(forest_data$effect_label))
+} else {
+  cat("No ANCOM-BC2 results available for forest plot - analysis may have failed\n")
+}
 ```
 
 #### Side-by-Side Comparison: RDC vs No Carb and SDC vs No Carb
 
-```{r ancombc2_carb_comparison}
+```{r ancombc2_carb_comparison, fig.width = 20, fig.height = 10}
 # First, create comparison table to identify taxa with opposite effects
-comparison_table <- ancombc2_tbl %>%
-  dplyr::filter(effect %in% c("carbohydrateRDC", "carbohydrateSDC")) %>%
+if (nrow(ancombc2_tbl) > 0 && "effect" %in% names(ancombc2_tbl)) {
+  comparison_table <- ancombc2_tbl %>%
+    dplyr::filter(effect %in% c("carbohydrateRDC", "carbohydrateSDC")) %>%
   dplyr::select(taxon, effect, beta, se, p_value, q_value, diff_abn) %>%
   tidyr::pivot_wider(
     names_from = effect,
@@ -2169,10 +2277,13 @@ opposite_taxa <- filtered_comparison %>%
   dplyr::filter(opposite_effects) %>%
   dplyr::select(taxon, beta_carbohydrateRDC, beta_carbohydrateSDC, effect_difference)
 
-if(nrow(opposite_taxa) > 0) {
-  cat("\nTaxa with Opposite Effects (RDC vs SDC):\n")
-  cat("========================================\n")
-  print(opposite_taxa)
+  if(nrow(opposite_taxa) > 0) {
+    cat("\nTaxa with Opposite Effects (RDC vs SDC):\n")
+    cat("========================================\n")
+    print(opposite_taxa)
+  }
+} else {
+  cat("No ANCOM-BC2 comparison data available - analysis may have failed\n")
 }
 ```
 
@@ -2533,6 +2644,218 @@ if(nrow(carb_effect_rdc_sdc) > 0) {
 }
 ```
 
+### 8.4.2 ANCOM-BC2: Group × Carbohydrate Interaction at 48h
+
+```{r ancombc2_group_carb_interaction_48h}
+# Subset to 48h timepoint only
+ps_48h_counts <- subset_samples(ps_counts, Timepoint == "48H")
+
+# Further subset to only RDC and SDC groups (exclude No Added Carb)
+ps_48h_rdc_sdc <- subset_samples(ps_48h_counts, carbohydrate %in% c("RDC", "SDC"))
+
+ancombc2_interaction_path <- file.path(outputs_dir, "ancombc2_group_carb_interaction_48h_results.rds")
+
+ancombc2_interaction <- cache_rds(
+  ancombc2_interaction_path,
+  {
+    tryCatch({
+      # Remove samples with too many zeros that cause estimation issues
+      # Use a more lenient threshold since 48h data may have more zeros
+      sample_sums <- sample_sums(ps_48h_rdc_sdc)
+      zero_prop <- apply(otu_table(ps_48h_rdc_sdc), 2, function(x) sum(x == 0) / length(x))
+      problematic_samples <- names(zero_prop[zero_prop > 0.95])  # More lenient: 95% zeros
+      
+      if (length(problematic_samples) > 0) {
+        message("Removing samples with >95% zeros: ", paste(problematic_samples, collapse = ", "))
+        ps_48h_rdc_sdc_clean <- subset_samples(ps_48h_rdc_sdc, !sample_names(ps_48h_rdc_sdc) %in% problematic_samples)
+        
+        # Check if we still have enough samples
+        if (nsamples(ps_48h_rdc_sdc_clean) < 10) {
+          message("Too few samples after filtering, using original data")
+          ps_48h_rdc_sdc_clean <- ps_48h_rdc_sdc
+        }
+      } else {
+        ps_48h_rdc_sdc_clean <- ps_48h_rdc_sdc
+      }
+      
+      ANCOMBC::ancombc2(
+        data = ps_48h_rdc_sdc_clean,
+        tax_level = "Genus",
+        fix_formula = "group * carbohydrate",  # Include interaction term
+        rand_formula = "(1|subject_id)",
+        p_adj_method = "BH",
+        prv_cut = 0.10,
+        lib_cut = 0,
+        s0_perc = 0.05,
+        group = "carbohydrate",
+        struc_zero = TRUE,
+        neg_lb = TRUE,
+        alpha = 0.05,
+        global = TRUE
+      )
+    }, error = function(e) {
+      message("ANCOM-BC2 Group × Carbohydrate Interaction 48h failed: ", e$message)
+      NULL
+    })
+  }
+)
+
+if (!is.null(ancombc2_interaction)) {
+  # Extract results from the res component
+  res_data_interaction <- ancombc2_interaction$res
+  
+  # Get the effect names (including interaction term)
+  effect_names_interaction <- c("groupObese", "carbohydrateSDC", "groupObese:carbohydrateSDC")
+  
+  # Create a data frame from the results for each effect
+  ancombc2_interaction_tbl <- purrr::map_dfr(effect_names_interaction, function(effect) {
+    # Check if columns exist for this effect
+    lfc_col <- paste0("lfc_", effect)
+    se_col <- paste0("se_", effect)
+    W_col <- paste0("W_", effect)
+    p_col <- paste0("p_", effect)
+    q_col <- paste0("q_", effect)
+    diff_col <- paste0("diff_", effect)
+    
+    if (all(c(lfc_col, se_col, W_col, p_col, q_col, diff_col) %in% colnames(res_data_interaction))) {
+      tibble(
+        taxon = res_data_interaction$taxon,
+        effect = effect,
+        beta = res_data_interaction[[lfc_col]],
+        se = res_data_interaction[[se_col]],
+        W = res_data_interaction[[W_col]],
+        p_value = res_data_interaction[[p_col]],
+        q_value = res_data_interaction[[q_col]],
+        diff_abn = res_data_interaction[[diff_col]]
+      )
+    } else {
+      # Return empty tibble if columns don't exist
+      tibble()
+    }
+  }) %>% dplyr::arrange(q_value)
+} else {
+  ancombc2_interaction_tbl <- tibble()
+}
+
+if (nrow(ancombc2_interaction_tbl) > 0) {
+  ancombc2_interaction_tbl %>%
+    dplyr::filter(q_value < 0.1)
+} else {
+  cat("No results available - analysis may have failed due to insufficient data\n")
+  tibble()
+}
+```
+
+#### Forest Plot: Group × Carbohydrate Interaction at 48h
+
+```{r ancombc2_interaction_forest_plot}
+# Prepare data for forest plot
+if (nrow(ancombc2_interaction_tbl) > 0) {
+  forest_data_interaction <- ancombc2_interaction_tbl %>%
+    dplyr::filter(q_value < 0.1) %>%
+    dplyr::mutate(
+      # Calculate confidence intervals
+      ci_lower = beta - 1.96 * se,
+      ci_upper = beta + 1.96 * se,
+      # Create effect labels
+      effect_label = case_when(
+        effect == "groupObese" ~ "Obese vs Normal (48h)",
+        effect == "carbohydrateSDC" ~ "SDC vs RDC (48h)",
+        effect == "groupObese:carbohydrateSDC" ~ "Group × Carbohydrate Interaction (48h)",
+        TRUE ~ effect
+      ),
+      # Create taxon labels with significance
+      taxon_label = paste0(taxon, " (q=", round(q_value, 3), ")"),
+      # Color by significance level
+      significance = case_when(
+        q_value < 0.001 ~ "q < 0.001",
+        q_value < 0.01 ~ "q < 0.01", 
+        q_value < 0.05 ~ "q < 0.05",
+        q_value < 0.1 ~ "q < 0.1",
+        TRUE ~ "q ≥ 0.1"
+      )
+    ) %>%
+    # Order by effect size (absolute value)
+    dplyr::arrange(desc(abs(beta)))
+} else {
+  forest_data_interaction <- tibble()
+}
+
+# Create forest plot for interaction analysis
+if (nrow(forest_data_interaction) > 0) {
+  forest_plot_interaction <- ggplot(forest_data_interaction, aes(x = beta, y = reorder(taxon_label, beta))) +
+    geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+    geom_errorbarh(aes(xmin = ci_lower, xmax = ci_upper, color = significance), 
+                   height = 0.15, size = 1) +
+    geom_point(aes(color = significance), size = 3, fill = "white", shape = 21, stroke = 1.5) +
+    facet_wrap(~ effect_label, scales = "free_x", ncol = 3) +
+    scale_color_manual(
+      values = c("q < 0.001" = "#d73027", 
+                 "q < 0.01" = "#f46d43",
+                 "q < 0.05" = "#fdae61", 
+                 "q < 0.1" = "#fee08b",
+                 "q ≥ 0.1" = "#d9d9d9"),
+      name = "FDR-adjusted\np-value"
+    ) +
+    labs(
+      title = "ANCOM-BC2: Group × Carbohydrate Interaction at 48h",
+      subtitle = "Effect sizes (log-fold changes) with 95% confidence intervals\n(Testing if carbohydrate effects differ between obese and normal weight individuals)",
+      x = "Log-fold change (β)",
+      y = "Taxon"
+    ) +
+    theme_minimal() +
+    theme(
+      axis.text.y = element_text(size = 9),
+      axis.text.x = element_text(size = 10),
+      strip.text = element_text(size = 11, face = "bold"),
+      plot.title = element_text(size = 14, face = "bold"),
+      plot.subtitle = element_text(size = 11),
+      legend.position = "bottom",
+      panel.grid.minor = element_blank(),
+      strip.background = element_rect(fill = "lightcoral", color = "black")
+    )
+
+  print(forest_plot_interaction)
+} else {
+  cat("No data available for forest plot - analysis may have failed\n")
+}
+
+# Summary statistics for interaction analysis
+if (nrow(forest_data_interaction) > 0) {
+  cat("Summary of Group × Carbohydrate Interaction 48h:\n")
+  cat("Total significant taxa (q < 0.1):", nrow(forest_data_interaction), "\n")
+  cat("By effect:\n")
+  print(table(forest_data_interaction$effect_label))
+
+  # Show top effects by magnitude
+  cat("\nTop 10 Effects by Magnitude (Group × Carbohydrate Interaction 48h):\n")
+  print(forest_data_interaction %>%
+    dplyr::select(taxon, effect_label, beta, q_value) %>%
+    dplyr::arrange(desc(abs(beta))) %>%
+    dplyr::slice_head(n = 10))
+
+  # Focus on interaction effect specifically
+  interaction_effect <- forest_data_interaction %>%
+    dplyr::filter(effect == "groupObese:carbohydrateSDC")
+
+  if(nrow(interaction_effect) > 0) {
+    cat("\nGroup × Carbohydrate Interaction Effect (48h):\n")
+    cat("===============================================\n")
+    print(interaction_effect %>%
+      dplyr::select(taxon, beta, q_value) %>%
+      dplyr::arrange(desc(abs(beta))))
+    
+    cat("\nInterpretation of Interaction Effects:\n")
+    cat("- Positive β: Carbohydrate effect is stronger in obese individuals\n")
+    cat("- Negative β: Carbohydrate effect is stronger in normal weight individuals\n")
+  } else {
+    cat("\nNo significant interaction effects found (q < 0.1)\n")
+  }
+} else {
+  cat("No summary statistics available - analysis may have failed\n")
+}
+```
+
 
 
 ### 8.5 ALDEx2 (48 h carbohydrate effect)
@@ -2543,37 +2866,168 @@ aldex_path <- file.path(outputs_dir, "aldex2_48h_results.rds")
 aldex_tbl <- cache_rds(
   aldex_path,
   {
-    counts_48h <- as(otu_table(ps_genus_48h), "matrix")
-    conds_48h <- sample_data(ps_genus_48h)$carbohydrate
+    tryCatch({
+      # Subset to 48h timepoint and only RDC vs SDC (two-group comparison)
+      ps_48h_rdc_sdc <- subset_samples(ps_genus_48h, 
+                                       Timepoint == "48H" & 
+                                       carbohydrate %in% c("RDC", "SDC"))
+      
+      counts_48h <- as(otu_table(ps_48h_rdc_sdc), "matrix")
+      conds_48h <- as.character(sample_data(ps_48h_rdc_sdc)$carbohydrate)  # Ensure character type
 
-    aldex_clr <- ALDEx2::aldex.clr(counts_48h, conds_48h, mc.samples = 64, denom = "all", verbose = FALSE)
-    aldex_kw <- ALDEx2::aldex.kw(aldex_clr)
-    aldex_effect <- ALDEx2::aldex.effect(aldex_clr)
+      aldex_clr <- ALDEx2::aldex.clr(counts_48h, conds_48h, mc.samples = 64, denom = "all", verbose = FALSE)
+      aldex_tt <- ALDEx2::aldex.ttest(aldex_clr)  # Use t-test for two-group comparison
+      aldex_effect <- ALDEx2::aldex.effect(aldex_clr)
 
-    aldex_kw %>%
-      rownames_to_column("taxon") %>%
-      dplyr::left_join(aldex_effect %>% rownames_to_column("taxon"), by = "taxon") %>%
-      dplyr::mutate(q = fdr_adjust(kw.ep)) %>%
-      dplyr::arrange(q)
+      aldex_tt %>%
+        rownames_to_column("taxon") %>%
+        dplyr::left_join(aldex_effect %>% rownames_to_column("taxon"), by = "taxon") %>%
+        dplyr::mutate(
+          # Ensure numeric types for p-values
+          we.ep = as.numeric(we.ep),
+          we.eBH = as.numeric(we.eBH),
+          q = we.eBH  # Use Benjamini-Hochberg corrected p-values from ALDEx2
+        ) %>%
+        dplyr::arrange(q)
+    }, error = function(e) {
+      message("ALDEx2 failed: ", e$message)
+      tibble()
+    })
   }
 )
 
-aldex_tbl %>% dplyr::filter(q < 0.1)
+if (nrow(aldex_tbl) > 0) {
+  aldex_tbl %>% dplyr::filter(q < 0.1)
+} else {
+  cat("No ALDEx2 results available - analysis may have failed\n")
+  tibble()
+}
 ```
 
-### 8.6 LEfSe (48 h, subclass = group)
+#### Forest Plot: ALDEx2 RDC vs SDC at 48h
+
+```{r aldex_forest_plot}
+# Prepare data for forest plot
+if (nrow(aldex_tbl) > 0) {
+  # Get taxonomy information for ASV to genus/species conversion
+  tax_table_df <- as.data.frame(tax_table(ps_genus_48h))
+  
+  forest_data_aldex <- aldex_tbl %>%
+    dplyr::filter(q < 0.1) %>%
+    dplyr::mutate(
+      # Convert ASV to genus/species format
+      taxon_display = case_when(
+        # Check if we have genus and species information
+        !is.na(tax_table_df[taxon, "Genus"]) & !is.na(tax_table_df[taxon, "Species"]) & 
+        tax_table_df[taxon, "Species"] != "uncultured" & tax_table_df[taxon, "Species"] != "" ~
+          paste0(tax_table_df[taxon, "Genus"], " ", tax_table_df[taxon, "Species"]),
+        # If no species, use genus
+        !is.na(tax_table_df[taxon, "Genus"]) & tax_table_df[taxon, "Genus"] != "uncultured" & 
+        tax_table_df[taxon, "Genus"] != "" ~ tax_table_df[taxon, "Genus"],
+        # Fallback to ASV if no genus info
+        TRUE ~ taxon
+      ),
+      # For ALDEx2, we'll use the effect size without confidence intervals
+      # since ALDEx2 doesn't provide standard errors in the traditional sense
+      # The significance is already captured in the q-value
+      # Create taxon labels with significance
+      taxon_label = paste0(taxon_display, " (q=", round(q, 3), ")"),
+      # Color by significance level
+      significance = case_when(
+        q < 0.001 ~ "q < 0.001",
+        q < 0.01 ~ "q < 0.01", 
+        q < 0.05 ~ "q < 0.05",
+        q < 0.1 ~ "q < 0.1",
+        TRUE ~ "q ≥ 0.1"
+      )
+    ) %>%
+    # Order by effect size (absolute value)
+    dplyr::arrange(desc(abs(effect)))
+} else {
+  forest_data_aldex <- tibble()
+}
+
+# Create forest plot for ALDEx2 results
+if (nrow(forest_data_aldex) > 0) {
+  forest_plot_aldex <- ggplot(forest_data_aldex, aes(x = effect, y = reorder(taxon_label, effect))) +
+    geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+    geom_point(aes(color = significance), size = 4, fill = "white", shape = 21, stroke = 1.5) +
+    scale_color_manual(
+      values = c("q < 0.001" = "#d73027", 
+                 "q < 0.01" = "#f46d43",
+                 "q < 0.05" = "#fdae61", 
+                 "q < 0.1" = "#fee08b",
+                 "q ≥ 0.1" = "#d9d9d9"),
+      name = "FDR-adjusted\np-value"
+    ) +
+    labs(
+      title = "ALDEx2: RDC vs SDC Comparison at 48h",
+      subtitle = "Effect sizes (Cohen's d) - significance indicated by color\n(Direct comparison between RDC and SDC at 48h timepoint)",
+      x = "Effect size (Cohen's d)",
+      y = "Taxon"
+    ) +
+    theme_minimal() +
+    theme(
+      axis.text.y = element_text(size = 9),
+      axis.text.x = element_text(size = 10),
+      plot.title = element_text(size = 14, face = "bold"),
+      plot.subtitle = element_text(size = 11),
+      legend.position = "bottom",
+      panel.grid.minor = element_blank()
+    )
+
+  print(forest_plot_aldex)
+} else {
+  cat("No data available for ALDEx2 forest plot - analysis may have failed\n")
+}
+
+# Summary statistics for ALDEx2 analysis
+if (nrow(forest_data_aldex) > 0) {
+  cat("Summary of ALDEx2 RDC vs SDC 48h Comparison:\n")
+  cat("Total significant taxa (q < 0.1):", nrow(forest_data_aldex), "\n")
+  
+  # Show top effects by magnitude
+  cat("\nTop 10 Effects by Magnitude (ALDEx2 RDC vs SDC 48h):\n")
+  print(forest_data_aldex %>%
+    dplyr::select(taxon_display, effect, q, we.ep) %>%
+    dplyr::arrange(desc(abs(effect))) %>%
+    dplyr::slice_head(n = 10))
+  
+  # Interpretation
+  cat("\nInterpretation of ALDEx2 Results:\n")
+  cat("- Positive effect: Higher abundance in SDC compared to RDC\n")
+  cat("- Negative effect: Higher abundance in RDC compared to SDC\n")
+  cat("- Effect size magnitude: |effect| > 0.5 is considered moderate, |effect| > 0.8 is large\n")
+} else {
+  cat("No summary statistics available for ALDEx2 - analysis may have failed\n")
+}
+```
+
+### 8.6 LEfSe (48H, RDC vs SDC)
 
 ```{r lefse}
-lefse_path <- file.path(outputs_dir, "lefse_48h_results.rds")
+lefse_path <- file.path(outputs_dir, "lefse_48h_rdc_vs_sdc_results.rds")
+
+# Subset to only RDC and SDC at 48H
+ps_genus_48h_rdc_sdc <- subset_samples(ps_genus_48h, 
+                                      carbohydrate %in% c("RDC", "SDC"))
+
+cat("48H RDC vs SDC samples for LEfSe:", nsamples(ps_genus_48h_rdc_sdc), "\n")
+cat("Sample distribution by carbohydrate:\n")
+print(table(sample_data(ps_genus_48h_rdc_sdc)$carbohydrate))
+
+# Check available sample variables
+cat("Available sample variables in ps_genus_48h_rdc_sdc:\n")
+print(sample_variables(ps_genus_48h_rdc_sdc))
 
 lefse_res <- cache_rds(
   lefse_path,
   {
     tryCatch({
       microbiomeMarker::run_lefse(
-        object = ps_genus_48h,
-        class = "carbohydrate",
-        subclass = "group",
+        ps = ps_genus_48h_rdc_sdc,
+        group = "carbohydrate",
+        subgroup = NULL,  # No subgroup, just RDC vs SDC comparison
         taxa_rank = "Genus",
         kw_cutoff = 0.05,
         lda_cutoff = 2
@@ -2588,12 +3042,87 @@ lefse_res <- cache_rds(
 lefse_tbl <- if (!is.null(lefse_res)) {
   microbiomeMarker::marker_table(lefse_res) %>%
     as_tibble() %>%
-    dplyr::arrange(desc(lda))
+    dplyr::arrange(desc(ef_lda))
 } else {
   tibble()
 }
 
 lefse_tbl
+```
+
+### 8.6.1 LEfSe Visualization
+
+```{r lefse_viz}
+if (nrow(lefse_tbl) > 0) {
+  # Prepare data for visualization
+  lefse_viz_data <- lefse_tbl %>%
+    dplyr::mutate(
+      # Create direction for bar colors (positive for SDC, negative for RDC)
+      direction = ifelse(enrich_group == "SDC", 1, -1),
+      # Create display labels with genus names and effect sizes
+      label = paste0(feature, " (LDA=", round(ef_lda, 2), ")"),
+      # Significance levels
+      significance = case_when(
+        padj < 0.001 ~ "***",
+        padj < 0.01 ~ "**", 
+        padj < 0.05 ~ "*",
+        TRUE ~ ""
+      ),
+      # Combined label with significance
+      display_label = paste0(label, significance)
+    ) %>%
+    # Limit to top 15 most significant results for readability
+    dplyr::slice_head(n = 15) %>%
+    # Reorder by effect size
+    dplyr::arrange(ef_lda)
+  
+  # Create horizontal bar chart
+  p_lefse <- ggplot(lefse_viz_data, aes(x = ef_lda * direction, y = reorder(display_label, ef_lda))) +
+    geom_col(aes(fill = enrich_group), alpha = 0.8) +
+    geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+    scale_fill_manual(
+      values = c("RDC" = "#2E86AB", "SDC" = "#A23B72"),
+      name = "Enriched in",
+      labels = c("RDC" = "RDC", "SDC" = "SDC")
+    ) +
+    labs(
+      title = "LEfSe Results: 48H RDC vs SDC Comparison",
+      subtitle = "Linear Discriminant Analysis (LDA) Effect Sizes",
+      x = "LDA Score (Effect Size)",
+      y = "Taxa (Genus level)",
+      caption = "*** p<0.001, ** p<0.01, * p<0.05"
+    ) +
+    theme_minimal() +
+    theme(
+      plot.title = element_text(size = 14, face = "bold"),
+      plot.subtitle = element_text(size = 12, color = "gray60"),
+      axis.text.y = element_text(size = 10),
+      axis.text.x = element_text(size = 10),
+      axis.title = element_text(size = 11, face = "bold"),
+      legend.position = "bottom",
+      legend.title = element_text(face = "bold"),
+      panel.grid.major.y = element_blank(),
+      panel.grid.minor = element_blank(),
+      plot.caption = element_text(size = 9, color = "gray50")
+    )
+  
+  print(p_lefse)
+  
+  # Save the plot
+  ggsave(file.path(outputs_dir, "lefse_48h_rdc_vs_sdc_barplot.png"), 
+         p_lefse, width = 12, height = 8, dpi = 300)
+  
+  # Summary statistics
+  cat("\nLEfSe Summary (48H RDC vs SDC):\n")
+  cat("- Total significant taxa:", nrow(lefse_tbl), "\n")
+  cat("- Taxa enriched in RDC:", sum(lefse_tbl$enrich_group == "RDC"), "\n")
+  cat("- Taxa enriched in SDC:", sum(lefse_tbl$enrich_group == "SDC"), "\n")
+  cat("- Mean LDA score:", round(mean(lefse_tbl$ef_lda), 2), "\n")
+  cat("- Max LDA score:", round(max(lefse_tbl$ef_lda), 2), "\n")
+  
+} else {
+  cat("No significant LEfSe results found for 48H RDC vs SDC comparison.\n")
+}
 ```
 
 ### 8.7 MaAsLin2
@@ -2632,6 +3161,704 @@ maaslin_tbl <- maaslin_fit$results %>%
 maaslin_tbl %>% dplyr::filter(q < 0.1)
 ```
 
+### 8.7.1 MaAsLin2 Visualization
+
+```{r maaslin_viz, fig.width = 20, fig.height = 24}
+if (nrow(maaslin_tbl) > 0) {
+  # Get taxonomy information for ASV to genus/species conversion
+  tax_table_df <- as.data.frame(tax_table(ps_genus_filtered))
+  tax_table_df$feature <- rownames(tax_table_df)
+  
+  # Create taxonomic display names
+  tax_table_df <- tax_table_df %>%
+    dplyr::mutate(
+      # Create genus_species display name
+      genus_species = case_when(
+        !is.na(Species) & Species != "Unassigned" & Species != "" ~ paste0(Genus, " ", Species),
+        !is.na(Genus) & Genus != "Unassigned" & Genus != "" ~ paste0(Genus, " sp."),
+        !is.na(Family) & Family != "Unassigned" & Family != "" ~ paste0(Family, " (family)"),
+        !is.na(Order) & Order != "Unassigned" & Order != "" ~ paste0(Order, " (order)"),
+        TRUE ~ feature  # Fallback to ASV ID if no good taxonomy
+      )
+    )
+  
+  # Filter for significant results and add taxonomy
+  maaslin_sig <- maaslin_tbl %>% 
+    dplyr::filter(q < 0.1) %>%
+    dplyr::left_join(tax_table_df %>% dplyr::select(feature, genus_species), by = "feature") %>%
+    dplyr::mutate(
+      # Create significance levels
+      significance = case_when(
+        q < 0.001 ~ "***",
+        q < 0.01 ~ "**", 
+        q < 0.05 ~ "*",
+        TRUE ~ ""
+      ),
+      # Create display labels with taxonomic names
+      display_label = paste0(genus_species, " (", metadata, "=", value, ")"),
+      # Create combined label with significance
+      full_label = paste0(display_label, significance),
+      # Create metadata-value combination for grouping
+      metadata_value = paste0(metadata, "=", value)
+    )
+  
+  if (nrow(maaslin_sig) > 0) {
+    # Plot 1: Coefficient effect sizes by metadata variable
+    p1 <- ggplot(maaslin_sig, aes(x = coef, y = reorder(full_label, coef))) +
+      geom_col(aes(fill = metadata_value), alpha = 0.8) +
+      geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+      scale_fill_viridis_d(name = "Variable", option = "plasma") +
+      labs(
+        title = "MaAsLin2 Results: Significant Associations",
+        subtitle = "Coefficient Effect Sizes by Variable",
+        x = "Coefficient (Effect Size)",
+        y = "Features",
+        caption = "*** q<0.001, ** q<0.01, * q<0.05"
+      ) +
+      theme_minimal() +
+      theme(
+        plot.title = element_text(size = 14, face = "bold"),
+        plot.subtitle = element_text(size = 12, color = "gray60"),
+        axis.text.y = element_text(size = 9),
+        axis.text.x = element_text(size = 10),
+        axis.title = element_text(size = 11, face = "bold"),
+        legend.position = "bottom",
+        legend.title = element_text(face = "bold"),
+        panel.grid.major.y = element_blank(),
+        panel.grid.minor = element_blank(),
+        plot.caption = element_text(size = 9, color = "gray50")
+      )
+    
+    print(p1)
+    
+    # Plot 2: Volcano plot (effect size vs significance)
+    # Add taxonomy to full maaslin_tbl for volcano plot
+    maaslin_tbl_with_tax <- maaslin_tbl %>%
+      dplyr::left_join(tax_table_df %>% dplyr::select(feature, genus_species), by = "feature")
+    
+    # Create data for labeling significant points
+    sig_points <- maaslin_tbl_with_tax %>% 
+      dplyr::filter(q < 0.1) %>%
+      dplyr::mutate(
+        # Create genus name for labeling (extract just the genus part)
+        genus_label = case_when(
+          !is.na(genus_species) & grepl(" ", genus_species) ~ 
+            stringr::str_extract(genus_species, "^[^ ]+"),  # Extract first word (genus)
+          !is.na(genus_species) ~ genus_species,
+          TRUE ~ feature
+        )
+      )
+    
+    p2 <- ggplot(maaslin_tbl_with_tax, aes(x = coef, y = -log10(q))) +
+      geom_point(aes(color = q < 0.1), alpha = 0.6, size = 2) +
+      geom_hline(yintercept = -log10(0.1), linetype = "dashed", color = "red", alpha = 0.7) +
+      geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+      # Add text labels for significant points
+      ggrepel::geom_text_repel(
+        data = sig_points,
+        aes(label = genus_label),
+        size = 3,
+        color = "#E31A1C",
+        fontface = "bold",
+        max.overlaps = 20,
+        min.segment.length = 0.1,
+        box.padding = 0.3,
+        point.padding = 0.2,
+        segment.color = "gray50",
+        segment.alpha = 0.6
+      ) +
+      scale_color_manual(
+        values = c("FALSE" = "gray70", "TRUE" = "#E31A1C"),
+        name = "Significant",
+        labels = c("FALSE" = "q ≥ 0.1", "TRUE" = "q < 0.1")
+      ) +
+      labs(
+        title = "MaAsLin2 Volcano Plot",
+        subtitle = "Effect Size vs Statistical Significance",
+        x = "Coefficient (Effect Size)",
+        y = "-log10(q-value)",
+        caption = "Red dashed line: q = 0.1 threshold; Labels show significant taxa"
+      ) +
+      theme_minimal() +
+      theme(
+        plot.title = element_text(size = 14, face = "bold"),
+        plot.subtitle = element_text(size = 12, color = "gray60"),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 11, face = "bold"),
+        legend.position = "bottom",
+        legend.title = element_text(face = "bold"),
+        plot.caption = element_text(size = 9, color = "gray50")
+      )
+    
+    print(p2)
+    
+    # Plot 3: Top effects by metadata variable
+    top_effects <- maaslin_sig %>%
+      dplyr::group_by(metadata) %>%
+      dplyr::slice_max(abs(coef), n = 10) %>%
+      dplyr::ungroup()
+    
+    p3 <- ggplot(top_effects, aes(x = coef, y = reorder(genus_species, coef))) +
+      geom_col(aes(fill = metadata), alpha = 0.8) +
+      geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+      scale_fill_manual(
+        values = c("group" = "#1f77b4", "carbohydrate" = "#ff7f0e", "timepoint" = "#2ca02c"),
+        name = "Variable"
+      ) +
+      labs(
+        title = "MaAsLin2: Top Effects by Variable",
+        subtitle = "Top 10 largest effects per metadata variable",
+        x = "Coefficient (Effect Size)",
+        y = "Features"
+      ) +
+      theme_minimal() +
+      theme(
+        plot.title = element_text(size = 14, face = "bold"),
+        plot.subtitle = element_text(size = 12, color = "gray60"),
+        axis.text.y = element_text(size = 9),
+        axis.text.x = element_text(size = 10),
+        axis.title = element_text(size = 11, face = "bold"),
+        legend.position = "bottom",
+        legend.title = element_text(face = "bold"),
+        panel.grid.major.y = element_blank(),
+        panel.grid.minor = element_blank()
+      ) +
+      facet_wrap(~metadata, scales = "free_y", ncol = 1)
+    
+    print(p3)
+    
+    # Save plots
+    ggsave(file.path(outputs_dir, "maaslin2_effects_barplot.png"), 
+           p1, width = 12, height = 10, dpi = 300)
+    ggsave(file.path(outputs_dir, "maaslin2_volcano_plot.png"), 
+           p2, width = 10, height = 8, dpi = 300)
+    ggsave(file.path(outputs_dir, "maaslin2_top_effects.png"), 
+           p3, width = 12, height = 12, dpi = 300)
+    
+    # Summary statistics
+    cat("\nMaAsLin2 Summary:\n")
+    cat("- Total features tested:", nrow(maaslin_tbl), "\n")
+    cat("- Significant associations (q < 0.1):", nrow(maaslin_sig), "\n")
+    cat("- Significant by variable:\n")
+    print(table(maaslin_sig$metadata))
+    cat("- Mean absolute coefficient:", round(mean(abs(maaslin_sig$coef)), 3), "\n")
+    cat("- Max absolute coefficient:", round(max(abs(maaslin_sig$coef)), 3), "\n")
+    
+  } else {
+    cat("No significant MaAsLin2 results found (q < 0.1).\n")
+  }
+  
+} else {
+  cat("No MaAsLin2 results available.\n")
+}
+```
+
+### 8.7.2 MaAsLin2 (48H, RDC vs SDC)
+
+```{r maaslin2_48h_rdc_sdc, fig.width = 20, fig.height = 16}
+maaslin_48h_path <- file.path(outputs_dir, "maaslin2_48h_rdc_vs_sdc_results.rds")
+
+# Subset to 48H timepoint and only RDC vs SDC
+ps_genus_48h_rdc_sdc_maaslin <- subset_samples(ps_genus_filtered, 
+                                              Timepoint == "48H" & 
+                                              carbohydrate %in% c("RDC", "SDC"))
+
+cat("48H RDC vs SDC samples for MaAsLin2:", nsamples(ps_genus_48h_rdc_sdc_maaslin), "\n")
+cat("Sample distribution by carbohydrate:\n")
+print(table(sample_data(ps_genus_48h_rdc_sdc_maaslin)$carbohydrate))
+
+# Prepare data for MaAsLin2
+maaslin_48h_counts <- as.data.frame(otu_table(ps_genus_48h_rdc_sdc_maaslin))
+maaslin_48h_meta <- as(sample_data(ps_genus_48h_rdc_sdc_maaslin), "data.frame")
+maaslin_48h_meta$SampleID <- rownames(maaslin_48h_meta)
+
+# Run MaAsLin2 analysis
+maaslin_48h_fit <- cache_rds(
+  maaslin_48h_path,
+  {
+    Maaslin2::Maaslin2(
+      input_data = maaslin_48h_counts,
+      input_metadata = maaslin_48h_meta,
+      output = file.path(outputs_dir, "maaslin2_48h_rdc_vs_sdc"),
+      min_prevalence = prevalence_cutoff,
+      normalization = "TSS",
+      transform = "LOG",
+      analysis_method = "LM",
+      fixed_effects = c("carbohydrate"),
+      random_effects = c("subject_id"),
+      plot_heatmap = FALSE,
+      plot_scatter = FALSE
+    )
+  }
+)
+
+maaslin_48h_tbl <- maaslin_48h_fit$results %>%
+  as_tibble() %>%
+  dplyr::mutate(q = fdr_adjust(qval)) %>%
+  dplyr::arrange(q)
+
+maaslin_48h_tbl %>% dplyr::filter(q < 0.1)
+```
+
+### 8.7.3 MaAsLin2 48H RDC vs SDC Visualization
+
+```{r maaslin_48h_viz, fig.width = 20, fig.height = 16}
+if (nrow(maaslin_48h_tbl) > 0) {
+  # Get taxonomy information for ASV to genus/species conversion
+  tax_table_df_48h <- as.data.frame(tax_table(ps_genus_48h_rdc_sdc_maaslin))
+  tax_table_df_48h$feature <- rownames(tax_table_df_48h)
+  
+  # Create taxonomic display names
+  tax_table_df_48h <- tax_table_df_48h %>%
+    dplyr::mutate(
+      # Create genus_species display name
+      genus_species = case_when(
+        !is.na(Species) & Species != "Unassigned" & Species != "" ~ paste0(Genus, " ", Species),
+        !is.na(Genus) & Genus != "Unassigned" & Genus != "" ~ paste0(Genus, " sp."),
+        !is.na(Family) & Family != "Unassigned" & Family != "" ~ paste0(Family, " (family)"),
+        !is.na(Order) & Order != "Unassigned" & Order != "" ~ paste0(Order, " (order)"),
+        TRUE ~ feature  # Fallback to ASV ID if no good taxonomy
+      )
+    )
+  
+  # Filter for significant results and add taxonomy
+  maaslin_48h_sig <- maaslin_48h_tbl %>% 
+    dplyr::filter(q < 0.1) %>%
+    dplyr::left_join(tax_table_df_48h %>% dplyr::select(feature, genus_species), by = "feature") %>%
+    dplyr::mutate(
+      # Create significance levels
+      significance = case_when(
+        q < 0.001 ~ "***",
+        q < 0.01 ~ "**", 
+        q < 0.05 ~ "*",
+        TRUE ~ ""
+      ),
+      # Create display labels with taxonomic names
+      display_label = paste0(genus_species, " (", metadata, "=", value, ")"),
+      # Create combined label with significance
+      full_label = paste0(display_label, significance),
+      # Create direction for bar colors (positive for SDC, negative for RDC)
+      direction = ifelse(value == "SDC", 1, -1)
+    )
+  
+  if (nrow(maaslin_48h_sig) > 0) {
+    # Plot 1: Horizontal bar chart of significant associations
+    p1_48h <- ggplot(maaslin_48h_sig, aes(x = coef * direction, y = reorder(full_label, coef))) +
+      geom_col(aes(fill = value), alpha = 0.8) +
+      geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+      scale_fill_manual(
+        values = c("RDC" = "#2E86AB", "SDC" = "#A23B72"),
+        name = "Enriched in",
+        labels = c("RDC" = "RDC", "SDC" = "SDC")
+      ) +
+      labs(
+        title = "MaAsLin2 Results: 48H RDC vs SDC Comparison",
+        subtitle = "Coefficient Effect Sizes for Significant Associations",
+        x = "Coefficient (Effect Size)",
+        y = "Taxa (Genus level)",
+        caption = "*** q<0.001, ** q<0.01, * q<0.05"
+      ) +
+      theme_minimal() +
+      theme(
+        plot.title = element_text(size = 14, face = "bold"),
+        plot.subtitle = element_text(size = 12, color = "gray60"),
+        axis.text.y = element_text(size = 10),
+        axis.text.x = element_text(size = 10),
+        axis.title = element_text(size = 11, face = "bold"),
+        legend.position = "bottom",
+        legend.title = element_text(face = "bold"),
+        panel.grid.major.y = element_blank(),
+        panel.grid.minor = element_blank(),
+        plot.caption = element_text(size = 9, color = "gray50")
+      )
+    
+    print(p1_48h)
+    
+    # Plot 2: Volcano plot for 48H RDC vs SDC
+    maaslin_48h_tbl_with_tax <- maaslin_48h_tbl %>%
+      dplyr::left_join(tax_table_df_48h %>% dplyr::select(feature, genus_species), by = "feature")
+    
+    p2_48h <- ggplot(maaslin_48h_tbl_with_tax, aes(x = coef, y = -log10(q))) +
+      geom_point(aes(color = q < 0.1), alpha = 0.6, size = 2) +
+      geom_hline(yintercept = -log10(0.1), linetype = "dashed", color = "red", alpha = 0.7) +
+      geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+      scale_color_manual(
+        values = c("FALSE" = "gray70", "TRUE" = "#E31A1C"),
+        name = "Significant",
+        labels = c("FALSE" = "q ≥ 0.1", "TRUE" = "q < 0.1")
+      ) +
+      labs(
+        title = "MaAsLin2 Volcano Plot: 48H RDC vs SDC",
+        subtitle = "Effect Size vs Statistical Significance",
+        x = "Coefficient (Effect Size)",
+        y = "-log10(q-value)",
+        caption = "Red dashed line: q = 0.1 threshold"
+      ) +
+      theme_minimal() +
+      theme(
+        plot.title = element_text(size = 14, face = "bold"),
+        plot.subtitle = element_text(size = 12, color = "gray60"),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 11, face = "bold"),
+        legend.position = "bottom",
+        legend.title = element_text(face = "bold"),
+        plot.caption = element_text(size = 9, color = "gray50")
+      )
+    
+    print(p2_48h)
+    
+    # Plot 3: Top effects by magnitude
+    top_effects_48h <- maaslin_48h_sig %>%
+      dplyr::slice_max(abs(coef), n = 15) %>%
+      dplyr::arrange(coef)
+    
+    p3_48h <- ggplot(top_effects_48h, aes(x = coef * direction, y = reorder(genus_species, coef))) +
+      geom_col(aes(fill = value), alpha = 0.8) +
+      geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+      scale_fill_manual(
+        values = c("RDC" = "#2E86AB", "SDC" = "#A23B72"),
+        name = "Enriched in"
+      ) +
+      labs(
+        title = "MaAsLin2: Top 15 Effects (48H RDC vs SDC)",
+        subtitle = "Largest effect sizes by magnitude",
+        x = "Coefficient (Effect Size)",
+        y = "Taxa (Genus level)"
+      ) +
+      theme_minimal() +
+      theme(
+        plot.title = element_text(size = 14, face = "bold"),
+        plot.subtitle = element_text(size = 12, color = "gray60"),
+        axis.text.y = element_text(size = 10),
+        axis.text.x = element_text(size = 10),
+        axis.title = element_text(size = 11, face = "bold"),
+        legend.position = "bottom",
+        legend.title = element_text(face = "bold"),
+        panel.grid.major.y = element_blank(),
+        panel.grid.minor = element_blank()
+      )
+    
+    print(p3_48h)
+    
+    # Save plots
+    ggsave(file.path(outputs_dir, "maaslin2_48h_rdc_vs_sdc_barplot.png"), 
+           p1_48h, width = 12, height = 10, dpi = 300)
+    ggsave(file.path(outputs_dir, "maaslin2_48h_rdc_vs_sdc_volcano.png"), 
+           p2_48h, width = 10, height = 8, dpi = 300)
+    ggsave(file.path(outputs_dir, "maaslin2_48h_rdc_vs_sdc_top_effects.png"), 
+           p3_48h, width = 12, height = 10, dpi = 300)
+    
+    # Summary statistics
+    cat("\nMaAsLin2 48H RDC vs SDC Summary:\n")
+    cat("- Total features tested:", nrow(maaslin_48h_tbl), "\n")
+    cat("- Significant associations (q < 0.1):", nrow(maaslin_48h_sig), "\n")
+    cat("- Taxa enriched in RDC:", sum(maaslin_48h_sig$value == "RDC"), "\n")
+    cat("- Taxa enriched in SDC:", sum(maaslin_48h_sig$value == "SDC"), "\n")
+    cat("- Mean absolute coefficient:", round(mean(abs(maaslin_48h_sig$coef)), 3), "\n")
+    cat("- Max absolute coefficient:", round(max(abs(maaslin_48h_sig$coef)), 3), "\n")
+    
+  } else {
+    cat("No significant MaAsLin2 results found for 48H RDC vs SDC comparison (q < 0.1).\n")
+  }
+  
+} else {
+  cat("No MaAsLin2 48H RDC vs SDC results available.\n")
+}
+```
+
+### 8.7.4 MaAsLin2 (Both Timepoints, RDC vs SDC)
+
+```{r maaslin2_both_timepoints_rdc_sdc}
+maaslin_both_path <- file.path(outputs_dir, "maaslin2_both_timepoints_rdc_vs_sdc_results.rds")
+
+# Subset to both timepoints and only RDC vs SDC
+ps_genus_both_rdc_sdc_maaslin <- subset_samples(ps_genus_filtered, 
+                                               carbohydrate %in% c("RDC", "SDC"))
+
+cat("Both timepoints RDC vs SDC samples for MaAsLin2:", nsamples(ps_genus_both_rdc_sdc_maaslin), "\n")
+cat("Sample distribution by carbohydrate:\n")
+print(table(sample_data(ps_genus_both_rdc_sdc_maaslin)$carbohydrate))
+cat("Sample distribution by timepoint:\n")
+print(table(sample_data(ps_genus_both_rdc_sdc_maaslin)$Timepoint))
+
+# Prepare data for MaAsLin2
+maaslin_both_counts <- as.data.frame(otu_table(ps_genus_both_rdc_sdc_maaslin))
+maaslin_both_meta <- as(sample_data(ps_genus_both_rdc_sdc_maaslin), "data.frame")
+maaslin_both_meta$SampleID <- rownames(maaslin_both_meta)
+
+# Run MaAsLin2 analysis with timepoint as covariate
+maaslin_both_fit <- cache_rds(
+  maaslin_both_path,
+  {
+    Maaslin2::Maaslin2(
+      input_data = maaslin_both_counts,
+      input_metadata = maaslin_both_meta,
+      output = file.path(outputs_dir, "maaslin2_both_timepoints_rdc_vs_sdc"),
+      min_prevalence = prevalence_cutoff,
+      normalization = "TSS",
+      transform = "LOG",
+      analysis_method = "LM",
+      fixed_effects = c("carbohydrate", "timepoint"),
+      random_effects = c("subject_id"),
+      plot_heatmap = FALSE,
+      plot_scatter = FALSE
+    )
+  }
+)
+
+maaslin_both_tbl <- maaslin_both_fit$results %>%
+  as_tibble() %>%
+  dplyr::mutate(q = fdr_adjust(qval)) %>%
+  dplyr::arrange(q)
+
+# Show results for carbohydrate effect specifically
+maaslin_both_carb <- maaslin_both_tbl %>% 
+  dplyr::filter(metadata == "carbohydrate") %>%
+  dplyr::filter(q < 0.1)
+
+maaslin_both_carb
+```
+
+### 8.7.5 MaAsLin2 Both Timepoints RDC vs SDC Visualization
+
+```{r maaslin_both_viz, fig.width = 20, fig.height = 16}
+# Load required library for text repelling
+library(ggrepel)
+
+if (nrow(maaslin_both_tbl) > 0) {
+  # Get taxonomy information for ASV to genus/species conversion
+  tax_table_df_both <- as.data.frame(tax_table(ps_genus_both_rdc_sdc_maaslin))
+  tax_table_df_both$feature <- rownames(tax_table_df_both)
+  
+  # Create taxonomic display names
+  tax_table_df_both <- tax_table_df_both %>%
+    dplyr::mutate(
+      # Create genus_species display name
+      genus_species = case_when(
+        !is.na(Species) & Species != "Unassigned" & Species != "" ~ paste0(Genus, " ", Species),
+        !is.na(Genus) & Genus != "Unassigned" & Genus != "" ~ paste0(Genus, " sp."),
+        !is.na(Family) & Family != "Unassigned" & Family != "" ~ paste0(Family, " (family)"),
+        !is.na(Order) & Order != "Unassigned" & Order != "" ~ paste0(Order, " (order)"),
+        TRUE ~ feature  # Fallback to ASV ID if no good taxonomy
+      )
+    )
+  
+  # Filter for significant carbohydrate effects and add taxonomy
+  maaslin_both_sig <- maaslin_both_tbl %>% 
+    dplyr::filter(metadata == "carbohydrate") %>%
+    dplyr::filter(q < 0.1) %>%
+    dplyr::left_join(tax_table_df_both %>% dplyr::select(feature, genus_species), by = "feature") %>%
+    dplyr::mutate(
+      # Create significance levels
+      significance = case_when(
+        q < 0.001 ~ "***",
+        q < 0.01 ~ "**", 
+        q < 0.05 ~ "*",
+        TRUE ~ ""
+      ),
+      # Create display labels with taxonomic names
+      display_label = paste0(genus_species, " (", metadata, "=", value, ")"),
+      # Create combined label with significance
+      full_label = paste0(display_label, significance),
+      # Create direction for bar colors (positive for SDC, negative for RDC)
+      direction = ifelse(value == "SDC", 1, -1)
+    )
+  
+  if (nrow(maaslin_both_sig) > 0) {
+    # Plot 1: Horizontal bar chart of significant carbohydrate associations
+    p1_both <- ggplot(maaslin_both_sig, aes(x = coef * direction, y = reorder(full_label, coef))) +
+      geom_col(aes(fill = value), alpha = 0.8) +
+      geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+      scale_fill_manual(
+        values = c("RDC" = "#2E86AB", "SDC" = "#A23B72"),
+        name = "Enriched in",
+        labels = c("RDC" = "RDC", "SDC" = "SDC")
+      ) +
+      labs(
+        title = "MaAsLin2 Results: RDC vs SDC (Both Timepoints)",
+        subtitle = "Carbohydrate Effect Across 0H and 48H Timepoints",
+        x = "Coefficient (Effect Size)",
+        y = "Taxa (Genus level)",
+        caption = "*** q<0.001, ** q<0.01, * q<0.05"
+      ) +
+      theme_minimal() +
+      theme(
+        plot.title = element_text(size = 14, face = "bold"),
+        plot.subtitle = element_text(size = 12, color = "gray60"),
+        axis.text.y = element_text(size = 10),
+        axis.text.x = element_text(size = 10),
+        axis.title = element_text(size = 11, face = "bold"),
+        legend.position = "bottom",
+        legend.title = element_text(face = "bold"),
+        panel.grid.major.y = element_blank(),
+        panel.grid.minor = element_blank(),
+        plot.caption = element_text(size = 9, color = "gray50")
+      )
+    
+    print(p1_both)
+    
+    # Plot 2: Volcano plot for carbohydrate effects
+    maaslin_both_carb_with_tax <- maaslin_both_tbl %>%
+      dplyr::filter(metadata == "carbohydrate") %>%
+      dplyr::left_join(tax_table_df_both %>% dplyr::select(feature, genus_species), by = "feature")
+    
+    p2_both <- ggplot(maaslin_both_carb_with_tax, aes(x = coef, y = -log10(q))) +
+      geom_point(aes(color = q < 0.1), alpha = 0.6, size = 2) +
+      geom_text_repel(
+        data = maaslin_both_carb_with_tax %>% filter(q < 0.1),
+        aes(label = genus_species),
+        size = 3,
+        max.overlaps = 15,
+        box.padding = 0.5,
+        point.padding = 0.3,
+        segment.color = "gray50",
+        segment.size = 0.3,
+        force = 2
+      ) +
+      geom_hline(yintercept = -log10(0.1), linetype = "dashed", color = "red", alpha = 0.7) +
+      geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+      scale_color_manual(
+        values = c("FALSE" = "gray70", "TRUE" = "#E31A1C"),
+        name = "Significant",
+        labels = c("FALSE" = "q ≥ 0.1", "TRUE" = "q < 0.1")
+      ) +
+      labs(
+        title = "MaAsLin2 Volcano Plot: RDC vs SDC (Both Timepoints)",
+        subtitle = "Carbohydrate Effect Size vs Statistical Significance",
+        x = "Coefficient (Effect Size)",
+        y = "-log10(q-value)",
+        caption = "Red dashed line: q = 0.1 threshold"
+      ) +
+      theme_minimal() +
+      theme(
+        plot.title = element_text(size = 14, face = "bold"),
+        plot.subtitle = element_text(size = 12, color = "gray60"),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 11, face = "bold"),
+        legend.position = "bottom",
+        legend.title = element_text(face = "bold"),
+        plot.caption = element_text(size = 9, color = "gray50")
+      )
+    
+    print(p2_both)
+    
+    # Plot 3: Top effects by magnitude
+    top_effects_both <- maaslin_both_sig %>%
+      dplyr::slice_max(abs(coef), n = 15) %>%
+      dplyr::arrange(coef)
+    
+    p3_both <- ggplot(top_effects_both, aes(x = coef * direction, y = reorder(genus_species, coef))) +
+      geom_col(aes(fill = value), alpha = 0.8) +
+      geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+      scale_fill_manual(
+        values = c("RDC" = "#2E86AB", "SDC" = "#A23B72"),
+        name = "Enriched in"
+      ) +
+      labs(
+        title = "MaAsLin2: Top 15 Carbohydrate Effects (Both Timepoints)",
+        subtitle = "Largest effect sizes by magnitude across 0H and 48H",
+        x = "Coefficient (Effect Size)",
+        y = "Taxa (Genus level)"
+      ) +
+      theme_minimal() +
+      theme(
+        plot.title = element_text(size = 14, face = "bold"),
+        plot.subtitle = element_text(size = 12, color = "gray60"),
+        axis.text.y = element_text(size = 10),
+        axis.text.x = element_text(size = 10),
+        axis.title = element_text(size = 11, face = "bold"),
+        legend.position = "bottom",
+        legend.title = element_text(face = "bold"),
+        panel.grid.major.y = element_blank(),
+        panel.grid.minor = element_blank()
+      )
+    
+    print(p3_both)
+    
+    # Plot 4: Comparison of timepoint effects
+    timepoint_effects <- maaslin_both_tbl %>%
+      dplyr::filter(metadata == "timepoint") %>%
+      dplyr::filter(q < 0.1) %>%
+      dplyr::left_join(tax_table_df_both %>% dplyr::select(feature, genus_species), by = "feature") %>%
+      dplyr::mutate(
+        significance = case_when(
+          q < 0.001 ~ "***",
+          q < 0.01 ~ "**", 
+          q < 0.05 ~ "*",
+          TRUE ~ ""
+        ),
+        display_label = paste0(genus_species, " (timepoint=", value, ")"),
+        full_label = paste0(display_label, significance)
+      )
+    
+    if (nrow(timepoint_effects) > 0) {
+      p4_both <- ggplot(timepoint_effects, aes(x = coef, y = reorder(full_label, coef))) +
+        geom_col(aes(fill = value), alpha = 0.8) +
+        geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+        scale_fill_manual(
+          values = c("0H" = "#FF6B6B", "48H" = "#4ECDC4"),
+          name = "Timepoint"
+        ) +
+        labs(
+          title = "MaAsLin2: Timepoint Effects (RDC vs SDC Analysis)",
+          subtitle = "Taxa that change significantly between 0H and 48H",
+          x = "Coefficient (Effect Size)",
+          y = "Taxa (Genus level)",
+          caption = "*** q<0.001, ** q<0.01, * q<0.05"
+        ) +
+        theme_minimal() +
+        theme(
+          plot.title = element_text(size = 14, face = "bold"),
+          plot.subtitle = element_text(size = 12, color = "gray60"),
+          axis.text.y = element_text(size = 10),
+          axis.text.x = element_text(size = 10),
+          axis.title = element_text(size = 11, face = "bold"),
+          legend.position = "bottom",
+          legend.title = element_text(face = "bold"),
+          panel.grid.major.y = element_blank(),
+          panel.grid.minor = element_blank(),
+          plot.caption = element_text(size = 9, color = "gray50")
+        )
+      
+      print(p4_both)
+      
+      # Save timepoint effects plot
+      ggsave(file.path(outputs_dir, "maaslin2_both_timepoints_timepoint_effects.png"), 
+             p4_both, width = 12, height = 10, dpi = 300)
+    }
+    
+    # Save plots
+    ggsave(file.path(outputs_dir, "maaslin2_both_timepoints_rdc_vs_sdc_barplot.png"), 
+           p1_both, width = 12, height = 10, dpi = 300)
+    ggsave(file.path(outputs_dir, "maaslin2_both_timepoints_rdc_vs_sdc_volcano.png"), 
+           p2_both, width = 10, height = 8, dpi = 300)
+    ggsave(file.path(outputs_dir, "maaslin2_both_timepoints_rdc_vs_sdc_top_effects.png"), 
+           p3_both, width = 12, height = 10, dpi = 300)
+    
+    # Summary statistics
+    cat("\nMaAsLin2 Both Timepoints RDC vs SDC Summary:\n")
+    cat("- Total features tested:", nrow(maaslin_both_tbl), "\n")
+    cat("- Significant carbohydrate associations (q < 0.1):", nrow(maaslin_both_sig), "\n")
+    cat("- Taxa enriched in RDC:", sum(maaslin_both_sig$value == "RDC"), "\n")
+    cat("- Taxa enriched in SDC:", sum(maaslin_both_sig$value == "SDC"), "\n")
+    cat("- Mean absolute coefficient:", round(mean(abs(maaslin_both_sig$coef)), 3), "\n")
+    cat("- Max absolute coefficient:", round(max(abs(maaslin_both_sig$coef)), 3), "\n")
+    
+    if (nrow(timepoint_effects) > 0) {
+      cat("- Significant timepoint effects (q < 0.1):", nrow(timepoint_effects), "\n")
+      cat("- Taxa enriched at 0H:", sum(timepoint_effects$value == "0H"), "\n")
+      cat("- Taxa enriched at 48H:", sum(timepoint_effects$value == "48H"), "\n")
+    }
+    
+  } else {
+    cat("No significant MaAsLin2 carbohydrate effects found for RDC vs SDC comparison across both timepoints (q < 0.1).\n")
+  }
+  
+} else {
+  cat("No MaAsLin2 both timepoints RDC vs SDC results available.\n")
+}
+```
+
 ### 8.8 ADAPT
 
 ```{r adapt}
@@ -2645,8 +3872,7 @@ adapt_res <- cache_rds(
         input_data = ps_genus_filtered,
         cond.var = "carbohydrate",
         base.cond = "No Added Carb",
-        time.var = "timepoint",
-        random.var = "subject_id"
+        adj.var = "timepoint"
       )
     }, error = function(e) {
       message("ADAPT failed: ", e$message)
@@ -2680,8 +3906,16 @@ rf_markers <- cache_rds(
   {
     set.seed(12345)
     rf_res <- tryCatch({
+      # Subset to only RDC and SDC at 48H for two-group comparison
+      ps_genus_48h_rdc_sdc <- subset_samples(ps_genus_48h, 
+                                           carbohydrate %in% c("RDC", "SDC"))
+      
+      cat("48H RDC vs SDC samples for Random Forest:", nsamples(ps_genus_48h_rdc_sdc), "\n")
+      cat("Sample distribution by carbohydrate:\n")
+      print(table(sample_data(ps_genus_48h_rdc_sdc)$carbohydrate))
+      
       microbiomeMarker::run_sl(
-        object = ps_genus_48h,
+        ps_genus_48h_rdc_sdc,
         group = "carbohydrate",
         taxa_rank = "Genus",
         norm = "TSS",
@@ -2709,24 +3943,98 @@ rf_markers <- rf_markers %||% tibble()
 
 rf_markers
 ```
-```
+
 ### 8.10 Cross-Method Signal Concordance
 
 ```{r da-consensus}
+# Get taxonomy information for ASV to genus conversion
+tax_table_df <- as.data.frame(tax_table(ps_genus_48h))
+
+# Function to convert ASV to genus name
+asv_to_genus <- function(asv_ids) {
+  if (length(asv_ids) == 0) return(character())
+  
+  genus_names <- sapply(asv_ids, function(asv_id) {
+    if (asv_id %in% rownames(tax_table_df)) {
+      genus <- tax_table_df[asv_id, "Genus"]
+      if (!is.na(genus) && genus != "uncultured" && genus != "") {
+        return(genus)
+      } else {
+        return(asv_id)  # Fallback to ASV if no genus info
+      }
+    } else {
+      return(asv_id)  # Fallback to ASV if not found
+    }
+  })
+  return(unname(genus_names))
+}
+
 da_lists <- list(
-  Corncob = pull_safe(corncob_results %>% dplyr::filter(q_value < 0.1), "taxon"),
-  ANCOMBC2 = {
-    col <- first_match_col(ancombc2_tbl, c("taxa_id", "taxon"))
-    if (is.null(col)) character() else pull_safe(ancombc2_tbl %>% dplyr::filter(q < 0.1), col)
+  Corncob = {
+    if (nrow(corncob_results) > 0 && "q_value" %in% names(corncob_results)) {
+      asv_ids <- pull_safe(corncob_results %>% dplyr::filter(q_value < 0.1), "taxon")
+      asv_to_genus(asv_ids)
+    } else {
+      character()
+    }
   },
-  ANCOMBC48 = pull_safe(ancombc48_tbl, "taxon"),
-  ALDEx2 = pull_safe(aldex_tbl %>% dplyr::filter(q < 0.1), "taxon"),
-  LEfSe = pull_safe(lefse_tbl, "taxa"),
-  MaAsLin2 = pull_safe(maaslin_tbl %>% dplyr::filter(q < 0.1), "feature"),
-  ADAPT = pull_safe(adapt_tbl, "taxon"),
+  ANCOMBC2 = {
+    if (nrow(ancombc2_tbl) > 0) {
+      col <- first_match_col(ancombc2_tbl, c("taxa_id", "taxon"))
+      if (!is.null(col) && "q" %in% names(ancombc2_tbl)) {
+        asv_ids <- pull_safe(ancombc2_tbl %>% dplyr::filter(q < 0.1), col)
+      } else {
+        asv_ids <- pull_safe(ancombc2_tbl, col)
+      }
+      asv_to_genus(asv_ids)
+    } else {
+      character()
+    }
+  },
+  ANCOMBC48 = {
+    if (nrow(ancombc48_tbl) > 0 && "q_value" %in% names(ancombc48_tbl)) {
+      asv_ids <- pull_safe(ancombc48_tbl %>% dplyr::filter(q_value < 0.1), "taxon")
+      asv_to_genus(asv_ids)
+    } else {
+      character()
+    }
+  },
+  ALDEx2 = {
+    if (nrow(aldex_tbl) > 0 && "q" %in% names(aldex_tbl)) {
+      asv_ids <- pull_safe(aldex_tbl %>% dplyr::filter(q < 0.1), "taxon")
+      asv_to_genus(asv_ids)
+    } else {
+      character()
+    }
+  },
+  LEfSe = {
+    asv_ids <- pull_safe(lefse_tbl, "feature")
+    asv_to_genus(asv_ids)
+  },
+  MaAsLin2 = {
+    if (nrow(maaslin_tbl) > 0 && "q" %in% names(maaslin_tbl)) {
+      asv_ids <- pull_safe(maaslin_tbl %>% dplyr::filter(q < 0.1), "feature")
+      asv_to_genus(asv_ids)
+    } else {
+      character()
+    }
+  },
+  ADAPT = {
+    asv_ids <- pull_safe(adapt_tbl, "taxon")
+    asv_to_genus(asv_ids)
+  },
   RandomForest = {
-    col <- first_match_col(rf_markers, c("taxa", "feature", "marker"))
-    if (is.null(col)) character() else pull_safe(rf_markers %>% slice_head(n = 15), col)
+    if (nrow(rf_markers) > 0) {
+      col <- first_match_col(rf_markers, c("feature", "taxa", "marker"))
+      if (!is.null(col)) {
+        asv_ids <- pull_safe(rf_markers %>% slice_head(n = 15), col)
+        asv_to_genus(asv_ids)
+      } else {
+        character()
+      }
+    } else {
+      character()
+    }
   }
 )
 
@@ -2742,29 +4050,6 @@ consensus_matrix <- da_long %>%
 consensus_matrix %>% dplyr::arrange(desc(rowSums(across(where(is.numeric)))))
 ```
 
-```{r forest-plot}
-if (nrow(ancombc48_tbl) > 0) {
-  ancombc48_tbl %>%
-    dplyr::mutate(
-      taxon = stringr::str_replace_all(taxon, "_", " "),
-      effect = factor(effect)
-    ) %>%
-    ggplot(aes(x = beta, y = reorder(taxon, beta), xmin = beta - 1.96 * se, xmax = beta + 1.96 * se, color = effect)) +
-    geom_point(size = 2.5) +
-    geom_errorbar(width = 0.2) +
-    geom_vline(xintercept = 0, linetype = "dashed", color = "grey40") +
-    labs(
-      x = "Log fold-change vs RDC",
-      y = NULL,
-      title = "48 h ANCOM-BC effect sizes"
-    ) +
-    custom_theme()
-} else {
-  ggplot() + annotate("text", x = 0, y = 0, label = "No ANCOM-BC signals at q < 0.10") +
-    theme_void()
-}
-```
-```
 ```{r da-interpretation, results='asis'}
 consensus_summary <- consensus_matrix %>%
   dplyr::mutate(method_count = rowSums(across(where(is.numeric)))) %>%
@@ -2790,8 +4075,7 @@ alpha_highlights <- alpha_significance %>%
   glue::glue_collapse(sep = "; ")
 
 permanova_highlights <- permanova_results %>%
-  dplyr::mutate(p_value = pr_greater_f_, q = fdr_adjust(p_value)) %>%
-  dplyr::filter(term != "Residual", q < 0.1) %>%
+  dplyr::filter(term != "Residual", q_value < 0.1) %>%
   dplyr::mutate(text = glue::glue("{stringr::str_to_title(distance)} {term}")) %>%
   dplyr::pull(text) %>%
   glue::glue_collapse(sep = "; ")

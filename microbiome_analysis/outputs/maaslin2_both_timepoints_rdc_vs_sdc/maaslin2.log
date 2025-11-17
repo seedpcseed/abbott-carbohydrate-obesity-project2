@@ -1,0 +1,188 @@
+2025-10-02 21:05:16.486557 INFO::Writing function arguments to log file
+2025-10-02 21:05:16.486992 DEBUG::Function arguments
+2025-10-02 21:05:16.487198 DEBUG::Output folder: /home/patcseed/projects/abbott-carbohydrate-obesity-project2/microbiome_analysis/outputs/maaslin2_both_timepoints_rdc_vs_sdc
+2025-10-02 21:05:16.48736 DEBUG::Min Abundance: 0.000000
+2025-10-02 21:05:16.487506 DEBUG::Min Prevalence: 0.050000
+2025-10-02 21:05:16.487647 DEBUG::Normalization: TSS
+2025-10-02 21:05:16.487786 DEBUG::Transform: LOG
+2025-10-02 21:05:16.487916 DEBUG::Analysis method: LM
+2025-10-02 21:05:16.48805 DEBUG::Max significance: 0.250000
+2025-10-02 21:05:16.488183 DEBUG::Random effects: subject_id
+2025-10-02 21:05:16.488315 DEBUG::Fixed effects: carbohydrate,timepoint
+2025-10-02 21:05:16.488442 DEBUG::Correction method: BH
+2025-10-02 21:05:16.488569 DEBUG::Standardize: TRUE
+2025-10-02 21:05:16.488692 DEBUG::Cores: 1
+2025-10-02 21:05:16.488921 INFO::Verifying options selected are valid
+2025-10-02 21:05:16.489314 INFO::Determining format of input files
+2025-10-02 21:05:16.489639 INFO::Input format is data samples as columns and metadata samples as rows
+2025-10-02 21:05:16.491482 DEBUG::Transformed data so samples are rows
+2025-10-02 21:05:16.491853 DEBUG::A total of 237 samples were found in both the data and metadata
+2025-10-02 21:05:16.492001 DEBUG::Reordering data/metadata to use same sample ordering
+2025-10-02 21:05:16.492904 INFO::Formula for random effects: expr ~ (1 | subject_id)
+2025-10-02 21:05:16.493344 INFO::Formula for fixed effects: expr ~  carbohydrate + timepoint
+2025-10-02 21:05:16.493663 INFO::Factor detected for categorial metadata 'carbohydrate'. Provide a reference argument or manually set factor ordering to change reference level.
+2025-10-02 21:05:16.493928 INFO::Factor detected for categorial metadata 'timepoint'. Provide a reference argument or manually set factor ordering to change reference level.
+2025-10-02 21:05:16.494161 INFO::Filter data based on min abundance and min prevalence
+2025-10-02 21:05:16.494387 INFO::Total samples in data: 237
+2025-10-02 21:05:16.494609 INFO::Min samples required with min abundance for a feature not to be filtered: 11.850000
+2025-10-02 21:05:16.495817 INFO::Total filtered features: 2
+2025-10-02 21:05:16.496148 INFO::Filtered feature names from abundance and prevalence filtering: ASV_1586, ASV_3222
+2025-10-02 21:05:16.497786 INFO::Total filtered features with variance filtering: 0
+2025-10-02 21:05:16.498098 INFO::Filtered feature names from variance filtering:
+2025-10-02 21:05:16.498332 INFO::Running selected normalization method: TSS
+2025-10-02 21:05:16.500082 INFO::Applying z-score to standardize continuous metadata
+2025-10-02 21:05:16.502235 INFO::Running selected transform method: LOG
+2025-10-02 21:05:16.504351 INFO::Running selected analysis method: LM
+2025-10-02 21:05:16.504849 INFO::Fitting model to feature number 1, ASV_3
+2025-10-02 21:05:16.528108 INFO::Fitting model to feature number 2, ASV_4
+2025-10-02 21:05:16.549316 INFO::Fitting model to feature number 3, ASV_5
+2025-10-02 21:05:16.570384 INFO::Fitting model to feature number 4, ASV_8
+2025-10-02 21:05:16.591306 INFO::Fitting model to feature number 5, ASV_9
+2025-10-02 21:05:16.612075 INFO::Fitting model to feature number 6, ASV_11
+2025-10-02 21:05:16.632372 INFO::Fitting model to feature number 7, ASV_12
+2025-10-02 21:05:16.655196 INFO::Fitting model to feature number 8, ASV_14
+2025-10-02 21:05:16.709545 INFO::Fitting model to feature number 9, ASV_21
+2025-10-02 21:05:16.731025 INFO::Fitting model to feature number 10, ASV_23
+2025-10-02 21:05:16.751574 INFO::Fitting model to feature number 11, ASV_28
+2025-10-02 21:05:16.774304 INFO::Fitting model to feature number 12, ASV_31
+2025-10-02 21:05:16.796506 INFO::Fitting model to feature number 13, ASV_42
+2025-10-02 21:05:16.816784 INFO::Fitting model to feature number 14, ASV_45
+2025-10-02 21:05:16.837103 INFO::Fitting model to feature number 15, ASV_47
+2025-10-02 21:05:16.858189 INFO::Fitting model to feature number 16, ASV_48
+2025-10-02 21:05:16.879143 INFO::Fitting model to feature number 17, ASV_49
+2025-10-02 21:05:16.90049 INFO::Fitting model to feature number 18, ASV_51
+2025-10-02 21:05:16.921 INFO::Fitting model to feature number 19, ASV_53
+2025-10-02 21:05:16.941154 INFO::Fitting model to feature number 20, ASV_62
+2025-10-02 21:05:16.961727 INFO::Fitting model to feature number 21, ASV_63
+2025-10-02 21:05:16.982298 INFO::Fitting model to feature number 22, ASV_64
+2025-10-02 21:05:17.003625 INFO::Fitting model to feature number 23, ASV_67
+2025-10-02 21:05:17.025112 INFO::Fitting model to feature number 24, ASV_77
+2025-10-02 21:05:17.047195 INFO::Fitting model to feature number 25, ASV_81
+2025-10-02 21:05:17.06795 INFO::Fitting model to feature number 26, ASV_87
+2025-10-02 21:05:17.088765 INFO::Fitting model to feature number 27, ASV_97
+2025-10-02 21:05:17.111022 INFO::Fitting model to feature number 28, ASV_99
+2025-10-02 21:05:17.132158 INFO::Fitting model to feature number 29, ASV_102
+2025-10-02 21:05:17.153416 INFO::Fitting model to feature number 30, ASV_119
+2025-10-02 21:05:17.174094 INFO::Fitting model to feature number 31, ASV_122
+2025-10-02 21:05:17.194976 INFO::Fitting model to feature number 32, ASV_149
+2025-10-02 21:05:17.215388 INFO::Fitting model to feature number 33, ASV_154
+2025-10-02 21:05:17.263645 INFO::Fitting model to feature number 34, ASV_168
+2025-10-02 21:05:17.286908 INFO::Fitting model to feature number 35, ASV_175
+2025-10-02 21:05:17.307489 INFO::Fitting model to feature number 36, ASV_188
+2025-10-02 21:05:17.329378 INFO::Fitting model to feature number 37, ASV_191
+2025-10-02 21:05:17.350935 INFO::Fitting model to feature number 38, ASV_192
+2025-10-02 21:05:17.370503 INFO::Fitting model to feature number 39, ASV_198
+2025-10-02 21:05:17.390217 INFO::Fitting model to feature number 40, ASV_200
+2025-10-02 21:05:17.41154 INFO::Fitting model to feature number 41, ASV_201
+2025-10-02 21:05:17.434063 INFO::Fitting model to feature number 42, ASV_202
+2025-10-02 21:05:17.456747 INFO::Fitting model to feature number 43, ASV_203
+2025-10-02 21:05:17.479956 INFO::Fitting model to feature number 44, ASV_209
+2025-10-02 21:05:17.503723 INFO::Fitting model to feature number 45, ASV_214
+2025-10-02 21:05:17.527036 INFO::Fitting model to feature number 46, ASV_225
+2025-10-02 21:05:17.549062 INFO::Fitting model to feature number 47, ASV_226
+2025-10-02 21:05:17.569944 INFO::Fitting model to feature number 48, ASV_227
+2025-10-02 21:05:17.590723 INFO::Fitting model to feature number 49, ASV_235
+2025-10-02 21:05:17.610739 INFO::Fitting model to feature number 50, ASV_248
+2025-10-02 21:05:17.630504 INFO::Fitting model to feature number 51, ASV_252
+2025-10-02 21:05:17.650631 INFO::Fitting model to feature number 52, ASV_254
+2025-10-02 21:05:17.670997 INFO::Fitting model to feature number 53, ASV_260
+2025-10-02 21:05:17.690419 INFO::Fitting model to feature number 54, ASV_263
+2025-10-02 21:05:17.711432 INFO::Fitting model to feature number 55, ASV_265
+2025-10-02 21:05:17.731814 INFO::Fitting model to feature number 56, ASV_266
+2025-10-02 21:05:17.752355 INFO::Fitting model to feature number 57, ASV_280
+2025-10-02 21:05:17.77576 INFO::Fitting model to feature number 58, ASV_287
+2025-10-02 21:05:17.800441 INFO::Fitting model to feature number 59, ASV_288
+2025-10-02 21:05:17.852121 INFO::Fitting model to feature number 60, ASV_289
+2025-10-02 21:05:17.873637 INFO::Fitting model to feature number 61, ASV_291
+2025-10-02 21:05:17.894649 INFO::Fitting model to feature number 62, ASV_292
+2025-10-02 21:05:17.914952 INFO::Fitting model to feature number 63, ASV_303
+2025-10-02 21:05:17.936005 INFO::Fitting model to feature number 64, ASV_309
+2025-10-02 21:05:17.957215 INFO::Fitting model to feature number 65, ASV_316
+2025-10-02 21:05:17.976802 INFO::Fitting model to feature number 66, ASV_319
+2025-10-02 21:05:17.996776 INFO::Fitting model to feature number 67, ASV_326
+2025-10-02 21:05:18.016697 INFO::Fitting model to feature number 68, ASV_334
+2025-10-02 21:05:18.036955 INFO::Fitting model to feature number 69, ASV_341
+2025-10-02 21:05:18.057918 INFO::Fitting model to feature number 70, ASV_349
+2025-10-02 21:05:18.078835 INFO::Fitting model to feature number 71, ASV_356
+2025-10-02 21:05:18.10012 INFO::Fitting model to feature number 72, ASV_373
+2025-10-02 21:05:18.121375 INFO::Fitting model to feature number 73, ASV_375
+2025-10-02 21:05:18.143521 INFO::Fitting model to feature number 74, ASV_390
+2025-10-02 21:05:18.164106 INFO::Fitting model to feature number 75, ASV_393
+2025-10-02 21:05:18.184074 INFO::Fitting model to feature number 76, ASV_423
+2025-10-02 21:05:18.203941 INFO::Fitting model to feature number 77, ASV_425
+2025-10-02 21:05:18.224964 INFO::Fitting model to feature number 78, ASV_427
+2025-10-02 21:05:18.245102 INFO::Fitting model to feature number 79, ASV_430
+2025-10-02 21:05:18.266259 INFO::Fitting model to feature number 80, ASV_446
+2025-10-02 21:05:18.28619 INFO::Fitting model to feature number 81, ASV_464
+2025-10-02 21:05:18.306661 INFO::Fitting model to feature number 82, ASV_494
+2025-10-02 21:05:18.327375 INFO::Fitting model to feature number 83, ASV_511
+2025-10-02 21:05:18.347426 INFO::Fitting model to feature number 84, ASV_521
+2025-10-02 21:05:18.396739 INFO::Fitting model to feature number 85, ASV_536
+2025-10-02 21:05:18.417713 INFO::Fitting model to feature number 86, ASV_561
+2025-10-02 21:05:18.437391 INFO::Fitting model to feature number 87, ASV_600
+2025-10-02 21:05:18.458176 INFO::Fitting model to feature number 88, ASV_612
+2025-10-02 21:05:18.478973 INFO::Fitting model to feature number 89, ASV_749
+2025-10-02 21:05:18.501087 INFO::Fitting model to feature number 90, ASV_753
+2025-10-02 21:05:18.522624 INFO::Fitting model to feature number 91, ASV_776
+2025-10-02 21:05:18.542279 INFO::Fitting model to feature number 92, ASV_781
+2025-10-02 21:05:18.563183 INFO::Fitting model to feature number 93, ASV_821
+2025-10-02 21:05:18.58403 INFO::Fitting model to feature number 94, ASV_847
+2025-10-02 21:05:18.604304 INFO::Fitting model to feature number 95, ASV_887
+2025-10-02 21:05:18.624236 INFO::Fitting model to feature number 96, ASV_912
+2025-10-02 21:05:18.645411 INFO::Fitting model to feature number 97, ASV_915
+2025-10-02 21:05:18.665214 INFO::Fitting model to feature number 98, ASV_917
+2025-10-02 21:05:18.685802 INFO::Fitting model to feature number 99, ASV_926
+2025-10-02 21:05:18.705992 INFO::Fitting model to feature number 100, ASV_957
+2025-10-02 21:05:18.725434 INFO::Fitting model to feature number 101, ASV_1036
+2025-10-02 21:05:18.744728 INFO::Fitting model to feature number 102, ASV_1039
+2025-10-02 21:05:18.764133 INFO::Fitting model to feature number 103, ASV_1044
+2025-10-02 21:05:18.785406 INFO::Fitting model to feature number 104, ASV_1048
+2025-10-02 21:05:18.805391 INFO::Fitting model to feature number 105, ASV_1057
+2025-10-02 21:05:18.830053 INFO::Fitting model to feature number 106, ASV_1063
+2025-10-02 21:05:18.853628 INFO::Fitting model to feature number 107, ASV_1073
+2025-10-02 21:05:18.875227 INFO::Fitting model to feature number 108, ASV_1125
+2025-10-02 21:05:18.896536 INFO::Fitting model to feature number 109, ASV_1144
+2025-10-02 21:05:18.91952 INFO::Fitting model to feature number 110, ASV_1147
+2025-10-02 21:05:18.972178 INFO::Fitting model to feature number 111, ASV_1173
+2025-10-02 21:05:18.993079 INFO::Fitting model to feature number 112, ASV_1304
+2025-10-02 21:05:19.014443 INFO::Fitting model to feature number 113, ASV_1357
+2025-10-02 21:05:19.034963 INFO::Fitting model to feature number 114, ASV_1362
+2025-10-02 21:05:19.055931 INFO::Fitting model to feature number 115, ASV_1366
+2025-10-02 21:05:19.075565 INFO::Fitting model to feature number 116, ASV_1440
+2025-10-02 21:05:19.0955 INFO::Fitting model to feature number 117, ASV_1463
+2025-10-02 21:05:19.116165 INFO::Fitting model to feature number 118, ASV_1499
+2025-10-02 21:05:19.137058 INFO::Fitting model to feature number 119, ASV_1523
+2025-10-02 21:05:19.158276 INFO::Fitting model to feature number 120, ASV_1537
+2025-10-02 21:05:19.180223 INFO::Fitting model to feature number 121, ASV_1569
+2025-10-02 21:05:19.202323 INFO::Fitting model to feature number 122, ASV_1608
+2025-10-02 21:05:19.223567 INFO::Fitting model to feature number 123, ASV_1729
+2025-10-02 21:05:19.244799 INFO::Fitting model to feature number 124, ASV_1740
+2025-10-02 21:05:19.266853 INFO::Fitting model to feature number 125, ASV_1913
+2025-10-02 21:05:19.287426 INFO::Fitting model to feature number 126, ASV_2025
+2025-10-02 21:05:19.307626 INFO::Fitting model to feature number 127, ASV_2049
+2025-10-02 21:05:19.327485 INFO::Fitting model to feature number 128, ASV_2085
+2025-10-02 21:05:19.347816 INFO::Fitting model to feature number 129, ASV_2210
+2025-10-02 21:05:19.367922 INFO::Fitting model to feature number 130, ASV_2376
+2025-10-02 21:05:19.38793 INFO::Fitting model to feature number 131, ASV_2530
+2025-10-02 21:05:19.409266 INFO::Fitting model to feature number 132, ASV_2595
+2025-10-02 21:05:19.430407 INFO::Fitting model to feature number 133, ASV_2647
+2025-10-02 21:05:19.4537 INFO::Fitting model to feature number 134, ASV_7586
+2025-10-02 21:05:19.47909 INFO::Fitting model to feature number 135, ASV_8251
+2025-10-02 21:05:19.534391 INFO::Fitting model to feature number 136, ASV_10308
+2025-10-02 21:05:19.557449 INFO::Fitting model to feature number 137, ASV_12342
+2025-10-02 21:05:19.582238 INFO::Fitting model to feature number 138, ASV_13436
+2025-10-02 21:05:19.608308 INFO::Fitting model to feature number 139, ASV_15327
+2025-10-02 21:05:19.630892 INFO::Fitting model to feature number 140, ASV_15567
+2025-10-02 21:05:19.654619 INFO::Fitting model to feature number 141, ASV_16344
+2025-10-02 21:05:19.679739 INFO::Fitting model to feature number 142, ASV_16536
+2025-10-02 21:05:19.705861 INFO::Fitting model to feature number 143, ASV_16840
+2025-10-02 21:05:19.728571 INFO::Fitting model to feature number 144, ASV_17160
+2025-10-02 21:05:19.761721 INFO::Counting total values for each feature
+2025-10-02 21:05:19.767127 INFO::Writing filtered data to file /home/patcseed/projects/abbott-carbohydrate-obesity-project2/microbiome_analysis/outputs/maaslin2_both_timepoints_rdc_vs_sdc/features/filtered_data.tsv
+2025-10-02 21:05:19.775497 INFO::Writing filtered, normalized data to file /home/patcseed/projects/abbott-carbohydrate-obesity-project2/microbiome_analysis/outputs/maaslin2_both_timepoints_rdc_vs_sdc/features/filtered_data_norm.tsv
+2025-10-02 21:05:19.784333 INFO::Writing filtered, normalized, transformed data to file /home/patcseed/projects/abbott-carbohydrate-obesity-project2/microbiome_analysis/outputs/maaslin2_both_timepoints_rdc_vs_sdc/features/filtered_data_norm_transformed.tsv
+2025-10-02 21:05:19.797573 INFO::Writing residuals to file /home/patcseed/projects/abbott-carbohydrate-obesity-project2/microbiome_analysis/outputs/maaslin2_both_timepoints_rdc_vs_sdc/fits/residuals.rds
+2025-10-02 21:05:19.806036 INFO::Writing fitted values to file /home/patcseed/projects/abbott-carbohydrate-obesity-project2/microbiome_analysis/outputs/maaslin2_both_timepoints_rdc_vs_sdc/fits/fitted.rds
+2025-10-02 21:05:19.812844 INFO::Writing extracted random effects to file /home/patcseed/projects/abbott-carbohydrate-obesity-project2/microbiome_analysis/outputs/maaslin2_both_timepoints_rdc_vs_sdc/fits/ranef.rds
+2025-10-02 21:05:19.81403 INFO::Writing all results to file (ordered by increasing q-values): /home/patcseed/projects/abbott-carbohydrate-obesity-project2/microbiome_analysis/outputs/maaslin2_both_timepoints_rdc_vs_sdc/all_results.tsv
+2025-10-02 21:05:19.815571 INFO::Writing the significant results (those which are less than or equal to the threshold of 0.250000 ) to file (ordered by increasing q-values): /home/patcseed/projects/abbott-carbohydrate-obesity-project2/microbiome_analysis/outputs/maaslin2_both_timepoints_rdc_vs_sdc/significant_results.tsv
