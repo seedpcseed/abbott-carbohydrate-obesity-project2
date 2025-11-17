@@ -4,7 +4,7 @@ author: "Patrick Seed, MD, PhD"
 date: "`r Sys.Date()`"
 output:
   html_document:
-    toc: true
+    toc: false
     toc_depth: 4
     toc_float: true
     code_folding: hide
@@ -1941,9 +1941,9 @@ if (nrow(ancombc2_tbl) > 0 && "q_value" %in% names(ancombc2_tbl)) {
       ) +
       theme_scfa() +
       theme(
-        axis.text.y = element_text(size = 8),
-        axis.text.x = element_text(size = 9),
-        strip.text = element_text(size = 10, face = "bold"),
+        axis.text.y = element_text(size = 10),
+        axis.text.x = element_text(size = 11),
+        strip.text = element_text(size = 12, face = "bold"),
         plot.title = element_text(size = 14, face = "bold"),
         plot.subtitle = element_text(size = 11),
         legend.position = "bottom",
@@ -2059,9 +2059,9 @@ if (nrow(ancombc2_tbl) > 0 && "effect" %in% names(ancombc2_tbl)) {
       ) +
       theme_scfa() +
       theme(
-        axis.text.y = element_text(size = 8),
-        axis.text.x = element_text(size = 9),
-        strip.text = element_text(size = 10, face = "bold"),
+        axis.text.y = element_text(size = 10),
+        axis.text.x = element_text(size = 11),
+        strip.text = element_text(size = 12, face = "bold"),
         legend.position = "bottom"
       )
     
@@ -2210,9 +2210,9 @@ if (nrow(ancombc2_48h_tbl) > 0 && "q_value" %in% names(ancombc2_48h_tbl)) {
       ) +
       theme_scfa() +
       theme(
-        axis.text.y = element_text(size = 8),
-        axis.text.x = element_text(size = 9),
-        strip.text = element_text(size = 10, face = "bold"),
+        axis.text.y = element_text(size = 10),
+        axis.text.x = element_text(size = 11),
+        strip.text = element_text(size = 12, face = "bold"),
         plot.title = element_text(size = 14, face = "bold"),
         plot.subtitle = element_text(size = 11),
         legend.position = "bottom"
@@ -2407,8 +2407,9 @@ if (nrow(ancombc2_48h_rdc_sdc_tbl) > 0 && "q_value" %in% names(ancombc2_48h_rdc_
       ) +
       theme_scfa() +
       theme(
-        axis.text.y = element_text(size = 9),
-        axis.text.x = element_text(size = 10),
+        axis.text.y = element_text(size = 10),
+        axis.text.x = element_text(size = 11),
+        strip.text = element_text(size = 12, face = "bold"),
         plot.title = element_text(size = 14, face = "bold"),
         plot.subtitle = element_text(size = 11),
         legend.position = "bottom",
@@ -2787,8 +2788,9 @@ if (nrow(maaslin2_tbl) > 0 && nrow(maaslin2_tbl %>% dplyr::filter(q < 0.1)) > 0)
     ) +
     theme_scfa() +
     theme(
-      axis.text.y = element_text(size = 8),
-      axis.text.x = element_text(size = 10),
+      axis.text.y = element_text(size = 10),
+      axis.text.x = element_text(size = 11),
+      strip.text = element_text(size = 12, face = "bold"),
       legend.position = "bottom",
       panel.grid.major.y = element_blank(),
       panel.grid.minor = element_blank()
@@ -2827,7 +2829,7 @@ if (nrow(maaslin2_tbl) > 0 && nrow(maaslin2_tbl %>% dplyr::filter(q < 0.1)) > 0)
     ggrepel::geom_text_repel(
       data = sig_points,
       aes(label = genus_label),
-      size = 3,
+      size = 4,
       color = "#E31A1C",
       fontface = "bold",
       max.overlaps = 20,
@@ -3637,8 +3639,9 @@ micro_meta_scfa <- micro_meta_merged %>%
 
 ## 7.2 Taxon–Butyrate Associations
 
-```{r taxon-butyrate-relative, echo=FALSE, cache=TRUE, cache.path="cache/integrated-"}
+```{r taxon-butyrate-relative, echo=FALSE, cache=TRUE, cache.path="cache/integrated-", dependson="scfa-microbiome-integration"}
 # Prepare data for analysis: relative abundance with butyrate
+# Explicitly depend on scfa-microbiome-integration chunk to ensure proper caching
 ps_butyrate_rel <- ps
 
 # Update sample_data with SCFA concentrations
@@ -3724,13 +3727,19 @@ maaslin2_butyrate_meta_rel <- data.frame(sample_data(ps_butyrate_rel)) %>%
 # Ensure rownames match count matrix column names
 rownames(maaslin2_butyrate_meta_rel) <- sample_names(ps_butyrate_rel)
 
+# Use fixed temp directory for caching stability
+maaslin2_butyrate_temp_dir <- file.path(getwd(), "maaslin2_temp_butyrate_rel")
+if (!dir.exists(maaslin2_butyrate_temp_dir)) {
+  dir.create(maaslin2_butyrate_temp_dir, recursive = TRUE, showWarnings = FALSE)
+}
+
 maaslin2_butyrate_rel <- tryCatch({
   suppressMessages(suppressWarnings(
     capture.output(
       maaslin2_butyrate_rel_result <- Maaslin2::Maaslin2(
         input_data = maaslin2_butyrate_counts_rel,
         input_metadata = maaslin2_butyrate_meta_rel,
-        output = tempfile(pattern = "maaslin2_butyrate_rel_", tmpdir = getwd()),
+        output = maaslin2_butyrate_temp_dir,
         min_prevalence = 0.05,
         normalization = "TSS",
         transform = "LOG",
@@ -3824,7 +3833,7 @@ if (exists("ancombc2_butyrate_tbl_rel_full") && nrow(ancombc2_butyrate_tbl_rel_f
       ) +
       theme_scfa() +
       theme(
-        axis.text.y = element_text(size = 8),
+        axis.text.y = element_text(size = 10),
         legend.position = "bottom"
       )
     
@@ -3980,13 +3989,19 @@ maaslin2_propionate_meta_rel <- data.frame(sample_data(ps_propionate_rel)) %>%
 # Ensure rownames match count matrix column names
 rownames(maaslin2_propionate_meta_rel) <- sample_names(ps_propionate_rel)
 
+# Use fixed temp directory for caching stability
+maaslin2_propionate_temp_dir <- file.path(getwd(), "maaslin2_temp_propionate_rel")
+if (!dir.exists(maaslin2_propionate_temp_dir)) {
+  dir.create(maaslin2_propionate_temp_dir, recursive = TRUE, showWarnings = FALSE)
+}
+
 maaslin2_propionate_rel <- tryCatch({
   suppressMessages(suppressWarnings(
     capture.output(
       maaslin2_propionate_rel_result <- Maaslin2::Maaslin2(
         input_data = maaslin2_propionate_counts_rel,
         input_metadata = maaslin2_propionate_meta_rel,
-        output = tempfile(pattern = "maaslin2_propionate_rel_", tmpdir = getwd()),
+        output = maaslin2_propionate_temp_dir,
         min_prevalence = 0.05,
         normalization = "TSS",
         transform = "LOG",
