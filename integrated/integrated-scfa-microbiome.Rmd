@@ -410,26 +410,28 @@ micro_table <- micro_summary_counts %>%
     `N samples` = n_samples
   )
 
+# Print SCFA table
 if (knitr::is_html_output()) {
-  htmltools::tagList(
-    htmltools::h3("SCFA samples by group and carbohydrate"),
-    DT::datatable(
-      scfa_table,
-      options = list(pageLength = 10, dom = "tip"),
-      rownames = FALSE
-    ),
-    htmltools::h3("Microbiome samples by group, carbohydrate, and timepoint"),
-    DT::datatable(
-      micro_table,
-      options = list(pageLength = 10, dom = "tip"),
-      rownames = FALSE
-    )
+  DT::datatable(
+    scfa_table,
+    caption = "SCFA samples by group and carbohydrate",
+    options = list(pageLength = 10, dom = "tip"),
+    rownames = FALSE
   )
 } else {
-  list(
-    SCFA = scfa_table,
-    Microbiome = micro_table
+  knitr::kable(scfa_table, caption = "SCFA samples by group and carbohydrate")
+}
+
+# Print Microbiome table
+if (knitr::is_html_output()) {
+  DT::datatable(
+    micro_table,
+    caption = "Microbiome samples by group, carbohydrate, and timepoint",
+    options = list(pageLength = 10, dom = "tip"),
+    rownames = FALSE
   )
+} else {
+  knitr::kable(micro_table, caption = "Microbiome samples by group, carbohydrate, and timepoint")
 }
 ```
 
@@ -780,30 +782,128 @@ alpha_48h_summary <- alpha_48h %>%
   )
 
 # Wilcoxon tests: Healthy vs Obese within carbohydrate × timepoint for each alpha metric
-alpha_wilcox_group <- alpha_long_0_48 %>%
-  dplyr::group_by(metric, carbohydrate, timepoint) %>%
-  dplyr::filter(dplyr::n_distinct(group) == 2) %>%  # Only test if both groups present
-  rstatix::wilcox_test(value ~ group, p.adjust.method = "BH") %>%
-  rstatix::add_significance() %>%
-  dplyr::ungroup() %>%
-  dplyr::mutate(
-    comparison = paste0(group1, " vs ", group2),
-    metric_carb_time = paste(metric, carbohydrate, timepoint, sep = " | ")
-  ) %>%
-  dplyr::select(metric, carbohydrate, timepoint, comparison, p, p.adj, p.adj.signif)
+alpha_wilcox_group <- tryCatch({
+  alpha_long_0_48 %>%
+    dplyr::group_by(metric, carbohydrate, timepoint) %>%
+    dplyr::filter(dplyr::n_distinct(group) == 2) %>%  # Only test if both groups present
+    rstatix::wilcox_test(value ~ group, p.adjust.method = "BH") %>%
+    rstatix::add_significance() %>%
+    dplyr::ungroup()
+}, error = function(e) {
+  cat("Error calculating alpha_wilcox_group:", e$message, "\n")
+  tibble::tibble()
+})
+
+# Check available columns and select appropriate ones
+if (nrow(alpha_wilcox_group) > 0) {
+  # Check what columns exist (p.adj vs p_adjust)
+  p_adj_col <- intersect(c("p.adj", "p_adjust", "adj.p.value"), names(alpha_wilcox_group))
+  p_adj_col <- if (length(p_adj_col) > 0) p_adj_col[1] else NULL
+  
+  p_signif_col <- intersect(c("p.adj.signif", "p_adjust_signif", "signif"), names(alpha_wilcox_group))
+  p_signif_col <- if (length(p_signif_col) > 0) p_signif_col[1] else NULL
+  
+  # Create adjusted p-value if it doesn't exist
+  if (is.null(p_adj_col) && "p" %in% names(alpha_wilcox_group)) {
+    alpha_wilcox_group$p_adj <- p.adjust(alpha_wilcox_group$p, method = "BH")
+  } else if (!is.null(p_adj_col)) {
+    alpha_wilcox_group$p_adj <- alpha_wilcox_group[[p_adj_col]]
+  } else {
+    alpha_wilcox_group$p_adj <- NA_real_
+  }
+  
+  # Create significance column if it doesn't exist
+  if (is.null(p_signif_col)) {
+    alpha_wilcox_group$p_adj_signif <- dplyr::case_when(
+      alpha_wilcox_group$p_adj < 0.001 ~ "***",
+      alpha_wilcox_group$p_adj < 0.01 ~ "**",
+      alpha_wilcox_group$p_adj < 0.05 ~ "*",
+      alpha_wilcox_group$p_adj < 0.1 ~ ".",
+      TRUE ~ "ns"
+    )
+  } else {
+    alpha_wilcox_group$p_adj_signif <- alpha_wilcox_group[[p_signif_col]]
+  }
+  
+  alpha_wilcox_group <- alpha_wilcox_group %>%
+    dplyr::mutate(
+      comparison = paste0(group1, " vs ", group2),
+      metric_carb_time = paste(metric, carbohydrate, timepoint, sep = " | ")
+    ) %>%
+    dplyr::select(metric, carbohydrate, timepoint, comparison, p, p_adj, p_adj_signif)
+} else {
+  alpha_wilcox_group <- tibble::tibble(
+    metric = character(0),
+    carbohydrate = character(0),
+    timepoint = character(0),
+    comparison = character(0),
+    p = numeric(0),
+    p_adj = numeric(0),
+    p_adj_signif = character(0)
+  )
+}
 
 # Wilcoxon tests: Carbohydrate comparisons within group × timepoint for each alpha metric
-alpha_wilcox_carb <- alpha_long_0_48 %>%
-  dplyr::group_by(metric, group, timepoint) %>%
-  dplyr::filter(dplyr::n_distinct(carbohydrate) >= 2) %>%  # Only test if multiple carb levels present
-  rstatix::wilcox_test(value ~ carbohydrate, p.adjust.method = "BH") %>%
-  rstatix::add_significance() %>%
-  dplyr::ungroup() %>%
-  dplyr::mutate(
-    comparison = paste0(group1, " vs ", group2),
-    metric_group_time = paste(metric, group, timepoint, sep = " | ")
-  ) %>%
-  dplyr::select(metric, group, timepoint, comparison, p, p.adj, p.adj.signif)
+alpha_wilcox_carb <- tryCatch({
+  alpha_long_0_48 %>%
+    dplyr::group_by(metric, group, timepoint) %>%
+    dplyr::filter(dplyr::n_distinct(carbohydrate) >= 2) %>%  # Only test if multiple carb levels present
+    rstatix::wilcox_test(value ~ carbohydrate, p.adjust.method = "BH") %>%
+    rstatix::add_significance() %>%
+    dplyr::ungroup()
+}, error = function(e) {
+  cat("Error calculating alpha_wilcox_carb:", e$message, "\n")
+  tibble::tibble()
+})
+
+# Check available columns and select appropriate ones
+if (nrow(alpha_wilcox_carb) > 0) {
+  # Check what columns exist (p.adj vs p_adjust)
+  p_adj_col_carb <- intersect(c("p.adj", "p_adjust", "adj.p.value"), names(alpha_wilcox_carb))
+  p_adj_col_carb <- if (length(p_adj_col_carb) > 0) p_adj_col_carb[1] else NULL
+  
+  p_signif_col_carb <- intersect(c("p.adj.signif", "p_adjust_signif", "signif"), names(alpha_wilcox_carb))
+  p_signif_col_carb <- if (length(p_signif_col_carb) > 0) p_signif_col_carb[1] else NULL
+  
+  # Create adjusted p-value if it doesn't exist
+  if (is.null(p_adj_col_carb) && "p" %in% names(alpha_wilcox_carb)) {
+    alpha_wilcox_carb$p_adj <- p.adjust(alpha_wilcox_carb$p, method = "BH")
+  } else if (!is.null(p_adj_col_carb)) {
+    alpha_wilcox_carb$p_adj <- alpha_wilcox_carb[[p_adj_col_carb]]
+  } else {
+    alpha_wilcox_carb$p_adj <- NA_real_
+  }
+  
+  # Create significance column if it doesn't exist
+  if (is.null(p_signif_col_carb)) {
+    alpha_wilcox_carb$p_adj_signif <- dplyr::case_when(
+      alpha_wilcox_carb$p_adj < 0.001 ~ "***",
+      alpha_wilcox_carb$p_adj < 0.01 ~ "**",
+      alpha_wilcox_carb$p_adj < 0.05 ~ "*",
+      alpha_wilcox_carb$p_adj < 0.1 ~ ".",
+      TRUE ~ "ns"
+    )
+  } else {
+    alpha_wilcox_carb$p_adj_signif <- alpha_wilcox_carb[[p_signif_col_carb]]
+  }
+  
+  alpha_wilcox_carb <- alpha_wilcox_carb %>%
+    dplyr::mutate(
+      comparison = paste0(group1, " vs ", group2),
+      metric_group_time = paste(metric, group, timepoint, sep = " | ")
+    ) %>%
+    dplyr::select(metric, group, timepoint, comparison, p, p_adj, p_adj_signif)
+} else {
+  alpha_wilcox_carb <- tibble::tibble(
+    metric = character(0),
+    group = character(0),
+    timepoint = character(0),
+    comparison = character(0),
+    p = numeric(0),
+    p_adj = numeric(0),
+    p_adj_signif = character(0)
+  )
+}
 
 # Print plot and tables - ggplot objects render automatically in HTML
 print(alpha_plot)
@@ -831,16 +931,18 @@ cat("\n\n#### Wilcoxon tests: Healthy vs Obese within carbohydrate × timepoint\
 if (knitr::is_html_output()) {
   DT::datatable(
     alpha_wilcox_group %>%
-      dplyr::select(metric, carbohydrate, timepoint, comparison, p, p.adj, p.adj.signif),
+      dplyr::select(metric, carbohydrate, timepoint, comparison, p, p_adj, p_adj_signif) %>%
+      dplyr::rename(`p value` = p, `p adjusted` = p_adj, `significance` = p_adj_signif),
     caption = "Wilcoxon tests: Healthy vs Obese within carbohydrate × timepoint for each alpha metric",
     options = list(pageLength = 10, scrollX = TRUE),
     rownames = FALSE
   ) %>%
-    DT::formatRound(columns = c("p", "p.adj"), digits = 4)
+    DT::formatRound(columns = c("p value", "p adjusted"), digits = 4)
 } else {
   knitr::kable(
     alpha_wilcox_group %>%
-      dplyr::select(metric, carbohydrate, timepoint, comparison, p, p.adj, p.adj.signif),
+      dplyr::select(metric, carbohydrate, timepoint, comparison, p, p_adj, p_adj_signif) %>%
+      dplyr::rename(`p value` = p, `p adjusted` = p_adj, `significance` = p_adj_signif),
     digits = 4
   )
 }
@@ -850,16 +952,18 @@ cat("\n\n#### Wilcoxon tests: Carbohydrate comparisons within group × timepoint
 if (knitr::is_html_output()) {
   DT::datatable(
     alpha_wilcox_carb %>%
-      dplyr::select(metric, group, timepoint, comparison, p, p.adj, p.adj.signif),
+      dplyr::select(metric, group, timepoint, comparison, p, p_adj, p_adj_signif) %>%
+      dplyr::rename(`p value` = p, `p adjusted` = p_adj, `significance` = p_adj_signif),
     caption = "Wilcoxon tests: Carbohydrate comparisons within group × timepoint for each alpha metric",
     options = list(pageLength = 10, scrollX = TRUE),
     rownames = FALSE
   ) %>%
-    DT::formatRound(columns = c("p", "p.adj"), digits = 4)
+    DT::formatRound(columns = c("p value", "p adjusted"), digits = 4)
 } else {
   knitr::kable(
     alpha_wilcox_carb %>%
-      dplyr::select(metric, group, timepoint, comparison, p, p.adj, p.adj.signif),
+      dplyr::select(metric, group, timepoint, comparison, p, p_adj, p_adj_signif) %>%
+      dplyr::rename(`p value` = p, `p adjusted` = p_adj, `significance` = p_adj_signif),
     digits = 4
   )
 }
@@ -910,31 +1014,54 @@ permanova_bray_p_col <- intersect(
   c("pr_greater_f_", "pr_greater_f", "pr_f", "p_value"),
   names(permanova_bray_tbl)
 )
+permanova_bray_p_col <- if (length(permanova_bray_p_col) > 0) permanova_bray_p_col[1] else NULL
+
 permanova_bray_f_col <- intersect(
   c("f", "f_model", "pseudo_f"),
   names(permanova_bray_tbl)
 )
+permanova_bray_f_col <- if (length(permanova_bray_f_col) > 0) permanova_bray_f_col[1] else NULL
+
 permanova_bray_r2_col <- intersect(
   c("r2", "r_squared", "r2_adj"),
   names(permanova_bray_tbl)
 )
+permanova_bray_r2_col <- if (length(permanova_bray_r2_col) > 0) permanova_bray_r2_col[1] else NULL
 
-permanova_bray_tbl <- permanova_bray_tbl %>%
-  dplyr::mutate(
-    f = .data[[permanova_bray_f_col[1]]],
-    r2 = .data[[permanova_bray_r2_col[1]]],
-    p_value = .data[[permanova_bray_p_col[1]]]
-  )
+# Create standardized columns if they don't exist
+if (!is.null(permanova_bray_f_col)) {
+  permanova_bray_tbl$f <- permanova_bray_tbl[[permanova_bray_f_col]]
+} else if ("f" %in% names(permanova_bray_tbl)) {
+  permanova_bray_tbl$f <- permanova_bray_tbl$f
+} else {
+  permanova_bray_tbl$f <- NA_real_
+}
+
+if (!is.null(permanova_bray_r2_col)) {
+  permanova_bray_tbl$r2 <- permanova_bray_tbl[[permanova_bray_r2_col]]
+} else if ("r2" %in% names(permanova_bray_tbl)) {
+  permanova_bray_tbl$r2 <- permanova_bray_tbl$r2
+} else {
+  permanova_bray_tbl$r2 <- NA_real_
+}
+
+if (!is.null(permanova_bray_p_col)) {
+  permanova_bray_tbl$p_value <- permanova_bray_tbl[[permanova_bray_p_col]]
+} else if ("p_value" %in% names(permanova_bray_tbl)) {
+  permanova_bray_tbl$p_value <- permanova_bray_tbl$p_value
+} else {
+  permanova_bray_tbl$p_value <- NA_real_
+}
 
 # PCoA plot with PERMANOVA annotation (R² and p for group:carbohydrate)
 permanova_gc <- permanova_bray_tbl %>%
   dplyr::filter(term == "group:carbohydrate")
 
 annotation_text <- NULL
-if (nrow(permanova_gc) > 0) {
-  annotation_text <- glue::glue(
+if (nrow(permanova_gc) > 0 && !is.na(permanova_gc$r2[1]) && !is.na(permanova_gc$p_value[1])) {
+  annotation_text <- as.character(glue::glue(
     "R² = {round(permanova_gc$r2[1], 3)}, p = {signif(permanova_gc$p_value[1], 3)}"
-  )
+  ))
 }
 
 beta_pcoa_plot <- {
@@ -951,8 +1078,8 @@ beta_pcoa_plot <- {
     scale_color_scfa() +
     scale_shape_manual(values = c(16, 17)) +
     labs(
-      x = glue::glue("PC1 ({scales::percent(round(pcoa_bray$axis1_var[1], 3))})"),
-      y = glue::glue("PC2 ({scales::percent(round(pcoa_bray$axis2_var[1], 3))})"),
+      x = paste0("PC1 (", scales::percent(round(pcoa_bray$axis1_var[1], 3)), ")"),
+      y = paste0("PC2 (", scales::percent(round(pcoa_bray$axis2_var[1], 3)), ")"),
       title = "PCoA – Bray-Curtis distance"
     ) +
     theme_scfa()
@@ -998,21 +1125,44 @@ permanova_48h_p_col <- intersect(
   c("pr_greater_f_", "pr_greater_f", "pr_f", "p_value"),
   names(permanova_48h_tbl)
 )
+permanova_48h_p_col <- if (length(permanova_48h_p_col) > 0) permanova_48h_p_col[1] else NULL
+
 permanova_48h_f_col <- intersect(
   c("f", "f_model", "pseudo_f"),
   names(permanova_48h_tbl)
 )
+permanova_48h_f_col <- if (length(permanova_48h_f_col) > 0) permanova_48h_f_col[1] else NULL
+
 permanova_48h_r2_col <- intersect(
   c("r2", "r_squared", "r2_adj"),
   names(permanova_48h_tbl)
 )
+permanova_48h_r2_col <- if (length(permanova_48h_r2_col) > 0) permanova_48h_r2_col[1] else NULL
 
-permanova_48h_tbl <- permanova_48h_tbl %>%
-  dplyr::mutate(
-    f = .data[[permanova_48h_f_col[1]]],
-    r2 = .data[[permanova_48h_r2_col[1]]],
-    p_value = .data[[permanova_48h_p_col[1]]]
-  )
+# Create standardized columns if they don't exist
+if (!is.null(permanova_48h_f_col)) {
+  permanova_48h_tbl$f <- permanova_48h_tbl[[permanova_48h_f_col]]
+} else if ("f" %in% names(permanova_48h_tbl)) {
+  permanova_48h_tbl$f <- permanova_48h_tbl$f
+} else {
+  permanova_48h_tbl$f <- NA_real_
+}
+
+if (!is.null(permanova_48h_r2_col)) {
+  permanova_48h_tbl$r2 <- permanova_48h_tbl[[permanova_48h_r2_col]]
+} else if ("r2" %in% names(permanova_48h_tbl)) {
+  permanova_48h_tbl$r2 <- permanova_48h_tbl$r2
+} else {
+  permanova_48h_tbl$r2 <- NA_real_
+}
+
+if (!is.null(permanova_48h_p_col)) {
+  permanova_48h_tbl$p_value <- permanova_48h_tbl[[permanova_48h_p_col]]
+} else if ("p_value" %in% names(permanova_48h_tbl)) {
+  permanova_48h_tbl$p_value <- permanova_48h_tbl$p_value
+} else {
+  permanova_48h_tbl$p_value <- NA_real_
+}
 
 beta_pcoa_48h_plot <- pcoa_48h %>%
   ggplot(aes(x = PC1, y = PC2, color = carbohydrate, shape = group)) +
@@ -1022,42 +1172,48 @@ beta_pcoa_48h_plot <- pcoa_48h %>%
   scale_color_scfa() +
   scale_shape_manual(values = c(16, 17)) +
   labs(
-    x = glue::glue("PC1 ({scales::percent(round(pcoa_48h$axis1_var[1], 3))})"),
-    y = glue::glue("PC2 ({scales::percent(round(pcoa_48h$axis2_var[1], 3))})"),
+    x = paste0("PC1 (", scales::percent(round(pcoa_48h$axis1_var[1], 3)), ")"),
+    y = paste0("PC2 (", scales::percent(round(pcoa_48h$axis2_var[1], 3)), ")"),
     title = "PCoA – Bray-Curtis distance (48H samples)"
   ) +
   theme_scfa()
 
+# Print plots
+print(beta_pcoa_plot)
+
+# Print PERMANOVA table for all timepoints
 if (knitr::is_html_output()) {
-  htmltools::tagList(
-    beta_pcoa_plot,
-    DT::datatable(
-      permanova_bray_tbl %>%
-        dplyr::select(term, f, r2, p_value),
-      caption = "PERMANOVA results (Bray-Curtis; all timepoints, subject-level strata)",
-      options = list(pageLength = 10, scrollX = TRUE),
-      rownames = FALSE
-    ) %>%
-      DT::formatRound(columns = c("f", "r2", "p_value"), digits = 3),
-    beta_pcoa_48h_plot,
-    DT::datatable(
-      permanova_48h_tbl %>%
-        dplyr::select(term, f, r2, p_value),
-      caption = "PERMANOVA results (Bray-Curtis; 48H only, subject-level strata)",
-      options = list(pageLength = 10, scrollX = TRUE),
-      rownames = FALSE
-    ) %>%
-      DT::formatRound(columns = c("f", "r2", "p_value"), digits = 3)
-  )
+  DT::datatable(
+    permanova_bray_tbl %>%
+      dplyr::select(term, f, r2, p_value),
+    caption = "PERMANOVA results (Bray-Curtis; all timepoints, subject-level strata)",
+    options = list(pageLength = 10, scrollX = TRUE),
+    rownames = FALSE
+  ) %>%
+    DT::formatRound(columns = c("f", "r2", "p_value"), digits = 3)
 } else {
-  print(beta_pcoa_plot)
-  print(beta_pcoa_48h_plot)
   knitr::kable(
     permanova_bray_tbl %>%
       dplyr::select(term, f, r2, p_value),
     digits = 3,
     caption = "PERMANOVA results (Bray-Curtis; all timepoints, subject-level strata)"
   )
+}
+
+# Print 48H plot
+print(beta_pcoa_48h_plot)
+
+# Print PERMANOVA table for 48H only
+if (knitr::is_html_output()) {
+  DT::datatable(
+    permanova_48h_tbl %>%
+      dplyr::select(term, f, r2, p_value),
+    caption = "PERMANOVA results (Bray-Curtis; 48H only, subject-level strata)",
+    options = list(pageLength = 10, scrollX = TRUE),
+    rownames = FALSE
+  ) %>%
+    DT::formatRound(columns = c("f", "r2", "p_value"), digits = 3)
+} else {
   knitr::kable(
     permanova_48h_tbl %>%
       dplyr::select(term, f, r2, p_value),
@@ -1118,15 +1274,9 @@ genus_barplot_48h <- psmelt(transform_sample_counts(ps_48h_genus, function(x) x 
   theme_scfa() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-if (knitr::is_html_output()) {
-  htmltools::tagList(
-    genus_barplot_all,
-    genus_barplot_48h
-  )
-} else {
-  print(genus_barplot_all)
-  print(genus_barplot_48h)
-}
+# Print plots
+print(genus_barplot_all)
+print(genus_barplot_48h)
 ```
 
 ### 6.4.2 Genus Composition Changes from 0H to 48H by Carbohydrate Type
@@ -2165,21 +2315,27 @@ maaslin2_meta <- maaslin2_meta %>%
     timepoint = as.factor(timepoint)
   )
 
-# Run MaAsLin2
+# Run MaAsLin2 (suppress output)
 maaslin2_fit <- tryCatch({
-  Maaslin2::Maaslin2(
-    input_data = maaslin2_counts,
-    input_metadata = maaslin2_meta,
-    output = tempfile(pattern = "maaslin2_", tmpdir = getwd()),  # Create temporary output directory
-    min_prevalence = 0.05,
-    normalization = "TSS",
-    transform = "LOG",
-    analysis_method = "LM",
-    fixed_effects = c("group", "carbohydrate", "timepoint"),
-    random_effects = c("subject_id"),
-    plot_heatmap = FALSE,
-    plot_scatter = FALSE
-  )
+  suppressMessages(suppressWarnings(
+    capture.output(
+      maaslin2_fit_result <- Maaslin2::Maaslin2(
+        input_data = maaslin2_counts,
+        input_metadata = maaslin2_meta,
+        output = tempfile(pattern = "maaslin2_", tmpdir = getwd()),  # Create temporary output directory
+        min_prevalence = 0.05,
+        normalization = "TSS",
+        transform = "LOG",
+        analysis_method = "LM",
+        fixed_effects = c("group", "carbohydrate", "timepoint"),
+        random_effects = c("subject_id"),
+        plot_heatmap = FALSE,
+        plot_scatter = FALSE
+      ),
+      file = nullfile()
+    )
+  ))
+  maaslin2_fit_result
 }, error = function(e) {
   cat("MaAsLin2 failed:", e$message, "\n")
   NULL
@@ -2635,21 +2791,27 @@ maaslin2_48h_meta <- maaslin2_48h_meta %>%
     carbohydrate = as.factor(carbohydrate)
   )
 
-# Run MaAsLin2 for 48H RDC vs SDC
+# Run MaAsLin2 for 48H RDC vs SDC (suppress output)
 maaslin2_48h_fit <- tryCatch({
-    Maaslin2::Maaslin2(
-      input_data = maaslin2_48h_counts,
-      input_metadata = maaslin2_48h_meta,
-      output = tempfile(pattern = "maaslin2_48h_", tmpdir = getwd()),  # Create temporary output directory
-      min_prevalence = 0.05,
-      normalization = "TSS",
-      transform = "LOG",
-      analysis_method = "LM",
-      fixed_effects = c("carbohydrate"),
-      random_effects = c("subject_id"),
-      plot_heatmap = FALSE,
-      plot_scatter = FALSE
+  suppressMessages(suppressWarnings(
+    capture.output(
+      maaslin2_48h_fit_result <- Maaslin2::Maaslin2(
+        input_data = maaslin2_48h_counts,
+        input_metadata = maaslin2_48h_meta,
+        output = tempfile(pattern = "maaslin2_48h_", tmpdir = getwd()),  # Create temporary output directory
+        min_prevalence = 0.05,
+        normalization = "TSS",
+        transform = "LOG",
+        analysis_method = "LM",
+        fixed_effects = c("carbohydrate"),
+        random_effects = c("subject_id"),
+        plot_heatmap = FALSE,
+        plot_scatter = FALSE
+      ),
+      file = nullfile()
     )
+  ))
+  maaslin2_48h_fit_result
 }, error = function(e) {
   cat("MaAsLin2 48H RDC vs SDC failed:", e$message, "\n")
   NULL
@@ -3061,9 +3223,17 @@ cat("- Samples without qPCR data:", sum(is.na(genome_copies)), "\n")
 
 ### 6.6.3 Absolute Abundance Plots by Group, Carbohydrate, and Timepoint
 
-```{r qpcr-summary-boxplots, echo=FALSE, fig.width=14, fig.height=8}
+```{r qpcr-summary-boxplots, echo=FALSE, fig.width=14, fig.height=8, cache=FALSE}
 # Create summary boxplots of qPCR data (genomes/μL) by group, carbohydrate, and timepoint
 # Use sample_meta_abs which has genome_copies_per_ul matched to samples
+
+# Ensure scale functions are available (they should be from themes-and-palettes chunk)
+if (!exists("scale_fill_scfa")) {
+  scale_fill_scfa <- function(...) ggplot2::scale_fill_brewer(palette = "Set2", ...)
+}
+if (!exists("scale_color_scfa")) {
+  scale_color_scfa <- function(...) ggplot2::scale_color_brewer(palette = "Set2", ...)
+}
 
 qpcr_plot_data <- sample_meta_abs %>%
   dplyr::filter(!is.na(genome_copies_per_ul)) %>%
@@ -3396,16 +3566,23 @@ if (nsamples(ps_butyrate_rel) > 10 && ntaxa(ps_butyrate_rel) > 1) {
   if (!is.null(ancombc2_butyrate_rel) && !is.null(ancombc2_butyrate_rel$res)) {
     res_data <- ancombc2_butyrate_rel$res
     ancombc2_butyrate_tbl_rel <- tibble::tibble()
+    ancombc2_butyrate_tbl_rel_full <- tibble::tibble()
     
     if ("q_butyrate" %in% colnames(res_data)) {
-      ancombc2_butyrate_tbl_rel <- res_data %>%
-        dplyr::filter(q_butyrate < 0.1) %>%
+      # Full results for visualization
+      ancombc2_butyrate_tbl_rel_full <- res_data %>%
         dplyr::mutate(
           effect = "butyrate",
           beta = lfc_butyrate,
+          se = se_butyrate,
+          p_value = p_butyrate,
           q_value = q_butyrate
         ) %>%
-        dplyr::select(taxon, effect, beta, q_value)
+        dplyr::select(taxon, effect, beta, se, p_value, q_value)
+      
+      # Significant results only
+      ancombc2_butyrate_tbl_rel <- ancombc2_butyrate_tbl_rel_full %>%
+        dplyr::filter(q_value < 0.1)
     }
     
     cat("ANCOM-BC2 butyrate (relative):", nrow(ancombc2_butyrate_tbl_rel), 
@@ -3413,9 +3590,11 @@ if (nsamples(ps_butyrate_rel) > 10 && ntaxa(ps_butyrate_rel) > 1) {
 ")
   } else {
     ancombc2_butyrate_tbl_rel <- tibble::tibble()
+    ancombc2_butyrate_tbl_rel_full <- tibble::tibble()
   }
 } else {
   ancombc2_butyrate_tbl_rel <- tibble::tibble()
+  ancombc2_butyrate_tbl_rel_full <- tibble::tibble()
 }
 
 # Run MaAsLin2 for taxon ~ butyrate + carbohydrate
@@ -3436,19 +3615,25 @@ maaslin2_butyrate_meta_rel <- data.frame(sample_data(ps_butyrate_rel)) %>%
 rownames(maaslin2_butyrate_meta_rel) <- sample_names(ps_butyrate_rel)
 
 maaslin2_butyrate_rel <- tryCatch({
-  Maaslin2::Maaslin2(
-    input_data = maaslin2_butyrate_counts_rel,
-    input_metadata = maaslin2_butyrate_meta_rel,
-    output = tempfile(pattern = "maaslin2_butyrate_rel_", tmpdir = getwd()),
-    min_prevalence = 0.05,
-    normalization = "TSS",
-    transform = "LOG",
-    analysis_method = "LM",
-    fixed_effects = c("butyrate", "carbohydrate"),
-    random_effects = c("subject_id"),
-    plot_heatmap = FALSE,
-    plot_scatter = FALSE
-  )
+  suppressMessages(suppressWarnings(
+    capture.output(
+      maaslin2_butyrate_rel_result <- Maaslin2::Maaslin2(
+        input_data = maaslin2_butyrate_counts_rel,
+        input_metadata = maaslin2_butyrate_meta_rel,
+        output = tempfile(pattern = "maaslin2_butyrate_rel_", tmpdir = getwd()),
+        min_prevalence = 0.05,
+        normalization = "TSS",
+        transform = "LOG",
+        analysis_method = "LM",
+        fixed_effects = c("butyrate", "carbohydrate"),
+        random_effects = c("subject_id"),
+        plot_heatmap = FALSE,
+        plot_scatter = FALSE
+      ),
+      file = nullfile()
+    )
+  ))
+  maaslin2_butyrate_rel_result
 }, error = function(e) {
   cat("MaAsLin2 butyrate (relative) failed:", e$message, "
 ")
@@ -3456,17 +3641,149 @@ maaslin2_butyrate_rel <- tryCatch({
 })
 
 if (!is.null(maaslin2_butyrate_rel) && !is.null(maaslin2_butyrate_rel$results)) {
-  maaslin2_butyrate_tbl_rel <- maaslin2_butyrate_rel$results %>%
+  # Full results for visualization
+  maaslin2_butyrate_tbl_rel_full <- maaslin2_butyrate_rel$results %>%
     dplyr::as_tibble() %>%
     dplyr::mutate(q = p.adjust(pval, method = "BH")) %>%
-    dplyr::filter(q < 0.1 & metadata == "butyrate") %>%
+    dplyr::filter(metadata == "butyrate") %>%
     dplyr::arrange(q)
+  
+  # Significant results only
+  maaslin2_butyrate_tbl_rel <- maaslin2_butyrate_tbl_rel_full %>%
+    dplyr::filter(q < 0.1)
   
   cat("MaAsLin2 butyrate (relative):", nrow(maaslin2_butyrate_tbl_rel), 
       "significant associations (q < 0.1)
 ")
 } else {
   maaslin2_butyrate_tbl_rel <- tibble::tibble()
+  maaslin2_butyrate_tbl_rel_full <- tibble::tibble()
+}
+```
+
+### 7.2.1 ANCOM-BC2 and MaAsLin2 Visualizations: Butyrate Associations
+
+```{r taxon-butyrate-visualizations, echo=FALSE, fig.width=14, fig.height=10}
+# ANCOM-BC2 Forest Plot for Butyrate
+if (exists("ancombc2_butyrate_tbl_rel_full") && nrow(ancombc2_butyrate_tbl_rel_full) > 0) {
+  forest_butyrate_data <- ancombc2_butyrate_tbl_rel_full %>%
+    dplyr::mutate(
+      ci_lower = beta - 1.96 * se,
+      ci_upper = beta + 1.96 * se,
+      taxon_label = stringr::str_replace(taxon, "^g__", ""),
+      significance = dplyr::case_when(
+        q_value < 0.001 ~ "q < 0.001",
+        q_value < 0.01 ~ "q < 0.01",
+        q_value < 0.05 ~ "q < 0.05",
+        q_value < 0.1 ~ "q < 0.1",
+        TRUE ~ "q ≥ 0.1"
+      )
+    ) %>%
+    dplyr::arrange(desc(abs(beta)))
+  
+  # Show top 25 taxa by effect size or all significant ones
+  if (sum(forest_butyrate_data$q_value < 0.1, na.rm = TRUE) > 0) {
+    forest_butyrate_plot_data <- forest_butyrate_data %>%
+      dplyr::filter(q_value < 0.1) %>%
+      dplyr::arrange(desc(abs(beta))) %>%
+      dplyr::slice_head(n = 25)
+  } else {
+    forest_butyrate_plot_data <- forest_butyrate_data %>%
+      dplyr::arrange(desc(abs(beta))) %>%
+      dplyr::slice_head(n = 25)
+  }
+  
+  if (nrow(forest_butyrate_plot_data) > 0) {
+    ancombc2_butyrate_forest <- ggplot(
+      forest_butyrate_plot_data,
+      aes(x = beta, y = reorder(taxon_label, beta), color = significance)
+    ) +
+      geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+      geom_point(size = 2) +
+      geom_errorbarh(aes(xmin = ci_lower, xmax = ci_upper), 
+                     height = 0.2, alpha = 0.8) +
+      scale_color_manual(
+        values = c("q < 0.001" = "#d73027", 
+                   "q < 0.01" = "#f46d43",
+                   "q < 0.05" = "#fdae61", 
+                   "q < 0.1" = "#fee08b",
+                   "q ≥ 0.1" = "gray70"),
+        name = "FDR-adjusted\np-value"
+      ) +
+      labs(
+        title = "ANCOM-BC2: Taxon Associations with Butyrate",
+        subtitle = "Effect sizes (log-fold change per unit butyrate) with 95% confidence intervals",
+        x = "Log-fold change (β)",
+        y = "Taxon"
+      ) +
+      theme_scfa() +
+      theme(
+        axis.text.y = element_text(size = 8),
+        legend.position = "bottom"
+      )
+    
+    print(ancombc2_butyrate_forest)
+  }
+} else {
+  cat("No ANCOM-BC2 butyrate results available for visualization\n")
+}
+
+# MaAsLin2 Volcano Plot for Butyrate
+if (exists("maaslin2_butyrate_tbl_rel_full") && nrow(maaslin2_butyrate_tbl_rel_full) > 0) {
+  # Get taxonomy for labels
+  tax_table_butyrate <- as.data.frame(tax_table(ps_butyrate_rel)) %>%
+    tibble::rownames_to_column("feature") %>%
+    dplyr::mutate(
+      Genus_clean = stringr::str_replace(Genus, "^g__", ""),
+      Family_clean = stringr::str_replace(Family, "^f__", ""),
+      genus_label = dplyr::case_when(
+        !is.na(Genus_clean) & Genus_clean != "NA" & Genus_clean != "" ~ Genus_clean,
+        !is.na(Family_clean) & Family_clean != "NA" & Family_clean != "" ~ Family_clean,
+        TRUE ~ feature
+      )
+    ) %>%
+    dplyr::select(feature, genus_label)
+  
+  maaslin2_butyrate_plot_data <- maaslin2_butyrate_tbl_rel_full %>%
+    dplyr::left_join(tax_table_butyrate, by = "feature")
+  
+  sig_points_butyrate <- maaslin2_butyrate_plot_data %>%
+    dplyr::filter(q < 0.1)
+  
+  maaslin2_butyrate_volcano <- ggplot(
+    maaslin2_butyrate_plot_data,
+    aes(x = coef, y = -log10(q))
+  ) +
+    geom_point(aes(color = q < 0.1), alpha = 0.6, size = 2) +
+    geom_hline(yintercept = -log10(0.1), linetype = "dashed", color = "red", alpha = 0.7) +
+    geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+    ggrepel::geom_text_repel(
+      data = sig_points_butyrate,
+      aes(label = genus_label),
+      size = 3,
+      color = "#E31A1C",
+      fontface = "bold",
+      max.overlaps = 20,
+      min.segment.length = 0.1
+    ) +
+    scale_color_manual(
+      values = c("FALSE" = "gray70", "TRUE" = "#E31A1C"),
+      name = "Significant",
+      labels = c("FALSE" = "q ≥ 0.1", "TRUE" = "q < 0.1")
+    ) +
+    labs(
+      title = "MaAsLin2: Taxon Associations with Butyrate",
+      subtitle = "Effect Size vs Statistical Significance",
+      x = "Coefficient (Effect Size)",
+      y = "-log10(q-value)",
+      caption = "Red dashed line: q = 0.1 threshold"
+    ) +
+    theme_scfa() +
+    theme(legend.position = "bottom")
+  
+  print(maaslin2_butyrate_volcano)
+} else {
+  cat("No MaAsLin2 butyrate results available for visualization\n")
 }
 ```
 
@@ -3516,16 +3833,23 @@ if (nsamples(ps_propionate_rel) > 10 && ntaxa(ps_propionate_rel) > 1) {
   if (!is.null(ancombc2_propionate_rel) && !is.null(ancombc2_propionate_rel$res)) {
     res_data <- ancombc2_propionate_rel$res
     ancombc2_propionate_tbl_rel <- tibble::tibble()
+    ancombc2_propionate_tbl_rel_full <- tibble::tibble()
     
     if ("q_propionate" %in% colnames(res_data)) {
-      ancombc2_propionate_tbl_rel <- res_data %>%
-        dplyr::filter(q_propionate < 0.1) %>%
+      # Full results for visualization
+      ancombc2_propionate_tbl_rel_full <- res_data %>%
         dplyr::mutate(
           effect = "propionate",
           beta = lfc_propionate,
+          se = se_propionate,
+          p_value = p_propionate,
           q_value = q_propionate
         ) %>%
-        dplyr::select(taxon, effect, beta, q_value)
+        dplyr::select(taxon, effect, beta, se, p_value, q_value)
+      
+      # Significant results only
+      ancombc2_propionate_tbl_rel <- ancombc2_propionate_tbl_rel_full %>%
+        dplyr::filter(q_value < 0.1)
     }
     
     cat("ANCOM-BC2 propionate (relative):", nrow(ancombc2_propionate_tbl_rel), 
@@ -3533,9 +3857,11 @@ if (nsamples(ps_propionate_rel) > 10 && ntaxa(ps_propionate_rel) > 1) {
 ")
   } else {
     ancombc2_propionate_tbl_rel <- tibble::tibble()
+    ancombc2_propionate_tbl_rel_full <- tibble::tibble()
   }
 } else {
   ancombc2_propionate_tbl_rel <- tibble::tibble()
+  ancombc2_propionate_tbl_rel_full <- tibble::tibble()
 }
 
 # Run MaAsLin2 for taxon ~ propionate + carbohydrate
@@ -3556,19 +3882,25 @@ maaslin2_propionate_meta_rel <- data.frame(sample_data(ps_propionate_rel)) %>%
 rownames(maaslin2_propionate_meta_rel) <- sample_names(ps_propionate_rel)
 
 maaslin2_propionate_rel <- tryCatch({
-  Maaslin2::Maaslin2(
-    input_data = maaslin2_propionate_counts_rel,
-    input_metadata = maaslin2_propionate_meta_rel,
-    output = tempfile(pattern = "maaslin2_propionate_rel_", tmpdir = getwd()),
-    min_prevalence = 0.05,
-    normalization = "TSS",
-    transform = "LOG",
-    analysis_method = "LM",
-    fixed_effects = c("propionate", "carbohydrate"),
-    random_effects = c("subject_id"),
-    plot_heatmap = FALSE,
-    plot_scatter = FALSE
-  )
+  suppressMessages(suppressWarnings(
+    capture.output(
+      maaslin2_propionate_rel_result <- Maaslin2::Maaslin2(
+        input_data = maaslin2_propionate_counts_rel,
+        input_metadata = maaslin2_propionate_meta_rel,
+        output = tempfile(pattern = "maaslin2_propionate_rel_", tmpdir = getwd()),
+        min_prevalence = 0.05,
+        normalization = "TSS",
+        transform = "LOG",
+        analysis_method = "LM",
+        fixed_effects = c("propionate", "carbohydrate"),
+        random_effects = c("subject_id"),
+        plot_heatmap = FALSE,
+        plot_scatter = FALSE
+      ),
+      file = nullfile()
+    )
+  ))
+  maaslin2_propionate_rel_result
 }, error = function(e) {
   cat("MaAsLin2 propionate (relative) failed:", e$message, "
 ")
@@ -3576,17 +3908,149 @@ maaslin2_propionate_rel <- tryCatch({
 })
 
 if (!is.null(maaslin2_propionate_rel) && !is.null(maaslin2_propionate_rel$results)) {
-  maaslin2_propionate_tbl_rel <- maaslin2_propionate_rel$results %>%
+  # Full results for visualization
+  maaslin2_propionate_tbl_rel_full <- maaslin2_propionate_rel$results %>%
     dplyr::as_tibble() %>%
     dplyr::mutate(q = p.adjust(pval, method = "BH")) %>%
-    dplyr::filter(q < 0.1 & metadata == "propionate") %>%
+    dplyr::filter(metadata == "propionate") %>%
     dplyr::arrange(q)
+  
+  # Significant results only
+  maaslin2_propionate_tbl_rel <- maaslin2_propionate_tbl_rel_full %>%
+    dplyr::filter(q < 0.1)
   
   cat("MaAsLin2 propionate (relative):", nrow(maaslin2_propionate_tbl_rel), 
       "significant associations (q < 0.1)
 ")
 } else {
   maaslin2_propionate_tbl_rel <- tibble::tibble()
+  maaslin2_propionate_tbl_rel_full <- tibble::tibble()
+}
+```
+
+### 7.3.1 ANCOM-BC2 and MaAsLin2 Visualizations: Propionate Associations
+
+```{r taxon-propionate-visualizations, echo=FALSE, fig.width=14, fig.height=10}
+# ANCOM-BC2 Forest Plot for Propionate
+if (exists("ancombc2_propionate_tbl_rel_full") && nrow(ancombc2_propionate_tbl_rel_full) > 0) {
+  forest_propionate_data <- ancombc2_propionate_tbl_rel_full %>%
+    dplyr::mutate(
+      ci_lower = beta - 1.96 * se,
+      ci_upper = beta + 1.96 * se,
+      taxon_label = stringr::str_replace(taxon, "^g__", ""),
+      significance = dplyr::case_when(
+        q_value < 0.001 ~ "q < 0.001",
+        q_value < 0.01 ~ "q < 0.01",
+        q_value < 0.05 ~ "q < 0.05",
+        q_value < 0.1 ~ "q < 0.1",
+        TRUE ~ "q ≥ 0.1"
+      )
+    ) %>%
+    dplyr::arrange(desc(abs(beta)))
+  
+  # Show top 25 taxa by effect size or all significant ones
+  if (sum(forest_propionate_data$q_value < 0.1, na.rm = TRUE) > 0) {
+    forest_propionate_plot_data <- forest_propionate_data %>%
+      dplyr::filter(q_value < 0.1) %>%
+      dplyr::arrange(desc(abs(beta))) %>%
+      dplyr::slice_head(n = 25)
+  } else {
+    forest_propionate_plot_data <- forest_propionate_data %>%
+      dplyr::arrange(desc(abs(beta))) %>%
+      dplyr::slice_head(n = 25)
+  }
+  
+  if (nrow(forest_propionate_plot_data) > 0) {
+    ancombc2_propionate_forest <- ggplot(
+      forest_propionate_plot_data,
+      aes(x = beta, y = reorder(taxon_label, beta), color = significance)
+    ) +
+      geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+      geom_point(size = 2) +
+      geom_errorbarh(aes(xmin = ci_lower, xmax = ci_upper), 
+                     height = 0.2, alpha = 0.8) +
+      scale_color_manual(
+        values = c("q < 0.001" = "#d73027", 
+                   "q < 0.01" = "#f46d43",
+                   "q < 0.05" = "#fdae61", 
+                   "q < 0.1" = "#fee08b",
+                   "q ≥ 0.1" = "gray70"),
+        name = "FDR-adjusted\np-value"
+      ) +
+      labs(
+        title = "ANCOM-BC2: Taxon Associations with Propionate",
+        subtitle = "Effect sizes (log-fold change per unit propionate) with 95% confidence intervals",
+        x = "Log-fold change (β)",
+        y = "Taxon"
+      ) +
+      theme_scfa() +
+      theme(
+        axis.text.y = element_text(size = 8),
+        legend.position = "bottom"
+      )
+    
+    print(ancombc2_propionate_forest)
+  }
+} else {
+  cat("No ANCOM-BC2 propionate results available for visualization\n")
+}
+
+# MaAsLin2 Volcano Plot for Propionate
+if (exists("maaslin2_propionate_tbl_rel_full") && nrow(maaslin2_propionate_tbl_rel_full) > 0) {
+  # Get taxonomy for labels
+  tax_table_propionate <- as.data.frame(tax_table(ps_propionate_rel)) %>%
+    tibble::rownames_to_column("feature") %>%
+    dplyr::mutate(
+      Genus_clean = stringr::str_replace(Genus, "^g__", ""),
+      Family_clean = stringr::str_replace(Family, "^f__", ""),
+      genus_label = dplyr::case_when(
+        !is.na(Genus_clean) & Genus_clean != "NA" & Genus_clean != "" ~ Genus_clean,
+        !is.na(Family_clean) & Family_clean != "NA" & Family_clean != "" ~ Family_clean,
+        TRUE ~ feature
+      )
+    ) %>%
+    dplyr::select(feature, genus_label)
+  
+  maaslin2_propionate_plot_data <- maaslin2_propionate_tbl_rel_full %>%
+    dplyr::left_join(tax_table_propionate, by = "feature")
+  
+  sig_points_propionate <- maaslin2_propionate_plot_data %>%
+    dplyr::filter(q < 0.1)
+  
+  maaslin2_propionate_volcano <- ggplot(
+    maaslin2_propionate_plot_data,
+    aes(x = coef, y = -log10(q))
+  ) +
+    geom_point(aes(color = q < 0.1), alpha = 0.6, size = 2) +
+    geom_hline(yintercept = -log10(0.1), linetype = "dashed", color = "red", alpha = 0.7) +
+    geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+    ggrepel::geom_text_repel(
+      data = sig_points_propionate,
+      aes(label = genus_label),
+      size = 3,
+      color = "#E31A1C",
+      fontface = "bold",
+      max.overlaps = 20,
+      min.segment.length = 0.1
+    ) +
+    scale_color_manual(
+      values = c("FALSE" = "gray70", "TRUE" = "#E31A1C"),
+      name = "Significant",
+      labels = c("FALSE" = "q ≥ 0.1", "TRUE" = "q < 0.1")
+    ) +
+    labs(
+      title = "MaAsLin2: Taxon Associations with Propionate",
+      subtitle = "Effect Size vs Statistical Significance",
+      x = "Coefficient (Effect Size)",
+      y = "-log10(q-value)",
+      caption = "Red dashed line: q = 0.1 threshold"
+    ) +
+    theme_scfa() +
+    theme(legend.position = "bottom")
+  
+  print(maaslin2_propionate_volcano)
+} else {
+  cat("No MaAsLin2 propionate results available for visualization\n")
 }
 ```
 
@@ -3598,11 +4062,15 @@ fusicatenibacter_taxa_rel <- taxa_names(ps)[
   stringr::str_detect(tax_table(ps)[, "Genus"], regex("Fusicatenibacter", ignore_case = TRUE))
 ]
 
-# Prepare correlation data
+# Prepare correlation data - filter to 48H and SDC only
 corr_data <- micro_meta_scfa %>%
   dplyr::select(SampleID, subject_id, group, carbohydrate, timepoint, 
                 scfa_butyrate, scfa_propionate) %>%
-  dplyr::filter(!is.na(scfa_butyrate) | !is.na(scfa_propionate))
+  dplyr::filter(
+    timepoint == "48H",
+    carbohydrate == "SDC",
+    !is.na(scfa_butyrate) | !is.na(scfa_propionate)
+  )
 
 # Add relative abundance of Fusicatenibacter
 if (length(fusicatenibacter_taxa_rel) > 0) {
@@ -3628,81 +4096,137 @@ if (length(fusicatenibacter_taxa_rel) > 0) {
   corr_data <- corr_data %>%
     dplyr::filter(!is.na(fusicatenibacter_rel))
   
-  # Create correlation plots
-  # Plot 1: Butyrate correlations by timepoint
-  corr_butyrate_plot <- ggplot(
-    corr_data %>% dplyr::filter(!is.na(scfa_butyrate)),
-    aes(x = scfa_butyrate, y = fusicatenibacter_rel)
-  ) +
-    geom_point(aes(color = carbohydrate), alpha = 0.6, size = 2) +
-    geom_smooth(method = "lm", se = TRUE, color = "black") +
-    facet_wrap(~ timepoint, scales = "free") +
-    scale_color_scfa() +
-    labs(
-      title = "Fusicatenibacter vs Butyrate (Relative Abundance)",
-      subtitle = "Correlation by timepoint and carbohydrate type",
-      x = "Butyrate Concentration",
-      y = "Fusicatenibacter Relative Abundance",
-      color = "Carbohydrate"
-    ) +
-    theme_scfa() +
-    theme(legend.position = "bottom")
+  # Calculate R² values and correlation statistics for butyrate
+  butyrate_data <- corr_data %>% 
+    dplyr::filter(!is.na(scfa_butyrate) & !is.na(fusicatenibacter_rel))
   
-  print(corr_butyrate_plot)
+  r2_butyrate <- NA_real_
+  p_butyrate <- NA_real_
+  rho_butyrate <- NA_real_
   
-  # Plot 2: Propionate correlations by timepoint
-  corr_propionate_plot <- ggplot(
-    corr_data %>% dplyr::filter(!is.na(scfa_propionate)),
-    aes(x = scfa_propionate, y = fusicatenibacter_rel)
-  ) +
-    geom_point(aes(color = carbohydrate), alpha = 0.6, size = 2) +
-    geom_smooth(method = "lm", se = TRUE, color = "black") +
-    facet_wrap(~ timepoint, scales = "free") +
-    scale_color_scfa() +
-    labs(
-      title = "Fusicatenibacter vs Propionate (Relative Abundance)",
-      subtitle = "Correlation by timepoint and carbohydrate type",
-      x = "Propionate Concentration",
-      y = "Fusicatenibacter Relative Abundance",
-      color = "Carbohydrate"
-    ) +
-    theme_scfa() +
-    theme(legend.position = "bottom")
-  
-  print(corr_propionate_plot)
-  
-  # Calculate correlation statistics
-  cat("
-Fusicatenibacter-SCFA Correlations (Relative Abundance):
-")
-  for (tp in c("0H", "48H")) {
-    corr_data_tp <- corr_data %>% dplyr::filter(timepoint == tp)
+  if (nrow(butyrate_data) > 3) {
+    # Linear model for R²
+    lm_but <- lm(fusicatenibacter_rel ~ scfa_butyrate, data = butyrate_data)
+    r2_butyrate <- summary(lm_but)$r.squared
+    p_butyrate <- summary(lm_but)$coefficients[2, 4]
     
-    # Butyrate correlation
-    if (sum(!is.na(corr_data_tp$scfa_butyrate) & 
-            !is.na(corr_data_tp$fusicatenibacter_rel)) > 3) {
-      corr_but <- cor.test(corr_data_tp$scfa_butyrate, 
-                          corr_data_tp$fusicatenibacter_rel,
-                          method = "spearman")
-      cat(sprintf("  %s - Butyrate: rho = %.3f, p = %.4f
-", 
-                  tp, corr_but$estimate, corr_but$p.value))
-    }
-    
-    # Propionate correlation
-    if (sum(!is.na(corr_data_tp$scfa_propionate) & 
-            !is.na(corr_data_tp$fusicatenibacter_rel)) > 3) {
-      corr_prop <- cor.test(corr_data_tp$scfa_propionate, 
-                           corr_data_tp$fusicatenibacter_rel,
-                           method = "spearman")
-      cat(sprintf("  %s - Propionate: rho = %.3f, p = %.4f
-", 
-                  tp, corr_prop$estimate, corr_prop$p.value))
-    }
+    # Spearman correlation
+    corr_but <- cor.test(butyrate_data$scfa_butyrate, 
+                        butyrate_data$fusicatenibacter_rel,
+                        method = "spearman")
+    rho_butyrate <- corr_but$estimate
   }
+  
+  # Calculate R² values and correlation statistics for propionate
+  propionate_data <- corr_data %>% 
+    dplyr::filter(!is.na(scfa_propionate) & !is.na(fusicatenibacter_rel))
+  
+  r2_propionate <- NA_real_
+  p_propionate <- NA_real_
+  rho_propionate <- NA_real_
+  
+  if (nrow(propionate_data) > 3) {
+    # Linear model for R²
+    lm_prop <- lm(fusicatenibacter_rel ~ scfa_propionate, data = propionate_data)
+    r2_propionate <- summary(lm_prop)$r.squared
+    p_propionate <- summary(lm_prop)$coefficients[2, 4]
+    
+    # Spearman correlation
+    corr_prop <- cor.test(propionate_data$scfa_propionate, 
+                         propionate_data$fusicatenibacter_rel,
+                         method = "spearman")
+    rho_propionate <- corr_prop$estimate
+  }
+  
+  # Create correlation plots with R² annotations
+  # Plot 1: Butyrate correlation at 48H, SDC only
+  if (nrow(butyrate_data) > 0) {
+    corr_butyrate_plot <- ggplot(
+      butyrate_data,
+      aes(x = scfa_butyrate, y = fusicatenibacter_rel)
+    ) +
+      geom_point(alpha = 0.7, size = 3, color = "#56B4E9") +
+      geom_smooth(method = "lm", se = TRUE, color = "black", linewidth = 1.2) +
+      annotate(
+        "text",
+        x = Inf,
+        y = Inf,
+        hjust = 1.1,
+        vjust = 1.5,
+        label = ifelse(!is.na(r2_butyrate), 
+                      sprintf("R² = %.3f\np = %.4f", r2_butyrate, p_butyrate),
+                      "Insufficient data"),
+        size = 5,
+        fontface = "bold"
+      ) +
+      labs(
+        title = "Fusicatenibacter vs Butyrate (Relative Abundance)",
+        subtitle = "48H timepoint, SDC carbohydrate only",
+        x = "Butyrate Concentration (μM)",
+        y = "Fusicatenibacter Relative Abundance"
+      ) +
+      theme_scfa() +
+      theme(legend.position = "none")
+    
+    print(corr_butyrate_plot)
+  }
+  
+  # Plot 2: Propionate correlation at 48H, SDC only
+  if (nrow(propionate_data) > 0) {
+    corr_propionate_plot <- ggplot(
+      propionate_data,
+      aes(x = scfa_propionate, y = fusicatenibacter_rel)
+    ) +
+      geom_point(alpha = 0.7, size = 3, color = "#E69F00") +
+      geom_smooth(method = "lm", se = TRUE, color = "black", linewidth = 1.2) +
+      annotate(
+        "text",
+        x = Inf,
+        y = Inf,
+        hjust = 1.1,
+        vjust = 1.5,
+        label = ifelse(!is.na(r2_propionate), 
+                      sprintf("R² = %.3f\np = %.4f", r2_propionate, p_propionate),
+                      "Insufficient data"),
+        size = 5,
+        fontface = "bold"
+      ) +
+      labs(
+        title = "Fusicatenibacter vs Propionate (Relative Abundance)",
+        subtitle = "48H timepoint, SDC carbohydrate only",
+        x = "Propionate Concentration (μM)",
+        y = "Fusicatenibacter Relative Abundance"
+      ) +
+      theme_scfa() +
+      theme(legend.position = "none")
+    
+    print(corr_propionate_plot)
+  }
+  
+  # Print correlation statistics summary
+  cat("\nFusicatenibacter-SCFA Correlations (48H, SDC only):\n")
+  cat("==================================================\n")
+  
+  if (!is.na(r2_butyrate)) {
+    cat(sprintf("Butyrate:\n"))
+    cat(sprintf("  R² = %.4f, p = %.4f\n", r2_butyrate, p_butyrate))
+    cat(sprintf("  Spearman rho = %.3f\n", rho_butyrate))
+    cat(sprintf("  N = %d\n\n", nrow(butyrate_data)))
+  } else {
+    cat("Butyrate: Insufficient data for correlation analysis\n\n")
+  }
+  
+  if (!is.na(r2_propionate)) {
+    cat(sprintf("Propionate:\n"))
+    cat(sprintf("  R² = %.4f, p = %.4f\n", r2_propionate, p_propionate))
+    cat(sprintf("  Spearman rho = %.3f\n", rho_propionate))
+    cat(sprintf("  N = %d\n", nrow(propionate_data)))
+  } else {
+    cat("Propionate: Insufficient data for correlation analysis\n")
+  }
+  
 } else {
-  cat("No Fusicatenibacter taxa found for correlation analysis
-")
+  cat("No Fusicatenibacter taxa found for correlation analysis\n")
 }
 ```
 
@@ -3821,6 +4345,18 @@ cat("- Samples with responder status:",
 
 ## 7.6 Microbial Composition Differences: Butyrate Responders vs Non-Responders
 
+To investigate whether individual variation in SCFA response is associated with differences in microbiome composition, we classified subjects as "Responders" or "Non-Responders" based on their change in SCFA concentration from baseline (0H) to 48 hours (48H). 
+
+**Definition of Responder Status:**
+- For each SCFA (butyrate and propionate) and each carbohydrate condition (RDC and SDC), we calculated the delta change: Δ = [SCFA]₄₈ₕ - [SCFA]₀ₕ
+- Subjects were classified separately for each analyte and carbohydrate type using a median split approach
+- **Responders**: Subjects with Δ ≥ median Δ for that specific analyte-carbohydrate combination
+- **Non-Responders**: Subjects with Δ < median Δ for that specific analyte-carbohydrate combination
+
+This approach allows us to identify whether individuals who show greater increases in SCFA production (responders) have distinct microbial communities compared to those with smaller increases (non-responders), potentially revealing microbiome features associated with enhanced SCFA production capacity.
+
+In this section, we compare the microbial composition (alpha diversity, beta diversity, and community structure) between butyrate responders and non-responders at the 48H timepoint, focusing on samples from RDC and SDC conditions (excluding No Added Carb controls).
+
 ```{r butyrate-responder-composition, echo=FALSE, fig.width=14, fig.height=8}
 # Compare microbial composition between butyrate responder groups at 48H
 ps_48h_butyrate_resp <- phyloseq::subset_samples(
@@ -3931,7 +4467,327 @@ PERMANOVA: Butyrate Responder Status (48H):
 }
 ```
 
+### 7.6.1 Differential Abundance Analysis: Butyrate Responders vs Non-Responders
+
+To identify specific taxa that differ between butyrate responders and non-responders, we performed differential abundance analysis using ANCOM-BC2 and MaAsLin2.
+
+```{r butyrate-responder-da, echo=FALSE, cache=TRUE, cache.path="cache/integrated-", fig.width=14, fig.height=10}
+# Prepare genus-level phyloseq object for DA analysis
+ps_butyrate_resp_genus <- tax_glom(ps_48h_butyrate_resp, taxrank = "Genus", NArm = FALSE)
+ps_butyrate_resp_genus <- prune_taxa(taxa_sums(ps_butyrate_resp_genus) > 0, ps_butyrate_resp_genus)
+
+# Filter to samples with responder status
+ps_butyrate_resp_genus <- phyloseq::subset_samples(
+  ps_butyrate_resp_genus,
+  !is.na(responder_butyrate) & carbohydrate != "No Added Carb"
+)
+
+# ANCOM-BC2 Analysis
+if (nsamples(ps_butyrate_resp_genus) > 10 && ntaxa(ps_butyrate_resp_genus) > 1) {
+  # Remove samples with too many zeros
+  zero_prop <- apply(otu_table(ps_butyrate_resp_genus), 2, function(x) sum(x == 0) / length(x))
+  problematic_samples <- names(zero_prop[zero_prop > 0.95])
+  
+  if (length(problematic_samples) > 0) {
+    ps_butyrate_resp_genus_clean <- subset_samples(
+      ps_butyrate_resp_genus, 
+      !sample_names(ps_butyrate_resp_genus) %in% problematic_samples
+    )
+  } else {
+    ps_butyrate_resp_genus_clean <- ps_butyrate_resp_genus
+  }
+  
+  # Ensure responder_butyrate is a factor
+  sample_data(ps_butyrate_resp_genus_clean)$responder_butyrate <- as.factor(
+    sample_data(ps_butyrate_resp_genus_clean)$responder_butyrate
+  )
+  
+  ancombc2_butyrate_resp <- tryCatch({
+    ANCOMBC::ancombc2(
+      data = ps_butyrate_resp_genus_clean,
+      tax_level = "Genus",
+      fix_formula = "responder_butyrate + carbohydrate",
+      rand_formula = "(1|subject_id)",
+      p_adj_method = "BH",
+      prv_cut = 0.10,
+      lib_cut = 0,
+      s0_perc = 0.05,
+      group = "responder_butyrate",
+      struc_zero = TRUE,
+      neg_lb = TRUE,
+      alpha = 0.05,
+      global = TRUE,
+      verbose = FALSE
+    )
+  }, error = function(e) {
+    cat("ANCOM-BC2 butyrate responder failed:", e$message, "\n")
+    NULL
+  })
+  
+  # Extract ANCOM-BC2 results
+  if (!is.null(ancombc2_butyrate_resp) && !is.null(ancombc2_butyrate_resp$res)) {
+    res_data_butyrate_resp <- ancombc2_butyrate_resp$res
+    
+    # Get effect for responder_butyrateResponder (vs Non-Responder as reference)
+    effect_name <- "responder_butyrateResponder"
+    lfc_col <- paste0("lfc_", effect_name)
+    se_col <- paste0("se_", effect_name)
+    p_col <- paste0("p_", effect_name)
+    q_col <- paste0("q_", effect_name)
+    
+    if (all(c(lfc_col, se_col, p_col, q_col) %in% colnames(res_data_butyrate_resp))) {
+      ancombc2_butyrate_resp_tbl <- res_data_butyrate_resp %>%
+        dplyr::mutate(
+          effect = "Responder vs Non-Responder",
+          beta = .data[[lfc_col]],
+          se = .data[[se_col]],
+          p_value = .data[[p_col]],
+          q_value = .data[[q_col]]
+        ) %>%
+        dplyr::select(taxon, effect, beta, se, p_value, q_value) %>%
+        dplyr::arrange(q_value)
+      
+      cat("ANCOM-BC2 butyrate responder:", 
+          sum(ancombc2_butyrate_resp_tbl$q_value < 0.1, na.rm = TRUE),
+          "significant taxa (q < 0.1)\n")
+    } else {
+      ancombc2_butyrate_resp_tbl <- tibble::tibble(
+        taxon = character(0),
+        effect = character(0),
+        beta = numeric(0),
+        se = numeric(0),
+        p_value = numeric(0),
+        q_value = numeric(0)
+      )
+    }
+  } else {
+    ancombc2_butyrate_resp_tbl <- tibble::tibble(
+      taxon = character(0),
+      effect = character(0),
+      beta = numeric(0),
+      se = numeric(0),
+      p_value = numeric(0),
+      q_value = numeric(0)
+    )
+  }
+} else {
+  ancombc2_butyrate_resp_tbl <- tibble::tibble(
+    taxon = character(0),
+    effect = character(0),
+    beta = numeric(0),
+    se = numeric(0),
+    p_value = numeric(0),
+    q_value = numeric(0)
+  )
+  cat("Insufficient samples for ANCOM-BC2 butyrate responder analysis\n")
+}
+
+# MaAsLin2 Analysis
+if (nsamples(ps_butyrate_resp_genus) > 5 && ntaxa(ps_butyrate_resp_genus) > 1) {
+  maaslin2_butyrate_resp_counts <- as.data.frame(otu_table(ps_butyrate_resp_genus))
+  if (!taxa_are_rows(ps_butyrate_resp_genus)) {
+    maaslin2_butyrate_resp_counts <- t(maaslin2_butyrate_resp_counts)
+  }
+  
+  maaslin2_butyrate_resp_meta <- data.frame(sample_data(ps_butyrate_resp_genus)) %>%
+    dplyr::mutate(
+      subject_id = as.character(subject_id),
+      responder_butyrate = as.factor(responder_butyrate),
+      carbohydrate = as.factor(carbohydrate)
+    )
+  rownames(maaslin2_butyrate_resp_meta) <- sample_names(ps_butyrate_resp_genus)
+  
+  maaslin2_butyrate_resp_fit <- tryCatch({
+    suppressMessages(suppressWarnings(
+      capture.output(
+        maaslin2_butyrate_resp_result <- Maaslin2::Maaslin2(
+          input_data = maaslin2_butyrate_resp_counts,
+          input_metadata = maaslin2_butyrate_resp_meta,
+          output = tempfile(pattern = "maaslin2_butyrate_resp_", tmpdir = getwd()),
+          min_prevalence = 0.05,
+          normalization = "TSS",
+          transform = "LOG",
+          analysis_method = "LM",
+          fixed_effects = c("responder_butyrate", "carbohydrate"),
+          random_effects = c("subject_id"),
+          plot_heatmap = FALSE,
+          plot_scatter = FALSE
+        ),
+        file = nullfile()
+      )
+    ))
+    maaslin2_butyrate_resp_result
+  }, error = function(e) {
+    cat("MaAsLin2 butyrate responder failed:", e$message, "\n")
+    NULL
+  })
+  
+  # Extract MaAsLin2 results
+  if (!is.null(maaslin2_butyrate_resp_fit) && !is.null(maaslin2_butyrate_resp_fit$results)) {
+    maaslin2_butyrate_resp_tbl <- maaslin2_butyrate_resp_fit$results %>%
+      dplyr::as_tibble() %>%
+      dplyr::mutate(q = p.adjust(pval, method = "BH")) %>%
+      dplyr::filter(metadata == "responder_butyrate") %>%
+      dplyr::arrange(q)
+    
+    cat("MaAsLin2 butyrate responder:", 
+        sum(maaslin2_butyrate_resp_tbl$q < 0.1, na.rm = TRUE),
+        "significant associations (q < 0.1)\n")
+  } else {
+    maaslin2_butyrate_resp_tbl <- tibble::tibble(
+      feature = character(0),
+      metadata = character(0),
+      value = character(0),
+      coef = numeric(0),
+      pval = numeric(0),
+      q = numeric(0)
+    )
+  }
+} else {
+  maaslin2_butyrate_resp_tbl <- tibble::tibble(
+    feature = character(0),
+    metadata = character(0),
+    value = character(0),
+    coef = numeric(0),
+    pval = numeric(0),
+    q = numeric(0)
+  )
+  cat("Insufficient samples for MaAsLin2 butyrate responder analysis\n")
+}
+```
+
+### 7.6.2 ANCOM-BC2 and MaAsLin2 Visualizations: Butyrate Responders vs Non-Responders
+
+```{r butyrate-responder-da-visualizations, echo=FALSE, fig.width=14, fig.height=10}
+# ANCOM-BC2 Forest Plot
+if (exists("ancombc2_butyrate_resp_tbl") && nrow(ancombc2_butyrate_resp_tbl) > 0) {
+  forest_butyrate_resp_data <- ancombc2_butyrate_resp_tbl %>%
+    dplyr::mutate(
+      ci_lower = beta - 1.96 * se,
+      ci_upper = beta + 1.96 * se,
+      taxon_label = stringr::str_replace(taxon, "^g__", ""),
+      significance = dplyr::case_when(
+        q_value < 0.001 ~ "q < 0.001",
+        q_value < 0.01 ~ "q < 0.01",
+        q_value < 0.05 ~ "q < 0.05",
+        q_value < 0.1 ~ "q < 0.1",
+        TRUE ~ "q ≥ 0.1"
+      )
+    ) %>%
+    dplyr::arrange(desc(abs(beta)))
+  
+  # Show top 25 taxa by effect size or all significant ones
+  if (sum(forest_butyrate_resp_data$q_value < 0.1, na.rm = TRUE) > 0) {
+    forest_butyrate_resp_plot_data <- forest_butyrate_resp_data %>%
+      dplyr::filter(q_value < 0.1) %>%
+      dplyr::arrange(desc(abs(beta))) %>%
+      dplyr::slice_head(n = 25)
+  } else {
+    forest_butyrate_resp_plot_data <- forest_butyrate_resp_data %>%
+      dplyr::arrange(desc(abs(beta))) %>%
+      dplyr::slice_head(n = 25)
+  }
+  
+  if (nrow(forest_butyrate_resp_plot_data) > 0) {
+    ancombc2_butyrate_resp_forest <- ggplot(
+      forest_butyrate_resp_plot_data,
+      aes(x = beta, y = reorder(taxon_label, beta), color = significance)
+    ) +
+      geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+      geom_point(size = 2) +
+      geom_errorbarh(aes(xmin = ci_lower, xmax = ci_upper), 
+                     height = 0.2, alpha = 0.8) +
+      scale_color_manual(
+        values = c("q < 0.001" = "#d73027", 
+                   "q < 0.01" = "#f46d43",
+                   "q < 0.05" = "#fdae61", 
+                   "q < 0.1" = "#fee08b",
+                   "q ≥ 0.1" = "gray70"),
+        name = "FDR-adjusted\np-value"
+      ) +
+      labs(
+        title = "ANCOM-BC2: Butyrate Responders vs Non-Responders",
+        subtitle = "Effect sizes (log-fold change: Responder vs Non-Responder) with 95% confidence intervals",
+        x = "Log-fold change (β)",
+        y = "Genus",
+        caption = "Positive values indicate higher abundance in Responders"
+      ) +
+      theme_scfa() +
+      theme(
+        axis.text.y = element_text(size = 8),
+        legend.position = "bottom"
+      )
+    
+    print(ancombc2_butyrate_resp_forest)
+  } else {
+    cat("No data available for ANCOM-BC2 butyrate responder forest plot\n")
+  }
+} else {
+  cat("No ANCOM-BC2 butyrate responder results available for visualization\n")
+}
+
+# MaAsLin2 Volcano Plot
+if (exists("maaslin2_butyrate_resp_tbl") && nrow(maaslin2_butyrate_resp_tbl) > 0) {
+  # Get taxonomy for labels
+  tax_table_butyrate_resp <- as.data.frame(tax_table(ps_butyrate_resp_genus)) %>%
+    tibble::rownames_to_column("feature") %>%
+    dplyr::mutate(
+      Genus_clean = stringr::str_replace(Genus, "^g__", ""),
+      Family_clean = stringr::str_replace(Family, "^f__", ""),
+      genus_label = dplyr::case_when(
+        !is.na(Genus_clean) & Genus_clean != "NA" & Genus_clean != "" ~ Genus_clean,
+        !is.na(Family_clean) & Family_clean != "NA" & Family_clean != "" ~ Family_clean,
+        TRUE ~ feature
+      )
+    ) %>%
+    dplyr::select(feature, genus_label)
+  
+  maaslin2_butyrate_resp_plot_data <- maaslin2_butyrate_resp_tbl %>%
+    dplyr::left_join(tax_table_butyrate_resp, by = "feature")
+  
+  sig_points_butyrate_resp <- maaslin2_butyrate_resp_plot_data %>%
+    dplyr::filter(q < 0.1)
+  
+  maaslin2_butyrate_resp_volcano <- ggplot(
+    maaslin2_butyrate_resp_plot_data,
+    aes(x = coef, y = -log10(q))
+  ) +
+    geom_point(aes(color = q < 0.1), alpha = 0.6, size = 2) +
+    geom_hline(yintercept = -log10(0.1), linetype = "dashed", color = "red", alpha = 0.7) +
+    geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+    ggrepel::geom_text_repel(
+      data = sig_points_butyrate_resp,
+      aes(label = genus_label),
+      size = 3,
+      color = "#E31A1C",
+      fontface = "bold",
+      max.overlaps = 20,
+      min.segment.length = 0.1
+    ) +
+    scale_color_manual(
+      values = c("FALSE" = "gray70", "TRUE" = "#E31A1C"),
+      name = "Significant",
+      labels = c("FALSE" = "q ≥ 0.1", "TRUE" = "q < 0.1")
+    ) +
+    labs(
+      title = "MaAsLin2: Butyrate Responders vs Non-Responders",
+      subtitle = "Effect Size vs Statistical Significance",
+      x = "Coefficient (Effect Size: Responder vs Non-Responder)",
+      y = "-log10(q-value)",
+      caption = "Red dashed line: q = 0.1 threshold; Positive values indicate higher abundance in Responders"
+    ) +
+    theme_scfa() +
+    theme(legend.position = "bottom")
+  
+  print(maaslin2_butyrate_resp_volcano)
+} else {
+  cat("No MaAsLin2 butyrate responder results available for visualization\n")
+}
+```
+
 ## 7.7 Microbial Composition Differences: Propionate Responders vs Non-Responders
+
+Following the same responder classification approach described in Section 7.6, we compare the microbial composition between propionate responders and non-responders at the 48H timepoint. Propionate responder status was determined using a median split of the delta change in propionate concentration (48H - 0H) for each carbohydrate condition separately. This analysis examines whether individuals with greater propionate production responses have distinct microbial communities compared to those with smaller responses.
 
 ```{r propionate-responder-composition, echo=FALSE, fig.width=14, fig.height=8}
 # Compare microbial composition between propionate responder groups at 48H
@@ -4039,6 +4895,324 @@ PERMANOVA: Propionate Responder Status (48H):
 } else {
   cat("Insufficient data for propionate responder composition comparison
 ")
+}
+```
+
+### 7.7.1 Differential Abundance Analysis: Propionate Responders vs Non-Responders
+
+To identify specific taxa that differ between propionate responders and non-responders, we performed differential abundance analysis using ANCOM-BC2 and MaAsLin2.
+
+```{r propionate-responder-da, echo=FALSE, cache=TRUE, cache.path="cache/integrated-", fig.width=14, fig.height=10}
+# Prepare genus-level phyloseq object for DA analysis
+ps_prop_resp_genus <- tax_glom(ps_48h_propionate_resp, taxrank = "Genus", NArm = FALSE)
+ps_prop_resp_genus <- prune_taxa(taxa_sums(ps_prop_resp_genus) > 0, ps_prop_resp_genus)
+
+# Filter to samples with responder status
+ps_prop_resp_genus <- phyloseq::subset_samples(
+  ps_prop_resp_genus,
+  !is.na(responder_propionate) & carbohydrate != "No Added Carb"
+)
+
+# ANCOM-BC2 Analysis
+if (nsamples(ps_prop_resp_genus) > 10 && ntaxa(ps_prop_resp_genus) > 1) {
+  # Remove samples with too many zeros
+  zero_prop <- apply(otu_table(ps_prop_resp_genus), 2, function(x) sum(x == 0) / length(x))
+  problematic_samples <- names(zero_prop[zero_prop > 0.95])
+  
+  if (length(problematic_samples) > 0) {
+    ps_prop_resp_genus_clean <- subset_samples(
+      ps_prop_resp_genus, 
+      !sample_names(ps_prop_resp_genus) %in% problematic_samples
+    )
+  } else {
+    ps_prop_resp_genus_clean <- ps_prop_resp_genus
+  }
+  
+  # Ensure responder_propionate is a factor
+  sample_data(ps_prop_resp_genus_clean)$responder_propionate <- as.factor(
+    sample_data(ps_prop_resp_genus_clean)$responder_propionate
+  )
+  
+  ancombc2_prop_resp <- tryCatch({
+    ANCOMBC::ancombc2(
+      data = ps_prop_resp_genus_clean,
+      tax_level = "Genus",
+      fix_formula = "responder_propionate + carbohydrate",
+      rand_formula = "(1|subject_id)",
+      p_adj_method = "BH",
+      prv_cut = 0.10,
+      lib_cut = 0,
+      s0_perc = 0.05,
+      group = "responder_propionate",
+      struc_zero = TRUE,
+      neg_lb = TRUE,
+      alpha = 0.05,
+      global = TRUE,
+      verbose = FALSE
+    )
+  }, error = function(e) {
+    cat("ANCOM-BC2 propionate responder failed:", e$message, "\n")
+    NULL
+  })
+  
+  # Extract ANCOM-BC2 results
+  if (!is.null(ancombc2_prop_resp) && !is.null(ancombc2_prop_resp$res)) {
+    res_data_prop_resp <- ancombc2_prop_resp$res
+    
+    # Get effect for responder_propionateResponder (vs Non-Responder as reference)
+    effect_name <- "responder_propionateResponder"
+    lfc_col <- paste0("lfc_", effect_name)
+    se_col <- paste0("se_", effect_name)
+    p_col <- paste0("p_", effect_name)
+    q_col <- paste0("q_", effect_name)
+    
+    if (all(c(lfc_col, se_col, p_col, q_col) %in% colnames(res_data_prop_resp))) {
+      ancombc2_prop_resp_tbl <- res_data_prop_resp %>%
+        dplyr::mutate(
+          effect = "Responder vs Non-Responder",
+          beta = .data[[lfc_col]],
+          se = .data[[se_col]],
+          p_value = .data[[p_col]],
+          q_value = .data[[q_col]]
+        ) %>%
+        dplyr::select(taxon, effect, beta, se, p_value, q_value) %>%
+        dplyr::arrange(q_value)
+      
+      cat("ANCOM-BC2 propionate responder:", 
+          sum(ancombc2_prop_resp_tbl$q_value < 0.1, na.rm = TRUE),
+          "significant taxa (q < 0.1)\n")
+    } else {
+      ancombc2_prop_resp_tbl <- tibble::tibble(
+        taxon = character(0),
+        effect = character(0),
+        beta = numeric(0),
+        se = numeric(0),
+        p_value = numeric(0),
+        q_value = numeric(0)
+      )
+    }
+  } else {
+    ancombc2_prop_resp_tbl <- tibble::tibble(
+      taxon = character(0),
+      effect = character(0),
+      beta = numeric(0),
+      se = numeric(0),
+      p_value = numeric(0),
+      q_value = numeric(0)
+    )
+  }
+} else {
+  ancombc2_prop_resp_tbl <- tibble::tibble(
+    taxon = character(0),
+    effect = character(0),
+    beta = numeric(0),
+    se = numeric(0),
+    p_value = numeric(0),
+    q_value = numeric(0)
+  )
+  cat("Insufficient samples for ANCOM-BC2 propionate responder analysis\n")
+}
+
+# MaAsLin2 Analysis
+if (nsamples(ps_prop_resp_genus) > 5 && ntaxa(ps_prop_resp_genus) > 1) {
+  maaslin2_prop_resp_counts <- as.data.frame(otu_table(ps_prop_resp_genus))
+  if (!taxa_are_rows(ps_prop_resp_genus)) {
+    maaslin2_prop_resp_counts <- t(maaslin2_prop_resp_counts)
+  }
+  
+  maaslin2_prop_resp_meta <- data.frame(sample_data(ps_prop_resp_genus)) %>%
+    dplyr::mutate(
+      subject_id = as.character(subject_id),
+      responder_propionate = as.factor(responder_propionate),
+      carbohydrate = as.factor(carbohydrate)
+    )
+  rownames(maaslin2_prop_resp_meta) <- sample_names(ps_prop_resp_genus)
+  
+  maaslin2_prop_resp_fit <- tryCatch({
+    suppressMessages(suppressWarnings(
+      capture.output(
+        maaslin2_prop_resp_result <- Maaslin2::Maaslin2(
+          input_data = maaslin2_prop_resp_counts,
+          input_metadata = maaslin2_prop_resp_meta,
+          output = tempfile(pattern = "maaslin2_prop_resp_", tmpdir = getwd()),
+          min_prevalence = 0.05,
+          normalization = "TSS",
+          transform = "LOG",
+          analysis_method = "LM",
+          fixed_effects = c("responder_propionate", "carbohydrate"),
+          random_effects = c("subject_id"),
+          plot_heatmap = FALSE,
+          plot_scatter = FALSE
+        ),
+        file = nullfile()
+      )
+    ))
+    maaslin2_prop_resp_result
+  }, error = function(e) {
+    cat("MaAsLin2 propionate responder failed:", e$message, "\n")
+    NULL
+  })
+  
+  # Extract MaAsLin2 results
+  if (!is.null(maaslin2_prop_resp_fit) && !is.null(maaslin2_prop_resp_fit$results)) {
+    maaslin2_prop_resp_tbl <- maaslin2_prop_resp_fit$results %>%
+      dplyr::as_tibble() %>%
+      dplyr::mutate(q = p.adjust(pval, method = "BH")) %>%
+      dplyr::filter(metadata == "responder_propionate") %>%
+      dplyr::arrange(q)
+    
+    cat("MaAsLin2 propionate responder:", 
+        sum(maaslin2_prop_resp_tbl$q < 0.1, na.rm = TRUE),
+        "significant associations (q < 0.1)\n")
+  } else {
+    maaslin2_prop_resp_tbl <- tibble::tibble(
+      feature = character(0),
+      metadata = character(0),
+      value = character(0),
+      coef = numeric(0),
+      pval = numeric(0),
+      q = numeric(0)
+    )
+  }
+} else {
+  maaslin2_prop_resp_tbl <- tibble::tibble(
+    feature = character(0),
+    metadata = character(0),
+    value = character(0),
+    coef = numeric(0),
+    pval = numeric(0),
+    q = numeric(0)
+  )
+  cat("Insufficient samples for MaAsLin2 propionate responder analysis\n")
+}
+```
+
+### 7.7.2 ANCOM-BC2 and MaAsLin2 Visualizations: Propionate Responders vs Non-Responders
+
+```{r propionate-responder-da-visualizations, echo=FALSE, fig.width=14, fig.height=10}
+# ANCOM-BC2 Forest Plot
+if (exists("ancombc2_prop_resp_tbl") && nrow(ancombc2_prop_resp_tbl) > 0) {
+  forest_prop_resp_data <- ancombc2_prop_resp_tbl %>%
+    dplyr::mutate(
+      ci_lower = beta - 1.96 * se,
+      ci_upper = beta + 1.96 * se,
+      taxon_label = stringr::str_replace(taxon, "^g__", ""),
+      significance = dplyr::case_when(
+        q_value < 0.001 ~ "q < 0.001",
+        q_value < 0.01 ~ "q < 0.01",
+        q_value < 0.05 ~ "q < 0.05",
+        q_value < 0.1 ~ "q < 0.1",
+        TRUE ~ "q ≥ 0.1"
+      )
+    ) %>%
+    dplyr::arrange(desc(abs(beta)))
+  
+  # Show top 25 taxa by effect size or all significant ones
+  if (sum(forest_prop_resp_data$q_value < 0.1, na.rm = TRUE) > 0) {
+    forest_prop_resp_plot_data <- forest_prop_resp_data %>%
+      dplyr::filter(q_value < 0.1) %>%
+      dplyr::arrange(desc(abs(beta))) %>%
+      dplyr::slice_head(n = 25)
+  } else {
+    forest_prop_resp_plot_data <- forest_prop_resp_data %>%
+      dplyr::arrange(desc(abs(beta))) %>%
+      dplyr::slice_head(n = 25)
+  }
+  
+  if (nrow(forest_prop_resp_plot_data) > 0) {
+    ancombc2_prop_resp_forest <- ggplot(
+      forest_prop_resp_plot_data,
+      aes(x = beta, y = reorder(taxon_label, beta), color = significance)
+    ) +
+      geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+      geom_point(size = 2) +
+      geom_errorbarh(aes(xmin = ci_lower, xmax = ci_upper), 
+                     height = 0.2, alpha = 0.8) +
+      scale_color_manual(
+        values = c("q < 0.001" = "#d73027", 
+                   "q < 0.01" = "#f46d43",
+                   "q < 0.05" = "#fdae61", 
+                   "q < 0.1" = "#fee08b",
+                   "q ≥ 0.1" = "gray70"),
+        name = "FDR-adjusted\np-value"
+      ) +
+      labs(
+        title = "ANCOM-BC2: Propionate Responders vs Non-Responders",
+        subtitle = "Effect sizes (log-fold change: Responder vs Non-Responder) with 95% confidence intervals",
+        x = "Log-fold change (β)",
+        y = "Genus",
+        caption = "Positive values indicate higher abundance in Responders"
+      ) +
+      theme_scfa() +
+      theme(
+        axis.text.y = element_text(size = 8),
+        legend.position = "bottom"
+      )
+    
+    print(ancombc2_prop_resp_forest)
+  } else {
+    cat("No data available for ANCOM-BC2 propionate responder forest plot\n")
+  }
+} else {
+  cat("No ANCOM-BC2 propionate responder results available for visualization\n")
+}
+
+# MaAsLin2 Volcano Plot
+if (exists("maaslin2_prop_resp_tbl") && nrow(maaslin2_prop_resp_tbl) > 0) {
+  # Get taxonomy for labels
+  tax_table_prop_resp <- as.data.frame(tax_table(ps_prop_resp_genus)) %>%
+    tibble::rownames_to_column("feature") %>%
+    dplyr::mutate(
+      Genus_clean = stringr::str_replace(Genus, "^g__", ""),
+      Family_clean = stringr::str_replace(Family, "^f__", ""),
+      genus_label = dplyr::case_when(
+        !is.na(Genus_clean) & Genus_clean != "NA" & Genus_clean != "" ~ Genus_clean,
+        !is.na(Family_clean) & Family_clean != "NA" & Family_clean != "" ~ Family_clean,
+        TRUE ~ feature
+      )
+    ) %>%
+    dplyr::select(feature, genus_label)
+  
+  maaslin2_prop_resp_plot_data <- maaslin2_prop_resp_tbl %>%
+    dplyr::left_join(tax_table_prop_resp, by = "feature")
+  
+  sig_points_prop_resp <- maaslin2_prop_resp_plot_data %>%
+    dplyr::filter(q < 0.1)
+  
+  maaslin2_prop_resp_volcano <- ggplot(
+    maaslin2_prop_resp_plot_data,
+    aes(x = coef, y = -log10(q))
+  ) +
+    geom_point(aes(color = q < 0.1), alpha = 0.6, size = 2) +
+    geom_hline(yintercept = -log10(0.1), linetype = "dashed", color = "red", alpha = 0.7) +
+    geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+    ggrepel::geom_text_repel(
+      data = sig_points_prop_resp,
+      aes(label = genus_label),
+      size = 3,
+      color = "#E31A1C",
+      fontface = "bold",
+      max.overlaps = 20,
+      min.segment.length = 0.1
+    ) +
+    scale_color_manual(
+      values = c("FALSE" = "gray70", "TRUE" = "#E31A1C"),
+      name = "Significant",
+      labels = c("FALSE" = "q ≥ 0.1", "TRUE" = "q < 0.1")
+    ) +
+    labs(
+      title = "MaAsLin2: Propionate Responders vs Non-Responders",
+      subtitle = "Effect Size vs Statistical Significance",
+      x = "Coefficient (Effect Size: Responder vs Non-Responder)",
+      y = "-log10(q-value)",
+      caption = "Red dashed line: q = 0.1 threshold; Positive values indicate higher abundance in Responders"
+    ) +
+    theme_scfa() +
+    theme(legend.position = "bottom")
+  
+  print(maaslin2_prop_resp_volcano)
+} else {
+  cat("No MaAsLin2 propionate responder results available for visualization\n")
 }
 ```
 
