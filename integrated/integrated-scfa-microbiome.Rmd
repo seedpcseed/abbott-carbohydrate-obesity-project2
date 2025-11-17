@@ -5713,6 +5713,386 @@ if (exists("maaslin2_prop_resp_tbl") && nrow(maaslin2_prop_resp_tbl) > 0) {
 }
 ```
 
+## 7.8 Absolute Fusicatenibacter Abundance: Responders vs Non-Responders
+
+To determine whether absolute *Fusicatenibacter* abundance differs between SCFA responders and non-responders, we compared absolute abundance levels (genome copies per μL) at the 48H timepoint. This analysis uses qPCR-derived total bacterial load data integrated with relative abundance measurements to calculate absolute *Fusicatenibacter* abundance.
+
+```{r fusicatenibacter-abs-responders, echo=FALSE, fig.width=14, fig.height=10, cache=FALSE, dependson=c("absolute-abundance-conversion", "responder-nonresponder")}
+# Extract absolute Fusicatenibacter abundance and merge with responder status
+# Find all ASVs assigned to Fusicatenibacter genus
+fusicatenibacter_taxa_abs <- taxa_names(ps_genus_abs_obj)[
+  stringr::str_detect(tax_table(ps_genus_abs_obj)[, "Genus"], regex("Fusicatenibacter", ignore_case = TRUE))
+]
+
+if (length(fusicatenibacter_taxa_abs) > 0) {
+  # Get absolute abundance for Fusicatenibacter genus
+  if (length(fusicatenibacter_taxa_abs) > 1) {
+    fusicatenibacter_abs_all <- colSums(otu_table(ps_genus_abs_obj)[fusicatenibacter_taxa_abs, , drop = FALSE], na.rm = TRUE)
+  } else {
+    fusicatenibacter_abs_all <- as.numeric(otu_table(ps_genus_abs_obj)[fusicatenibacter_taxa_abs, ])
+  }
+  
+  # Get metadata and merge with responder status
+  meta_abs_resp <- data.frame(sample_data(ps_genus_abs_obj)) %>%
+    tibble::rownames_to_column("SampleID") %>%
+    dplyr::mutate(
+      fusicatenibacter_abs_abund = fusicatenibacter_abs_all,
+      subject_id_numeric = stringr::str_extract(subject_id, "^[0-9]+"),
+      has_qpcr = !is.na(genome_copies_per_ul)
+    ) %>%
+    dplyr::filter(has_qpcr, timepoint == "48H", !is.na(carbohydrate), carbohydrate != "No Added Carb")
+  
+  # Merge with responder status
+  if (exists("responder_wide") && nrow(responder_wide) > 0) {
+    meta_abs_resp <- meta_abs_resp %>%
+      dplyr::left_join(
+        responder_wide %>%
+          dplyr::mutate(subject_id_numeric = as.character(subject)) %>%
+          dplyr::select(subject_id_numeric, carbohydrate, responder_butyrate, responder_propionate),
+        by = c("subject_id_numeric", "carbohydrate")
+      )
+    
+    # Butyrate Responder Analysis
+    if ("responder_butyrate" %in% colnames(meta_abs_resp)) {
+      butyrate_resp_data <- meta_abs_resp %>%
+        dplyr::filter(!is.na(responder_butyrate), !is.na(fusicatenibacter_abs_abund))
+      
+      if (nrow(butyrate_resp_data) > 0) {
+        # Statistical test
+        butyrate_wilcox <- tryCatch({
+          rstatix::wilcox_test(
+            fusicatenibacter_abs_abund ~ responder_butyrate,
+            data = butyrate_resp_data,
+            p.adjust.method = "BH"
+          )
+        }, error = function(e) NULL)
+        
+        # Summary statistics
+        butyrate_summary <- butyrate_resp_data %>%
+          dplyr::group_by(responder_butyrate, carbohydrate) %>%
+          dplyr::summarise(
+            median_abs = median(fusicatenibacter_abs_abund, na.rm = TRUE),
+            mean_abs = mean(fusicatenibacter_abs_abund, na.rm = TRUE),
+            se_abs = sd(fusicatenibacter_abs_abund, na.rm = TRUE) / sqrt(dplyr::n()),
+            n = dplyr::n(),
+            .groups = "drop"
+          )
+        
+        # Plot
+        plot_butyrate_abs <- ggplot(
+          butyrate_resp_data,
+          aes(x = responder_butyrate, y = fusicatenibacter_abs_abund, fill = responder_butyrate)
+        ) +
+          geom_boxplot(alpha = 0.7, outlier.shape = NA) +
+          geom_jitter(aes(color = responder_butyrate), alpha = 0.5, width = 0.2, size = 1.2) +
+          facet_wrap(~ carbohydrate, scales = "free_y") +
+          scale_fill_manual(values = c("Responder" = "#2E8B57", "Non-Responder" = "#CD5C5C")) +
+          scale_color_manual(values = c("Responder" = "#2E8B57", "Non-Responder" = "#CD5C5C")) +
+          scale_y_continuous(labels = scales::comma, trans = "log10") +
+          labs(
+            title = "Absolute Fusicatenibacter Abundance: Butyrate Responders vs Non-Responders",
+            subtitle = "48H timepoint, genome copies per μL (log10 scale)",
+            x = "Butyrate Responder Status",
+            y = "Absolute Fusicatenibacter Abundance\n(genome copies per μL, log10 scale)",
+            fill = "Responder Status",
+            color = "Responder Status"
+          ) +
+          theme_scfa() +
+          theme(
+            axis.text.x = element_text(angle = 45, hjust = 1),
+            legend.position = "bottom"
+          )
+        
+        # Add statistical comparisons using stat_compare_means
+        plot_butyrate_abs <- plot_butyrate_abs +
+          ggpubr::stat_compare_means(
+            method = "wilcox.test",
+            comparisons = list(c("Responder", "Non-Responder")),
+            label = "p.format",
+            vjust = -0.5
+          )
+        
+        print(plot_butyrate_abs)
+        
+        # Print summary
+        cat("\n### Butyrate Responder Analysis:\n")
+        print(butyrate_summary)
+        if (!is.null(butyrate_wilcox) && nrow(butyrate_wilcox) > 0) {
+          cat("\nWilcoxon Test Results:\n")
+          print(butyrate_wilcox)
+        }
+      }
+    }
+    
+    # Propionate Responder Analysis
+    if ("responder_propionate" %in% colnames(meta_abs_resp)) {
+      propionate_resp_data <- meta_abs_resp %>%
+        dplyr::filter(!is.na(responder_propionate), !is.na(fusicatenibacter_abs_abund))
+      
+      if (nrow(propionate_resp_data) > 0) {
+        # Statistical test
+        propionate_wilcox <- tryCatch({
+          rstatix::wilcox_test(
+            fusicatenibacter_abs_abund ~ responder_propionate,
+            data = propionate_resp_data,
+            p.adjust.method = "BH"
+          )
+        }, error = function(e) NULL)
+        
+        # Summary statistics
+        propionate_summary <- propionate_resp_data %>%
+          dplyr::group_by(responder_propionate, carbohydrate) %>%
+          dplyr::summarise(
+            median_abs = median(fusicatenibacter_abs_abund, na.rm = TRUE),
+            mean_abs = mean(fusicatenibacter_abs_abund, na.rm = TRUE),
+            se_abs = sd(fusicatenibacter_abs_abund, na.rm = TRUE) / sqrt(dplyr::n()),
+            n = dplyr::n(),
+            .groups = "drop"
+          )
+        
+        # Plot
+        plot_propionate_abs <- ggplot(
+          propionate_resp_data,
+          aes(x = responder_propionate, y = fusicatenibacter_abs_abund, fill = responder_propionate)
+        ) +
+          geom_boxplot(alpha = 0.7, outlier.shape = NA) +
+          geom_jitter(aes(color = responder_propionate), alpha = 0.5, width = 0.2, size = 1.2) +
+          facet_wrap(~ carbohydrate, scales = "free_y") +
+          scale_fill_manual(values = c("Responder" = "#2E8B57", "Non-Responder" = "#CD5C5C")) +
+          scale_color_manual(values = c("Responder" = "#2E8B57", "Non-Responder" = "#CD5C5C")) +
+          scale_y_continuous(labels = scales::comma, trans = "log10") +
+          labs(
+            title = "Absolute Fusicatenibacter Abundance: Propionate Responders vs Non-Responders",
+            subtitle = "48H timepoint, genome copies per μL (log10 scale)",
+            x = "Propionate Responder Status",
+            y = "Absolute Fusicatenibacter Abundance\n(genome copies per μL, log10 scale)",
+            fill = "Responder Status",
+            color = "Responder Status"
+          ) +
+          theme_scfa() +
+          theme(
+            axis.text.x = element_text(angle = 45, hjust = 1),
+            legend.position = "bottom"
+          )
+        
+        # Add statistical comparisons using stat_compare_means
+        plot_propionate_abs <- plot_propionate_abs +
+          ggpubr::stat_compare_means(
+            method = "wilcox.test",
+            comparisons = list(c("Responder", "Non-Responder")),
+            label = "p.format",
+            vjust = -0.5
+          )
+        
+        print(plot_propionate_abs)
+        
+        # Print summary
+        cat("\n### Propionate Responder Analysis:\n")
+        print(propionate_summary)
+        if (!is.null(propionate_wilcox) && nrow(propionate_wilcox) > 0) {
+          cat("\nWilcoxon Test Results:\n")
+          print(propionate_wilcox)
+        }
+      }
+    }
+  } else {
+    cat("Responder status data not available. Please run responder-nonresponder chunk first.\n")
+  }
+} else {
+  cat("Fusicatenibacter taxa not found in absolute abundance data.\n")
+}
+```
+
+## 7.9 Absolute Bifidobacterium Abundance: Responders vs Non-Responders
+
+To determine whether absolute *Bifidobacterium* abundance differs between SCFA responders and non-responders, we compared absolute abundance levels (genome copies per μL) at the 48H timepoint. This analysis uses qPCR-derived total bacterial load data integrated with relative abundance measurements to calculate absolute *Bifidobacterium* abundance.
+
+```{r bifidobacterium-abs-responders, echo=FALSE, fig.width=14, fig.height=10, cache=FALSE, dependson=c("absolute-abundance-conversion", "responder-nonresponder")}
+# Extract absolute Bifidobacterium abundance and merge with responder status
+# Find all ASVs assigned to Bifidobacterium genus
+bifidobacterium_taxa_abs <- taxa_names(ps_genus_abs_obj)[
+  stringr::str_detect(tax_table(ps_genus_abs_obj)[, "Genus"], regex("Bifidobacterium", ignore_case = TRUE))
+]
+
+if (length(bifidobacterium_taxa_abs) > 0) {
+  # Get absolute abundance for Bifidobacterium genus
+  if (length(bifidobacterium_taxa_abs) > 1) {
+    bifidobacterium_abs_all <- colSums(otu_table(ps_genus_abs_obj)[bifidobacterium_taxa_abs, , drop = FALSE], na.rm = TRUE)
+  } else {
+    bifidobacterium_abs_all <- as.numeric(otu_table(ps_genus_abs_obj)[bifidobacterium_taxa_abs, ])
+  }
+  
+  # Get metadata and merge with responder status
+  meta_abs_resp_bif <- data.frame(sample_data(ps_genus_abs_obj)) %>%
+    tibble::rownames_to_column("SampleID") %>%
+    dplyr::mutate(
+      bifidobacterium_abs_abund = bifidobacterium_abs_all,
+      subject_id_numeric = stringr::str_extract(subject_id, "^[0-9]+"),
+      has_qpcr = !is.na(genome_copies_per_ul)
+    ) %>%
+    dplyr::filter(has_qpcr, timepoint == "48H", !is.na(carbohydrate), carbohydrate != "No Added Carb")
+  
+  # Merge with responder status
+  if (exists("responder_wide") && nrow(responder_wide) > 0) {
+    meta_abs_resp_bif <- meta_abs_resp_bif %>%
+      dplyr::left_join(
+        responder_wide %>%
+          dplyr::mutate(subject_id_numeric = as.character(subject)) %>%
+          dplyr::select(subject_id_numeric, carbohydrate, responder_butyrate, responder_propionate),
+        by = c("subject_id_numeric", "carbohydrate")
+      )
+    
+    # Butyrate Responder Analysis
+    if ("responder_butyrate" %in% colnames(meta_abs_resp_bif)) {
+      butyrate_resp_data_bif <- meta_abs_resp_bif %>%
+        dplyr::filter(!is.na(responder_butyrate), !is.na(bifidobacterium_abs_abund))
+      
+      if (nrow(butyrate_resp_data_bif) > 0) {
+        # Statistical test
+        butyrate_wilcox_bif <- tryCatch({
+          rstatix::wilcox_test(
+            bifidobacterium_abs_abund ~ responder_butyrate,
+            data = butyrate_resp_data_bif,
+            p.adjust.method = "BH"
+          )
+        }, error = function(e) NULL)
+        
+        # Summary statistics
+        butyrate_summary_bif <- butyrate_resp_data_bif %>%
+          dplyr::group_by(responder_butyrate, carbohydrate) %>%
+          dplyr::summarise(
+            median_abs = median(bifidobacterium_abs_abund, na.rm = TRUE),
+            mean_abs = mean(bifidobacterium_abs_abund, na.rm = TRUE),
+            se_abs = sd(bifidobacterium_abs_abund, na.rm = TRUE) / sqrt(dplyr::n()),
+            n = dplyr::n(),
+            .groups = "drop"
+          )
+        
+        # Plot
+        plot_butyrate_abs_bif <- ggplot(
+          butyrate_resp_data_bif,
+          aes(x = responder_butyrate, y = bifidobacterium_abs_abund, fill = responder_butyrate)
+        ) +
+          geom_boxplot(alpha = 0.7, outlier.shape = NA) +
+          geom_jitter(aes(color = responder_butyrate), alpha = 0.5, width = 0.2, size = 1.2) +
+          facet_wrap(~ carbohydrate, scales = "free_y") +
+          scale_fill_manual(values = c("Responder" = "#2E8B57", "Non-Responder" = "#CD5C5C")) +
+          scale_color_manual(values = c("Responder" = "#2E8B57", "Non-Responder" = "#CD5C5C")) +
+          scale_y_continuous(labels = scales::comma, trans = "log10") +
+          labs(
+            title = "Absolute Bifidobacterium Abundance: Butyrate Responders vs Non-Responders",
+            subtitle = "48H timepoint, genome copies per μL (log10 scale)",
+            x = "Butyrate Responder Status",
+            y = "Absolute Bifidobacterium Abundance\n(genome copies per μL, log10 scale)",
+            fill = "Responder Status",
+            color = "Responder Status"
+          ) +
+          theme_scfa() +
+          theme(
+            axis.text.x = element_text(angle = 45, hjust = 1),
+            legend.position = "bottom"
+          )
+        
+        # Add statistical comparisons using stat_compare_means
+        plot_butyrate_abs_bif <- plot_butyrate_abs_bif +
+          ggpubr::stat_compare_means(
+            method = "wilcox.test",
+            comparisons = list(c("Responder", "Non-Responder")),
+            label = "p.format",
+            vjust = -0.5
+          )
+        
+        print(plot_butyrate_abs_bif)
+        
+        # Print summary
+        cat("\n### Butyrate Responder Analysis:\n")
+        print(butyrate_summary_bif)
+        if (!is.null(butyrate_wilcox_bif) && nrow(butyrate_wilcox_bif) > 0) {
+          cat("\nWilcoxon Test Results:\n")
+          print(butyrate_wilcox_bif)
+        }
+      }
+    }
+    
+    # Propionate Responder Analysis
+    if ("responder_propionate" %in% colnames(meta_abs_resp_bif)) {
+      propionate_resp_data_bif <- meta_abs_resp_bif %>%
+        dplyr::filter(!is.na(responder_propionate), !is.na(bifidobacterium_abs_abund))
+      
+      if (nrow(propionate_resp_data_bif) > 0) {
+        # Statistical test
+        propionate_wilcox_bif <- tryCatch({
+          rstatix::wilcox_test(
+            bifidobacterium_abs_abund ~ responder_propionate,
+            data = propionate_resp_data_bif,
+            p.adjust.method = "BH"
+          )
+        }, error = function(e) NULL)
+        
+        # Summary statistics
+        propionate_summary_bif <- propionate_resp_data_bif %>%
+          dplyr::group_by(responder_propionate, carbohydrate) %>%
+          dplyr::summarise(
+            median_abs = median(bifidobacterium_abs_abund, na.rm = TRUE),
+            mean_abs = mean(bifidobacterium_abs_abund, na.rm = TRUE),
+            se_abs = sd(bifidobacterium_abs_abund, na.rm = TRUE) / sqrt(dplyr::n()),
+            n = dplyr::n(),
+            .groups = "drop"
+          )
+        
+        # Plot
+        plot_propionate_abs_bif <- ggplot(
+          propionate_resp_data_bif,
+          aes(x = responder_propionate, y = bifidobacterium_abs_abund, fill = responder_propionate)
+        ) +
+          geom_boxplot(alpha = 0.7, outlier.shape = NA) +
+          geom_jitter(aes(color = responder_propionate), alpha = 0.5, width = 0.2, size = 1.2) +
+          facet_wrap(~ carbohydrate, scales = "free_y") +
+          scale_fill_manual(values = c("Responder" = "#2E8B57", "Non-Responder" = "#CD5C5C")) +
+          scale_color_manual(values = c("Responder" = "#2E8B57", "Non-Responder" = "#CD5C5C")) +
+          scale_y_continuous(labels = scales::comma, trans = "log10") +
+          labs(
+            title = "Absolute Bifidobacterium Abundance: Propionate Responders vs Non-Responders",
+            subtitle = "48H timepoint, genome copies per μL (log10 scale)",
+            x = "Propionate Responder Status",
+            y = "Absolute Bifidobacterium Abundance\n(genome copies per μL, log10 scale)",
+            fill = "Responder Status",
+            color = "Responder Status"
+          ) +
+          theme_scfa() +
+          theme(
+            axis.text.x = element_text(angle = 45, hjust = 1),
+            legend.position = "bottom"
+          )
+        
+        # Add statistical comparisons using stat_compare_means
+        plot_propionate_abs_bif <- plot_propionate_abs_bif +
+          ggpubr::stat_compare_means(
+            method = "wilcox.test",
+            comparisons = list(c("Responder", "Non-Responder")),
+            label = "p.format",
+            vjust = -0.5
+          )
+        
+        print(plot_propionate_abs_bif)
+        
+        # Print summary
+        cat("\n### Propionate Responder Analysis:\n")
+        print(propionate_summary_bif)
+        if (!is.null(propionate_wilcox_bif) && nrow(propionate_wilcox_bif) > 0) {
+          cat("\nWilcoxon Test Results:\n")
+          print(propionate_wilcox_bif)
+        }
+      }
+    }
+  } else {
+    cat("Responder status data not available. Please run responder-nonresponder chunk first.\n")
+  }
+} else {
+  cat("Bifidobacterium taxa not found in absolute abundance data.\n")
+}
+```
+
 # 8. Summary
 
 This integrated analysis brings together SCFA metabolomics and 16S rRNA gene microbiome data to provide a comprehensive view of how carbohydrate interventions affect microbial metabolism and community structure in adolescents with and without obesity. Below we summarize the key findings from each major analysis component.
