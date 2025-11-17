@@ -4392,11 +4392,19 @@ if (nsamples(ps_48h_butyrate_resp) > 5) {
   ) +
     geom_boxplot(alpha = 0.7) +
     geom_jitter(width = 0.2, alpha = 0.5) +
+    ggpubr::stat_compare_means(
+      aes(group = responder_butyrate),
+      method = "wilcox.test",
+      label = "p.format",
+      label.y = Inf,
+      vjust = 1.5,
+      size = 3.5
+    ) +
     facet_wrap(~ metric, scales = "free_y") +
     scale_fill_scfa() +
     labs(
       title = "Alpha Diversity: Butyrate Responders vs Non-Responders (48H)",
-      subtitle = "Comparison across RDC and SDC conditions",
+      subtitle = "Comparison across RDC and SDC conditions (Wilcoxon test p-values shown)",
       x = "Butyrate Response Status",
       y = "Alpha Diversity",
       fill = "Response Status"
@@ -4405,6 +4413,68 @@ if (nsamples(ps_48h_butyrate_resp) > 5) {
     theme(legend.position = "none")
   
   print(alpha_resp_plot)
+  
+  # Calculate and display Wilcoxon test statistics
+  alpha_butyrate_wilcox <- tryCatch({
+    alpha_butyrate_resp_long %>%
+      dplyr::group_by(metric) %>%
+      dplyr::filter(dplyr::n_distinct(responder_butyrate) == 2) %>%
+      rstatix::wilcox_test(value ~ responder_butyrate, p.adjust.method = "BH") %>%
+      rstatix::add_significance() %>%
+      dplyr::ungroup()
+  }, error = function(e) {
+    cat("Error calculating alpha_butyrate_wilcox:", e$message, "\n")
+    tibble::tibble()
+  })
+  
+  # Check available columns and select appropriate ones
+  if (nrow(alpha_butyrate_wilcox) > 0) {
+    # Check what columns exist (p.adj vs p_adjust)
+    p_adj_col <- intersect(c("p.adj", "p_adjust", "adj.p.value"), names(alpha_butyrate_wilcox))
+    p_adj_col <- if (length(p_adj_col) > 0) p_adj_col[1] else NULL
+    
+    p_signif_col <- intersect(c("p.adj.signif", "p_adjust_signif", "signif"), names(alpha_butyrate_wilcox))
+    p_signif_col <- if (length(p_signif_col) > 0) p_signif_col[1] else NULL
+    
+    # Create adjusted p-value if it doesn't exist
+    if (is.null(p_adj_col) && "p" %in% names(alpha_butyrate_wilcox)) {
+      alpha_butyrate_wilcox$p_adj <- p.adjust(alpha_butyrate_wilcox$p, method = "BH")
+    } else if (!is.null(p_adj_col)) {
+      alpha_butyrate_wilcox$p_adj <- alpha_butyrate_wilcox[[p_adj_col]]
+    } else {
+      alpha_butyrate_wilcox$p_adj <- NA_real_
+    }
+    
+    # Create significance column if it doesn't exist
+    if (is.null(p_signif_col)) {
+      alpha_butyrate_wilcox$p_adj_signif <- dplyr::case_when(
+        alpha_butyrate_wilcox$p_adj < 0.001 ~ "***",
+        alpha_butyrate_wilcox$p_adj < 0.01 ~ "**",
+        alpha_butyrate_wilcox$p_adj < 0.05 ~ "*",
+        alpha_butyrate_wilcox$p_adj < 0.1 ~ ".",
+        TRUE ~ "ns"
+      )
+    } else {
+      alpha_butyrate_wilcox$p_adj_signif <- alpha_butyrate_wilcox[[p_signif_col]]
+    }
+    
+    cat("\nWilcoxon Test Results: Butyrate Responders vs Non-Responders (Alpha Diversity)\n")
+    cat("================================================================================\n")
+    print(alpha_butyrate_wilcox %>%
+            dplyr::select(metric, group1, group2, p, p_adj, p_adj_signif) %>%
+            dplyr::rename(
+              Metric = metric,
+              Group1 = group1,
+              Group2 = group2,
+              `p value` = p,
+              `p adjusted` = p_adj,
+              Significance = p_adj_signif
+            ))
+  } else {
+    cat("\nWilcoxon Test Results: Butyrate Responders vs Non-Responders (Alpha Diversity)\n")
+    cat("================================================================================\n")
+    cat("Insufficient data for Wilcoxon tests\n")
+  }
   
   # Beta diversity comparison
   ps_48h_butyrate_resp_rel <- microbiome::transform(
@@ -4823,11 +4893,19 @@ if (nsamples(ps_48h_propionate_resp) > 5) {
   ) +
     geom_boxplot(alpha = 0.7) +
     geom_jitter(width = 0.2, alpha = 0.5) +
+    ggpubr::stat_compare_means(
+      aes(group = responder_propionate),
+      method = "wilcox.test",
+      label = "p.format",
+      label.y = Inf,
+      vjust = 1.5,
+      size = 3.5
+    ) +
     facet_wrap(~ metric, scales = "free_y") +
     scale_fill_scfa() +
     labs(
       title = "Alpha Diversity: Propionate Responders vs Non-Responders (48H)",
-      subtitle = "Comparison across RDC and SDC conditions",
+      subtitle = "Comparison across RDC and SDC conditions (Wilcoxon test p-values shown)",
       x = "Propionate Response Status",
       y = "Alpha Diversity",
       fill = "Response Status"
@@ -4836,6 +4914,68 @@ if (nsamples(ps_48h_propionate_resp) > 5) {
     theme(legend.position = "none")
   
   print(alpha_prop_resp_plot)
+  
+  # Calculate and display Wilcoxon test statistics
+  alpha_propionate_wilcox <- tryCatch({
+    alpha_propionate_resp_long %>%
+      dplyr::group_by(metric) %>%
+      dplyr::filter(dplyr::n_distinct(responder_propionate) == 2) %>%
+      rstatix::wilcox_test(value ~ responder_propionate, p.adjust.method = "BH") %>%
+      rstatix::add_significance() %>%
+      dplyr::ungroup()
+  }, error = function(e) {
+    cat("Error calculating alpha_propionate_wilcox:", e$message, "\n")
+    tibble::tibble()
+  })
+  
+  # Check available columns and select appropriate ones
+  if (nrow(alpha_propionate_wilcox) > 0) {
+    # Check what columns exist (p.adj vs p_adjust)
+    p_adj_col <- intersect(c("p.adj", "p_adjust", "adj.p.value"), names(alpha_propionate_wilcox))
+    p_adj_col <- if (length(p_adj_col) > 0) p_adj_col[1] else NULL
+    
+    p_signif_col <- intersect(c("p.adj.signif", "p_adjust_signif", "signif"), names(alpha_propionate_wilcox))
+    p_signif_col <- if (length(p_signif_col) > 0) p_signif_col[1] else NULL
+    
+    # Create adjusted p-value if it doesn't exist
+    if (is.null(p_adj_col) && "p" %in% names(alpha_propionate_wilcox)) {
+      alpha_propionate_wilcox$p_adj <- p.adjust(alpha_propionate_wilcox$p, method = "BH")
+    } else if (!is.null(p_adj_col)) {
+      alpha_propionate_wilcox$p_adj <- alpha_propionate_wilcox[[p_adj_col]]
+    } else {
+      alpha_propionate_wilcox$p_adj <- NA_real_
+    }
+    
+    # Create significance column if it doesn't exist
+    if (is.null(p_signif_col)) {
+      alpha_propionate_wilcox$p_adj_signif <- dplyr::case_when(
+        alpha_propionate_wilcox$p_adj < 0.001 ~ "***",
+        alpha_propionate_wilcox$p_adj < 0.01 ~ "**",
+        alpha_propionate_wilcox$p_adj < 0.05 ~ "*",
+        alpha_propionate_wilcox$p_adj < 0.1 ~ ".",
+        TRUE ~ "ns"
+      )
+    } else {
+      alpha_propionate_wilcox$p_adj_signif <- alpha_propionate_wilcox[[p_signif_col]]
+    }
+    
+    cat("\nWilcoxon Test Results: Propionate Responders vs Non-Responders (Alpha Diversity)\n")
+    cat("==================================================================================\n")
+    print(alpha_propionate_wilcox %>%
+            dplyr::select(metric, group1, group2, p, p_adj, p_adj_signif) %>%
+            dplyr::rename(
+              Metric = metric,
+              Group1 = group1,
+              Group2 = group2,
+              `p value` = p,
+              `p adjusted` = p_adj,
+              Significance = p_adj_signif
+            ))
+  } else {
+    cat("\nWilcoxon Test Results: Propionate Responders vs Non-Responders (Alpha Diversity)\n")
+    cat("==================================================================================\n")
+    cat("Insufficient data for Wilcoxon tests\n")
+  }
   
   # Beta diversity comparison
   ps_48h_propionate_resp_rel <- microbiome::transform(
