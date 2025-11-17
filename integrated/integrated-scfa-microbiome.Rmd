@@ -4,9 +4,6 @@ author: "Patrick Seed, MD, PhD"
 date: "`r Sys.Date()`"
 output:
   html_document:
-    toc: false
-    toc_depth: 4
-    toc_float: true
     code_folding: hide
     theme: united
     df_print: paged
@@ -547,7 +544,7 @@ combined_carb_stats <- purrr::map_dfr(
 
 ### 5.2.1 Control Group: Delta SCFA by Carbohydrate Type
 
-```{r scfa-carbohydrate-effects-control, echo=FALSE, fig.width=14, fig.height=8}
+```{r scfa-carbohydrate-effects-control, echo=FALSE, fig.width=14, fig.height=8, cache=FALSE, dependson="scfa-carbohydrate-effects-prep"}
 # Control group-specific delta plot
 plot_delta_control_only <- tryCatch({
   delta_data %>%
@@ -591,7 +588,7 @@ if (!is.null(plot_delta_control_only)) {
 
 ### 5.2.2 Case Group: Delta SCFA by Carbohydrate Type
 
-```{r scfa-carbohydrate-effects-case, echo=FALSE, fig.width=14, fig.height=8}
+```{r scfa-carbohydrate-effects-case, echo=FALSE, fig.width=14, fig.height=8, cache=FALSE, dependson="scfa-carbohydrate-effects-prep"}
 # Case group-specific delta plot
 plot_delta_case_only <- tryCatch({
   delta_data %>%
@@ -635,7 +632,7 @@ if (!is.null(plot_delta_case_only)) {
 
 ### 5.2.3 Combined Groups: Delta SCFA by Carbohydrate Type
 
-```{r scfa-carbohydrate-effects-combined, echo=FALSE, fig.width=14, fig.height=8}
+```{r scfa-carbohydrate-effects-combined, echo=FALSE, fig.width=14, fig.height=8, cache=FALSE, dependson="scfa-carbohydrate-effects-prep"}
 # Combined groups analysis
 plot_delta_carb_combined <- tryCatch({
   delta_data %>%
@@ -702,7 +699,7 @@ if (knitr::is_html_output()) {
 
 ## 5.3 SCFA Concentrations Over Time
 
-```{r scfa-over-time, echo=FALSE, fig.width=14, fig.height=8}
+```{r scfa-over-time, echo=FALSE, fig.width=14, fig.height=8, cache=FALSE}
 plot_time_series <- tryCatch({
   scfa_sample_data_long %>%
     dplyr::group_by(carbohydrate_type_label, timepoint_hr, analyte) %>%
@@ -863,7 +860,7 @@ This section reproduces key microbiome results, including alpha and beta diversi
 
 ## 6.2 Alpha Diversity
 
-```{r alpha-diversity, echo=FALSE, fig.width=18, fig.height=8}
+```{r alpha-diversity, echo=FALSE, fig.width=18, fig.height=8, cache=FALSE}
 # Alpha diversity metrics: Observed, Shannon, Simpson at 0H and 48H
 
 alpha_metrics <- estimate_richness(ps, measures = c("Observed", "Shannon", "Simpson")) %>%
@@ -1113,7 +1110,7 @@ if (knitr::is_html_output()) {
 
 ## 6.3 Beta Diversity
 
-```{r beta-diversity, echo=FALSE, fig.width=14, fig.height=10}
+```{r beta-diversity, echo=FALSE, fig.width=14, fig.height=10, cache=FALSE}
 # Beta diversity and community structure using Bray-Curtis distance
 
 # Helper: PCoA data frame
@@ -1370,7 +1367,7 @@ if (knitr::is_html_output()) {
 
 ### 6.4.1 Genus-Level Aggregation and Overview
 
-```{r genus-aggregation, echo=FALSE, fig.width=14, fig.height=10}
+```{r genus-aggregation, echo=FALSE, fig.width=14, fig.height=10, cache=FALSE}
 # Create genus-level aggregation using tax_glom
 ps_genus <- tax_glom(ps, taxrank = "Genus", NArm = FALSE)
 ps_genus <- prune_taxa(taxa_sums(ps_genus) > 0, ps_genus)
@@ -1423,7 +1420,7 @@ print(genus_barplot_48h)
 
 ### 6.4.2 Genus Composition Changes from 0H to 48H by Carbohydrate Type
 
-```{r genus-alluvial, echo=FALSE, fig.width=14, fig.height=10}
+```{r genus-alluvial, echo=FALSE, fig.width=14, fig.height=10, cache=FALSE}
 # Prepare data for alluvial diagrams showing flow from 0H to 48H
 ps_genus_rel <- transform_sample_counts(ps_genus, function(x) x / sum(x))
 
@@ -1632,7 +1629,7 @@ print(combined_alluvial)
 
 ### 6.4.3 Validation: Bar Plots of Genus Abundances by Timepoint and Carbohydrate
 
-```{r genus-validation, echo=FALSE, fig.width=14, fig.height=10}
+```{r genus-validation, echo=FALSE, fig.width=14, fig.height=10, cache=FALSE}
 # Extract genus-level data for validation bar plots
 ps_genus_rel <- transform_sample_counts(ps_genus, function(x) x / sum(x))
 
@@ -1885,10 +1882,32 @@ if (nrow(ancombc2_tbl) > 0 && "q_value" %in% names(ancombc2_tbl)) {
 
 ### 6.5.2 ANCOM-BC2 Forest Plots
 
-```{r ancombc2-forest-plot, echo=FALSE, fig.width=16, fig.height=12}
+```{r ancombc2-forest-plot, echo=FALSE, fig.width=16, fig.height=12, cache=FALSE, dependson="ancombc2-analysis"}
 # Prepare data for forest plot
-if (nrow(ancombc2_tbl) > 0 && "q_value" %in% names(ancombc2_tbl)) {
+# Note: cache=FALSE ensures plot regenerates when plotting code changes
+if (exists("ancombc2_tbl") && nrow(ancombc2_tbl) > 0 && "q_value" %in% names(ancombc2_tbl)) {
+  # Get taxonomy table for creating proper labels (genus-level analysis)
+  tax_table_ancombc2 <- as.data.frame(tax_table(ps_genus)) %>%
+    dplyr::distinct(Genus, .keep_all = TRUE) %>%
+    dplyr::mutate(
+      taxon = Genus,  # Match on Genus column since ANCOM-BC2 uses genus names
+      Genus_clean = stringr::str_replace(Genus, "^g__", ""),
+      Species_clean = stringr::str_replace(Species, "^s__", ""),
+      Family_clean = stringr::str_replace(Family, "^f__", ""),
+      # Create label: Genus_Species if both available, otherwise Family if Genus is NA
+      taxon_label = dplyr::case_when(
+        !is.na(Genus_clean) & Genus_clean != "NA" & Genus_clean != "" &
+        !is.na(Species_clean) & Species_clean != "NA" & Species_clean != "" ~ 
+          paste0(Genus_clean, "_", Species_clean),
+        !is.na(Genus_clean) & Genus_clean != "NA" & Genus_clean != "" ~ Genus_clean,
+        !is.na(Family_clean) & Family_clean != "NA" & Family_clean != "" ~ Family_clean,
+        TRUE ~ taxon
+      )
+    ) %>%
+    dplyr::select(taxon, taxon_label)
+  
   forest_data <- ancombc2_tbl %>%
+    dplyr::left_join(tax_table_ancombc2, by = "taxon") %>%
     dplyr::filter(q_value < 0.1) %>%
     dplyr::mutate(
       # Calculate confidence intervals
@@ -1904,8 +1923,6 @@ if (nrow(ancombc2_tbl) > 0 && "q_value" %in% names(ancombc2_tbl)) {
         effect == "carbohydrateSDC:timepoint48H" ~ "SDC × 48H Interaction",
         TRUE ~ effect
       ),
-      # Create taxon labels (remove g__ prefix for cleaner display)
-      taxon_label = stringr::str_replace(taxon, "^g__", ""),
       # Color by significance level
       significance = dplyr::case_when(
         q_value < 0.001 ~ "q < 0.001",
@@ -1961,9 +1978,30 @@ if (nrow(ancombc2_tbl) > 0 && "q_value" %in% names(ancombc2_tbl)) {
 
 ### 6.5.3 ANCOM-BC2 Side-by-Side Comparison: Carbohydrate Effects
 
-```{r ancombc2-carb-comparison, echo=FALSE, fig.width=14, fig.height=10}
+```{r ancombc2-carb-comparison, echo=FALSE, fig.width=14, fig.height=10, cache=FALSE, dependson="ancombc2-analysis"}
 # Compare RDC vs No Carb and SDC vs No Carb effects side by side
-if (nrow(ancombc2_tbl) > 0 && "effect" %in% names(ancombc2_tbl)) {
+# Note: cache=FALSE ensures plot regenerates when plotting code changes
+if (exists("ancombc2_tbl") && nrow(ancombc2_tbl) > 0 && "effect" %in% names(ancombc2_tbl)) {
+  # Get taxonomy table for creating proper labels (genus-level analysis)
+  tax_table_ancombc2_comp <- as.data.frame(tax_table(ps_genus)) %>%
+    dplyr::distinct(Genus, .keep_all = TRUE) %>%
+    dplyr::mutate(
+      taxon = Genus,  # Match on Genus column since ANCOM-BC2 uses genus names
+      Genus_clean = stringr::str_replace(Genus, "^g__", ""),
+      Species_clean = stringr::str_replace(Species, "^s__", ""),
+      Family_clean = stringr::str_replace(Family, "^f__", ""),
+      # Create label: Genus_Species if both available, otherwise Family if Genus is NA
+      taxon_clean = dplyr::case_when(
+        !is.na(Genus_clean) & Genus_clean != "NA" & Genus_clean != "" &
+        !is.na(Species_clean) & Species_clean != "NA" & Species_clean != "" ~ 
+          paste0(Genus_clean, "_", Species_clean),
+        !is.na(Genus_clean) & Genus_clean != "NA" & Genus_clean != "" ~ Genus_clean,
+        !is.na(Family_clean) & Family_clean != "NA" & Family_clean != "" ~ Family_clean,
+        TRUE ~ taxon
+      )
+    ) %>%
+    dplyr::select(taxon, taxon_clean)
+  
   comparison_data <- ancombc2_tbl %>%
     dplyr::filter(effect %in% c("carbohydrateRDC", "carbohydrateSDC")) %>%
     dplyr::select(taxon, effect, beta, se, p_value, q_value, diff_abn) %>%
@@ -1972,6 +2010,7 @@ if (nrow(ancombc2_tbl) > 0 && "effect" %in% names(ancombc2_tbl)) {
       values_from = c(beta, se, p_value, q_value, diff_abn),
       names_sep = "_"
     ) %>%
+    dplyr::left_join(tax_table_ancombc2_comp, by = "taxon") %>%
     dplyr::mutate(
       # Calculate difference between RDC and SDC effects
       effect_difference = beta_carbohydrateRDC - beta_carbohydrateSDC,
@@ -1984,9 +2023,7 @@ if (nrow(ancombc2_tbl) > 0 && "effect" %in% names(ancombc2_tbl)) {
       # Check if effects are opposite (different signs)
       opposite_effects = sign(beta_carbohydrateRDC) != sign(beta_carbohydrateSDC),
       # Check if either effect is significant
-      either_significant = (q_value_carbohydrateRDC < 0.1) | (q_value_carbohydrateSDC < 0.1),
-      # Clean taxon names
-      taxon_clean = stringr::str_replace(taxon, "^g__", "")
+      either_significant = (q_value_carbohydrateRDC < 0.1) | (q_value_carbohydrateSDC < 0.1)
     ) %>%
     dplyr::filter(either_significant | opposite_effects) %>%
     dplyr::arrange(desc(abs(effect_difference)))
@@ -2160,10 +2197,32 @@ if (nrow(ancombc2_48h_tbl) > 0 && "q_value" %in% names(ancombc2_48h_tbl)) {
 
 ### 6.5.5 ANCOM-BC2 48H Forest Plots
 
-```{r ancombc2-48h-forest-plot, echo=FALSE, fig.width=14, fig.height=10}
+```{r ancombc2-48h-forest-plot, echo=FALSE, fig.width=14, fig.height=10, cache=FALSE, dependson="ancombc2-48h-analysis"}
 # Prepare data for 48H forest plot
-if (nrow(ancombc2_48h_tbl) > 0 && "q_value" %in% names(ancombc2_48h_tbl)) {
+# Note: cache=FALSE ensures plot regenerates when plotting code changes
+if (exists("ancombc2_48h_tbl") && nrow(ancombc2_48h_tbl) > 0 && "q_value" %in% names(ancombc2_48h_tbl)) {
+  # Get taxonomy table for creating proper labels (genus-level analysis)
+  tax_table_ancombc2_48h <- as.data.frame(tax_table(ps_genus)) %>%
+    dplyr::distinct(Genus, .keep_all = TRUE) %>%
+    dplyr::mutate(
+      taxon = Genus,  # Match on Genus column since ANCOM-BC2 uses genus names
+      Genus_clean = stringr::str_replace(Genus, "^g__", ""),
+      Species_clean = stringr::str_replace(Species, "^s__", ""),
+      Family_clean = stringr::str_replace(Family, "^f__", ""),
+      # Create label: Genus_Species if both available, otherwise Family if Genus is NA
+      taxon_label = dplyr::case_when(
+        !is.na(Genus_clean) & Genus_clean != "NA" & Genus_clean != "" &
+        !is.na(Species_clean) & Species_clean != "NA" & Species_clean != "" ~ 
+          paste0(Genus_clean, "_", Species_clean),
+        !is.na(Genus_clean) & Genus_clean != "NA" & Genus_clean != "" ~ Genus_clean,
+        !is.na(Family_clean) & Family_clean != "NA" & Family_clean != "" ~ Family_clean,
+        TRUE ~ taxon
+      )
+    ) %>%
+    dplyr::select(taxon, taxon_label)
+  
   forest_48h_data <- ancombc2_48h_tbl %>%
+    dplyr::left_join(tax_table_ancombc2_48h, by = "taxon") %>%
     dplyr::filter(q_value < 0.1) %>%
     dplyr::mutate(
       ci_lower = beta - 1.96 * se,
@@ -2174,7 +2233,6 @@ if (nrow(ancombc2_48h_tbl) > 0 && "q_value" %in% names(ancombc2_48h_tbl)) {
         effect == "carbohydrateSDC" ~ "SDC vs No Added Carb",
         TRUE ~ effect
       ),
-      taxon_label = stringr::str_replace(taxon, "^g__", ""),
       significance = dplyr::case_when(
         q_value < 0.001 ~ "q < 0.001",
         q_value < 0.01 ~ "q < 0.01",
@@ -2333,16 +2391,37 @@ if (!is.null(ancombc2_48h_rdc_sdc_res) && !is.null(ancombc2_48h_rdc_sdc_res$res)
 
 ### 6.5.7 Forest Plot: RDC vs SDC at 48H
 
-```{r ancombc2-48h-rdc-sdc-forest-plot, echo=FALSE, fig.width=12, fig.height=10}
+```{r ancombc2-48h-rdc-sdc-forest-plot, echo=FALSE, fig.width=12, fig.height=10, cache=FALSE, dependson="ancombc2-48h-rdc-sdc-analysis"}
 # Prepare data for 48H RDC vs SDC forest plot
-if (nrow(ancombc2_48h_rdc_sdc_tbl) > 0 && "q_value" %in% names(ancombc2_48h_rdc_sdc_tbl)) {
+# Note: cache=FALSE ensures plot regenerates when plotting code changes
+if (exists("ancombc2_48h_rdc_sdc_tbl") && nrow(ancombc2_48h_rdc_sdc_tbl) > 0 && "q_value" %in% names(ancombc2_48h_rdc_sdc_tbl)) {
+  # Get taxonomy table for creating proper labels (genus-level analysis)
+  tax_table_ancombc2_48h_rdc_sdc <- as.data.frame(tax_table(ps_genus)) %>%
+    dplyr::distinct(Genus, .keep_all = TRUE) %>%
+    dplyr::mutate(
+      taxon = Genus,  # Match on Genus column since ANCOM-BC2 uses genus names
+      Genus_clean = stringr::str_replace(Genus, "^g__", ""),
+      Species_clean = stringr::str_replace(Species, "^s__", ""),
+      Family_clean = stringr::str_replace(Family, "^f__", ""),
+      # Create label: Genus_Species if both available, otherwise Family if Genus is NA
+      taxon_label = dplyr::case_when(
+        !is.na(Genus_clean) & Genus_clean != "NA" & Genus_clean != "" &
+        !is.na(Species_clean) & Species_clean != "NA" & Species_clean != "" ~ 
+          paste0(Genus_clean, "_", Species_clean),
+        !is.na(Genus_clean) & Genus_clean != "NA" & Genus_clean != "" ~ Genus_clean,
+        !is.na(Family_clean) & Family_clean != "NA" & Family_clean != "" ~ Family_clean,
+        TRUE ~ taxon
+      )
+    ) %>%
+    dplyr::select(taxon, taxon_label)
+  
   # Focus on carbohydrateSDC effect (SDC vs RDC, with RDC as reference)
   forest_48h_rdc_sdc_data <- ancombc2_48h_rdc_sdc_tbl %>%
+    dplyr::left_join(tax_table_ancombc2_48h_rdc_sdc, by = "taxon") %>%
     dplyr::filter(effect == "carbohydrateSDC") %>%
     dplyr::mutate(
       ci_lower = beta - 1.96 * se,
       ci_upper = beta + 1.96 * se,
-      taxon_label = stringr::str_replace(taxon, "^g__", ""),
       significance = dplyr::case_when(
         q_value < 0.001 ~ "q < 0.001",
         q_value < 0.01 ~ "q < 0.01",
@@ -2718,7 +2797,7 @@ if (nrow(maaslin2_tbl) > 0) {
 
 ### 6.5.10 MaAsLin2 Visualizations
 
-```{r maaslin2-visualizations, echo=FALSE, fig.width=14, fig.height=16}
+```{r maaslin2-visualizations, echo=FALSE, fig.width=14, fig.height=16, cache=FALSE, dependson="maaslin2-analysis"}
 if (nrow(maaslin2_tbl) > 0 && nrow(maaslin2_tbl %>% dplyr::filter(q < 0.1)) > 0) {
   # Get taxonomy table for Family lookups (for NA taxa)
   tax_table_for_vis <- as.data.frame(tax_table(ps)) %>%
@@ -2989,7 +3068,7 @@ if (!is.null(maaslin2_48h_fit) && !is.null(maaslin2_48h_fit$results)) {
 
 ### 6.5.12 MaAsLin2 48H RDC vs SDC Volcano Plot
 
-```{r maaslin2-48h-volcano, echo=FALSE, fig.width=12, fig.height=10}
+```{r maaslin2-48h-volcano, echo=FALSE, fig.width=12, fig.height=10, cache=FALSE, dependson="maaslin2-48h-rdc-sdc"}
 if (nrow(maaslin2_48h_tbl) > 0) {
   sig_points_48h <- maaslin2_48h_tbl %>%
     dplyr::filter(q < 0.1) %>%
@@ -3047,7 +3126,7 @@ if (nrow(maaslin2_48h_tbl) > 0) {
 
 This alluvial plot shows the comparison of genus-level composition at 48H across the three carbohydrate conditions (No Added Carb, RDC, and SDC), highlighting the top 25 most abundant genera and including key differentially abundant taxa.
 
-```{r genus-alluvial-48h-carb, echo=FALSE, fig.width=16, fig.height=12}
+```{r genus-alluvial-48h-carb, echo=FALSE, fig.width=16, fig.height=12, cache=FALSE}
 # Prepare data for alluvial diagram showing 48H comparison across carbohydrate conditions
 ps_genus_rel_48h <- ps_genus_rel
 
@@ -3472,7 +3551,7 @@ print(table(qpcr_plot_data$group, useNA = "ifany"))
 
 ### 6.6.4 Fusicatenibacter Absolute Abundance Plots
 
-```{r fusicatenibacter-absolute-abundance, echo=FALSE, fig.width=14, fig.height=10}
+```{r fusicatenibacter-absolute-abundance, echo=FALSE, fig.width=14, fig.height=10, cache=FALSE, dependson="absolute-abundance-conversion"}
 # Extract absolute abundance data for g__Fusicatenibacter
 # Find all ASVs assigned to this genus
 fusicatenibacter_taxa <- taxa_names(ps_genus_abs_obj)[
@@ -3649,10 +3728,10 @@ sample_data(ps_butyrate_rel)$butyrate <- micro_meta_scfa$scfa_butyrate[
   match(sample_names(ps_butyrate_rel), micro_meta_scfa$SampleID)
 ]
 
-# Filter to samples with butyrate data
+# Filter to samples with butyrate data at 48H timepoint only
 ps_butyrate_rel <- phyloseq::subset_samples(
   ps_butyrate_rel,
-  !is.na(butyrate) & !is.na(carbohydrate) & !is.na(timepoint)
+  !is.na(butyrate) & !is.na(carbohydrate) & !is.na(timepoint) & timepoint == "48H"
 )
 
 # Run ANCOM-BC2 for taxon ~ butyrate + carbohydrate
@@ -3778,14 +3857,33 @@ if (!is.null(maaslin2_butyrate_rel) && !is.null(maaslin2_butyrate_rel$results)) 
 
 ### 7.2.1 ANCOM-BC2 and MaAsLin2 Visualizations: Butyrate Associations
 
-```{r taxon-butyrate-visualizations, echo=FALSE, fig.width=14, fig.height=10}
+```{r taxon-butyrate-visualizations, echo=FALSE, fig.width=14, fig.height=10, cache=FALSE, dependson="taxon-butyrate-relative"}
 # ANCOM-BC2 Forest Plot for Butyrate
 if (exists("ancombc2_butyrate_tbl_rel_full") && nrow(ancombc2_butyrate_tbl_rel_full) > 0) {
+  # Get taxonomy table for creating proper labels
+  tax_table_butyrate <- as.data.frame(tax_table(ps_butyrate_rel)) %>%
+    tibble::rownames_to_column("taxon") %>%
+    dplyr::mutate(
+      Genus_clean = stringr::str_replace(Genus, "^g__", ""),
+      Species_clean = stringr::str_replace(Species, "^s__", ""),
+      Family_clean = stringr::str_replace(Family, "^f__", ""),
+      # Create label: Genus_Species if both available, otherwise Family if Genus is NA
+      taxon_label = dplyr::case_when(
+        !is.na(Genus_clean) & Genus_clean != "NA" & Genus_clean != "" &
+        !is.na(Species_clean) & Species_clean != "NA" & Species_clean != "" ~ 
+          paste0(Genus_clean, "_", Species_clean),
+        !is.na(Genus_clean) & Genus_clean != "NA" & Genus_clean != "" ~ Genus_clean,
+        !is.na(Family_clean) & Family_clean != "NA" & Family_clean != "" ~ Family_clean,
+        TRUE ~ taxon
+      )
+    ) %>%
+    dplyr::select(taxon, taxon_label)
+  
   forest_butyrate_data <- ancombc2_butyrate_tbl_rel_full %>%
+    dplyr::left_join(tax_table_butyrate, by = "taxon") %>%
     dplyr::mutate(
       ci_lower = beta - 1.96 * se,
       ci_upper = beta + 1.96 * se,
-      taxon_label = stringr::str_replace(taxon, "^g__", ""),
       significance = dplyr::case_when(
         q_value < 0.001 ~ "q < 0.001",
         q_value < 0.01 ~ "q < 0.01",
@@ -3913,10 +4011,10 @@ sample_data(ps_propionate_rel)$propionate <- micro_meta_scfa$scfa_propionate[
   match(sample_names(ps_propionate_rel), micro_meta_scfa$SampleID)
 ]
 
-# Filter to samples with propionate data
+# Filter to samples with propionate data at 48H timepoint only
 ps_propionate_rel <- phyloseq::subset_samples(
   ps_propionate_rel,
-  !is.na(propionate) & !is.na(carbohydrate) & !is.na(timepoint)
+  !is.na(propionate) & !is.na(carbohydrate) & !is.na(timepoint) & timepoint == "48H"
 )
 
 # Run ANCOM-BC2 for taxon ~ propionate + carbohydrate
@@ -4040,14 +4138,33 @@ if (!is.null(maaslin2_propionate_rel) && !is.null(maaslin2_propionate_rel$result
 
 ### 7.3.1 ANCOM-BC2 and MaAsLin2 Visualizations: Propionate Associations
 
-```{r taxon-propionate-visualizations, echo=FALSE, fig.width=14, fig.height=10}
+```{r taxon-propionate-visualizations, echo=FALSE, fig.width=14, fig.height=10, cache=FALSE, dependson="taxon-propionate-relative"}
 # ANCOM-BC2 Forest Plot for Propionate
 if (exists("ancombc2_propionate_tbl_rel_full") && nrow(ancombc2_propionate_tbl_rel_full) > 0) {
+  # Get taxonomy table for creating proper labels
+  tax_table_propionate <- as.data.frame(tax_table(ps_propionate_rel)) %>%
+    tibble::rownames_to_column("taxon") %>%
+    dplyr::mutate(
+      Genus_clean = stringr::str_replace(Genus, "^g__", ""),
+      Species_clean = stringr::str_replace(Species, "^s__", ""),
+      Family_clean = stringr::str_replace(Family, "^f__", ""),
+      # Create label: Genus_Species if both available, otherwise Family if Genus is NA
+      taxon_label = dplyr::case_when(
+        !is.na(Genus_clean) & Genus_clean != "NA" & Genus_clean != "" &
+        !is.na(Species_clean) & Species_clean != "NA" & Species_clean != "" ~ 
+          paste0(Genus_clean, "_", Species_clean),
+        !is.na(Genus_clean) & Genus_clean != "NA" & Genus_clean != "" ~ Genus_clean,
+        !is.na(Family_clean) & Family_clean != "NA" & Family_clean != "" ~ Family_clean,
+        TRUE ~ taxon
+      )
+    ) %>%
+    dplyr::select(taxon, taxon_label)
+  
   forest_propionate_data <- ancombc2_propionate_tbl_rel_full %>%
+    dplyr::left_join(tax_table_propionate, by = "taxon") %>%
     dplyr::mutate(
       ci_lower = beta - 1.96 * se,
       ci_upper = beta + 1.96 * se,
-      taxon_label = stringr::str_replace(taxon, "^g__", ""),
       significance = dplyr::case_when(
         q_value < 0.001 ~ "q < 0.001",
         q_value < 0.01 ~ "q < 0.01",
@@ -4166,7 +4283,7 @@ if (exists("maaslin2_propionate_tbl_rel_full") && nrow(maaslin2_propionate_tbl_r
 
 ## 7.4 Fusicatenibacter–SCFA Correlations
 
-```{r fusicatenibacter-scfa-correlations, echo=FALSE, fig.width=14, fig.height=10}
+```{r fusicatenibacter-scfa-correlations, echo=FALSE, fig.width=14, fig.height=10, cache=FALSE, dependson="scfa-microbiome-integration"}
 # Extract relative abundance of g__Fusicatenibacter
 fusicatenibacter_taxa_rel <- taxa_names(ps)[
   stringr::str_detect(tax_table(ps)[, "Genus"], regex("Fusicatenibacter", ignore_case = TRUE))
@@ -4467,7 +4584,7 @@ This approach allows us to identify whether individuals who show greater increas
 
 In this section, we compare the microbial composition (alpha diversity, beta diversity, and community structure) between butyrate responders and non-responders at the 48H timepoint, focusing on samples from RDC and SDC conditions (excluding No Added Carb controls).
 
-```{r butyrate-responder-composition, echo=FALSE, fig.width=14, fig.height=8}
+```{r butyrate-responder-composition, echo=FALSE, fig.width=14, fig.height=8, cache=FALSE, dependson="responder-nonresponder"}
 # Compare microbial composition between butyrate responder groups at 48H
 ps_48h_butyrate_resp <- phyloseq::subset_samples(
   ps_48h_resp,
@@ -4838,14 +4955,36 @@ if (nsamples(ps_butyrate_resp_genus) > 5 && ntaxa(ps_butyrate_resp_genus) > 1) {
 
 ### 7.6.2 ANCOM-BC2 and MaAsLin2 Visualizations: Butyrate Responders vs Non-Responders
 
-```{r butyrate-responder-da-visualizations, echo=FALSE, fig.width=14, fig.height=10}
+```{r butyrate-responder-da-visualizations, echo=FALSE, fig.width=14, fig.height=10, cache=FALSE, dependson="butyrate-responder-da"}
 # ANCOM-BC2 Forest Plot
 if (exists("ancombc2_butyrate_resp_tbl") && nrow(ancombc2_butyrate_resp_tbl) > 0) {
+  # Get taxonomy table for creating proper labels
+  # For genus-level analysis, taxon names are genus names (e.g., "g__GenusName")
+  # Get unique genus taxonomy from ps_genus
+  tax_table_butyrate_resp <- as.data.frame(tax_table(ps_genus)) %>%
+    dplyr::distinct(Genus, .keep_all = TRUE) %>%
+    dplyr::mutate(
+      taxon = Genus,  # Match on Genus column since ANCOM-BC2 uses genus names
+      Genus_clean = stringr::str_replace(Genus, "^g__", ""),
+      Species_clean = stringr::str_replace(Species, "^s__", ""),
+      Family_clean = stringr::str_replace(Family, "^f__", ""),
+      # Create label: Genus_Species if both available, otherwise Family if Genus is NA
+      taxon_label = dplyr::case_when(
+        !is.na(Genus_clean) & Genus_clean != "NA" & Genus_clean != "" &
+        !is.na(Species_clean) & Species_clean != "NA" & Species_clean != "" ~ 
+          paste0(Genus_clean, "_", Species_clean),
+        !is.na(Genus_clean) & Genus_clean != "NA" & Genus_clean != "" ~ Genus_clean,
+        !is.na(Family_clean) & Family_clean != "NA" & Family_clean != "" ~ Family_clean,
+        TRUE ~ taxon
+      )
+    ) %>%
+    dplyr::select(taxon, taxon_label)
+  
   forest_butyrate_resp_data <- ancombc2_butyrate_resp_tbl %>%
+    dplyr::left_join(tax_table_butyrate_resp, by = "taxon") %>%
     dplyr::mutate(
       ci_lower = beta - 1.96 * se,
       ci_upper = beta + 1.96 * se,
-      taxon_label = stringr::str_replace(taxon, "^g__", ""),
       significance = dplyr::case_when(
         q_value < 0.001 ~ "q < 0.001",
         q_value < 0.01 ~ "q < 0.01",
@@ -4969,7 +5108,7 @@ if (exists("maaslin2_butyrate_resp_tbl") && nrow(maaslin2_butyrate_resp_tbl) > 0
 
 Following the same responder classification approach described in Section 7.6, we compare the microbial composition between propionate responders and non-responders at the 48H timepoint. Propionate responder status was determined using a median split of the delta change in propionate concentration (48H - 0H) for each carbohydrate condition separately. This analysis examines whether individuals with greater propionate production responses have distinct microbial communities compared to those with smaller responses.
 
-```{r propionate-responder-composition, echo=FALSE, fig.width=14, fig.height=8}
+```{r propionate-responder-composition, echo=FALSE, fig.width=14, fig.height=8, cache=FALSE, dependson="responder-nonresponder"}
 # Compare microbial composition between propionate responder groups at 48H
 ps_48h_propionate_resp <- phyloseq::subset_samples(
   ps_48h_resp,
@@ -5339,14 +5478,36 @@ if (nsamples(ps_prop_resp_genus) > 5 && ntaxa(ps_prop_resp_genus) > 1) {
 
 ### 7.7.2 ANCOM-BC2 and MaAsLin2 Visualizations: Propionate Responders vs Non-Responders
 
-```{r propionate-responder-da-visualizations, echo=FALSE, fig.width=14, fig.height=10}
+```{r propionate-responder-da-visualizations, echo=FALSE, fig.width=14, fig.height=10, cache=FALSE, dependson="propionate-responder-da"}
 # ANCOM-BC2 Forest Plot
 if (exists("ancombc2_prop_resp_tbl") && nrow(ancombc2_prop_resp_tbl) > 0) {
+  # Get taxonomy table for creating proper labels
+  # For genus-level analysis, taxon names are genus names (e.g., "g__GenusName")
+  # Get unique genus taxonomy from ps_genus
+  tax_table_prop_resp <- as.data.frame(tax_table(ps_genus)) %>%
+    dplyr::distinct(Genus, .keep_all = TRUE) %>%
+    dplyr::mutate(
+      taxon = Genus,  # Match on Genus column since ANCOM-BC2 uses genus names
+      Genus_clean = stringr::str_replace(Genus, "^g__", ""),
+      Species_clean = stringr::str_replace(Species, "^s__", ""),
+      Family_clean = stringr::str_replace(Family, "^f__", ""),
+      # Create label: Genus_Species if both available, otherwise Family if Genus is NA
+      taxon_label = dplyr::case_when(
+        !is.na(Genus_clean) & Genus_clean != "NA" & Genus_clean != "" &
+        !is.na(Species_clean) & Species_clean != "NA" & Species_clean != "" ~ 
+          paste0(Genus_clean, "_", Species_clean),
+        !is.na(Genus_clean) & Genus_clean != "NA" & Genus_clean != "" ~ Genus_clean,
+        !is.na(Family_clean) & Family_clean != "NA" & Family_clean != "" ~ Family_clean,
+        TRUE ~ taxon
+      )
+    ) %>%
+    dplyr::select(taxon, taxon_label)
+  
   forest_prop_resp_data <- ancombc2_prop_resp_tbl %>%
+    dplyr::left_join(tax_table_prop_resp, by = "taxon") %>%
     dplyr::mutate(
       ci_lower = beta - 1.96 * se,
       ci_upper = beta + 1.96 * se,
-      taxon_label = stringr::str_replace(taxon, "^g__", ""),
       significance = dplyr::case_when(
         q_value < 0.001 ~ "q < 0.001",
         q_value < 0.01 ~ "q < 0.01",
