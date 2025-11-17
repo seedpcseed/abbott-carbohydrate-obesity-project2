@@ -1,0 +1,639 @@
+<!--
+*Summary of Emperor's Information*
+Command executed on August 15, 2025 at 00:10:57
+Emperor Version: 0.9.51
+QIIME Version: 0.9.51
+HostName: CN08
+Metadata: /mnt/workdir/true/af/583f86e8829566428f1dc7c2d42633/zr24558.16S_250813.zymo/00...AllSamples.Bac16Sv34/qiime.mapping.file.txt
+Coordinates: /mnt/workdir/true/af/583f86e8829566428f1dc7c2d42633/zr24558.16S_250813.zymo/00...AllSamples.Bac16Sv34/core_diversity/bdiv_even4000/unweighted_unifrac_pc.txt
+Command: /usr/local/bin/make_emperor.py -i core_diversity/bdiv_even4000//unweighted_unifrac_pc.txt -o core_diversity/bdiv_even4000//unweighted_unifrac_emperor_pcoa_plot/ -m qiime.mapping.file.txt
+-->
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>Emperor</title>
+    <meta charset="utf-8">
+    <link rel="shortcut icon" href="emperor_required_resources/img/favicon.ico" />
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+
+    <!-- Style files -->
+    <link rel="stylesheet" type="text/css" href="emperor_required_resources/emperor/css/emperor.css">
+    <link rel="stylesheet" type="text/css" href="emperor_required_resources/css/jquery-ui2.css">
+    <link rel="stylesheet" type="text/css" href="emperor_required_resources/css/colorPicker.css">
+    <link rel="stylesheet" type="text/css" href="emperor_required_resources/css/spectrum.css">
+    <link rel="stylesheet" type="text/css" href="emperor_required_resources/css/d3.parcoords.css">
+    <link rel="stylesheet" type="text/css" href="emperor_required_resources/css/chosen.min.css">
+
+    <!-- Emperor logo for the splash window -->
+    <table id="logotable" style="vertical-align:middle;text-align:center;height:100%;width:100%;margin:0;padding:0;border:0;">
+        <tr><td><img src="emperor_required_resources/img/emperor.png" alt="Emperor" id="logo"/></td></tr>
+    </table>
+
+    <!-- JavaScript code -->
+
+    <!-- jQuery and other plugins -->
+    <script type="text/javascript" src="emperor_required_resources/js/jquery-1.7.1.min.js"></script>
+    <script type="text/javascript" src="emperor_required_resources/js/jquery-ui-1.8.17.custom.min.js"></script>
+    <script type="text/javascript" src="emperor_required_resources/js/jquery.colorPicker.js"></script>
+    <script type="text/javascript" src="emperor_required_resources/js/spectrum.js"></script>
+    <script type="text/javascript" src="emperor_required_resources/js/chosen.jquery.min.js"></script>
+
+    <!-- D3.js for the parallel coordinates plugin -->
+    <script type="text/javascript" src="emperor_required_resources/js/d3.v3.min.js"></script>
+    <script type="text/javascript" src="emperor_required_resources/js/d3.parcoords.js"></script>
+
+    <!-- THREE.js and plugins for screenshots -->
+    <script type="text/javascript" src="emperor_required_resources/js/three.min.js"></script>
+    <script type="text/javascript" src="emperor_required_resources/js/js/Detector.js"></script>
+    <script type="text/javascript" src="emperor_required_resources/js/js/OrbitControls.js"></script>
+    <script type="text/javascript" src="emperor_required_resources/js/js/ColorConverter.js"></script>
+    <script type="text/javascript" src="emperor_required_resources/js/js/SVGRenderer.js"></script>
+    <script type="text/javascript" src="emperor_required_resources/js/THREEx.screenshot.js"></script>
+
+    <!-- General utilities (underscore.js and FileSaver.js) -->
+    <script type="text/javascript" src="emperor_required_resources/js/underscore-min.js"></script>
+    <script type="text/javascript" src="emperor_required_resources/js/chroma.min.js"></script>
+    <script type="text/javascript" src="emperor_required_resources/js/FileSaver.min.js"></script>
+
+    <!-- Emperor library code -->
+    <script type="text/javascript" src="emperor_required_resources/emperor/js/animate.js"></script>
+    <script type="text/javascript" src="emperor_required_resources/emperor/js/draw.js"></script>
+    <script type="text/javascript" src="emperor_required_resources/emperor/js/emperor.js"></script>
+    <script type="text/javascript" src="emperor_required_resources/emperor/js/trajectory.js"></script>
+    <script type="text/javascript" src="emperor_required_resources/emperor/js/ui.js"></script>
+    <script type="text/javascript" src="emperor_required_resources/emperor/js/util.js"></script>
+
+    <script type="text/javascript">
+
+var g_mappingFileHeaders = ['SampleID','BarcodeSequence','LinkerPrimerSequence','Subgroup1'];
+var g_mappingFileData = { '176A.R2.0H': ['176A.R2.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'92B.S1.48H': ['92B.S1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'67A.R1.0H': ['67A.R1.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'67A.NC.0H': ['67A.NC.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'176A.R1.0H': ['176A.R1.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'116A.NC.48H': ['116A.NC.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'176B.S1.0H': ['176B.S1.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'276B.NC.48H': ['276B.NC.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'116A.S2.48H': ['116A.S2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'137B.S2.0H': ['137B.S2.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'67B.R1.48H': ['67B.R1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'92A.R1.48H': ['92A.R1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'67B.S1.48H': ['67B.S1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'MediaControl': ['MediaControl','NA','GTGCCAGCMGCCGCGGTAA',''],'92A.S1.48H': ['92A.S1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'92B.R1.0H': ['92B.R1.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'239A.S2.48H': ['239A.S2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'58A.R1.0H': ['58A.R1.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'84B.R1.48H': ['84B.R1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'50B.R1.48H': ['50B.R1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'123A.S2.0H': ['123A.S2.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'161A.R2.0H': ['161A.R2.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'58B.S1.0H': ['58B.S1.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'41B.NC.48H': ['41B.NC.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'MediaControl48h': ['MediaControl48h','NA','GTGCCAGCMGCCGCGGTAA',''],'21A.S2.0H': ['21A.S2.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'123A.S1.48H': ['123A.S1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'67B.NC.0H': ['67B.NC.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'73B.S1.48H': ['73B.S1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'50A.S1.0H': ['50A.S1.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'84A.R2.48H': ['84A.R2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'58B.NC.48H': ['58B.NC.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'84A.S1.0H': ['84A.S1.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'161B.S2.0H': ['161B.S2.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'137B.R1.48H': ['137B.R1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'67A.S1.48H': ['67A.S1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'41B.R2.48H': ['41B.R2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'41A.S2.0H': ['41A.S2.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'176B.S2.48H': ['176B.S2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'137B.S1.48H': ['137B.S1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'176A.S2.48H': ['176A.S2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'58A.R2.48H': ['58A.R2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'41B.NC.0H': ['41B.NC.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'239A.S1.0H': ['239A.S1.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'84B.NC.0H': ['84B.NC.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'73B.S1.0H': ['73B.S1.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'116A.S1.0H': ['116A.S1.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'41A.NC.40H': ['41A.NC.40H','NA','GTGCCAGCMGCCGCGGTAA',''],'161B.NC.0H': ['161B.NC.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'84B.S2.48H': ['84B.S2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'276B.R2.48H': ['276B.R2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'50B.S1.0H': ['50B.S1.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'58A.NC.48H': ['58A.NC.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'276A.R2.48H': ['276A.R2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'176B.R2.0H': ['176B.R2.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'21B.S1.0H': ['21B.S1.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'67A.S1.0H': ['67A.S1.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'58A.S1.0H': ['58A.S1.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'84A.R1.48H': ['84A.R1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'92B.NC.48H': ['92B.NC.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'73A.R1.48H': ['73A.R1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'66A.S1.0H': ['66A.S1.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'58B.S2.0H': ['58B.S2.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'66A.R2.0H': ['66A.R2.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'73B.R2.48H': ['73B.R2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'239B.S1.48H': ['239B.S1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'161B.S2.48H': ['161B.S2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'84A.S1.48H': ['84A.S1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'239A.S1.48H': ['239A.S1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'137B.R2.0H': ['137B.R2.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'84A.R1.0H': ['84A.R1.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'123A.NC.0H': ['123A.NC.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'92B.R1.48H': ['92B.R1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'73B.R2.0H': ['73B.R2.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'92A.R2.0H': ['92A.R2.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'73A.R1.0H': ['73A.R1.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'116B.S1.48H': ['116B.S1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'21B.S2.48H': ['21B.S2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'176B.R1.0H': ['176B.R1.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'50A.R1.0H': ['50A.R1.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'67B.NC.48H': ['67B.NC.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'116A.R2.0H': ['116A.R2.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'50B.NC.0H': ['50B.NC.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'66A.R1.48H': ['66A.R1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'161B.NC.48H': ['161B.NC.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'92A.R2.48H': ['92A.R2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'66A.R2.48H': ['66A.R2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'67A.S2.0H': ['67A.S2.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'73A.S2.0H': ['73A.S2.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'137B.R1.0H': ['137B.R1.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'276A.S2.48H': ['276A.S2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'123B.S1.48H': ['123B.S1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'67B.S2.0H': ['67B.S2.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'123B.R2.48H': ['123B.R2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'21A.R2.48H': ['21A.R2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'137B.NC.48H': ['137B.NC.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'92A.S2.0H': ['92A.S2.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'66B.R2.0H': ['66B.R2.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'41A.S1.0H': ['41A.S1.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'239A.R1.48H': ['239A.R1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'176A.S1.0H': ['176A.S1.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'116A.R2.48H': ['116A.R2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'50A.R2.0H': ['50A.R2.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'239A.R2.0H': ['239A.R2.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'73B.NC..48H': ['73B.NC..48H','NA','GTGCCAGCMGCCGCGGTAA',''],'41A.R1.48H': ['41A.R1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'176A.S1.48H': ['176A.S1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'41B.S2.48H': ['41B.S2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'21B.R2.48H': ['21B.R2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'137A.S2.48H': ['137A.S2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'116B.R1.48H': ['116B.R1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'41B.R2.0H': ['41B.R2.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'92B.R2.48H': ['92B.R2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'92B.S1.0H': ['92B.S1.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'41B.R1.0H': ['41B.R1.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'123A.NC.48H': ['123A.NC.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'58A.R1.48H': ['58A.R1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'67B.R1.0H': ['67B.R1.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'239B.R2.0H': ['239B.R2.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'21B.S2.0H': ['21B.S2.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'137A.S1.0H': ['137A.S1.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'58B.R1.0H': ['58B.R1.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'84B.S1.48H': ['84B.S1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'66A.S1.48H': ['66A.S1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'66B.S2.0H': ['66B.S2.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'50B.R1.0H': ['50B.R1.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'67A.R2.48H': ['67A.R2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'161A.S2.48H': ['161A.S2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'66B.S2.48H': ['66B.S2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'92B.NC.0H': ['92B.NC.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'116B.NC.48H': ['116B.NC.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'50B.S2.0H': ['50B.S2.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'176A.R1.48H': ['176A.R1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'239A.R2.48H': ['239A.R2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'66A.S2.0H': ['66A.S2.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'161B.R2.0H': ['161B.R2.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'92A.S1.0H': ['92A.S1.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'123A.R2.48H': ['123A.R2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'84B.NC.48H': ['84B.NC.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'239B.NC.48H': ['239B.NC.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'41A.R2.0H': ['41A.R2.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'58A.S2.0H': ['58A.S2.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'116B.S2.48H': ['116B.S2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'239B.NC.0H': ['239B.NC.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'41B.S2.0H': ['41B.S2.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'137A.R1.48H': ['137A.R1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'123B.R1.48H': ['123B.R1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'239B.S2.0H': ['239B.S2.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'66B.S1.48H': ['66B.S1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'21B.NC.0H': ['21B.NC.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'123A.R1.48H': ['123A.R1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'66B.NC.48H': ['66B.NC.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'84B.S1.0H': ['84B.S1.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'58B.S1.48H': ['58B.S1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'92B.R2.0H': ['92B.R2.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'239A.S2.0H': ['239A.S2.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'276A.R1.48H': ['276A.R1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'66A.NC.0H': ['66A.NC.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'58B.R1.48H': ['58B.R1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'21A.R1.48H': ['21A.R1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'239B.R1.48H': ['239B.R1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'239B.S1.0H': ['239B.S1.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'50B.R2.48H': ['50B.R2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'58A.NC.0H': ['58A.NC.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'67B.R2.48H': ['67B.R2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'41B.S1.0H': ['41B.S1.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'21A.NC.48H': ['21A.NC.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'92A.NC.0H': ['92A.NC.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'176B.NC.48H': ['176B.NC.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'161A.R2.48H': ['161A.R2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'67A.S2.48H': ['67A.S2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'58A.S1.48H': ['58A.S1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'50A.NC.48H': ['50A.NC.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'58A.R2.0H': ['58A.R2.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'41A.S2.48H': ['41A.S2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'84A.S2.0H': ['84A.S2.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'161B.S1.0H': ['161B.S1.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'239A.NC.48H': ['239A.NC.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'123B.S2.48H': ['123B.S2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'276B.R1.48H': ['276B.R1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'50A.S2.0H': ['50A.S2.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'21B.R2.0H': ['21B.R2.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'161A.NC.0H': ['161A.NC.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'73A.S1.48H': ['73A.S1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'84B.R2.48H': ['84B.R2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'137B.S2.48H': ['137B.S2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'50A.S1.48H': ['50A.S1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'176B.R2.48H': ['176B.R2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'73B.S2.0H': ['73B.S2.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'239A.NC.0H': ['239A.NC.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'239A.R1.0H': ['239A.R1.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'21A.R1.0H': ['21A.R1.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'21A.R2.0H': ['21A.R2.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'123A.S2.48H': ['123A.S2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'276A.NC.48H': ['276A.NC.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'116A.S2.0H': ['116A.S2.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'21B.S1.48H': ['21B.S1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'58B.S2.48H': ['58B.S2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'73A.NC.0H': ['73A.NC.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'66B.R1.48H': ['66B.R1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'21B.R1.48H': ['21B.R1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'73A.S1.0H': ['73A.S1.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'84B.R2.0H': ['84B.R2.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'137A.S1.48H': ['137A.S1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'123A.R1.0H': ['123A.R1.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'21A.NC.0H': ['21A.NC.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'92A.NC.48H': ['92A.NC.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'73B.S2.48H': ['73B.S2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'50A.R1.48H': ['50A.R1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'50B.S1.48H': ['50B.S1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'116B.R2.48H': ['116B.R2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'21A.S1.48H': ['21A.S1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'161A.S2.0H': ['161A.S2.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'137B.NC.0H': ['137B.NC.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'67A.R2.0H': ['67A.R2.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'66A.R1.0H': ['66A.R1.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'276B.S2.48H': ['276B.S2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'176A.S2.0H': ['176A.S2.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'84A.R2.0H': ['84A.R2.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'41B.R1.48H': ['41B.R1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'50B.NC.48H': ['50B.NC.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'58B.R2.48H': ['58B.R2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'67B.S1.0H': ['67B.S1.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'50B.S2.48H': ['50B.S2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'41B.S1.48H': ['41B.S1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'176B.R1.48H': ['176B.R1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'50A.S2.48H': ['50A.S2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'116A.R1.0H': ['116A.R1.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'161A.R1.48H': ['161A.R1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'116A.S1.48H': ['116A.S1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'161A.S1.48H': ['161A.S1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'58A.S2.48H': ['58A.S2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'161A.NC.48H': ['161A.NC.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'123B.NC.48H': ['123B.NC.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'239B.S2.48H': ['239B.S2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'137A.R2.0H': ['137A.R2.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'73B.R1.48H': ['73B.R1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'276B.S1.48H': ['276B.S1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'41A.R2.48H': ['41A.R2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'66B.R2.48H': ['66B.R2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'66B.R1.0H': ['66B.R1.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'84A.S2.48H': ['84A.S2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'161B.S1.48H': ['161B.S1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'92A.R1.0H': ['92A.R1.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'66A.S2.48H': ['66A.S2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'239B.R2.48H': ['239B.R2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'161B.R1.48H': ['161B.R1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'137A.NC.0H': ['137A.NC.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'84B.S2.0H': ['84B.S2.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'58B.NC.0H': ['58B.NC.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'58B.R2.0H': ['58B.R2.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'161A.R1.0H': ['161A.R1.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'92B.S2.48H': ['92B.S2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'176A.NC.48H': ['176A.NC.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'67B.R2.0H': ['67B.R2.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'41A.NC.48H': ['41A.NC.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'239B.R1.0H': ['239B.R1.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'276A.S1.48H': ['276A.S1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'73A.R2.0H': ['73A.R2.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'116A.R1.48H': ['116A.R1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'73A.S2.48H': ['73A.S2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'67A.NC.48H': ['67A.NC.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'73A.NC.48H': ['73A.NC.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'50B.R2.0H': ['50B.R2.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'66B.NC.0H': ['66B.NC.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'137A.NC.48H': ['137A.NC.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'92A.S2.48H': ['92A.S2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'21A.S2.48H': ['21A.S2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'41A.R1.0H': ['41A.R1.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'66B.S1.0H': ['66B.S1.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'66A.NC.48H': ['66A.NC.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'176A.R2.48H': ['176A.R2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'137A.R1.0H': ['137A.R1.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'116A.NC.0H': ['116A.NC.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'21A.S1.0H': ['21A.S1.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'123A.S1.0H': ['123A.S1.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'92B.S2.0H': ['92B.S2.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'176A.NC.0H': ['176A.NC.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'137A.S2.0H': ['137A.S2.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'73.NC.0H': ['73.NC.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'161B.R2.48H': ['161B.R2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'41A.S1.48H': ['41A.S1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'73B.R1.0H': ['73B.R1.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'137B.R2.48H': ['137B.R2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'73A.R2.48H': ['73A.R2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'161A.S1.0H': ['161A.S1.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'50A.R2.48H': ['50A.R2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'67B.S2.48H': ['67B.S2.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'84A.NC.48H': ['84A.NC.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'21B.NC.48H': ['21B.NC.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'123A.R2.0H': ['123A.R2.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'50A.NC.0H': ['50A.NC.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'161B.R1.0H': ['161B.R1.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'176B.S1.48H': ['176B.S1.48H','NA','GTGCCAGCMGCCGCGGTAA',''],'137B.S1.0H': ['137B.S1.0H','NA','GTGCCAGCMGCCGCGGTAA',''],'84B.R1.0H': ['84B.R1.0H','NA','GTGCCAGCMGCCGCGGTAA',''] };
+var g_animatableMappingFileHeaders = [];
+
+var g_spherePositions = new Array();
+g_spherePositions['176A.R2.0H'] = { 'name': '176A.R2.0H', 'color': 0, 'x': -0.272558, 'y': 0.168187, 'z': 0.022838, 'P1': -0.272558, 'P2': 0.168187, 'P3': 0.022838, 'P4': -0.061482, 'P5': 0.041904, 'P6': -0.002611, 'P7': 0.077807, 'P8': 0.067404, 'P9': -0.041636, 'P10': 0.078392 };
+g_spherePositions['92B.S1.48H'] = { 'name': '92B.S1.48H', 'color': 0, 'x': -0.218641, 'y': -0.075875, 'z': 0.100432, 'P1': -0.218641, 'P2': -0.075875, 'P3': 0.100432, 'P4': 0.064760, 'P5': -0.157234, 'P6': -0.028280, 'P7': -0.063263, 'P8': -0.072445, 'P9': 0.098985, 'P10': -0.002731 };
+g_spherePositions['67A.R1.0H'] = { 'name': '67A.R1.0H', 'color': 0, 'x': 0.195299, 'y': 0.228394, 'z': 0.089232, 'P1': 0.195299, 'P2': 0.228394, 'P3': 0.089232, 'P4': 0.108252, 'P5': -0.045672, 'P6': -0.069526, 'P7': 0.096449, 'P8': 0.021862, 'P9': -0.019781, 'P10': 0.051906 };
+g_spherePositions['67A.NC.0H'] = { 'name': '67A.NC.0H', 'color': 0, 'x': 0.169582, 'y': 0.258061, 'z': 0.084434, 'P1': 0.169582, 'P2': 0.258061, 'P3': 0.084434, 'P4': 0.103275, 'P5': -0.019665, 'P6': -0.097105, 'P7': 0.062497, 'P8': 0.027216, 'P9': -0.042862, 'P10': 0.034071 };
+g_spherePositions['176A.R1.0H'] = { 'name': '176A.R1.0H', 'color': 0, 'x': -0.183974, 'y': 0.013769, 'z': -0.012536, 'P1': -0.183974, 'P2': 0.013769, 'P3': -0.012536, 'P4': -0.184850, 'P5': 0.079660, 'P6': -0.140250, 'P7': 0.092117, 'P8': -0.191365, 'P9': -0.012071, 'P10': -0.085787 };
+g_spherePositions['116A.NC.48H'] = { 'name': '116A.NC.48H', 'color': 0, 'x': 0.238679, 'y': -0.082344, 'z': -0.000303, 'P1': 0.238679, 'P2': -0.082344, 'P3': -0.000303, 'P4': -0.113081, 'P5': 0.032614, 'P6': 0.067806, 'P7': -0.054163, 'P8': 0.016541, 'P9': 0.008521, 'P10': -0.005405 };
+g_spherePositions['176B.S1.0H'] = { 'name': '176B.S1.0H', 'color': 0, 'x': 0.152735, 'y': 0.298262, 'z': 0.075585, 'P1': 0.152735, 'P2': 0.298262, 'P3': 0.075585, 'P4': 0.041721, 'P5': -0.050669, 'P6': -0.067777, 'P7': 0.005835, 'P8': 0.007275, 'P9': 0.023179, 'P10': -0.020213 };
+g_spherePositions['276B.NC.48H'] = { 'name': '276B.NC.48H', 'color': 0, 'x': 0.029222, 'y': -0.222251, 'z': -0.036824, 'P1': 0.029222, 'P2': -0.222251, 'P3': -0.036824, 'P4': -0.190170, 'P5': 0.042494, 'P6': -0.067674, 'P7': -0.080728, 'P8': 0.066132, 'P9': -0.076764, 'P10': 0.066662 };
+g_spherePositions['116A.S2.48H'] = { 'name': '116A.S2.48H', 'color': 0, 'x': -0.136766, 'y': -0.172315, 'z': 0.099150, 'P1': -0.136766, 'P2': -0.172315, 'P3': 0.099150, 'P4': 0.044426, 'P5': -0.145574, 'P6': 0.010907, 'P7': -0.004715, 'P8': -0.040606, 'P9': -0.001371, 'P10': -0.006345 };
+g_spherePositions['137B.S2.0H'] = { 'name': '137B.S2.0H', 'color': 0, 'x': 0.140226, 'y': 0.204795, 'z': 0.092158, 'P1': 0.140226, 'P2': 0.204795, 'P3': 0.092158, 'P4': 0.095920, 'P5': 0.018946, 'P6': -0.195824, 'P7': -0.059458, 'P8': 0.012482, 'P9': 0.108972, 'P10': -0.038984 };
+g_spherePositions['67B.R1.48H'] = { 'name': '67B.R1.48H', 'color': 0, 'x': 0.170497, 'y': -0.085846, 'z': 0.009786, 'P1': 0.170497, 'P2': -0.085846, 'P3': 0.009786, 'P4': -0.001992, 'P5': 0.117088, 'P6': 0.117859, 'P7': 0.028093, 'P8': -0.041008, 'P9': 0.081011, 'P10': -0.002262 };
+g_spherePositions['92A.R1.48H'] = { 'name': '92A.R1.48H', 'color': 0, 'x': 0.232339, 'y': -0.076771, 'z': 0.012515, 'P1': 0.232339, 'P2': -0.076771, 'P3': 0.012515, 'P4': -0.090533, 'P5': 0.034528, 'P6': 0.045170, 'P7': -0.017817, 'P8': 0.007496, 'P9': 0.043050, 'P10': -0.000553 };
+g_spherePositions['67B.S1.48H'] = { 'name': '67B.S1.48H', 'color': 0, 'x': -0.072956, 'y': -0.208368, 'z': 0.006328, 'P1': -0.072956, 'P2': -0.208368, 'P3': 0.006328, 'P4': -0.079325, 'P5': 0.019582, 'P6': 0.089173, 'P7': 0.129882, 'P8': -0.010576, 'P9': 0.012286, 'P10': -0.079262 };
+g_spherePositions['MediaControl'] = { 'name': 'MediaControl', 'color': 0, 'x': -0.204706, 'y': -0.198922, 'z': 0.024749, 'P1': -0.204706, 'P2': -0.198922, 'P3': 0.024749, 'P4': 0.185718, 'P5': 0.091220, 'P6': 0.058937, 'P7': 0.020484, 'P8': -0.078858, 'P9': -0.140009, 'P10': 0.150238 };
+g_spherePositions['92A.S1.48H'] = { 'name': '92A.S1.48H', 'color': 0, 'x': 0.224992, 'y': -0.077322, 'z': 0.027552, 'P1': 0.224992, 'P2': -0.077322, 'P3': 0.027552, 'P4': -0.060352, 'P5': 0.014056, 'P6': 0.048216, 'P7': -0.019390, 'P8': 0.037710, 'P9': 0.057647, 'P10': -0.021976 };
+g_spherePositions['92B.R1.0H'] = { 'name': '92B.R1.0H', 'color': 0, 'x': -0.196220, 'y': 0.165301, 'z': 0.061688, 'P1': -0.196220, 'P2': 0.165301, 'P3': 0.061688, 'P4': -0.095475, 'P5': -0.176356, 'P6': -0.032319, 'P7': -0.012553, 'P8': 0.024389, 'P9': 0.066536, 'P10': 0.015623 };
+g_spherePositions['239A.S2.48H'] = { 'name': '239A.S2.48H', 'color': 0, 'x': -0.337191, 'y': -0.042000, 'z': 0.024123, 'P1': -0.337191, 'P2': -0.042000, 'P3': 0.024123, 'P4': 0.132984, 'P5': 0.150835, 'P6': 0.008127, 'P7': -0.016084, 'P8': -0.107164, 'P9': 0.103300, 'P10': -0.069855 };
+g_spherePositions['58A.R1.0H'] = { 'name': '58A.R1.0H', 'color': 0, 'x': 0.132716, 'y': 0.231247, 'z': 0.043150, 'P1': 0.132716, 'P2': 0.231247, 'P3': 0.043150, 'P4': -0.038346, 'P5': -0.086838, 'P6': 0.101315, 'P7': 0.027766, 'P8': -0.051566, 'P9': -0.013071, 'P10': -0.065478 };
+g_spherePositions['84B.R1.48H'] = { 'name': '84B.R1.48H', 'color': 0, 'x': 0.235192, 'y': -0.122218, 'z': 0.016740, 'P1': 0.235192, 'P2': -0.122218, 'P3': 0.016740, 'P4': -0.018202, 'P5': 0.082031, 'P6': -0.006849, 'P7': -0.045657, 'P8': -0.084478, 'P9': -0.048773, 'P10': -0.006862 };
+g_spherePositions['50B.R1.48H'] = { 'name': '50B.R1.48H', 'color': 0, 'x': 0.198690, 'y': -0.089311, 'z': 0.052367, 'P1': 0.198690, 'P2': -0.089311, 'P3': 0.052367, 'P4': 0.000492, 'P5': -0.058070, 'P6': 0.126729, 'P7': 0.006306, 'P8': -0.037471, 'P9': 0.027117, 'P10': -0.123134 };
+g_spherePositions['123A.S2.0H'] = { 'name': '123A.S2.0H', 'color': 0, 'x': 0.097735, 'y': 0.309385, 'z': 0.047453, 'P1': 0.097735, 'P2': 0.309385, 'P3': 0.047453, 'P4': 0.073836, 'P5': 0.132196, 'P6': -0.041185, 'P7': 0.106480, 'P8': 0.018496, 'P9': -0.000915, 'P10': 0.075640 };
+g_spherePositions['161A.R2.0H'] = { 'name': '161A.R2.0H', 'color': 0, 'x': 0.181775, 'y': 0.161990, 'z': -0.306251, 'P1': 0.181775, 'P2': 0.161990, 'P3': -0.306251, 'P4': 0.237254, 'P5': -0.101579, 'P6': -0.106831, 'P7': 0.123257, 'P8': -0.029455, 'P9': -0.044940, 'P10': 0.079762 };
+g_spherePositions['58B.S1.0H'] = { 'name': '58B.S1.0H', 'color': 0, 'x': -0.286842, 'y': 0.111323, 'z': -0.009753, 'P1': -0.286842, 'P2': 0.111323, 'P3': -0.009753, 'P4': -0.090111, 'P5': 0.134827, 'P6': 0.037185, 'P7': 0.004108, 'P8': -0.019037, 'P9': 0.053928, 'P10': -0.038395 };
+g_spherePositions['41B.NC.48H'] = { 'name': '41B.NC.48H', 'color': 0, 'x': -0.032326, 'y': -0.144578, 'z': -0.004963, 'P1': -0.032326, 'P2': -0.144578, 'P3': -0.004963, 'P4': -0.173698, 'P5': -0.015442, 'P6': -0.029882, 'P7': -0.070122, 'P8': -0.014823, 'P9': -0.067265, 'P10': 0.109545 };
+g_spherePositions['MediaControl48h'] = { 'name': 'MediaControl48h', 'color': 0, 'x': -0.233671, 'y': 0.141728, 'z': 0.045000, 'P1': -0.233671, 'P2': 0.141728, 'P3': 0.045000, 'P4': -0.074849, 'P5': -0.121410, 'P6': -0.058317, 'P7': -0.221755, 'P8': 0.051609, 'P9': -0.097714, 'P10': -0.001658 };
+g_spherePositions['21A.S2.0H'] = { 'name': '21A.S2.0H', 'color': 0, 'x': 0.246823, 'y': -0.022097, 'z': 0.018484, 'P1': 0.246823, 'P2': -0.022097, 'P3': 0.018484, 'P4': 0.021615, 'P5': 0.062961, 'P6': -0.085424, 'P7': 0.063154, 'P8': 0.014461, 'P9': -0.059666, 'P10': 0.005274 };
+g_spherePositions['123A.S1.48H'] = { 'name': '123A.S1.48H', 'color': 0, 'x': -0.094933, 'y': -0.243713, 'z': 0.024089, 'P1': -0.094933, 'P2': -0.243713, 'P3': 0.024089, 'P4': -0.005699, 'P5': -0.055429, 'P6': -0.018786, 'P7': -0.046855, 'P8': -0.009753, 'P9': 0.068965, 'P10': 0.070236 };
+g_spherePositions['67B.NC.0H'] = { 'name': '67B.NC.0H', 'color': 0, 'x': -0.189392, 'y': 0.139552, 'z': -0.481753, 'P1': -0.189392, 'P2': 0.139552, 'P3': -0.481753, 'P4': 0.058669, 'P5': -0.066054, 'P6': -0.011592, 'P7': 0.053830, 'P8': 0.026085, 'P9': 0.012087, 'P10': -0.002259 };
+g_spherePositions['73B.S1.48H'] = { 'name': '73B.S1.48H', 'color': 0, 'x': -0.091046, 'y': -0.178228, 'z': 0.035869, 'P1': -0.091046, 'P2': -0.178228, 'P3': 0.035869, 'P4': -0.040420, 'P5': -0.064949, 'P6': -0.055632, 'P7': -0.077551, 'P8': 0.105733, 'P9': -0.001750, 'P10': 0.076027 };
+g_spherePositions['50A.S1.0H'] = { 'name': '50A.S1.0H', 'color': 0, 'x': 0.165129, 'y': 0.139333, 'z': 0.054378, 'P1': 0.165129, 'P2': 0.139333, 'P3': 0.054378, 'P4': 0.004803, 'P5': -0.133742, 'P6': 0.174843, 'P7': 0.077915, 'P8': -0.068339, 'P9': -0.002651, 'P10': -0.033680 };
+g_spherePositions['84A.R2.48H'] = { 'name': '84A.R2.48H', 'color': 0, 'x': 0.232314, 'y': -0.117601, 'z': 0.000357, 'P1': 0.232314, 'P2': -0.117601, 'P3': 0.000357, 'P4': -0.047917, 'P5': 0.053098, 'P6': 0.019963, 'P7': -0.036873, 'P8': 0.004429, 'P9': 0.005180, 'P10': -0.035398 };
+g_spherePositions['58B.NC.48H'] = { 'name': '58B.NC.48H', 'color': 0, 'x': 0.148946, 'y': 0.052018, 'z': -0.382071, 'P1': 0.148946, 'P2': 0.052018, 'P3': -0.382071, 'P4': 0.143057, 'P5': -0.057475, 'P6': -0.067566, 'P7': -0.169367, 'P8': 0.008545, 'P9': 0.094576, 'P10': -0.049756 };
+g_spherePositions['84A.S1.0H'] = { 'name': '84A.S1.0H', 'color': 0, 'x': 0.139523, 'y': 0.307668, 'z': 0.073451, 'P1': 0.139523, 'P2': 0.307668, 'P3': 0.073451, 'P4': 0.053676, 'P5': -0.040667, 'P6': -0.074158, 'P7': -0.000245, 'P8': -0.003194, 'P9': 0.033684, 'P10': 0.002908 };
+g_spherePositions['161B.S2.0H'] = { 'name': '161B.S2.0H', 'color': 0, 'x': 0.095690, 'y': 0.214882, 'z': -0.369324, 'P1': 0.095690, 'P2': 0.214882, 'P3': -0.369324, 'P4': 0.017338, 'P5': -0.152164, 'P6': 0.019372, 'P7': -0.046657, 'P8': -0.106430, 'P9': -0.011237, 'P10': -0.012877 };
+g_spherePositions['137B.R1.48H'] = { 'name': '137B.R1.48H', 'color': 0, 'x': -0.034590, 'y': -0.223549, 'z': 0.042242, 'P1': -0.034590, 'P2': -0.223549, 'P3': 0.042242, 'P4': -0.090866, 'P5': -0.067877, 'P6': -0.083441, 'P7': 0.037876, 'P8': 0.096077, 'P9': 0.062085, 'P10': -0.034146 };
+g_spherePositions['67A.S1.48H'] = { 'name': '67A.S1.48H', 'color': 0, 'x': 0.288755, 'y': -0.072966, 'z': 0.069283, 'P1': 0.288755, 'P2': -0.072966, 'P3': 0.069283, 'P4': 0.096102, 'P5': 0.039883, 'P6': -0.074583, 'P7': 0.080393, 'P8': 0.061917, 'P9': -0.039933, 'P10': -0.047642 };
+g_spherePositions['41B.R2.48H'] = { 'name': '41B.R2.48H', 'color': 0, 'x': -0.182750, 'y': -0.220084, 'z': 0.070099, 'P1': -0.182750, 'P2': -0.220084, 'P3': 0.070099, 'P4': 0.054228, 'P5': -0.026709, 'P6': 0.048424, 'P7': 0.001994, 'P8': -0.059062, 'P9': -0.004187, 'P10': -0.052675 };
+g_spherePositions['41A.S2.0H'] = { 'name': '41A.S2.0H', 'color': 0, 'x': 0.187466, 'y': 0.101566, 'z': 0.058944, 'P1': 0.187466, 'P2': 0.101566, 'P3': 0.058944, 'P4': -0.037571, 'P5': -0.089863, 'P6': 0.157450, 'P7': -0.016869, 'P8': -0.002547, 'P9': -0.025793, 'P10': 0.042377 };
+g_spherePositions['176B.S2.48H'] = { 'name': '176B.S2.48H', 'color': 0, 'x': -0.166300, 'y': -0.229533, 'z': 0.044511, 'P1': -0.166300, 'P2': -0.229533, 'P3': 0.044511, 'P4': 0.070808, 'P5': 0.032279, 'P6': 0.078091, 'P7': 0.072303, 'P8': 0.075365, 'P9': 0.034261, 'P10': -0.104225 };
+g_spherePositions['137B.S1.48H'] = { 'name': '137B.S1.48H', 'color': 0, 'x': -0.020724, 'y': -0.220637, 'z': 0.041849, 'P1': -0.020724, 'P2': -0.220637, 'P3': 0.041849, 'P4': -0.100710, 'P5': -0.064481, 'P6': -0.089356, 'P7': 0.010336, 'P8': 0.112606, 'P9': 0.057640, 'P10': -0.037517 };
+g_spherePositions['176A.S2.48H'] = { 'name': '176A.S2.48H', 'color': 0, 'x': -0.255906, 'y': -0.157388, 'z': 0.055406, 'P1': -0.255906, 'P2': -0.157388, 'P3': 0.055406, 'P4': 0.188766, 'P5': 0.065905, 'P6': 0.114030, 'P7': 0.065572, 'P8': 0.044146, 'P9': 0.023730, 'P10': -0.004641 };
+g_spherePositions['58A.R2.48H'] = { 'name': '58A.R2.48H', 'color': 0, 'x': 0.018321, 'y': -0.265384, 'z': 0.024148, 'P1': 0.018321, 'P2': -0.265384, 'P3': 0.024148, 'P4': -0.089680, 'P5': -0.046557, 'P6': -0.069095, 'P7': 0.024962, 'P8': 0.112972, 'P9': -0.063352, 'P10': -0.030884 };
+g_spherePositions['41B.NC.0H'] = { 'name': '41B.NC.0H', 'color': 0, 'x': 0.088055, 'y': 0.194613, 'z': 0.066539, 'P1': 0.088055, 'P2': 0.194613, 'P3': 0.066539, 'P4': 0.020718, 'P5': 0.003346, 'P6': -0.090911, 'P7': -0.119509, 'P8': 0.010596, 'P9': 0.152040, 'P10': -0.063690 };
+g_spherePositions['239A.S1.0H'] = { 'name': '239A.S1.0H', 'color': 0, 'x': -0.285695, 'y': 0.113788, 'z': -0.008878, 'P1': -0.285695, 'P2': 0.113788, 'P3': -0.008878, 'P4': -0.093754, 'P5': 0.131218, 'P6': 0.038015, 'P7': -0.000118, 'P8': -0.014216, 'P9': 0.050474, 'P10': -0.036055 };
+g_spherePositions['84B.NC.0H'] = { 'name': '84B.NC.0H', 'color': 0, 'x': -0.318857, 'y': 0.150885, 'z': 0.009271, 'P1': -0.318857, 'P2': 0.150885, 'P3': 0.009271, 'P4': -0.016660, 'P5': 0.055141, 'P6': 0.035295, 'P7': -0.186208, 'P8': 0.058133, 'P9': -0.125616, 'P10': -0.013617 };
+g_spherePositions['73B.S1.0H'] = { 'name': '73B.S1.0H', 'color': 0, 'x': 0.034093, 'y': 0.284107, 'z': 0.004034, 'P1': 0.034093, 'P2': 0.284107, 'P3': 0.004034, 'P4': -0.027877, 'P5': 0.127103, 'P6': 0.052942, 'P7': -0.056829, 'P8': 0.042698, 'P9': 0.026376, 'P10': 0.041555 };
+g_spherePositions['116A.S1.0H'] = { 'name': '116A.S1.0H', 'color': 0, 'x': 0.186939, 'y': 0.109559, 'z': 0.054186, 'P1': 0.186939, 'P2': 0.109559, 'P3': 0.054186, 'P4': -0.049713, 'P5': -0.116371, 'P6': 0.171947, 'P7': -0.022794, 'P8': -0.053571, 'P9': -0.023870, 'P10': 0.008632 };
+g_spherePositions['41A.NC.40H'] = { 'name': '41A.NC.40H', 'color': 0, 'x': 0.186788, 'y': 0.109961, 'z': 0.057484, 'P1': 0.186788, 'P2': 0.109961, 'P3': 0.057484, 'P4': -0.035955, 'P5': -0.099745, 'P6': 0.157068, 'P7': -0.018513, 'P8': -0.004562, 'P9': -0.024756, 'P10': 0.041874 };
+g_spherePositions['161B.NC.0H'] = { 'name': '161B.NC.0H', 'color': 0, 'x': 0.153684, 'y': 0.272029, 'z': 0.054840, 'P1': 0.153684, 'P2': 0.272029, 'P3': 0.054840, 'P4': -0.003147, 'P5': -0.040068, 'P6': -0.051147, 'P7': -0.021301, 'P8': -0.083133, 'P9': -0.027903, 'P10': -0.000810 };
+g_spherePositions['84B.S2.48H'] = { 'name': '84B.S2.48H', 'color': 0, 'x': -0.130837, 'y': -0.285754, 'z': 0.042071, 'P1': -0.130837, 'P2': -0.285754, 'P3': 0.042071, 'P4': 0.045660, 'P5': 0.010532, 'P6': 0.051738, 'P7': 0.032334, 'P8': -0.082128, 'P9': -0.077860, 'P10': -0.128194 };
+g_spherePositions['276B.R2.48H'] = { 'name': '276B.R2.48H', 'color': 0, 'x': -0.217781, 'y': -0.173655, 'z': 0.116450, 'P1': -0.217781, 'P2': -0.173655, 'P3': 0.116450, 'P4': 0.160810, 'P5': -0.164232, 'P6': -0.011971, 'P7': -0.077488, 'P8': -0.063822, 'P9': 0.039406, 'P10': 0.003965 };
+g_spherePositions['50B.S1.0H'] = { 'name': '50B.S1.0H', 'color': 0, 'x': 0.160094, 'y': 0.130034, 'z': 0.063570, 'P1': 0.160094, 'P2': 0.130034, 'P3': 0.063570, 'P4': 0.021516, 'P5': -0.126471, 'P6': 0.163333, 'P7': 0.067832, 'P8': -0.057071, 'P9': 0.016745, 'P10': -0.032822 };
+g_spherePositions['58A.NC.48H'] = { 'name': '58A.NC.48H', 'color': 0, 'x': 0.264556, 'y': -0.146577, 'z': 0.001924, 'P1': 0.264556, 'P2': -0.146577, 'P3': 0.001924, 'P4': -0.001375, 'P5': 0.063162, 'P6': -0.009117, 'P7': -0.103378, 'P8': 0.045936, 'P9': -0.007310, 'P10': -0.081585 };
+g_spherePositions['276A.R2.48H'] = { 'name': '276A.R2.48H', 'color': 0, 'x': -0.191529, 'y': -0.217023, 'z': 0.117030, 'P1': -0.191529, 'P2': -0.217023, 'P3': 0.117030, 'P4': 0.178404, 'P5': -0.175172, 'P6': -0.038498, 'P7': -0.043450, 'P8': -0.110109, 'P9': 0.007045, 'P10': -0.021046 };
+g_spherePositions['176B.R2.0H'] = { 'name': '176B.R2.0H', 'color': 0, 'x': 0.140779, 'y': 0.301870, 'z': 0.068053, 'P1': 0.140779, 'P2': 0.301870, 'P3': 0.068053, 'P4': 0.043258, 'P5': -0.018527, 'P6': -0.083263, 'P7': -0.002429, 'P8': 0.015959, 'P9': 0.038177, 'P10': 0.014989 };
+g_spherePositions['21B.S1.0H'] = { 'name': '21B.S1.0H', 'color': 0, 'x': -0.292954, 'y': 0.196577, 'z': -0.029066, 'P1': -0.292954, 'P2': 0.196577, 'P3': -0.029066, 'P4': -0.072418, 'P5': 0.106689, 'P6': 0.059700, 'P7': 0.047524, 'P8': 0.075414, 'P9': -0.017648, 'P10': 0.016918 };
+g_spherePositions['67A.S1.0H'] = { 'name': '67A.S1.0H', 'color': 0, 'x': 0.203597, 'y': 0.246620, 'z': 0.085938, 'P1': 0.203597, 'P2': 0.246620, 'P3': 0.085938, 'P4': 0.152811, 'P5': -0.004117, 'P6': -0.115925, 'P7': 0.091725, 'P8': 0.028616, 'P9': -0.097874, 'P10': 0.009105 };
+g_spherePositions['58A.S1.0H'] = { 'name': '58A.S1.0H', 'color': 0, 'x': -0.083083, 'y': -0.053282, 'z': -0.039466, 'P1': -0.083083, 'P2': -0.053282, 'P3': -0.039466, 'P4': -0.229224, 'P5': 0.068136, 'P6': -0.074385, 'P7': 0.074736, 'P8': -0.232940, 'P9': -0.086797, 'P10': 0.022061 };
+g_spherePositions['84A.R1.48H'] = { 'name': '84A.R1.48H', 'color': 0, 'x': 0.241846, 'y': -0.142479, 'z': -0.018433, 'P1': 0.241846, 'P2': -0.142479, 'P3': -0.018433, 'P4': -0.097794, 'P5': 0.087826, 'P6': -0.015460, 'P7': -0.091003, 'P8': -0.085275, 'P9': -0.022148, 'P10': 0.031040 };
+g_spherePositions['92B.NC.48H'] = { 'name': '92B.NC.48H', 'color': 0, 'x': 0.012671, 'y': -0.228237, 'z': 0.007107, 'P1': 0.012671, 'P2': -0.228237, 'P3': 0.007107, 'P4': -0.161698, 'P5': -0.004229, 'P6': -0.041724, 'P7': 0.028237, 'P8': 0.019083, 'P9': 0.021190, 'P10': 0.056012 };
+g_spherePositions['73A.R1.48H'] = { 'name': '73A.R1.48H', 'color': 0, 'x': 0.227757, 'y': -0.105734, 'z': -0.000381, 'P1': 0.227757, 'P2': -0.105734, 'P3': -0.000381, 'P4': -0.062113, 'P5': 0.064174, 'P6': -0.031030, 'P7': -0.066400, 'P8': 0.061818, 'P9': 0.005631, 'P10': 0.016539 };
+g_spherePositions['66A.S1.0H'] = { 'name': '66A.S1.0H', 'color': 0, 'x': 0.071622, 'y': 0.152695, 'z': 0.020449, 'P1': 0.071622, 'P2': 0.152695, 'P3': 0.020449, 'P4': -0.055301, 'P5': 0.080606, 'P6': 0.055468, 'P7': 0.041675, 'P8': 0.033310, 'P9': 0.054111, 'P10': -0.163089 };
+g_spherePositions['58B.S2.0H'] = { 'name': '58B.S2.0H', 'color': 0, 'x': -0.296840, 'y': 0.134824, 'z': -0.007978, 'P1': -0.296840, 'P2': 0.134824, 'P3': -0.007978, 'P4': -0.061317, 'P5': 0.125077, 'P6': 0.019729, 'P7': 0.048850, 'P8': 0.015498, 'P9': 0.097572, 'P10': -0.046240 };
+g_spherePositions['66A.R2.0H'] = { 'name': '66A.R2.0H', 'color': 0, 'x': -0.224893, 'y': 0.141391, 'z': 0.013514, 'P1': -0.224893, 'P2': 0.141391, 'P3': 0.013514, 'P4': -0.113130, 'P5': 0.057457, 'P6': 0.029951, 'P7': 0.110514, 'P8': 0.056997, 'P9': 0.033685, 'P10': -0.048636 };
+g_spherePositions['73B.R2.48H'] = { 'name': '73B.R2.48H', 'color': 0, 'x': -0.341377, 'y': 0.003048, 'z': 0.042450, 'P1': -0.341377, 'P2': 0.003048, 'P3': 0.042450, 'P4': 0.120851, 'P5': 0.091829, 'P6': -0.041944, 'P7': -0.045758, 'P8': -0.021216, 'P9': 0.018706, 'P10': -0.061623 };
+g_spherePositions['239B.S1.48H'] = { 'name': '239B.S1.48H', 'color': 0, 'x': -0.051631, 'y': -0.259271, 'z': -0.036519, 'P1': -0.051631, 'P2': -0.259271, 'P3': -0.036519, 'P4': -0.139265, 'P5': 0.165009, 'P6': -0.027596, 'P7': 0.010651, 'P8': -0.029735, 'P9': 0.047014, 'P10': 0.077986 };
+g_spherePositions['161B.S2.48H'] = { 'name': '161B.S2.48H', 'color': 0, 'x': 0.255253, 'y': -0.057216, 'z': 0.070153, 'P1': 0.255253, 'P2': -0.057216, 'P3': 0.070153, 'P4': 0.182911, 'P5': 0.071502, 'P6': -0.097366, 'P7': 0.075472, 'P8': -0.055727, 'P9': -0.046757, 'P10': 0.022281 };
+g_spherePositions['84A.S1.48H'] = { 'name': '84A.S1.48H', 'color': 0, 'x': 0.237566, 'y': -0.148027, 'z': -0.025508, 'P1': 0.237566, 'P2': -0.148027, 'P3': -0.025508, 'P4': -0.089093, 'P5': 0.101774, 'P6': -0.011109, 'P7': -0.102896, 'P8': -0.091959, 'P9': -0.022418, 'P10': 0.037191 };
+g_spherePositions['239A.S1.48H'] = { 'name': '239A.S1.48H', 'color': 0, 'x': 0.155543, 'y': -0.084589, 'z': -0.012233, 'P1': 0.155543, 'P2': -0.084589, 'P3': -0.012233, 'P4': 0.026535, 'P5': 0.253223, 'P6': 0.083743, 'P7': -0.066977, 'P8': -0.075580, 'P9': 0.108942, 'P10': 0.115312 };
+g_spherePositions['137B.R2.0H'] = { 'name': '137B.R2.0H', 'color': 0, 'x': -0.211020, 'y': 0.062178, 'z': 0.073805, 'P1': -0.211020, 'P2': 0.062178, 'P3': 0.073805, 'P4': -0.055422, 'P5': -0.079295, 'P6': -0.206997, 'P7': -0.064151, 'P8': 0.044575, 'P9': 0.113205, 'P10': -0.048247 };
+g_spherePositions['84A.R1.0H'] = { 'name': '84A.R1.0H', 'color': 0, 'x': 0.027446, 'y': 0.214911, 'z': 0.025803, 'P1': 0.027446, 'P2': 0.214911, 'P3': 0.025803, 'P4': -0.023084, 'P5': 0.122664, 'P6': 0.105548, 'P7': 0.036443, 'P8': 0.007802, 'P9': 0.070089, 'P10': -0.072783 };
+g_spherePositions['123A.NC.0H'] = { 'name': '123A.NC.0H', 'color': 0, 'x': 0.098958, 'y': 0.305428, 'z': 0.052216, 'P1': 0.098958, 'P2': 0.305428, 'P3': 0.052216, 'P4': 0.083590, 'P5': 0.114510, 'P6': -0.026256, 'P7': 0.085322, 'P8': 0.025510, 'P9': -0.017887, 'P10': 0.064301 };
+g_spherePositions['92B.R1.48H'] = { 'name': '92B.R1.48H', 'color': 0, 'x': 0.228646, 'y': -0.098458, 'z': 0.017852, 'P1': 0.228646, 'P2': -0.098458, 'P3': 0.017852, 'P4': -0.061458, 'P5': 0.049558, 'P6': 0.015752, 'P7': -0.015599, 'P8': 0.002804, 'P9': 0.064816, 'P10': 0.013008 };
+g_spherePositions['73B.R2.0H'] = { 'name': '73B.R2.0H', 'color': 0, 'x': -0.276963, 'y': 0.179775, 'z': 0.007803, 'P1': -0.276963, 'P2': 0.179775, 'P3': 0.007803, 'P4': -0.089448, 'P5': 0.057794, 'P6': -0.037775, 'P7': 0.011080, 'P8': 0.098050, 'P9': -0.031132, 'P10': 0.088301 };
+g_spherePositions['92A.R2.0H'] = { 'name': '92A.R2.0H', 'color': 0, 'x': -0.179694, 'y': 0.022845, 'z': -0.013671, 'P1': -0.179694, 'P2': 0.022845, 'P3': -0.013671, 'P4': -0.203456, 'P5': 0.078534, 'P6': -0.148450, 'P7': 0.087046, 'P8': -0.199979, 'P9': 0.014858, 'P10': -0.095818 };
+g_spherePositions['73A.R1.0H'] = { 'name': '73A.R1.0H', 'color': 0, 'x': -0.052315, 'y': -0.060227, 'z': -0.022022, 'P1': -0.052315, 'P2': -0.060227, 'P3': -0.022022, 'P4': -0.236087, 'P5': -0.001793, 'P6': -0.114405, 'P7': 0.025835, 'P8': -0.237605, 'P9': -0.072601, 'P10': 0.045221 };
+g_spherePositions['116B.S1.48H'] = { 'name': '116B.S1.48H', 'color': 0, 'x': 0.240558, 'y': -0.098301, 'z': 0.007588, 'P1': 0.240558, 'P2': -0.098301, 'P3': 0.007588, 'P4': -0.092931, 'P5': 0.029722, 'P6': 0.051412, 'P7': -0.019605, 'P8': 0.074698, 'P9': 0.003025, 'P10': -0.020128 };
+g_spherePositions['21B.S2.48H'] = { 'name': '21B.S2.48H', 'color': 0, 'x': 0.156843, 'y': -0.046840, 'z': -0.026606, 'P1': 0.156843, 'P2': -0.046840, 'P3': -0.026606, 'P4': 0.051373, 'P5': 0.199126, 'P6': 0.173384, 'P7': -0.109872, 'P8': -0.018858, 'P9': -0.011256, 'P10': 0.170434 };
+g_spherePositions['176B.R1.0H'] = { 'name': '176B.R1.0H', 'color': 0, 'x': 0.139346, 'y': 0.302619, 'z': 0.074511, 'P1': 0.139346, 'P2': 0.302619, 'P3': 0.074511, 'P4': 0.052508, 'P5': -0.035535, 'P6': -0.080401, 'P7': -0.009213, 'P8': -0.003177, 'P9': 0.036015, 'P10': -0.006879 };
+g_spherePositions['50A.R1.0H'] = { 'name': '50A.R1.0H', 'color': 0, 'x': 0.181597, 'y': 0.078864, 'z': 0.057057, 'P1': 0.181597, 'P2': 0.078864, 'P3': 0.057057, 'P4': -0.045987, 'P5': -0.096100, 'P6': 0.154394, 'P7': -0.023870, 'P8': 0.001667, 'P9': -0.030384, 'P10': 0.030694 };
+g_spherePositions['67B.NC.48H'] = { 'name': '67B.NC.48H', 'color': 0, 'x': 0.241802, 'y': -0.013688, 'z': 0.025266, 'P1': 0.241802, 'P2': -0.013688, 'P3': 0.025266, 'P4': -0.005100, 'P5': 0.017298, 'P6': -0.034128, 'P7': 0.048503, 'P8': -0.009300, 'P9': -0.041170, 'P10': -0.044011 };
+g_spherePositions['116A.R2.0H'] = { 'name': '116A.R2.0H', 'color': 0, 'x': 0.159405, 'y': 0.095983, 'z': 0.054201, 'P1': 0.159405, 'P2': 0.095983, 'P3': 0.054201, 'P4': -0.059515, 'P5': -0.130603, 'P6': 0.177468, 'P7': -0.030272, 'P8': -0.033099, 'P9': -0.029869, 'P10': 0.032084 };
+g_spherePositions['50B.NC.0H'] = { 'name': '50B.NC.0H', 'color': 0, 'x': -0.067104, 'y': 0.046202, 'z': 0.037924, 'P1': -0.067104, 'P2': 0.046202, 'P3': 0.037924, 'P4': -0.154835, 'P5': -0.215050, 'P6': 0.086455, 'P7': 0.148957, 'P8': -0.023956, 'P9': -0.089846, 'P10': -0.039442 };
+g_spherePositions['66A.R1.48H'] = { 'name': '66A.R1.48H', 'color': 0, 'x': 0.226712, 'y': -0.116841, 'z': 0.010128, 'P1': 0.226712, 'P2': -0.116841, 'P3': 0.010128, 'P4': -0.039312, 'P5': 0.050171, 'P6': 0.011376, 'P7': -0.021338, 'P8': 0.082382, 'P9': -0.028927, 'P10': -0.031228 };
+g_spherePositions['161B.NC.48H'] = { 'name': '161B.NC.48H', 'color': 0, 'x': 0.274942, 'y': -0.076375, 'z': 0.070512, 'P1': 0.274942, 'P2': -0.076375, 'P3': 0.070512, 'P4': 0.158134, 'P5': 0.087248, 'P6': -0.102842, 'P7': 0.014809, 'P8': -0.085437, 'P9': -0.092041, 'P10': 0.130959 };
+g_spherePositions['92A.R2.48H'] = { 'name': '92A.R2.48H', 'color': 0, 'x': -0.178159, 'y': -0.059799, 'z': 0.079270, 'P1': -0.178159, 'P2': -0.059799, 'P3': 0.079270, 'P4': -0.013863, 'P5': -0.120296, 'P6': -0.037492, 'P7': 0.057714, 'P8': -0.046104, 'P9': 0.130539, 'P10': 0.035805 };
+g_spherePositions['66A.R2.48H'] = { 'name': '66A.R2.48H', 'color': 0, 'x': -0.318373, 'y': -0.065799, 'z': 0.068535, 'P1': -0.318373, 'P2': -0.065799, 'P3': 0.068535, 'P4': 0.223796, 'P5': 0.004446, 'P6': 0.111607, 'P7': 0.016329, 'P8': -0.010036, 'P9': -0.084657, 'P10': 0.082043 };
+g_spherePositions['67A.S2.0H'] = { 'name': '67A.S2.0H', 'color': 0, 'x': 0.184318, 'y': 0.225456, 'z': 0.095123, 'P1': 0.184318, 'P2': 0.225456, 'P3': 0.095123, 'P4': 0.139925, 'P5': -0.037881, 'P6': -0.086721, 'P7': 0.076006, 'P8': 0.013285, 'P9': -0.003927, 'P10': 0.071987 };
+g_spherePositions['73A.S2.0H'] = { 'name': '73A.S2.0H', 'color': 0, 'x': 0.152934, 'y': 0.275808, 'z': 0.058812, 'P1': 0.152934, 'P2': 0.275808, 'P3': 0.058812, 'P4': -0.004491, 'P5': -0.046097, 'P6': -0.054819, 'P7': -0.029849, 'P8': -0.083561, 'P9': -0.023528, 'P10': 0.008646 };
+g_spherePositions['137B.R1.0H'] = { 'name': '137B.R1.0H', 'color': 0, 'x': 0.154012, 'y': 0.178824, 'z': 0.099698, 'P1': 0.154012, 'P2': 0.178824, 'P3': 0.099698, 'P4': 0.110400, 'P5': 0.003790, 'P6': -0.176434, 'P7': -0.035817, 'P8': -0.013072, 'P9': 0.143909, 'P10': -0.038737 };
+g_spherePositions['276A.S2.48H'] = { 'name': '276A.S2.48H', 'color': 0, 'x': -0.176822, 'y': -0.161312, 'z': 0.099401, 'P1': -0.176822, 'P2': -0.161312, 'P3': 0.099401, 'P4': 0.174326, 'P5': -0.125270, 'P6': -0.019530, 'P7': 0.011870, 'P8': 0.004082, 'P9': 0.004962, 'P10': 0.054300 };
+g_spherePositions['123B.S1.48H'] = { 'name': '123B.S1.48H', 'color': 0, 'x': -0.101497, 'y': -0.226771, 'z': 0.028138, 'P1': -0.101497, 'P2': -0.226771, 'P3': 0.028138, 'P4': -0.022080, 'P5': -0.050217, 'P6': -0.011302, 'P7': -0.073916, 'P8': -0.057814, 'P9': 0.045365, 'P10': 0.096966 };
+g_spherePositions['67B.S2.0H'] = { 'name': '67B.S2.0H', 'color': 0, 'x': -0.232317, 'y': 0.155678, 'z': 0.029470, 'P1': -0.232317, 'P2': 0.155678, 'P3': 0.029470, 'P4': -0.069815, 'P5': -0.114741, 'P6': -0.034529, 'P7': -0.004967, 'P8': 0.023752, 'P9': 0.015545, 'P10': 0.010015 };
+g_spherePositions['123B.R2.48H'] = { 'name': '123B.R2.48H', 'color': 0, 'x': -0.197062, 'y': -0.162494, 'z': 0.094286, 'P1': -0.197062, 'P2': -0.162494, 'P3': 0.094286, 'P4': 0.145835, 'P5': -0.129303, 'P6': -0.037612, 'P7': -0.009229, 'P8': -0.054722, 'P9': 0.064702, 'P10': 0.067939 };
+g_spherePositions['21A.R2.48H'] = { 'name': '21A.R2.48H', 'color': 0, 'x': -0.284751, 'y': -0.164756, 'z': 0.053646, 'P1': -0.284751, 'P2': -0.164756, 'P3': 0.053646, 'P4': 0.194277, 'P5': 0.055745, 'P6': 0.141821, 'P7': 0.006723, 'P8': -0.022356, 'P9': 0.046825, 'P10': 0.008114 };
+g_spherePositions['137B.NC.48H'] = { 'name': '137B.NC.48H', 'color': 0, 'x': -0.004558, 'y': -0.223585, 'z': 0.029344, 'P1': -0.004558, 'P2': -0.223585, 'P3': 0.029344, 'P4': -0.127582, 'P5': -0.058070, 'P6': -0.095260, 'P7': 0.000245, 'P8': 0.114050, 'P9': 0.049448, 'P10': -0.030907 };
+g_spherePositions['92A.S2.0H'] = { 'name': '92A.S2.0H', 'color': 0, 'x': -0.174463, 'y': 0.004330, 'z': 0.007672, 'P1': -0.174463, 'P2': 0.004330, 'P3': 0.007672, 'P4': -0.163485, 'P5': 0.067270, 'P6': -0.153600, 'P7': 0.133710, 'P8': -0.165153, 'P9': -0.049823, 'P10': -0.156167 };
+g_spherePositions['66B.R2.0H'] = { 'name': '66B.R2.0H', 'color': 0, 'x': 0.187383, 'y': 0.109199, 'z': 0.056936, 'P1': 0.187383, 'P2': 0.109199, 'P3': 0.056936, 'P4': -0.041976, 'P5': -0.096109, 'P6': 0.157906, 'P7': -0.011224, 'P8': -0.007473, 'P9': -0.019542, 'P10': 0.026573 };
+g_spherePositions['41A.S1.0H'] = { 'name': '41A.S1.0H', 'color': 0, 'x': 0.172657, 'y': 0.106576, 'z': 0.057231, 'P1': 0.172657, 'P2': 0.106576, 'P3': 0.057231, 'P4': -0.040236, 'P5': -0.096256, 'P6': 0.160025, 'P7': -0.016454, 'P8': 0.006372, 'P9': -0.015635, 'P10': 0.037901 };
+g_spherePositions['239A.R1.48H'] = { 'name': '239A.R1.48H', 'color': 0, 'x': 0.190769, 'y': -0.113778, 'z': 0.030216, 'P1': 0.190769, 'P2': -0.113778, 'P3': 0.030216, 'P4': -0.015476, 'P5': 0.068270, 'P6': 0.008873, 'P7': -0.059613, 'P8': -0.088343, 'P9': 0.120920, 'P10': -0.000624 };
+g_spherePositions['176A.S1.0H'] = { 'name': '176A.S1.0H', 'color': 0, 'x': -0.255930, 'y': 0.185045, 'z': 0.015442, 'P1': -0.255930, 'P2': 0.185045, 'P3': 0.015442, 'P4': -0.085574, 'P5': 0.052728, 'P6': -0.007614, 'P7': 0.119641, 'P8': 0.054745, 'P9': -0.022257, 'P10': 0.092744 };
+g_spherePositions['116A.R2.48H'] = { 'name': '116A.R2.48H', 'color': 0, 'x': 0.246895, 'y': -0.093082, 'z': 0.032158, 'P1': 0.246895, 'P2': -0.093082, 'P3': 0.032158, 'P4': -0.074899, 'P5': -0.001880, 'P6': 0.069645, 'P7': -0.047320, 'P8': 0.028666, 'P9': -0.028956, 'P10': -0.049630 };
+g_spherePositions['50A.R2.0H'] = { 'name': '50A.R2.0H', 'color': 0, 'x': 0.165785, 'y': 0.138017, 'z': 0.054255, 'P1': 0.165785, 'P2': 0.138017, 'P3': 0.054255, 'P4': -0.001752, 'P5': -0.132595, 'P6': 0.173619, 'P7': 0.069459, 'P8': -0.069530, 'P9': 0.001530, 'P10': -0.033148 };
+g_spherePositions['239A.R2.0H'] = { 'name': '239A.R2.0H', 'color': 0, 'x': -0.298622, 'y': 0.140163, 'z': -0.004938, 'P1': -0.298622, 'P2': 0.140163, 'P3': -0.004938, 'P4': -0.060205, 'P5': 0.123409, 'P6': 0.011925, 'P7': 0.078604, 'P8': -0.020627, 'P9': 0.110495, 'P10': -0.052045 };
+g_spherePositions['73B.NC..48H'] = { 'name': '73B.NC..48H', 'color': 0, 'x': -0.053521, 'y': -0.225309, 'z': 0.027398, 'P1': -0.053521, 'P2': -0.225309, 'P3': 0.027398, 'P4': -0.057599, 'P5': -0.048595, 'P6': -0.014229, 'P7': 0.017104, 'P8': 0.049407, 'P9': 0.051741, 'P10': 0.052258 };
+g_spherePositions['41A.R1.48H'] = { 'name': '41A.R1.48H', 'color': 0, 'x': 0.295160, 'y': -0.093211, 'z': 0.024165, 'P1': 0.295160, 'P2': -0.093211, 'P3': 0.024165, 'P4': -0.023806, 'P5': 0.049959, 'P6': -0.082944, 'P7': 0.000474, 'P8': 0.027194, 'P9': -0.028281, 'P10': 0.001495 };
+g_spherePositions['176A.S1.48H'] = { 'name': '176A.S1.48H', 'color': 0, 'x': 0.168768, 'y': -0.078678, 'z': 0.025813, 'P1': 0.168768, 'P2': -0.078678, 'P3': 0.025813, 'P4': 0.059818, 'P5': 0.109202, 'P6': 0.124569, 'P7': 0.105338, 'P8': 0.083759, 'P9': 0.068058, 'P10': -0.085919 };
+g_spherePositions['41B.S2.48H'] = { 'name': '41B.S2.48H', 'color': 0, 'x': -0.172106, 'y': -0.220880, 'z': 0.059701, 'P1': -0.172106, 'P2': -0.220880, 'P3': 0.059701, 'P4': 0.046858, 'P5': -0.022390, 'P6': 0.050726, 'P7': 0.007021, 'P8': -0.051230, 'P9': -0.008560, 'P10': -0.048200 };
+g_spherePositions['21B.R2.48H'] = { 'name': '21B.R2.48H', 'color': 0, 'x': 0.194117, 'y': -0.116408, 'z': -0.388422, 'P1': 0.194117, 'P2': -0.116408, 'P3': -0.388422, 'P4': 0.109264, 'P5': 0.080011, 'P6': 0.045900, 'P7': -0.055567, 'P8': -0.047692, 'P9': 0.019637, 'P10': 0.025035 };
+g_spherePositions['137A.S2.48H'] = { 'name': '137A.S2.48H', 'color': 0, 'x': -0.178297, 'y': -0.199279, 'z': 0.097101, 'P1': -0.178297, 'P2': -0.199279, 'P3': 0.097101, 'P4': 0.137622, 'P5': -0.109447, 'P6': -0.030294, 'P7': -0.033840, 'P8': -0.015239, 'P9': 0.020627, 'P10': 0.020977 };
+g_spherePositions['116B.R1.48H'] = { 'name': '116B.R1.48H', 'color': 0, 'x': 0.271667, 'y': -0.138317, 'z': 0.010960, 'P1': 0.271667, 'P2': -0.138317, 'P3': 0.010960, 'P4': -0.050754, 'P5': 0.059075, 'P6': -0.007922, 'P7': -0.026020, 'P8': 0.071651, 'P9': -0.019635, 'P10': -0.011875 };
+g_spherePositions['41B.R2.0H'] = { 'name': '41B.R2.0H', 'color': 0, 'x': -0.243560, 'y': 0.064154, 'z': -0.051219, 'P1': -0.243560, 'P2': 0.064154, 'P3': -0.051219, 'P4': 0.193983, 'P5': 0.160213, 'P6': -0.083782, 'P7': -0.105556, 'P8': -0.032356, 'P9': -0.417808, 'P10': -0.273103 };
+g_spherePositions['92B.R2.48H'] = { 'name': '92B.R2.48H', 'color': 0, 'x': -0.200786, 'y': -0.111968, 'z': 0.100147, 'P1': -0.200786, 'P2': -0.111968, 'P3': 0.100147, 'P4': 0.056226, 'P5': -0.130981, 'P6': -0.002664, 'P7': 0.002379, 'P8': -0.072885, 'P9': 0.100931, 'P10': 0.031162 };
+g_spherePositions['92B.S1.0H'] = { 'name': '92B.S1.0H', 'color': 0, 'x': 0.151961, 'y': 0.298273, 'z': 0.071304, 'P1': 0.151961, 'P2': 0.298273, 'P3': 0.071304, 'P4': 0.035614, 'P5': -0.042659, 'P6': -0.071992, 'P7': 0.005298, 'P8': 0.015606, 'P9': 0.026135, 'P10': -0.017411 };
+g_spherePositions['41B.R1.0H'] = { 'name': '41B.R1.0H', 'color': 0, 'x': 0.159984, 'y': 0.129726, 'z': 0.054989, 'P1': 0.159984, 'P2': 0.129726, 'P3': 0.054989, 'P4': -0.062777, 'P5': -0.105987, 'P6': 0.124333, 'P7': -0.019151, 'P8': -0.044658, 'P9': 0.002464, 'P10': 0.022226 };
+g_spherePositions['123A.NC.48H'] = { 'name': '123A.NC.48H', 'color': 0, 'x': -0.019043, 'y': -0.211601, 'z': -0.422175, 'P1': -0.019043, 'P2': -0.211601, 'P3': -0.422175, 'P4': 0.103787, 'P5': -0.114625, 'P6': -0.087112, 'P7': -0.024920, 'P8': -0.053901, 'P9': 0.023742, 'P10': 0.088838 };
+g_spherePositions['58A.R1.48H'] = { 'name': '58A.R1.48H', 'color': 0, 'x': 0.239104, 'y': -0.109725, 'z': -0.358402, 'P1': 0.239104, 'P2': -0.109725, 'P3': -0.358402, 'P4': 0.062409, 'P5': -0.044975, 'P6': -0.002567, 'P7': -0.041960, 'P8': 0.049496, 'P9': 0.022539, 'P10': -0.056773 };
+g_spherePositions['67B.R1.0H'] = { 'name': '67B.R1.0H', 'color': 0, 'x': -0.285649, 'y': 0.105705, 'z': -0.013282, 'P1': -0.285649, 'P2': 0.105705, 'P3': -0.013282, 'P4': -0.077719, 'P5': 0.174546, 'P6': -0.010024, 'P7': 0.064036, 'P8': -0.025577, 'P9': 0.098245, 'P10': -0.009715 };
+g_spherePositions['239B.R2.0H'] = { 'name': '239B.R2.0H', 'color': 0, 'x': -0.310122, 'y': 0.162269, 'z': 0.001628, 'P1': -0.310122, 'P2': 0.162269, 'P3': 0.001628, 'P4': -0.037362, 'P5': 0.053445, 'P6': 0.038179, 'P7': -0.181415, 'P8': 0.069414, 'P9': -0.128103, 'P10': -0.012371 };
+g_spherePositions['21B.S2.0H'] = { 'name': '21B.S2.0H', 'color': 0, 'x': -0.291458, 'y': 0.209674, 'z': -0.029093, 'P1': -0.291458, 'P2': 0.209674, 'P3': -0.029093, 'P4': -0.069523, 'P5': 0.096170, 'P6': 0.073213, 'P7': 0.060114, 'P8': 0.078115, 'P9': -0.006357, 'P10': 0.019774 };
+g_spherePositions['137A.S1.0H'] = { 'name': '137A.S1.0H', 'color': 0, 'x': 0.068919, 'y': 0.251643, 'z': -0.433898, 'P1': 0.068919, 'P2': 0.251643, 'P3': -0.433898, 'P4': 0.131214, 'P5': 0.043945, 'P6': 0.075830, 'P7': 0.004952, 'P8': 0.013530, 'P9': 0.056727, 'P10': -0.020629 };
+g_spherePositions['58B.R1.0H'] = { 'name': '58B.R1.0H', 'color': 0, 'x': -0.284098, 'y': 0.213590, 'z': -0.025501, 'P1': -0.284098, 'P2': 0.213590, 'P3': -0.025501, 'P4': -0.084114, 'P5': 0.086543, 'P6': 0.061745, 'P7': 0.057221, 'P8': 0.075962, 'P9': -0.007361, 'P10': 0.022318 };
+g_spherePositions['84B.S1.48H'] = { 'name': '84B.S1.48H', 'color': 0, 'x': 0.240201, 'y': -0.101860, 'z': -0.035881, 'P1': 0.240201, 'P2': -0.101860, 'P3': -0.035881, 'P4': -0.135509, 'P5': 0.106962, 'P6': -0.034660, 'P7': -0.087182, 'P8': -0.124320, 'P9': -0.060207, 'P10': 0.016002 };
+g_spherePositions['66A.S1.48H'] = { 'name': '66A.S1.48H', 'color': 0, 'x': -0.172258, 'y': -0.153694, 'z': 0.041400, 'P1': -0.172258, 'P2': -0.153694, 'P3': 0.041400, 'P4': 0.010763, 'P5': 0.055325, 'P6': 0.037209, 'P7': 0.096220, 'P8': -0.010924, 'P9': 0.020640, 'P10': 0.049325 };
+g_spherePositions['66B.S2.0H'] = { 'name': '66B.S2.0H', 'color': 0, 'x': 0.187295, 'y': 0.084435, 'z': 0.052618, 'P1': 0.187295, 'P2': 0.084435, 'P3': 0.052618, 'P4': -0.068635, 'P5': -0.101424, 'P6': 0.146768, 'P7': 0.004979, 'P8': -0.003687, 'P9': -0.032514, 'P10': 0.002392 };
+g_spherePositions['50B.R1.0H'] = { 'name': '50B.R1.0H', 'color': 0, 'x': -0.313369, 'y': 0.109828, 'z': 0.022884, 'P1': -0.313369, 'P2': 0.109828, 'P3': 0.022884, 'P4': 0.010892, 'P5': 0.023935, 'P6': 0.074812, 'P7': -0.186866, 'P8': 0.052678, 'P9': -0.092770, 'P10': 0.004964 };
+g_spherePositions['67A.R2.48H'] = { 'name': '67A.R2.48H', 'color': 0, 'x': 0.284122, 'y': -0.073552, 'z': 0.070004, 'P1': 0.284122, 'P2': -0.073552, 'P3': 0.070004, 'P4': 0.147060, 'P5': 0.031570, 'P6': -0.084249, 'P7': 0.112222, 'P8': 0.069705, 'P9': -0.021529, 'P10': -0.051812 };
+g_spherePositions['161A.S2.48H'] = { 'name': '161A.S2.48H', 'color': 0, 'x': -0.240479, 'y': -0.150762, 'z': 0.073706, 'P1': -0.240479, 'P2': -0.150762, 'P3': 0.073706, 'P4': 0.239666, 'P5': 0.043802, 'P6': 0.010180, 'P7': 0.139726, 'P8': -0.036451, 'P9': -0.089524, 'P10': 0.029421 };
+g_spherePositions['66B.S2.48H'] = { 'name': '66B.S2.48H', 'color': 0, 'x': -0.284013, 'y': -0.122922, 'z': 0.086483, 'P1': -0.284013, 'P2': -0.122922, 'P3': 0.086483, 'P4': 0.214444, 'P5': -0.030786, 'P6': 0.104972, 'P7': 0.009573, 'P8': -0.028603, 'P9': -0.068229, 'P10': 0.125363 };
+g_spherePositions['92B.NC.0H'] = { 'name': '92B.NC.0H', 'color': 0, 'x': 0.152426, 'y': 0.299781, 'z': 0.071174, 'P1': 0.152426, 'P2': 0.299781, 'P3': 0.071174, 'P4': 0.035194, 'P5': -0.042846, 'P6': -0.070648, 'P7': 0.005415, 'P8': 0.014526, 'P9': 0.025479, 'P10': -0.016244 };
+g_spherePositions['116B.NC.48H'] = { 'name': '116B.NC.48H', 'color': 0, 'x': 0.262604, 'y': -0.094291, 'z': -0.002708, 'P1': 0.262604, 'P2': -0.094291, 'P3': -0.002708, 'P4': -0.088307, 'P5': 0.038705, 'P6': 0.032092, 'P7': 0.004089, 'P8': 0.028766, 'P9': -0.013403, 'P10': 0.010924 };
+g_spherePositions['50B.S2.0H'] = { 'name': '50B.S2.0H', 'color': 0, 'x': -0.093517, 'y': 0.059847, 'z': 0.040652, 'P1': -0.093517, 'P2': 0.059847, 'P3': 0.040652, 'P4': -0.102657, 'P5': -0.205807, 'P6': 0.099505, 'P7': 0.151013, 'P8': -0.015786, 'P9': -0.071488, 'P10': -0.028277 };
+g_spherePositions['176A.R1.48H'] = { 'name': '176A.R1.48H', 'color': 0, 'x': -0.043690, 'y': -0.206584, 'z': 0.008452, 'P1': -0.043690, 'P2': -0.206584, 'P3': 0.008452, 'P4': -0.069553, 'P5': 0.040337, 'P6': 0.038283, 'P7': 0.165939, 'P8': 0.154521, 'P9': -0.004915, 'P10': -0.044810 };
+g_spherePositions['239A.R2.48H'] = { 'name': '239A.R2.48H', 'color': 0, 'x': 0.203416, 'y': -0.117995, 'z': 0.013596, 'P1': 0.203416, 'P2': -0.117995, 'P3': 0.013596, 'P4': -0.045872, 'P5': 0.089994, 'P6': -0.002895, 'P7': -0.069657, 'P8': -0.081765, 'P9': 0.107789, 'P10': 0.028856 };
+g_spherePositions['66A.S2.0H'] = { 'name': '66A.S2.0H', 'color': 0, 'x': -0.235861, 'y': 0.162553, 'z': 0.012576, 'P1': -0.235861, 'P2': 0.162553, 'P3': 0.012576, 'P4': -0.089297, 'P5': 0.011897, 'P6': 0.093229, 'P7': 0.096868, 'P8': 0.070103, 'P9': -0.008696, 'P10': 0.018469 };
+g_spherePositions['161B.R2.0H'] = { 'name': '161B.R2.0H', 'color': 0, 'x': 0.171750, 'y': 0.131723, 'z': 0.060409, 'P1': 0.171750, 'P2': 0.131723, 'P3': 0.060409, 'P4': -0.014148, 'P5': -0.146896, 'P6': 0.163365, 'P7': 0.075221, 'P8': -0.056792, 'P9': 0.005238, 'P10': -0.032511 };
+g_spherePositions['92A.S1.0H'] = { 'name': '92A.S1.0H', 'color': 0, 'x': -0.193744, 'y': 0.021377, 'z': 0.010524, 'P1': -0.193744, 'P2': 0.021377, 'P3': 0.010524, 'P4': -0.177755, 'P5': 0.040619, 'P6': -0.130736, 'P7': 0.106576, 'P8': -0.160511, 'P9': 0.027457, 'P10': -0.137092 };
+g_spherePositions['123A.R2.48H'] = { 'name': '123A.R2.48H', 'color': 0, 'x': -0.254859, 'y': -0.197423, 'z': 0.050625, 'P1': -0.254859, 'P2': -0.197423, 'P3': 0.050625, 'P4': 0.157349, 'P5': 0.041096, 'P6': 0.070593, 'P7': -0.013212, 'P8': -0.019090, 'P9': 0.061803, 'P10': 0.049878 };
+g_spherePositions['84B.NC.48H'] = { 'name': '84B.NC.48H', 'color': 0, 'x': 0.238040, 'y': -0.108429, 'z': -0.027707, 'P1': 0.238040, 'P2': -0.108429, 'P3': -0.027707, 'P4': -0.131263, 'P5': 0.100360, 'P6': -0.029483, 'P7': -0.106219, 'P8': -0.141724, 'P9': -0.045070, 'P10': 0.014605 };
+g_spherePositions['239B.NC.48H'] = { 'name': '239B.NC.48H', 'color': 0, 'x': -0.101279, 'y': -0.196473, 'z': -0.030098, 'P1': -0.101279, 'P2': -0.196473, 'P3': -0.030098, 'P4': -0.105657, 'P5': 0.164666, 'P6': 0.042884, 'P7': -0.002771, 'P8': -0.061846, 'P9': 0.052779, 'P10': 0.142832 };
+g_spherePositions['41A.R2.0H'] = { 'name': '41A.R2.0H', 'color': 0, 'x': 0.169425, 'y': 0.144728, 'z': 0.060708, 'P1': 0.169425, 'P2': 0.144728, 'P3': 0.060708, 'P4': -0.032575, 'P5': -0.104856, 'P6': 0.147001, 'P7': -0.011913, 'P8': -0.014207, 'P9': -0.012835, 'P10': 0.033668 };
+g_spherePositions['58A.S2.0H'] = { 'name': '58A.S2.0H', 'color': 0, 'x': -0.096333, 'y': -0.056700, 'z': -0.054178, 'P1': -0.096333, 'P2': -0.056700, 'P3': -0.054178, 'P4': -0.216830, 'P5': 0.127738, 'P6': -0.063287, 'P7': 0.026940, 'P8': -0.227732, 'P9': -0.088310, 'P10': 0.097417 };
+g_spherePositions['116B.S2.48H'] = { 'name': '116B.S2.48H', 'color': 0, 'x': -0.214211, 'y': -0.169805, 'z': 0.066240, 'P1': -0.214211, 'P2': -0.169805, 'P3': 0.066240, 'P4': 0.106488, 'P5': 0.013995, 'P6': 0.103569, 'P7': 0.035941, 'P8': -0.042699, 'P9': -0.027539, 'P10': -0.035945 };
+g_spherePositions['239B.NC.0H'] = { 'name': '239B.NC.0H', 'color': 0, 'x': 0.039409, 'y': 0.283546, 'z': 0.013916, 'P1': 0.039409, 'P2': 0.283546, 'P3': 0.013916, 'P4': 0.001046, 'P5': 0.125878, 'P6': 0.052361, 'P7': -0.039732, 'P8': 0.051687, 'P9': 0.039022, 'P10': 0.044431 };
+g_spherePositions['41B.S2.0H'] = { 'name': '41B.S2.0H', 'color': 0, 'x': -0.195031, 'y': 0.082318, 'z': 0.046410, 'P1': -0.195031, 'P2': 0.082318, 'P3': 0.046410, 'P4': -0.096541, 'P5': -0.062985, 'P6': -0.189501, 'P7': -0.059866, 'P8': 0.093989, 'P9': 0.083465, 'P10': -0.014548 };
+g_spherePositions['137A.R1.48H'] = { 'name': '137A.R1.48H', 'color': 0, 'x': 0.287102, 'y': -0.078151, 'z': 0.037482, 'P1': 0.287102, 'P2': -0.078151, 'P3': 0.037482, 'P4': 0.011834, 'P5': 0.030532, 'P6': -0.095184, 'P7': 0.017924, 'P8': 0.093571, 'P9': 0.041009, 'P10': -0.056174 };
+g_spherePositions['123B.R1.48H'] = { 'name': '123B.R1.48H', 'color': 0, 'x': -0.099071, 'y': -0.242004, 'z': 0.024780, 'P1': -0.099071, 'P2': -0.242004, 'P3': 0.024780, 'P4': 0.008054, 'P5': -0.041769, 'P6': -0.050552, 'P7': -0.076170, 'P8': -0.024106, 'P9': 0.039771, 'P10': 0.125486 };
+g_spherePositions['239B.S2.0H'] = { 'name': '239B.S2.0H', 'color': 0, 'x': -0.306414, 'y': 0.101487, 'z': 0.011541, 'P1': -0.306414, 'P2': 0.101487, 'P3': 0.011541, 'P4': -0.033846, 'P5': 0.076048, 'P6': 0.004806, 'P7': -0.180116, 'P8': 0.033788, 'P9': -0.042140, 'P10': -0.077453 };
+g_spherePositions['66B.S1.48H'] = { 'name': '66B.S1.48H', 'color': 0, 'x': 0.217952, 'y': -0.079370, 'z': 0.036923, 'P1': 0.217952, 'P2': -0.079370, 'P3': 0.036923, 'P4': -0.016521, 'P5': 0.036464, 'P6': -0.010592, 'P7': 0.022867, 'P8': 0.082686, 'P9': 0.022902, 'P10': 0.010774 };
+g_spherePositions['21B.NC.0H'] = { 'name': '21B.NC.0H', 'color': 0, 'x': 0.071115, 'y': 0.256583, 'z': -0.427986, 'P1': 0.071115, 'P2': 0.256583, 'P3': -0.427986, 'P4': 0.120362, 'P5': 0.041828, 'P6': 0.076607, 'P7': 0.003864, 'P8': 0.001144, 'P9': 0.054736, 'P10': -0.014685 };
+g_spherePositions['123A.R1.48H'] = { 'name': '123A.R1.48H', 'color': 0, 'x': -0.050510, 'y': -0.169478, 'z': -0.419812, 'P1': -0.050510, 'P2': -0.169478, 'P3': -0.419812, 'P4': 0.083801, 'P5': -0.147349, 'P6': -0.062074, 'P7': -0.035258, 'P8': -0.018183, 'P9': 0.065079, 'P10': 0.071840 };
+g_spherePositions['66B.NC.48H'] = { 'name': '66B.NC.48H', 'color': 0, 'x': -0.035294, 'y': -0.232173, 'z': 0.000464, 'P1': -0.035294, 'P2': -0.232173, 'P3': 0.000464, 'P4': -0.072150, 'P5': 0.029430, 'P6': 0.034028, 'P7': 0.097364, 'P8': 0.180206, 'P9': -0.084249, 'P10': 0.078384 };
+g_spherePositions['84B.S1.0H'] = { 'name': '84B.S1.0H', 'color': 0, 'x': -0.319307, 'y': 0.153652, 'z': 0.008311, 'P1': -0.319307, 'P2': 0.153652, 'P3': 0.008311, 'P4': -0.018176, 'P5': 0.056818, 'P6': 0.032891, 'P7': -0.186155, 'P8': 0.059001, 'P9': -0.128222, 'P10': -0.014129 };
+g_spherePositions['58B.S1.48H'] = { 'name': '58B.S1.48H', 'color': 0, 'x': 0.134563, 'y': 0.051040, 'z': 0.035329, 'P1': 0.134563, 'P2': 0.051040, 'P3': 0.035329, 'P4': 0.065279, 'P5': 0.016243, 'P6': -0.015556, 'P7': -0.185812, 'P8': 0.051408, 'P9': 0.113022, 'P10': -0.048630 };
+g_spherePositions['92B.R2.0H'] = { 'name': '92B.R2.0H', 'color': 0, 'x': 0.138771, 'y': 0.310511, 'z': 0.068649, 'P1': 0.138771, 'P2': 0.310511, 'P3': 0.068649, 'P4': 0.044761, 'P5': -0.033956, 'P6': -0.076256, 'P7': -0.002047, 'P8': -0.010229, 'P9': 0.033452, 'P10': -0.000238 };
+g_spherePositions['239A.S2.0H'] = { 'name': '239A.S2.0H', 'color': 0, 'x': -0.277669, 'y': 0.128798, 'z': -0.001442, 'P1': -0.277669, 'P2': 0.128798, 'P3': -0.001442, 'P4': -0.111207, 'P5': 0.130305, 'P6': 0.008402, 'P7': 0.030062, 'P8': -0.029789, 'P9': 0.073697, 'P10': -0.015018 };
+g_spherePositions['276A.R1.48H'] = { 'name': '276A.R1.48H', 'color': 0, 'x': -0.119549, 'y': -0.181465, 'z': 0.062981, 'P1': -0.119549, 'P2': -0.181465, 'P3': 0.062981, 'P4': 0.000354, 'P5': -0.110689, 'P6': 0.025429, 'P7': -0.098919, 'P8': 0.010465, 'P9': 0.004409, 'P10': 0.070217 };
+g_spherePositions['66A.NC.0H'] = { 'name': '66A.NC.0H', 'color': 0, 'x': -0.230906, 'y': 0.211284, 'z': 0.006213, 'P1': -0.230906, 'P2': 0.211284, 'P3': 0.006213, 'P4': -0.113708, 'P5': 0.018130, 'P6': 0.076310, 'P7': 0.096042, 'P8': 0.104047, 'P9': -0.043656, 'P10': -0.004571 };
+g_spherePositions['58B.R1.48H'] = { 'name': '58B.R1.48H', 'color': 0, 'x': 0.178448, 'y': -0.011282, 'z': -0.374401, 'P1': 0.178448, 'P2': -0.011282, 'P3': -0.374401, 'P4': 0.134067, 'P5': -0.096386, 'P6': 0.033736, 'P7': -0.105034, 'P8': 0.040756, 'P9': 0.021987, 'P10': 0.034274 };
+g_spherePositions['21A.R1.48H'] = { 'name': '21A.R1.48H', 'color': 0, 'x': 0.203334, 'y': -0.118034, 'z': -0.023457, 'P1': 0.203334, 'P2': -0.118034, 'P3': -0.023457, 'P4': 0.040333, 'P5': 0.162213, 'P6': 0.123396, 'P7': -0.052437, 'P8': 0.021036, 'P9': -0.007266, 'P10': 0.072856 };
+g_spherePositions['239B.R1.48H'] = { 'name': '239B.R1.48H', 'color': 0, 'x': -0.051610, 'y': -0.228640, 'z': 0.006855, 'P1': -0.051610, 'P2': -0.228640, 'P3': 0.006855, 'P4': -0.085400, 'P5': 0.057877, 'P6': -0.054349, 'P7': -0.000401, 'P8': -0.071854, 'P9': 0.051171, 'P10': 0.177856 };
+g_spherePositions['239B.S1.0H'] = { 'name': '239B.S1.0H', 'color': 0, 'x': -0.305108, 'y': 0.156503, 'z': -0.000131, 'P1': -0.305108, 'P2': 0.156503, 'P3': -0.000131, 'P4': -0.032119, 'P5': 0.054011, 'P6': 0.036388, 'P7': -0.189929, 'P8': 0.077507, 'P9': -0.133154, 'P10': -0.010917 };
+g_spherePositions['50B.R2.48H'] = { 'name': '50B.R2.48H', 'color': 0, 'x': -0.128484, 'y': -0.125122, 'z': 0.072010, 'P1': -0.128484, 'P2': -0.125122, 'P3': 0.072010, 'P4': -0.031382, 'P5': -0.153037, 'P6': 0.013518, 'P7': 0.080964, 'P8': -0.028669, 'P9': 0.056661, 'P10': -0.111459 };
+g_spherePositions['58A.NC.0H'] = { 'name': '58A.NC.0H', 'color': 0, 'x': -0.041051, 'y': -0.042782, 'z': -0.422726, 'P1': -0.041051, 'P2': -0.042782, 'P3': -0.422726, 'P4': -0.112279, 'P5': -0.013191, 'P6': -0.104256, 'P7': 0.059920, 'P8': -0.224700, 'P9': -0.069033, 'P10': 0.017693 };
+g_spherePositions['67B.R2.48H'] = { 'name': '67B.R2.48H', 'color': 0, 'x': -0.242147, 'y': -0.121919, 'z': 0.042118, 'P1': -0.242147, 'P2': -0.121919, 'P3': 0.042118, 'P4': 0.074499, 'P5': 0.037406, 'P6': 0.115625, 'P7': 0.055037, 'P8': -0.062308, 'P9': 0.062059, 'P10': -0.013524 };
+g_spherePositions['41B.S1.0H'] = { 'name': '41B.S1.0H', 'color': 0, 'x': -0.209015, 'y': 0.077678, 'z': 0.068753, 'P1': -0.209015, 'P2': 0.077678, 'P3': 0.068753, 'P4': -0.058294, 'P5': -0.079886, 'P6': -0.199098, 'P7': -0.048293, 'P8': 0.047127, 'P9': 0.121544, 'P10': -0.046665 };
+g_spherePositions['21A.NC.48H'] = { 'name': '21A.NC.48H', 'color': 0, 'x': -0.087551, 'y': -0.270423, 'z': 0.059897, 'P1': -0.087551, 'P2': -0.270423, 'P3': 0.059897, 'P4': 0.053849, 'P5': -0.068101, 'P6': -0.046193, 'P7': 0.019935, 'P8': -0.078512, 'P9': -0.015672, 'P10': -0.049130 };
+g_spherePositions['92A.NC.0H'] = { 'name': '92A.NC.0H', 'color': 0, 'x': -0.175255, 'y': 0.008735, 'z': -0.009436, 'P1': -0.175255, 'P2': 0.008735, 'P3': -0.009436, 'P4': -0.198467, 'P5': 0.072143, 'P6': -0.142595, 'P7': 0.093193, 'P8': -0.208128, 'P9': 0.022031, 'P10': -0.093069 };
+g_spherePositions['176B.NC.48H'] = { 'name': '176B.NC.48H', 'color': 0, 'x': 0.218096, 'y': -0.064384, 'z': -0.000375, 'P1': 0.218096, 'P2': -0.064384, 'P3': -0.000375, 'P4': -0.073189, 'P5': 0.055146, 'P6': 0.020417, 'P7': -0.001523, 'P8': 0.126397, 'P9': 0.013675, 'P10': -0.034388 };
+g_spherePositions['161A.R2.48H'] = { 'name': '161A.R2.48H', 'color': 0, 'x': -0.210476, 'y': -0.106162, 'z': 0.103376, 'P1': -0.210476, 'P2': -0.106162, 'P3': 0.103376, 'P4': 0.229119, 'P5': -0.084353, 'P6': -0.166110, 'P7': 0.008000, 'P8': -0.032049, 'P9': -0.077526, 'P10': -0.032183 };
+g_spherePositions['67A.S2.48H'] = { 'name': '67A.S2.48H', 'color': 0, 'x': 0.298351, 'y': -0.063206, 'z': 0.058609, 'P1': 0.298351, 'P2': -0.063206, 'P3': 0.058609, 'P4': 0.078170, 'P5': 0.036624, 'P6': -0.083782, 'P7': 0.091308, 'P8': 0.071605, 'P9': -0.049115, 'P10': -0.032498 };
+g_spherePositions['58A.S1.48H'] = { 'name': '58A.S1.48H', 'color': 0, 'x': 0.223608, 'y': -0.111442, 'z': -0.351394, 'P1': 0.223608, 'P2': -0.111442, 'P3': -0.351394, 'P4': 0.033095, 'P5': -0.039005, 'P6': -0.002738, 'P7': -0.039852, 'P8': 0.054343, 'P9': 0.029493, 'P10': -0.067248 };
+g_spherePositions['50A.NC.48H'] = { 'name': '50A.NC.48H', 'color': 0, 'x': 0.245181, 'y': -0.098756, 'z': 0.020663, 'P1': 0.245181, 'P2': -0.098756, 'P3': 0.020663, 'P4': -0.056887, 'P5': -0.039324, 'P6': 0.113500, 'P7': 0.025708, 'P8': -0.013381, 'P9': 0.002694, 'P10': -0.115779 };
+g_spherePositions['58A.R2.0H'] = { 'name': '58A.R2.0H', 'color': 0, 'x': -0.065696, 'y': -0.039578, 'z': -0.022997, 'P1': -0.065696, 'P2': -0.039578, 'P3': -0.022997, 'P4': -0.230916, 'P5': 0.002438, 'P6': -0.135317, 'P7': 0.021835, 'P8': -0.254621, 'P9': -0.074369, 'P10': 0.026723 };
+g_spherePositions['41A.S2.48H'] = { 'name': '41A.S2.48H', 'color': 0, 'x': -0.026566, 'y': -0.240943, 'z': 0.030346, 'P1': -0.026566, 'P2': -0.240943, 'P3': 0.030346, 'P4': -0.042220, 'P5': -0.065711, 'P6': -0.011536, 'P7': 0.044879, 'P8': 0.083810, 'P9': -0.047544, 'P10': -0.044067 };
+g_spherePositions['84A.S2.0H'] = { 'name': '84A.S2.0H', 'color': 0, 'x': 0.151360, 'y': 0.271509, 'z': 0.088714, 'P1': 0.151360, 'P2': 0.271509, 'P3': 0.088714, 'P4': 0.078598, 'P5': -0.055352, 'P6': -0.062364, 'P7': -0.013626, 'P8': -0.018398, 'P9': 0.061333, 'P10': 0.006741 };
+g_spherePositions['161B.S1.0H'] = { 'name': '161B.S1.0H', 'color': 0, 'x': -0.176502, 'y': 0.150863, 'z': 0.026049, 'P1': -0.176502, 'P2': 0.150863, 'P3': 0.026049, 'P4': -0.170760, 'P5': -0.124578, 'P6': -0.042459, 'P7': -0.066354, 'P8': 0.022811, 'P9': -0.049324, 'P10': 0.046892 };
+g_spherePositions['239A.NC.48H'] = { 'name': '239A.NC.48H', 'color': 0, 'x': -0.017585, 'y': -0.271260, 'z': 0.015719, 'P1': -0.017585, 'P2': -0.271260, 'P3': 0.015719, 'P4': -0.106843, 'P5': 0.036704, 'P6': -0.095333, 'P7': 0.011237, 'P8': -0.017599, 'P9': 0.056379, 'P10': 0.088668 };
+g_spherePositions['123B.S2.48H'] = { 'name': '123B.S2.48H', 'color': 0, 'x': -0.192987, 'y': -0.200969, 'z': 0.105828, 'P1': -0.192987, 'P2': -0.200969, 'P3': 0.105828, 'P4': 0.177680, 'P5': -0.136532, 'P6': -0.024243, 'P7': -0.027020, 'P8': -0.066272, 'P9': 0.038804, 'P10': 0.064037 };
+g_spherePositions['276B.R1.48H'] = { 'name': '276B.R1.48H', 'color': 0, 'x': 0.223590, 'y': -0.104385, 'z': -0.033032, 'P1': 0.223590, 'P2': -0.104385, 'P3': -0.033032, 'P4': -0.123638, 'P5': 0.091829, 'P6': -0.004210, 'P7': -0.107475, 'P8': 0.032676, 'P9': -0.033043, 'P10': 0.037194 };
+g_spherePositions['50A.S2.0H'] = { 'name': '50A.S2.0H', 'color': 0, 'x': 0.168740, 'y': 0.122908, 'z': 0.056019, 'P1': 0.168740, 'P2': 0.122908, 'P3': 0.056019, 'P4': -0.001086, 'P5': -0.129072, 'P6': 0.166895, 'P7': 0.066917, 'P8': -0.062018, 'P9': -0.001744, 'P10': -0.031001 };
+g_spherePositions['21B.R2.0H'] = { 'name': '21B.R2.0H', 'color': 0, 'x': -0.187984, 'y': 0.161501, 'z': -0.490120, 'P1': -0.187984, 'P2': 0.161501, 'P3': -0.490120, 'P4': 0.035908, 'P5': -0.020773, 'P6': 0.010207, 'P7': 0.069797, 'P8': 0.043568, 'P9': 0.001888, 'P10': 0.016868 };
+g_spherePositions['161A.NC.0H'] = { 'name': '161A.NC.0H', 'color': 0, 'x': 0.184138, 'y': 0.176993, 'z': 0.082092, 'P1': 0.184138, 'P2': 0.176993, 'P3': 0.082092, 'P4': 0.158648, 'P5': -0.016593, 'P6': -0.085008, 'P7': 0.120167, 'P8': -0.018114, 'P9': -0.056685, 'P10': 0.096026 };
+g_spherePositions['73A.S1.48H'] = { 'name': '73A.S1.48H', 'color': 0, 'x': 0.297481, 'y': -0.106897, 'z': 0.014504, 'P1': 0.297481, 'P2': -0.106897, 'P3': 0.014504, 'P4': -0.015424, 'P5': 0.056003, 'P6': -0.105138, 'P7': -0.019542, 'P8': 0.065247, 'P9': -0.019504, 'P10': 0.007113 };
+g_spherePositions['84B.R2.48H'] = { 'name': '84B.R2.48H', 'color': 0, 'x': 0.239515, 'y': -0.111903, 'z': -0.038224, 'P1': 0.239515, 'P2': -0.111903, 'P3': -0.038224, 'P4': -0.121401, 'P5': 0.116852, 'P6': -0.034773, 'P7': -0.083983, 'P8': -0.107190, 'P9': -0.051075, 'P10': 0.019957 };
+g_spherePositions['137B.S2.48H'] = { 'name': '137B.S2.48H', 'color': 0, 'x': -0.188133, 'y': -0.142829, 'z': 0.113664, 'P1': -0.188133, 'P2': -0.142829, 'P3': 0.113664, 'P4': 0.082625, 'P5': -0.133409, 'P6': -0.086683, 'P7': -0.065231, 'P8': -0.006538, 'P9': 0.094254, 'P10': 0.017700 };
+g_spherePositions['50A.S1.48H'] = { 'name': '50A.S1.48H', 'color': 0, 'x': 0.240249, 'y': -0.124631, 'z': 0.018294, 'P1': 0.240249, 'P2': -0.124631, 'P3': 0.018294, 'P4': -0.047111, 'P5': -0.016652, 'P6': 0.085796, 'P7': 0.035466, 'P8': 0.038189, 'P9': -0.022764, 'P10': -0.075229 };
+g_spherePositions['176B.R2.48H'] = { 'name': '176B.R2.48H', 'color': 0, 'x': -0.115144, 'y': -0.186628, 'z': -0.394700, 'P1': -0.115144, 'P2': -0.186628, 'P3': -0.394700, 'P4': 0.176091, 'P5': -0.083554, 'P6': 0.004726, 'P7': 0.062989, 'P8': 0.026996, 'P9': 0.025540, 'P10': -0.103381 };
+g_spherePositions['73B.S2.0H'] = { 'name': '73B.S2.0H', 'color': 0, 'x': -0.265043, 'y': 0.172714, 'z': 0.006938, 'P1': -0.265043, 'P2': 0.172714, 'P3': 0.006938, 'P4': -0.084846, 'P5': 0.061600, 'P6': -0.048767, 'P7': 0.023253, 'P8': 0.119634, 'P9': -0.048220, 'P10': 0.094160 };
+g_spherePositions['239A.NC.0H'] = { 'name': '239A.NC.0H', 'color': 0, 'x': 0.031099, 'y': 0.231214, 'z': -0.000097, 'P1': 0.031099, 'P2': 0.231214, 'P3': -0.000097, 'P4': -0.001298, 'P5': 0.222236, 'P6': 0.088637, 'P7': -0.034389, 'P8': -0.086807, 'P9': 0.124215, 'P10': -0.038415 };
+g_spherePositions['239A.R1.0H'] = { 'name': '239A.R1.0H', 'color': 0, 'x': -0.294893, 'y': 0.082345, 'z': 0.005055, 'P1': -0.294893, 'P2': 0.082345, 'P3': 0.005055, 'P4': -0.044854, 'P5': 0.127623, 'P6': 0.034696, 'P7': 0.078303, 'P8': -0.008759, 'P9': 0.141159, 'P10': -0.012683 };
+g_spherePositions['21A.R1.0H'] = { 'name': '21A.R1.0H', 'color': 0, 'x': 0.103059, 'y': 0.255437, 'z': 0.034690, 'P1': 0.103059, 'P2': 0.255437, 'P3': 0.034690, 'P4': -0.075807, 'P5': -0.062478, 'P6': 0.048551, 'P7': -0.086859, 'P8': -0.104189, 'P9': -0.002906, 'P10': -0.016776 };
+g_spherePositions['21A.R2.0H'] = { 'name': '21A.R2.0H', 'color': 0, 'x': -0.261137, 'y': 0.161247, 'z': 0.003891, 'P1': -0.261137, 'P2': 0.161247, 'P3': 0.003891, 'P4': -0.076290, 'P5': 0.045091, 'P6': -0.061880, 'P7': -0.025218, 'P8': 0.150138, 'P9': -0.049239, 'P10': 0.048390 };
+g_spherePositions['123A.S2.48H'] = { 'name': '123A.S2.48H', 'color': 0, 'x': -0.306582, 'y': -0.180314, 'z': 0.074494, 'P1': -0.306582, 'P2': -0.180314, 'P3': 0.074494, 'P4': 0.237409, 'P5': 0.019364, 'P6': 0.082637, 'P7': -0.012470, 'P8': -0.078139, 'P9': 0.035971, 'P10': -0.000245 };
+g_spherePositions['276A.NC.48H'] = { 'name': '276A.NC.48H', 'color': 0, 'x': -0.026805, 'y': -0.272394, 'z': 0.021249, 'P1': -0.026805, 'P2': -0.272394, 'P3': 0.021249, 'P4': -0.089855, 'P5': -0.046604, 'P6': -0.005649, 'P7': -0.095243, 'P8': 0.099648, 'P9': -0.036239, 'P10': 0.016462 };
+g_spherePositions['116A.S2.0H'] = { 'name': '116A.S2.0H', 'color': 0, 'x': 0.176000, 'y': 0.106300, 'z': 0.056311, 'P1': 0.176000, 'P2': 0.106300, 'P3': 0.056311, 'P4': -0.051352, 'P5': -0.118391, 'P6': 0.174493, 'P7': -0.033017, 'P8': -0.044655, 'P9': -0.018993, 'P10': 0.034904 };
+g_spherePositions['21B.S1.48H'] = { 'name': '21B.S1.48H', 'color': 0, 'x': 0.151076, 'y': -0.093284, 'z': -0.000897, 'P1': 0.151076, 'P2': -0.093284, 'P3': -0.000897, 'P4': 0.112198, 'P5': 0.203145, 'P6': 0.153742, 'P7': -0.104887, 'P8': -0.028243, 'P9': 0.054357, 'P10': 0.097088 };
+g_spherePositions['58B.S2.48H'] = { 'name': '58B.S2.48H', 'color': 0, 'x': -0.355734, 'y': 0.030366, 'z': 0.051008, 'P1': -0.355734, 'P2': 0.030366, 'P3': 0.051008, 'P4': 0.198095, 'P5': 0.028246, 'P6': 0.021630, 'P7': -0.142147, 'P8': 0.036667, 'P9': -0.062388, 'P10': -0.025026 };
+g_spherePositions['73A.NC.0H'] = { 'name': '73A.NC.0H', 'color': 0, 'x': 0.103521, 'y': 0.259326, 'z': 0.037507, 'P1': 0.103521, 'P2': 0.259326, 'P3': 0.037507, 'P4': -0.075880, 'P5': -0.068983, 'P6': 0.058559, 'P7': -0.087509, 'P8': -0.082534, 'P9': -0.002952, 'P10': -0.012570 };
+g_spherePositions['66B.R1.48H'] = { 'name': '66B.R1.48H', 'color': 0, 'x': -0.054060, 'y': -0.215099, 'z': 0.030311, 'P1': -0.054060, 'P2': -0.215099, 'P3': 0.030311, 'P4': -0.064047, 'P5': -0.005547, 'P6': -0.117469, 'P7': 0.059854, 'P8': 0.118062, 'P9': 0.000113, 'P10': 0.037256 };
+g_spherePositions['21B.R1.48H'] = { 'name': '21B.R1.48H', 'color': 0, 'x': -0.230796, 'y': -0.152004, 'z': 0.031319, 'P1': -0.230796, 'P2': -0.152004, 'P3': 0.031319, 'P4': 0.090308, 'P5': 0.094352, 'P6': 0.143716, 'P7': 0.034507, 'P8': -0.019971, 'P9': 0.053127, 'P10': 0.039072 };
+g_spherePositions['73A.S1.0H'] = { 'name': '73A.S1.0H', 'color': 0, 'x': -0.101222, 'y': 0.141431, 'z': -0.408662, 'P1': -0.101222, 'P2': 0.141431, 'P3': -0.408662, 'P4': -0.058043, 'P5': -0.222954, 'P6': -0.057216, 'P7': -0.019310, 'P8': -0.082328, 'P9': -0.041153, 'P10': 0.015181 };
+g_spherePositions['84B.R2.0H'] = { 'name': '84B.R2.0H', 'color': 0, 'x': -0.258788, 'y': 0.129503, 'z': 0.048231, 'P1': -0.258788, 'P2': 0.129503, 'P3': 0.048231, 'P4': -0.003813, 'P5': -0.136059, 'P6': -0.057347, 'P7': -0.191470, 'P8': 0.056141, 'P9': -0.078766, 'P10': -0.059166 };
+g_spherePositions['137A.S1.48H'] = { 'name': '137A.S1.48H', 'color': 0, 'x': 0.303110, 'y': -0.070058, 'z': 0.054879, 'P1': 0.303110, 'P2': -0.070058, 'P3': 0.054879, 'P4': 0.044455, 'P5': 0.020114, 'P6': -0.115317, 'P7': 0.040899, 'P8': 0.073295, 'P9': 0.004618, 'P10': -0.084691 };
+g_spherePositions['123A.R1.0H'] = { 'name': '123A.R1.0H', 'color': 0, 'x': 0.149767, 'y': 0.281592, 'z': 0.081378, 'P1': 0.149767, 'P2': 0.281592, 'P3': 0.081378, 'P4': 0.071088, 'P5': -0.051336, 'P6': -0.054122, 'P7': 0.000545, 'P8': -0.014958, 'P9': 0.074090, 'P10': 0.005646 };
+g_spherePositions['21A.NC.0H'] = { 'name': '21A.NC.0H', 'color': 0, 'x': -0.188881, 'y': 0.159556, 'z': 0.022996, 'P1': -0.188881, 'P2': 0.159556, 'P3': 0.022996, 'P4': -0.158447, 'P5': -0.099236, 'P6': -0.089179, 'P7': -0.008383, 'P8': 0.020100, 'P9': -0.013556, 'P10': 0.071202 };
+g_spherePositions['92A.NC.48H'] = { 'name': '92A.NC.48H', 'color': 0, 'x': 0.019873, 'y': -0.218575, 'z': 0.006711, 'P1': 0.019873, 'P2': -0.218575, 'P3': 0.006711, 'P4': -0.173352, 'P5': -0.039257, 'P6': -0.009014, 'P7': 0.010445, 'P8': 0.096302, 'P9': -0.000752, 'P10': 0.010795 };
+g_spherePositions['73B.S2.48H'] = { 'name': '73B.S2.48H', 'color': 0, 'x': -0.344957, 'y': 0.020158, 'z': 0.039638, 'P1': -0.344957, 'P2': 0.020158, 'P3': 0.039638, 'P4': 0.134498, 'P5': 0.085225, 'P6': -0.049191, 'P7': -0.087897, 'P8': 0.018432, 'P9': 0.020074, 'P10': -0.089989 };
+g_spherePositions['50A.R1.48H'] = { 'name': '50A.R1.48H', 'color': 0, 'x': 0.242571, 'y': -0.135466, 'z': 0.026190, 'P1': 0.242571, 'P2': -0.135466, 'P3': 0.026190, 'P4': -0.019839, 'P5': -0.025586, 'P6': 0.093704, 'P7': -0.004005, 'P8': 0.052663, 'P9': -0.025952, 'P10': -0.084398 };
+g_spherePositions['50B.S1.48H'] = { 'name': '50B.S1.48H', 'color': 0, 'x': -0.023505, 'y': -0.230344, 'z': 0.039782, 'P1': -0.023505, 'P2': -0.230344, 'P3': 0.039782, 'P4': -0.072895, 'P5': -0.129158, 'P6': 0.052897, 'P7': 0.082610, 'P8': 0.022716, 'P9': -0.017472, 'P10': -0.100416 };
+g_spherePositions['116B.R2.48H'] = { 'name': '116B.R2.48H', 'color': 0, 'x': -0.175893, 'y': -0.213054, 'z': 0.071496, 'P1': -0.175893, 'P2': -0.213054, 'P3': 0.071496, 'P4': 0.070746, 'P5': -0.018471, 'P6': 0.045629, 'P7': 0.070937, 'P8': -0.032602, 'P9': -0.024100, 'P10': -0.136427 };
+g_spherePositions['21A.S1.48H'] = { 'name': '21A.S1.48H', 'color': 0, 'x': 0.188147, 'y': -0.120507, 'z': -0.408441, 'P1': 0.188147, 'P2': -0.120507, 'P3': -0.408441, 'P4': 0.128521, 'P5': 0.073472, 'P6': 0.042108, 'P7': -0.056267, 'P8': -0.000912, 'P9': 0.038799, 'P10': 0.010183 };
+g_spherePositions['161A.S2.0H'] = { 'name': '161A.S2.0H', 'color': 0, 'x': 0.178224, 'y': 0.181952, 'z': 0.081604, 'P1': 0.178224, 'P2': 0.181952, 'P3': 0.081604, 'P4': 0.152657, 'P5': -0.019183, 'P6': -0.075946, 'P7': 0.114429, 'P8': -0.009505, 'P9': -0.055748, 'P10': 0.105002 };
+g_spherePositions['137B.NC.0H'] = { 'name': '137B.NC.0H', 'color': 0, 'x': 0.139583, 'y': 0.217867, 'z': 0.087748, 'P1': 0.139583, 'P2': 0.217867, 'P3': 0.087748, 'P4': 0.094541, 'P5': 0.017422, 'P6': -0.185672, 'P7': -0.041873, 'P8': 0.008931, 'P9': 0.115480, 'P10': -0.039706 };
+g_spherePositions['67A.R2.0H'] = { 'name': '67A.R2.0H', 'color': 0, 'x': 0.180323, 'y': 0.248307, 'z': 0.085041, 'P1': 0.180323, 'P2': 0.248307, 'P3': 0.085041, 'P4': 0.124760, 'P5': -0.039530, 'P6': -0.091802, 'P7': 0.049441, 'P8': 0.039128, 'P9': -0.058287, 'P10': 0.022152 };
+g_spherePositions['66A.R1.0H'] = { 'name': '66A.R1.0H', 'color': 0, 'x': -0.172229, 'y': 0.162013, 'z': 0.027043, 'P1': -0.172229, 'P2': 0.162013, 'P3': 0.027043, 'P4': -0.177048, 'P5': -0.140207, 'P6': -0.029658, 'P7': -0.049546, 'P8': -0.018489, 'P9': -0.068327, 'P10': 0.051632 };
+g_spherePositions['276B.S2.48H'] = { 'name': '276B.S2.48H', 'color': 0, 'x': -0.200696, 'y': -0.174232, 'z': 0.111787, 'P1': -0.200696, 'P2': -0.174232, 'P3': 0.111787, 'P4': 0.128365, 'P5': -0.148015, 'P6': -0.008273, 'P7': -0.062783, 'P8': -0.010497, 'P9': 0.040689, 'P10': 0.026255 };
+g_spherePositions['176A.S2.0H'] = { 'name': '176A.S2.0H', 'color': 0, 'x': -0.273275, 'y': 0.159047, 'z': 0.018549, 'P1': -0.273275, 'P2': 0.159047, 'P3': 0.018549, 'P4': -0.056330, 'P5': 0.051990, 'P6': -0.009744, 'P7': 0.086449, 'P8': 0.077861, 'P9': -0.040002, 'P10': 0.069414 };
+g_spherePositions['84A.R2.0H'] = { 'name': '84A.R2.0H', 'color': 0, 'x': 0.140094, 'y': 0.302342, 'z': 0.071118, 'P1': 0.140094, 'P2': 0.302342, 'P3': 0.071118, 'P4': 0.053958, 'P5': -0.033045, 'P6': -0.082021, 'P7': -0.009624, 'P8': -0.007722, 'P9': 0.038179, 'P10': -0.007812 };
+g_spherePositions['41B.R1.48H'] = { 'name': '41B.R1.48H', 'color': 0, 'x': 0.214795, 'y': -0.058718, 'z': 0.003538, 'P1': 0.214795, 'P2': -0.058718, 'P3': 0.003538, 'P4': -0.091310, 'P5': 0.050096, 'P6': 0.016288, 'P7': -0.059922, 'P8': -0.028709, 'P9': -0.020283, 'P10': 0.023437 };
+g_spherePositions['50B.NC.48H'] = { 'name': '50B.NC.48H', 'color': 0, 'x': 0.005746, 'y': -0.234704, 'z': 0.033437, 'P1': 0.005746, 'P2': -0.234704, 'P3': 0.033437, 'P4': -0.120777, 'P5': -0.121741, 'P6': 0.042243, 'P7': 0.060729, 'P8': 0.019799, 'P9': -0.015613, 'P10': -0.071674 };
+g_spherePositions['58B.R2.48H'] = { 'name': '58B.R2.48H', 'color': 0, 'x': -0.193737, 'y': -0.068006, 'z': 0.049200, 'P1': -0.193737, 'P2': -0.068006, 'P3': 0.049200, 'P4': 0.010115, 'P5': -0.072661, 'P6': -0.139612, 'P7': -0.187333, 'P8': 0.066040, 'P9': 0.072235, 'P10': -0.030212 };
+g_spherePositions['67B.S1.0H'] = { 'name': '67B.S1.0H', 'color': 0, 'x': -0.281423, 'y': 0.108784, 'z': -0.004362, 'P1': -0.281423, 'P2': 0.108784, 'P3': -0.004362, 'P4': -0.073628, 'P5': 0.072407, 'P6': 0.030688, 'P7': -0.006971, 'P8': -0.011886, 'P9': 0.031273, 'P10': -0.048076 };
+g_spherePositions['50B.S2.48H'] = { 'name': '50B.S2.48H', 'color': 0, 'x': -0.011667, 'y': -0.191625, 'z': 0.036730, 'P1': -0.011667, 'P2': -0.191625, 'P3': 0.036730, 'P4': -0.104398, 'P5': -0.137876, 'P6': 0.076655, 'P7': 0.105690, 'P8': -0.004666, 'P9': -0.026690, 'P10': -0.094442 };
+g_spherePositions['41B.S1.48H'] = { 'name': '41B.S1.48H', 'color': 0, 'x': 0.283517, 'y': -0.072909, 'z': 0.039314, 'P1': 0.283517, 'P2': -0.072909, 'P3': 0.039314, 'P4': 0.026876, 'P5': 0.044679, 'P6': -0.060524, 'P7': 0.042161, 'P8': 0.072199, 'P9': -0.044994, 'P10': 0.000587 };
+g_spherePositions['176B.R1.48H'] = { 'name': '176B.R1.48H', 'color': 0, 'x': 0.061111, 'y': -0.142961, 'z': -0.393058, 'P1': 0.061111, 'P2': -0.142961, 'P3': -0.393058, 'P4': -0.092480, 'P5': -0.073064, 'P6': -0.077430, 'P7': 0.066501, 'P8': 0.097953, 'P9': -0.045846, 'P10': -0.004403 };
+g_spherePositions['50A.S2.48H'] = { 'name': '50A.S2.48H', 'color': 0, 'x': -0.021421, 'y': -0.174292, 'z': 0.026427, 'P1': -0.021421, 'P2': -0.174292, 'P3': 0.026427, 'P4': -0.068020, 'P5': -0.133447, 'P6': 0.061881, 'P7': 0.097555, 'P8': 0.087793, 'P9': -0.056531, 'P10': -0.035871 };
+g_spherePositions['116A.R1.0H'] = { 'name': '116A.R1.0H', 'color': 0, 'x': 0.174133, 'y': 0.094575, 'z': 0.060136, 'P1': 0.174133, 'P2': 0.094575, 'P3': 0.060136, 'P4': -0.036962, 'P5': -0.110508, 'P6': 0.179711, 'P7': -0.040187, 'P8': -0.039524, 'P9': -0.021266, 'P10': 0.025979 };
+g_spherePositions['161A.R1.48H'] = { 'name': '161A.R1.48H', 'color': 0, 'x': 0.304035, 'y': -0.096365, 'z': 0.053153, 'P1': 0.304035, 'P2': -0.096365, 'P3': 0.053153, 'P4': 0.103516, 'P5': 0.082931, 'P6': -0.095127, 'P7': 0.094459, 'P8': -0.021533, 'P9': -0.081339, 'P10': 0.045212 };
+g_spherePositions['116A.S1.48H'] = { 'name': '116A.S1.48H', 'color': 0, 'x': -0.035764, 'y': -0.218623, 'z': 0.040003, 'P1': -0.035764, 'P2': -0.218623, 'P3': 0.040003, 'P4': -0.100015, 'P5': -0.078328, 'P6': -0.003847, 'P7': 0.031233, 'P8': 0.082205, 'P9': 0.034972, 'P10': -0.010950 };
+g_spherePositions['161A.S1.48H'] = { 'name': '161A.S1.48H', 'color': 0, 'x': 0.302332, 'y': -0.089134, 'z': 0.053903, 'P1': 0.302332, 'P2': -0.089134, 'P3': 0.053903, 'P4': 0.104748, 'P5': 0.076145, 'P6': -0.089834, 'P7': 0.087966, 'P8': -0.001265, 'P9': -0.067416, 'P10': 0.030698 };
+g_spherePositions['58A.S2.48H'] = { 'name': '58A.S2.48H', 'color': 0, 'x': -0.004711, 'y': -0.230056, 'z': 0.006223, 'P1': -0.004711, 'P2': -0.230056, 'P3': 0.006223, 'P4': -0.109305, 'P5': -0.060300, 'P6': -0.039339, 'P7': 0.016157, 'P8': 0.127443, 'P9': -0.001996, 'P10': -0.069762 };
+g_spherePositions['161A.NC.48H'] = { 'name': '161A.NC.48H', 'color': 0, 'x': 0.290411, 'y': -0.111308, 'z': 0.033629, 'P1': 0.290411, 'P2': -0.111308, 'P3': 0.033629, 'P4': 0.125278, 'P5': 0.158619, 'P6': -0.039297, 'P7': 0.076287, 'P8': -0.024038, 'P9': -0.127046, 'P10': 0.024210 };
+g_spherePositions['123B.NC.48H'] = { 'name': '123B.NC.48H', 'color': 0, 'x': -0.096101, 'y': -0.260275, 'z': 0.032021, 'P1': -0.096101, 'P2': -0.260275, 'P3': 0.032021, 'P4': 0.029848, 'P5': -0.051250, 'P6': -0.054344, 'P7': -0.065313, 'P8': -0.043031, 'P9': 0.046497, 'P10': 0.108486 };
+g_spherePositions['239B.S2.48H'] = { 'name': '239B.S2.48H', 'color': 0, 'x': -0.147702, 'y': -0.181875, 'z': 0.016704, 'P1': -0.147702, 'P2': -0.181875, 'P3': 0.016704, 'P4': -0.053672, 'P5': 0.085381, 'P6': 0.041550, 'P7': 0.076295, 'P8': -0.041140, 'P9': 0.100554, 'P10': -0.038741 };
+g_spherePositions['137A.R2.0H'] = { 'name': '137A.R2.0H', 'color': 0, 'x': 0.033683, 'y': 0.308191, 'z': -0.010919, 'P1': 0.033683, 'P2': 0.308191, 'P3': -0.010919, 'P4': 0.037192, 'P5': 0.170130, 'P6': 0.144963, 'P7': -0.010411, 'P8': 0.039875, 'P9': 0.059091, 'P10': -0.022559 };
+g_spherePositions['73B.R1.48H'] = { 'name': '73B.R1.48H', 'color': 0, 'x': 0.157931, 'y': -0.090811, 'z': 0.015718, 'P1': 0.157931, 'P2': -0.090811, 'P3': 0.015718, 'P4': -0.004263, 'P5': 0.039629, 'P6': 0.009031, 'P7': -0.098131, 'P8': 0.037542, 'P9': 0.015006, 'P10': 0.068868 };
+g_spherePositions['276B.S1.48H'] = { 'name': '276B.S1.48H', 'color': 0, 'x': 0.217603, 'y': -0.076989, 'z': 0.001076, 'P1': 0.217603, 'P2': -0.076989, 'P3': 0.001076, 'P4': -0.084175, 'P5': 0.048224, 'P6': 0.020580, 'P7': -0.109016, 'P8': 0.086101, 'P9': -0.005931, 'P10': -0.015081 };
+g_spherePositions['41A.R2.48H'] = { 'name': '41A.R2.48H', 'color': 0, 'x': 0.222929, 'y': -0.103049, 'z': -0.350233, 'P1': 0.222929, 'P2': -0.103049, 'P3': -0.350233, 'P4': 0.062018, 'P5': -0.055205, 'P6': 0.002472, 'P7': -0.016681, 'P8': 0.020141, 'P9': 0.021783, 'P10': -0.042417 };
+g_spherePositions['66B.R2.48H'] = { 'name': '66B.R2.48H', 'color': 0, 'x': -0.303391, 'y': -0.036750, 'z': 0.053559, 'P1': -0.303391, 'P2': -0.036750, 'P3': 0.053559, 'P4': 0.157704, 'P5': 0.030444, 'P6': 0.057669, 'P7': 0.019728, 'P8': 0.023048, 'P9': -0.111813, 'P10': 0.085404 };
+g_spherePositions['66B.R1.0H'] = { 'name': '66B.R1.0H', 'color': 0, 'x': 0.096136, 'y': 0.256444, 'z': 0.039432, 'P1': 0.096136, 'P2': 0.256444, 'P3': 0.039432, 'P4': -0.065283, 'P5': -0.058938, 'P6': 0.046220, 'P7': -0.099326, 'P8': -0.083502, 'P9': 0.003917, 'P10': -0.005465 };
+g_spherePositions['84A.S2.48H'] = { 'name': '84A.S2.48H', 'color': 0, 'x': -0.001045, 'y': -0.273733, 'z': -0.011874, 'P1': -0.001045, 'P2': -0.273733, 'P3': -0.011874, 'P4': -0.144562, 'P5': 0.032359, 'P6': -0.048909, 'P7': -0.053940, 'P8': -0.032997, 'P9': -0.005349, 'P10': 0.034830 };
+g_spherePositions['161B.S1.48H'] = { 'name': '161B.S1.48H', 'color': 0, 'x': 0.288813, 'y': -0.103378, 'z': 0.055506, 'P1': 0.288813, 'P2': -0.103378, 'P3': 0.055506, 'P4': 0.138926, 'P5': 0.092248, 'P6': -0.103704, 'P7': 0.057998, 'P8': -0.020002, 'P9': -0.063579, 'P10': 0.042310 };
+g_spherePositions['92A.R1.0H'] = { 'name': '92A.R1.0H', 'color': 0, 'x': -0.294577, 'y': 0.190631, 'z': -0.008895, 'P1': -0.294577, 'P2': 0.190631, 'P3': -0.008895, 'P4': -0.071265, 'P5': 0.046937, 'P6': 0.039638, 'P7': 0.042209, 'P8': 0.039768, 'P9': 0.001298, 'P10': 0.013405 };
+g_spherePositions['66A.S2.48H'] = { 'name': '66A.S2.48H', 'color': 0, 'x': 0.241987, 'y': -0.143785, 'z': 0.025540, 'P1': 0.241987, 'P2': -0.143785, 'P3': 0.025540, 'P4': -0.036749, 'P5': 0.008352, 'P6': 0.036345, 'P7': -0.030054, 'P8': 0.071505, 'P9': 0.010839, 'P10': -0.035016 };
+g_spherePositions['239B.R2.48H'] = { 'name': '239B.R2.48H', 'color': 0, 'x': -0.310296, 'y': -0.024379, 'z': 0.022298, 'P1': -0.310296, 'P2': -0.024379, 'P3': 0.022298, 'P4': 0.075837, 'P5': 0.118364, 'P6': 0.016974, 'P7': 0.022256, 'P8': -0.058936, 'P9': 0.144964, 'P10': -0.065213 };
+g_spherePositions['161B.R1.48H'] = { 'name': '161B.R1.48H', 'color': 0, 'x': 0.312495, 'y': -0.118784, 'z': 0.039060, 'P1': 0.312495, 'P2': -0.118784, 'P3': 0.039060, 'P4': 0.084046, 'P5': 0.088032, 'P6': -0.102539, 'P7': 0.048116, 'P8': -0.005018, 'P9': -0.086455, 'P10': 0.061060 };
+g_spherePositions['137A.NC.0H'] = { 'name': '137A.NC.0H', 'color': 0, 'x': 0.029759, 'y': 0.298475, 'z': -0.016632, 'P1': 0.029759, 'P2': 0.298475, 'P3': -0.016632, 'P4': 0.034629, 'P5': 0.170380, 'P6': 0.139883, 'P7': -0.018139, 'P8': 0.038551, 'P9': 0.049289, 'P10': -0.013824 };
+g_spherePositions['84B.S2.0H'] = { 'name': '84B.S2.0H', 'color': 0, 'x': 0.069748, 'y': 0.244710, 'z': 0.060813, 'P1': 0.069748, 'P2': 0.244710, 'P3': 0.060813, 'P4': 0.061991, 'P5': -0.041218, 'P6': 0.051541, 'P7': -0.269381, 'P8': -0.028459, 'P9': -0.033708, 'P10': -0.068005 };
+g_spherePositions['58B.NC.0H'] = { 'name': '58B.NC.0H', 'color': 0, 'x': -0.296916, 'y': 0.120519, 'z': -0.007615, 'P1': -0.296916, 'P2': 0.120519, 'P3': -0.007615, 'P4': -0.068111, 'P5': 0.151033, 'P6': -0.005779, 'P7': 0.066877, 'P8': -0.001619, 'P9': 0.097454, 'P10': -0.029521 };
+g_spherePositions['58B.R2.0H'] = { 'name': '58B.R2.0H', 'color': 0, 'x': 0.017791, 'y': 0.240625, 'z': 0.016788, 'P1': 0.017791, 'P2': 0.240625, 'P3': 0.016788, 'P4': 0.045539, 'P5': 0.179752, 'P6': 0.106847, 'P7': -0.017222, 'P8': -0.055745, 'P9': 0.149573, 'P10': -0.093661 };
+g_spherePositions['161A.R1.0H'] = { 'name': '161A.R1.0H', 'color': 0, 'x': 0.199390, 'y': 0.162710, 'z': 0.085573, 'P1': 0.199390, 'P2': 0.162710, 'P3': 0.085573, 'P4': 0.164587, 'P5': -0.044742, 'P6': -0.045678, 'P7': 0.135198, 'P8': -0.021475, 'P9': -0.041050, 'P10': 0.112117 };
+g_spherePositions['92B.S2.48H'] = { 'name': '92B.S2.48H', 'color': 0, 'x': 0.228622, 'y': -0.092235, 'z': 0.022431, 'P1': 0.228622, 'P2': -0.092235, 'P3': 0.022431, 'P4': -0.058573, 'P5': 0.040484, 'P6': 0.029890, 'P7': -0.003356, 'P8': -0.000655, 'P9': 0.070737, 'P10': 0.008426 };
+g_spherePositions['176A.NC.48H'] = { 'name': '176A.NC.48H', 'color': 0, 'x': -0.035306, 'y': -0.262432, 'z': 0.004894, 'P1': -0.035306, 'P2': -0.262432, 'P3': 0.004894, 'P4': -0.046253, 'P5': 0.048946, 'P6': 0.011706, 'P7': 0.112936, 'P8': 0.178966, 'P9': 0.002377, 'P10': -0.029382 };
+g_spherePositions['67B.R2.0H'] = { 'name': '67B.R2.0H', 'color': 0, 'x': -0.183068, 'y': 0.122671, 'z': -0.479565, 'P1': -0.183068, 'P2': 0.122671, 'P3': -0.479565, 'P4': 0.069492, 'P5': -0.086384, 'P6': 0.016849, 'P7': 0.060989, 'P8': 0.002058, 'P9': 0.042482, 'P10': 0.016484 };
+g_spherePositions['41A.NC.48H'] = { 'name': '41A.NC.48H', 'color': 0, 'x': 0.297228, 'y': -0.088433, 'z': 0.018269, 'P1': 0.297228, 'P2': -0.088433, 'P3': 0.018269, 'P4': -0.014329, 'P5': 0.052743, 'P6': -0.060232, 'P7': -0.031764, 'P8': -0.004788, 'P9': -0.049777, 'P10': 0.024060 };
+g_spherePositions['239B.R1.0H'] = { 'name': '239B.R1.0H', 'color': 0, 'x': -0.265369, 'y': 0.061746, 'z': -0.038031, 'P1': -0.265369, 'P2': 0.061746, 'P3': -0.038031, 'P4': 0.202961, 'P5': 0.164521, 'P6': -0.072759, 'P7': -0.097101, 'P8': -0.041483, 'P9': -0.391654, 'P10': -0.266604 };
+g_spherePositions['276A.S1.48H'] = { 'name': '276A.S1.48H', 'color': 0, 'x': 0.182818, 'y': -0.099212, 'z': 0.050026, 'P1': 0.182818, 'P2': -0.099212, 'P3': 0.050026, 'P4': 0.031737, 'P5': 0.006534, 'P6': 0.058285, 'P7': -0.145061, 'P8': 0.018888, 'P9': 0.047544, 'P10': -0.031650 };
+g_spherePositions['73A.R2.0H'] = { 'name': '73A.R2.0H', 'color': 0, 'x': -0.175076, 'y': 0.167745, 'z': 0.029532, 'P1': -0.175076, 'P2': 0.167745, 'P3': 0.029532, 'P4': -0.174819, 'P5': -0.151279, 'P6': -0.013946, 'P7': -0.036064, 'P8': -0.045524, 'P9': -0.046256, 'P10': 0.024951 };
+g_spherePositions['116A.R1.48H'] = { 'name': '116A.R1.48H', 'color': 0, 'x': 0.214011, 'y': -0.047690, 'z': 0.042183, 'P1': 0.214011, 'P2': -0.047690, 'P3': 0.042183, 'P4': -0.031262, 'P5': -0.022912, 'P6': 0.073669, 'P7': -0.025666, 'P8': 0.033926, 'P9': 0.064223, 'P10': -0.040846 };
+g_spherePositions['73A.S2.48H'] = { 'name': '73A.S2.48H', 'color': 0, 'x': 0.018768, 'y': -0.214558, 'z': -0.406180, 'P1': 0.018768, 'P2': -0.214558, 'P3': -0.406180, 'P4': 0.028196, 'P5': -0.117139, 'P6': -0.072754, 'P7': 0.032885, 'P8': 0.055897, 'P9': -0.025910, 'P10': -0.022598 };
+g_spherePositions['67A.NC.48H'] = { 'name': '67A.NC.48H', 'color': 0, 'x': 0.262966, 'y': -0.069772, 'z': 0.076602, 'P1': 0.262966, 'P2': -0.069772, 'P3': 0.076602, 'P4': 0.175489, 'P5': 0.037134, 'P6': -0.079234, 'P7': 0.113526, 'P8': 0.033346, 'P9': -0.022353, 'P10': -0.051719 };
+g_spherePositions['73A.NC.48H'] = { 'name': '73A.NC.48H', 'color': 0, 'x': 0.047132, 'y': -0.276931, 'z': -0.013389, 'P1': 0.047132, 'P2': -0.276931, 'P3': -0.013389, 'P4': -0.165942, 'P5': -0.004052, 'P6': -0.095240, 'P7': -0.071257, 'P8': 0.058927, 'P9': -0.013263, 'P10': 0.026535 };
+g_spherePositions['50B.R2.0H'] = { 'name': '50B.R2.0H', 'color': 0, 'x': 0.185076, 'y': 0.095926, 'z': 0.047495, 'P1': 0.185076, 'P2': 0.095926, 'P3': 0.047495, 'P4': -0.013777, 'P5': -0.122306, 'P6': 0.164262, 'P7': 0.093602, 'P8': -0.053399, 'P9': -0.007526, 'P10': -0.078094 };
+g_spherePositions['66B.NC.0H'] = { 'name': '66B.NC.0H', 'color': 0, 'x': 0.200997, 'y': 0.084847, 'z': 0.044025, 'P1': 0.200997, 'P2': 0.084847, 'P3': 0.044025, 'P4': -0.080820, 'P5': -0.091270, 'P6': 0.145124, 'P7': -0.008791, 'P8': -0.020932, 'P9': -0.047142, 'P10': 0.008885 };
+g_spherePositions['137A.NC.48H'] = { 'name': '137A.NC.48H', 'color': 0, 'x': 0.291017, 'y': -0.100259, 'z': 0.030391, 'P1': 0.291017, 'P2': -0.100259, 'P3': 0.030391, 'P4': 0.026525, 'P5': 0.049977, 'P6': -0.096984, 'P7': 0.013210, 'P8': 0.075249, 'P9': 0.037541, 'P10': -0.027842 };
+g_spherePositions['92A.S2.48H'] = { 'name': '92A.S2.48H', 'color': 0, 'x': -0.253358, 'y': -0.015663, 'z': 0.101340, 'P1': -0.253358, 'P2': -0.015663, 'P3': 0.101340, 'P4': 0.062358, 'P5': -0.130368, 'P6': -0.095455, 'P7': -0.049024, 'P8': -0.053638, 'P9': 0.125766, 'P10': -0.045479 };
+g_spherePositions['21A.S2.48H'] = { 'name': '21A.S2.48H', 'color': 0, 'x': -0.285538, 'y': -0.101360, 'z': 0.037214, 'P1': -0.285538, 'P2': -0.101360, 'P3': 0.037214, 'P4': 0.193136, 'P5': 0.041530, 'P6': 0.204859, 'P7': 0.011522, 'P8': 0.016232, 'P9': -0.047988, 'P10': 0.063847 };
+g_spherePositions['41A.R1.0H'] = { 'name': '41A.R1.0H', 'color': 0, 'x': -0.190763, 'y': 0.151511, 'z': -0.486271, 'P1': -0.190763, 'P2': 0.151511, 'P3': -0.486271, 'P4': 0.044403, 'P5': -0.019911, 'P6': 0.013465, 'P7': 0.078740, 'P8': 0.030813, 'P9': 0.004973, 'P10': 0.018460 };
+g_spherePositions['66B.S1.0H'] = { 'name': '66B.S1.0H', 'color': 0, 'x': 0.175191, 'y': 0.106235, 'z': 0.056591, 'P1': 0.175191, 'P2': 0.106235, 'P3': 0.056591, 'P4': -0.048633, 'P5': -0.097423, 'P6': 0.157784, 'P7': -0.007810, 'P8': -0.000687, 'P9': -0.012362, 'P10': 0.033086 };
+g_spherePositions['66A.NC.48H'] = { 'name': '66A.NC.48H', 'color': 0, 'x': 0.178238, 'y': -0.080694, 'z': 0.045908, 'P1': 0.178238, 'P2': -0.080694, 'P3': 0.045908, 'P4': 0.065347, 'P5': 0.040481, 'P6': 0.017604, 'P7': -0.042254, 'P8': 0.036369, 'P9': -0.024002, 'P10': -0.079941 };
+g_spherePositions['176A.R2.48H'] = { 'name': '176A.R2.48H', 'color': 0, 'x': -0.267771, 'y': -0.168294, 'z': 0.065257, 'P1': -0.267771, 'P2': -0.168294, 'P3': 0.065257, 'P4': 0.219995, 'P5': 0.062871, 'P6': 0.092818, 'P7': 0.037925, 'P8': 0.044003, 'P9': 0.026821, 'P10': -0.005550 };
+g_spherePositions['137A.R1.0H'] = { 'name': '137A.R1.0H', 'color': 0, 'x': -0.267078, 'y': 0.172816, 'z': 0.020142, 'P1': -0.267078, 'P2': 0.172816, 'P3': 0.020142, 'P4': -0.076900, 'P5': 0.062564, 'P6': -0.021475, 'P7': 0.111433, 'P8': 0.050648, 'P9': -0.028757, 'P10': 0.094044 };
+g_spherePositions['116A.NC.0H'] = { 'name': '116A.NC.0H', 'color': 0, 'x': 0.205039, 'y': 0.091219, 'z': 0.036631, 'P1': 0.205039, 'P2': 0.091219, 'P3': 0.036631, 'P4': -0.079872, 'P5': -0.100268, 'P6': 0.158612, 'P7': -0.039951, 'P8': -0.029063, 'P9': -0.051852, 'P10': 0.025985 };
+g_spherePositions['21A.S1.0H'] = { 'name': '21A.S1.0H', 'color': 0, 'x': -0.266746, 'y': 0.165238, 'z': 0.003767, 'P1': -0.266746, 'P2': 0.165238, 'P3': 0.003767, 'P4': -0.101521, 'P5': 0.063078, 'P6': -0.046063, 'P7': 0.011649, 'P8': 0.091256, 'P9': -0.015994, 'P10': 0.075909 };
+g_spherePositions['123A.S1.0H'] = { 'name': '123A.S1.0H', 'color': 0, 'x': -0.194337, 'y': 0.147299, 'z': 0.048732, 'P1': -0.194337, 'P2': 0.147299, 'P3': 0.048732, 'P4': -0.099520, 'P5': -0.089426, 'P6': -0.088088, 'P7': 0.075774, 'P8': 0.037567, 'P9': -0.018008, 'P10': 0.098350 };
+g_spherePositions['92B.S2.0H'] = { 'name': '92B.S2.0H', 'color': 0, 'x': 0.147964, 'y': 0.297433, 'z': 0.072309, 'P1': 0.147964, 'P2': 0.297433, 'P3': 0.072309, 'P4': 0.043655, 'P5': -0.039905, 'P6': -0.071915, 'P7': 0.000010, 'P8': 0.007330, 'P9': 0.031235, 'P10': -0.023797 };
+g_spherePositions['176A.NC.0H'] = { 'name': '176A.NC.0H', 'color': 0, 'x': -0.264264, 'y': 0.170461, 'z': 0.017505, 'P1': -0.264264, 'P2': 0.170461, 'P3': 0.017505, 'P4': -0.069499, 'P5': 0.043272, 'P6': -0.000549, 'P7': 0.091072, 'P8': 0.066197, 'P9': -0.039057, 'P10': 0.075160 };
+g_spherePositions['137A.S2.0H'] = { 'name': '137A.S2.0H', 'color': 0, 'x': -0.181357, 'y': 0.163956, 'z': -0.495597, 'P1': -0.181357, 'P2': 0.163956, 'P3': -0.495597, 'P4': 0.039684, 'P5': -0.022773, 'P6': 0.018102, 'P7': 0.083292, 'P8': 0.052461, 'P9': 0.012441, 'P10': 0.007616 };
+g_spherePositions['73.NC.0H'] = { 'name': '73.NC.0H', 'color': 0, 'x': -0.315156, 'y': 0.157195, 'z': 0.001323, 'P1': -0.315156, 'P2': 0.157195, 'P3': 0.001323, 'P4': -0.029702, 'P5': 0.056020, 'P6': 0.035947, 'P7': -0.188266, 'P8': 0.067731, 'P9': -0.135907, 'P10': -0.012833 };
+g_spherePositions['161B.R2.48H'] = { 'name': '161B.R2.48H', 'color': 0, 'x': -0.215206, 'y': -0.099306, 'z': 0.109351, 'P1': -0.215206, 'P2': -0.099306, 'P3': 0.109351, 'P4': 0.217739, 'P5': -0.096250, 'P6': -0.166988, 'P7': -0.005319, 'P8': -0.043977, 'P9': -0.065964, 'P10': -0.012924 };
+g_spherePositions['41A.S1.48H'] = { 'name': '41A.S1.48H', 'color': 0, 'x': 0.313199, 'y': -0.102806, 'z': 0.036225, 'P1': 0.313199, 'P2': -0.102806, 'P3': 0.036225, 'P4': -0.001639, 'P5': 0.032919, 'P6': -0.083365, 'P7': 0.006632, 'P8': 0.005208, 'P9': -0.046265, 'P10': -0.037763 };
+g_spherePositions['73B.R1.0H'] = { 'name': '73B.R1.0H', 'color': 0, 'x': -0.248297, 'y': 0.190396, 'z': -0.008999, 'P1': -0.248297, 'P2': 0.190396, 'P3': -0.008999, 'P4': -0.128838, 'P5': 0.056131, 'P6': -0.035982, 'P7': 0.039378, 'P8': 0.099427, 'P9': -0.012697, 'P10': 0.071996 };
+g_spherePositions['137B.R2.48H'] = { 'name': '137B.R2.48H', 'color': 0, 'x': -0.198926, 'y': -0.155918, 'z': 0.113264, 'P1': -0.198926, 'P2': -0.155918, 'P3': 0.113264, 'P4': 0.123453, 'P5': -0.141720, 'P6': -0.065284, 'P7': -0.075302, 'P8': 0.019045, 'P9': 0.080674, 'P10': 0.014425 };
+g_spherePositions['73A.R2.48H'] = { 'name': '73A.R2.48H', 'color': 0, 'x': 0.212533, 'y': -0.112823, 'z': 0.015126, 'P1': 0.212533, 'P2': -0.112823, 'P3': 0.015126, 'P4': -0.019246, 'P5': 0.045026, 'P6': -0.013562, 'P7': -0.032914, 'P8': 0.082212, 'P9': -0.003106, 'P10': -0.046188 };
+g_spherePositions['161A.S1.0H'] = { 'name': '161A.S1.0H', 'color': 0, 'x': 0.212004, 'y': 0.165507, 'z': 0.082515, 'P1': 0.212004, 'P2': 0.165507, 'P3': 0.082515, 'P4': 0.192814, 'P5': 0.005019, 'P6': -0.101038, 'P7': 0.137582, 'P8': -0.038319, 'P9': -0.099232, 'P10': 0.086845 };
+g_spherePositions['50A.R2.48H'] = { 'name': '50A.R2.48H', 'color': 0, 'x': -0.261820, 'y': -0.209848, 'z': 0.074025, 'P1': -0.261820, 'P2': -0.209848, 'P3': 0.074025, 'P4': 0.197472, 'P5': 0.010664, 'P6': 0.120310, 'P7': -0.021198, 'P8': -0.071806, 'P9': 0.003791, 'P10': -0.018374 };
+g_spherePositions['67B.S2.48H'] = { 'name': '67B.S2.48H', 'color': 0, 'x': -0.045656, 'y': -0.236408, 'z': -0.009143, 'P1': -0.045656, 'P2': -0.236408, 'P3': -0.009143, 'P4': -0.097820, 'P5': 0.038725, 'P6': 0.065240, 'P7': 0.107827, 'P8': 0.022624, 'P9': 0.006464, 'P10': -0.048221 };
+g_spherePositions['84A.NC.48H'] = { 'name': '84A.NC.48H', 'color': 0, 'x': 0.267678, 'y': -0.149113, 'z': -0.023366, 'P1': 0.267678, 'P2': -0.149113, 'P3': -0.023366, 'P4': -0.088653, 'P5': 0.101825, 'P6': -0.027671, 'P7': -0.098222, 'P8': -0.126466, 'P9': -0.054364, 'P10': -0.003669 };
+g_spherePositions['21B.NC.48H'] = { 'name': '21B.NC.48H', 'color': 0, 'x': -0.287125, 'y': -0.163223, 'z': 0.053456, 'P1': -0.287125, 'P2': -0.163223, 'P3': 0.053456, 'P4': 0.191494, 'P5': 0.062328, 'P6': 0.149565, 'P7': 0.009262, 'P8': -0.037755, 'P9': 0.053883, 'P10': 0.004683 };
+g_spherePositions['123A.R2.0H'] = { 'name': '123A.R2.0H', 'color': 0, 'x': 0.149467, 'y': 0.271329, 'z': 0.073963, 'P1': 0.149467, 'P2': 0.271329, 'P3': 0.073963, 'P4': 0.043484, 'P5': -0.024720, 'P6': -0.079310, 'P7': 0.057833, 'P8': 0.029532, 'P9': -0.012056, 'P10': 0.043862 };
+g_spherePositions['50A.NC.0H'] = { 'name': '50A.NC.0H', 'color': 0, 'x': 0.184006, 'y': 0.117969, 'z': 0.053653, 'P1': 0.184006, 'P2': 0.117969, 'P3': 0.053653, 'P4': -0.038761, 'P5': -0.137558, 'P6': 0.169422, 'P7': 0.058204, 'P8': -0.051359, 'P9': -0.043232, 'P10': -0.018005 };
+g_spherePositions['161B.R1.0H'] = { 'name': '161B.R1.0H', 'color': 0, 'x': -0.158630, 'y': 0.148175, 'z': 0.026415, 'P1': -0.158630, 'P2': 0.148175, 'P3': 0.026415, 'P4': -0.178883, 'P5': -0.113962, 'P6': -0.059540, 'P7': -0.003976, 'P8': 0.028679, 'P9': -0.080673, 'P10': 0.074639 };
+g_spherePositions['176B.S1.48H'] = { 'name': '176B.S1.48H', 'color': 0, 'x': 0.003014, 'y': -0.187688, 'z': 0.000049, 'P1': 0.003014, 'P2': -0.187688, 'P3': 0.000049, 'P4': -0.147416, 'P5': -0.014780, 'P6': -0.054320, 'P7': 0.056454, 'P8': 0.170271, 'P9': -0.022264, 'P10': -0.009847 };
+g_spherePositions['137B.S1.0H'] = { 'name': '137B.S1.0H', 'color': 0, 'x': 0.143313, 'y': 0.214905, 'z': 0.090537, 'P1': 0.143313, 'P2': 0.214905, 'P3': 0.090537, 'P4': 0.095531, 'P5': 0.012891, 'P6': -0.187139, 'P7': -0.038447, 'P8': 0.008962, 'P9': 0.113749, 'P10': -0.040157 };
+g_spherePositions['84B.R1.0H'] = { 'name': '84B.R1.0H', 'color': 0, 'x': 0.142475, 'y': 0.210902, 'z': 0.087094, 'P1': 0.142475, 'P2': 0.210902, 'P3': 0.087094, 'P4': 0.094584, 'P5': 0.023822, 'P6': -0.193236, 'P7': -0.043047, 'P8': 0.006009, 'P9': 0.112445, 'P10': -0.036565 };
+
+var g_ellipsesDimensions = new Array();
+var g_segments = 8, g_rings = 8, g_radius = 0.008027;
+var g_xAxisLength = 0.668933;
+var g_yAxisLength = 0.596265;
+var g_zAxisLength = 0.612626;
+var g_xMaximumValue = 0.313199;
+var g_yMaximumValue = 0.310511;
+var g_zMaximumValue = 0.117030;
+var g_xMinimumValue = -0.355734;
+var g_yMinimumValue = -0.285754;
+var g_zMinimumValue = -0.495597;
+var g_maximum = 0.495597;
+var g_pc1Label = "PC1 (22.16 %)";
+var g_pc2Label = "PC2 (15.54 %)";
+var g_pc3Label = "PC3 (8.45 %)";
+var g_number_of_custom_axes = 0;
+var g_fractionExplained = [0.221577, 0.155435, 0.084541, 0.059905, 0.044340, 0.041221, 0.030442, 0.026549, 0.024670, 0.020516];
+var g_fractionExplainedRounded = [22.16, 15.54, 8.45, 5.99, 4.43, 4.12, 3.04, 2.65, 2.47, 2.05];
+
+var g_taxaPositions = new Array();
+
+
+var g_vectorPositions = new Array();
+
+var g_comparisonPositions = new Array();
+var g_isSerialComparisonPlot = true;
+document.getElementById("logo").style.display = 'none';
+document.getElementById("logotable").style.display = 'none';
+
+ </script>
+</head>
+
+<body>
+
+<div id="overlay">
+    <div>
+    <img src="emperor_required_resources/img/emperor.png" alt="Emperor" id="small-logo"/>
+        <h1>WebGL is not enabled!</h1>
+        <p>Emperor's visualization framework is WebGL based, it seems that your system doesn't have this resource available. Here is what you can do:</p>
+        <p id="explanation"><strong>Chrome:</strong> Type "chrome://flags/" into the address bar, then search for "Disable WebGL". Disable this option if you haven't already. <em>Note:</em> If you follow these steps and still don't see an image, go to "chrome://flags/" and then search for "Override software rendering list" and enable this option.</p>
+        <p id="explanation"><strong>Safari:</strong> Open Safari's menu and select Preferences. Click on the advanced tab, and then check "Show Developer" menu. Then open the "Developer" menu and select "Enable WebGL".</p>
+        <p id="explanation"><strong>Firefox:</strong> Go to Options through Firefox > Options or Tools > Options. Go to Advanced, then General. Check "Use hardware acceleration when available" and restart Firefox.</p>
+        <p id="explanation"><strong>Other browsers:</strong> The only browsers that support WebGL are Chrome, Safari, and Firefox. Please switch to these browsers when using Emperor.</p>
+        <p id="explanation"><em>Note:</em> Once you went through these changes, reload the page and it should work!</p>
+        <p id="source">Sources: Instructions for <a href="https://www.biodigitalhuman.com/home/enabling-webgl.html">Chrome and Safari</a>, and <a href="http://www.infewbytes.com/?p=144">Firefox</a></p>
+    </div>
+</div>
+
+<div id="emperor-plot-toggle">
+    <form>
+      <div id="plottype">
+        <input id="pcoa" type="radio" id="pcoa" name="plottype" checked="checked" /><label for="pcoa">PCoA</label>
+        <input id="parallel" type="radio" id="parallel" name="plottype" /><label for="parallel">Parallel</label>
+      </div>
+    </form>
+</div>
+<div id="pcoaPlotWrapper" class="emperor-plot-wrapper">
+    <label id="pointCount" class="ontop">
+    </label>
+
+    <div id="finder" class="arrow-right">
+    </div>
+
+    <div id="labels" class="unselectable">
+    </div>
+
+    <div id="taxalabels" class="unselectable">
+    </div>
+
+    <div id="axislabels" class="axis-labels">
+    </div>
+
+    <div id="main-plot">
+    </div>
+</div>
+
+<div id="parallelPlotWrapper" class="emperor-plot-wrapper">
+</div>
+
+<div id="emperor-separator" class="emperor-separator" ondblclick="separatorDoubleClick()"></div>
+
+<div id="emperor-menu">
+    <div id="emperor-menu-tabs">
+        <ul>
+            <li><a href="#keytab">Key</a></li>
+            <li><a href="#colorby">Colors</a></li>
+            <li><a href="#showby">Visibility</a></li>
+            <li><a href="#scalingby">Scaling</a></li>
+            <li><a href="#labelby">Labels</a></li>
+            <li><a href="#axes">Axes</a></li>
+            <li><a href="#animations">Animations</a></li>
+            <li><a href="#options">Options</a></li>
+        </ul>
+        <div id="keytab" class="emperor-tab-div">
+            <form name="keyFilter">
+                <label>Filter  </label><input name="filterBox" id="searchBox" type="text" onkeyup="filterKey()"></input>
+            </form>
+            <div id="key">
+            </div>
+        </div>
+        <div id="colorby" class="emperor-tab-div">
+            <select id="colormap-drop-down" class="emperor-tab-drop-down" onchange="colorByMenuChanged()"></select>
+            
+            <br><br>
+            <select id="colorbycombo" onchange="colorByMenuChanged()" class="emperor-tab-drop-down">
+            </select>
+            <div class="list" id="colorbylist">
+            </div>
+        </div>
+        <div id="showby" class="emperor-tab-div">
+            <table class="emperor-tab-table">
+                <tr>
+                    <td>
+                        <select id="showbycombo" onchange="showByMenuChanged()" class="emperor-tab-drop-down">
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="list" id="showbylist" style="height:100%%;width:100%%">
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding-left: 12px; padding-right:12px;">
+                        <hr class='section-break'>
+                        <br>
+                        <label for="sphereopacity" class="text">Global Sphere Opacity</label>
+                        <label id="sphereopacity" class="slidervalue"></label>
+                        <div id="sopacityslider" class="slider-range-max"></div>
+                    </td>
+                </tr>
+                <tr>
+                    <td align="center">
+                        <button id="toggle-visibility-selection-button" onClick="toggleVisibleCategories()">Invert Selected</button>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div id="scalingby" class="emperor-tab-div">
+            <table class="emperor-tab-table">
+                <tr>
+                    <td>
+                        <select id="scalingbycombo" onchange="scalingByMenuChanged()" class="emperor-tab-drop-down">
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="list" id="scalingbylist" style="height:100%%;width:100%%">
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding-left: 12px; padding-right:12px;">
+                        <hr class='section-break'>
+                        <br>
+                        <label for="sphereradius" class="text">Global Sphere Scale</label>
+                        <label id="sphereradius" class="slidervalue"></label>
+                        <div id="sradiusslider" class="slider-range-max"></div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div id="labelby" class="emperor-tab-div">
+            <div id="labels-top">
+                <form name="plotoptions">
+                    <input type="checkbox" onClick="toggleLabels()">Samples Label Visibility</input>
+                </form>
+                <br>
+                <label for="labelopacity" class="text">Label Opacity</label>
+                <label id="labelopacity" class="slidervalue"></label>
+                <div id="lopacityslider" class="slider-range-max"></div>
+                <div id="label-color-holder clearfix">
+                    <table class="emperor-tab-table">
+                        <tr><td><div id="labelColor" class="colorbox"></div></td><td><label>Master Label Color</label></td></tr>
+                        <br><br>
+                </table></div>
+            </div>
+            <br>
+            <select id="labelcombo" onchange="labelMenuChanged()" class="emperor-tab-drop-down">
+            </select>
+            <div class="list" id="label-list">
+            </div>
+        </div>
+        <div id="axes" class="emperor-tab-div">
+            <div id="pcoaaxes">
+                <div class="list" id="axeslist">
+                </div>
+            </div>
+        </div>
+        <div id="animations" class="emperor-tab-div">
+            <table class="emperor-tab-table-with-sliders">
+                <tr>
+                    <td>
+                        <a id="reset-button" class="media-button" href="javascript:void(0);" onclick="javascript:resetAnimation()"><img src="emperor_required_resources/img/reset.png" ></img></a>
+                        <a id="play-button" class="media-button" href="javascript:void(0);" onclick="javascript:playAnimation()"><img src="emperor_required_resources/img/play.png"></img></a>
+                        <a id="pause-button" class="media-button" href="javascript:void(0);" onclick="javascript:pauseAnimation()"><img src="emperor_required_resources/img/pause.png"></img></a>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <label for="animation-speed" class="text">Speed</label>
+                        <label id="animation-speed" class="slidervalue"></label>
+                        <div id="animation-speed-slider" class="slider-range-max"></div>
+                        <div id="labelColorHolder clearfix">
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <br><label for="gradient-category-drop-down" class="text">Gradient Category</label><br>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <select id="gradient-category-drop-down" class="emperor-tab-drop-down"></select><br>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <label for="trajectory-category-drop-down" class="text">Trajectory Category</label>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <select id="trajectory-category-drop-down" class="emperor-tab-drop-down" onchange="colorAnimationsByCategoryChanged()"></select>
+                    </td>
+                </tr>
+                <tr>
+                    <td id="emperor-animation-color-selector">
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div id="options" class="emperor-tab-div">
+            <table class="emperor-tab-table">
+                <tr><td><div id="axeslabelscolor" class="colorbox" name="axeslabelscolor"></div></td><td title="Axes Labels Color">Axes Labels Color</td></tr>
+                <tr><td><div id="axescolor" class="colorbox" name="axescolor"></div></td><td title="Axes Color Title">Axes Color</td></tr>
+                <tr><td><div id="rendererbackgroundcolor" class="colorbox" name="rendererbackgroundcolor"></div></td><td title="Background Color Title">Background Color</td></tr>
+                <tr><td colspan="2">
+                        <div id="pcoaviewoptions" class="">
+                            <form name="settingsoptionscolor">
+                            </form>
+                            <div id="pcoaoptions" class="">
+                                <form name="settingsoptions">
+                                    <input type="checkbox" onchange="toggleScaleCoordinates(this)" id="scale_checkbox" name="scale_checkbox">Scale coords by percent explained</input>
+                                </form>
+                            </div>
+                            <br><input id="reset" class="button" type="submit" value="Recenter Camera" style="" onClick="resetCamera()">
+                            <br><br>
+                            <hr class='section-break'>
+                            <br>Filename <small>(only letters, numbers, ., - and _)</small>:
+                            <br><input name="saveas_name" id="saveas_name" value="screenshot" type="text"/>
+                            <br><input id="saveas_legends" class="checkbox" type="checkbox" style=""> Create legend
+                            <input id="saveas" class="button" type="submit" value="Save as SVG" style="" onClick="saveSVG()"/>
+                            <br><br>For a PNG, simply press 'ctrl+p'.
+                            <div id="paralleloptions" class="">
+                            </div>
+                        </div>
+                        <br>
+                </td></tr>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+
+</html>
