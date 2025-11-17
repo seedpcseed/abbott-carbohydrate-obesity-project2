@@ -6129,38 +6129,45 @@ This integrated analysis brings together SCFA metabolomics and 16S rRNA gene mic
 - At 48H, significant differences were observed between RDC and SDC conditions, with distinct taxa associated with each carbohydrate type.
 - These findings suggest that carbohydrate structure and digestibility shape microbial community composition in predictable ways.
 
+**Absolute Abundance:**
+- Integration of qPCR-derived total bacterial load data with relative abundance measurements enabled calculation of absolute abundances (genome copies per μL) for all taxa.
+- Absolute abundance analyses revealed patterns that complement relative abundance findings, distinguishing between true changes in microbial load versus compositional shifts.
+- Key taxa of interest, including *Fusicatenibacter* and *Bifidobacterium*, were examined using absolute abundance metrics to understand their true abundance changes in response to carbohydrate interventions.
+
 ## 8.3 Taxon–SCFA Relationships
 
-**Butyrate Associations:**
+**Butyrate Associations (48H timepoint):**
 ```{r summary-butyrate-taxa, echo=FALSE, results='asis'}
 if (exists("ancombc2_butyrate_tbl_rel") && nrow(ancombc2_butyrate_tbl_rel) > 0) {
   n_butyrate_ancombc2 <- nrow(ancombc2_butyrate_tbl_rel)
-  cat(sprintf("- ANCOM-BC2 identified %d taxa significantly associated with butyrate concentrations (q < 0.1) after adjusting for carbohydrate effects.\n", n_butyrate_ancombc2))
+  cat(sprintf("- ANCOM-BC2 identified %d taxa significantly associated with butyrate concentrations at 48H (q < 0.1) after adjusting for carbohydrate effects.\n", n_butyrate_ancombc2))
 } else {
-  cat("- ANCOM-BC2 analysis identified multiple taxa associated with butyrate concentrations.\n")
+  cat("- ANCOM-BC2 analysis identified multiple taxa associated with butyrate concentrations at 48H.\n")
 }
 if (exists("maaslin2_butyrate_tbl_rel") && nrow(maaslin2_butyrate_tbl_rel) > 0) {
   n_butyrate_maaslin2 <- nrow(maaslin2_butyrate_tbl_rel)
-  cat(sprintf("- MaAsLin2 identified %d significant associations between taxa and butyrate concentrations (q < 0.1).\n", n_butyrate_maaslin2))
+  cat(sprintf("- MaAsLin2 identified %d significant associations between taxa and butyrate concentrations at 48H (q < 0.1).\n", n_butyrate_maaslin2))
 } else {
-  cat("- MaAsLin2 analysis identified multiple taxa associated with butyrate concentrations.\n")
+  cat("- MaAsLin2 analysis identified multiple taxa associated with butyrate concentrations at 48H.\n")
 }
+cat("- These analyses focused on the 48H timepoint to capture associations at peak SCFA production following carbohydrate intervention.\n")
 ```
 
-**Propionate Associations:**
+**Propionate Associations (48H timepoint):**
 ```{r summary-propionate-taxa, echo=FALSE, results='asis'}
 if (exists("ancombc2_propionate_tbl_rel") && nrow(ancombc2_propionate_tbl_rel) > 0) {
   n_propionate_ancombc2 <- nrow(ancombc2_propionate_tbl_rel)
-  cat(sprintf("- ANCOM-BC2 identified %d taxa significantly associated with propionate concentrations (q < 0.1) after adjusting for carbohydrate effects.\n", n_propionate_ancombc2))
+  cat(sprintf("- ANCOM-BC2 identified %d taxa significantly associated with propionate concentrations at 48H (q < 0.1) after adjusting for carbohydrate effects.\n", n_propionate_ancombc2))
 } else {
-  cat("- ANCOM-BC2 analysis identified multiple taxa associated with propionate concentrations.\n")
+  cat("- ANCOM-BC2 analysis identified multiple taxa associated with propionate concentrations at 48H.\n")
 }
 if (exists("maaslin2_propionate_tbl_rel") && nrow(maaslin2_propionate_tbl_rel) > 0) {
   n_propionate_maaslin2 <- nrow(maaslin2_propionate_tbl_rel)
-  cat(sprintf("- MaAsLin2 identified %d significant associations between taxa and propionate concentrations (q < 0.1).\n", n_propionate_maaslin2))
+  cat(sprintf("- MaAsLin2 identified %d significant associations between taxa and propionate concentrations at 48H (q < 0.1).\n", n_propionate_maaslin2))
 } else {
-  cat("- MaAsLin2 analysis identified multiple taxa associated with propionate concentrations.\n")
+  cat("- MaAsLin2 analysis identified multiple taxa associated with propionate concentrations at 48H.\n")
 }
+cat("- These analyses focused on the 48H timepoint to capture associations at peak SCFA production following carbohydrate intervention.\n")
 ```
 
 **Fusicatenibacter–SCFA Correlations:**
@@ -6216,6 +6223,11 @@ if (exists("responder_wide") && nrow(responder_wide) > 0) {
 - Differential abundance analyses (ANCOM-BC2 and MaAsLin2) identified distinct taxa associated with responder vs non-responder status for both butyrate and propionate.
 - These findings indicate that microbial community composition is predictive of SCFA response capacity, with specific taxa enriched in responder groups.
 
+**Absolute Abundance of Key Taxa in Responders:**
+- Absolute abundance analyses (using qPCR-derived total bacterial load) revealed differences in *Fusicatenibacter* and *Bifidobacterium* abundance between responders and non-responders at 48H.
+- These analyses provide insights into whether responder status is associated with true changes in microbial load (absolute abundance) versus compositional shifts (relative abundance).
+- The comparison of absolute abundances helps distinguish between taxa that are truly more abundant in responders versus taxa that appear enriched due to compositional effects.
+
 ## 8.5 Integrated Conclusions
 
 **Key Insights:**
@@ -6233,6 +6245,7 @@ if (exists("responder_wide") && nrow(responder_wide) > 0) {
 - The identification of responder vs non-responder groups, combined with distinct microbial signatures, suggests that microbiome profiling could inform personalized dietary recommendations.
 - The finding that *Fusicatenibacter* correlates with SCFA production in the SDC condition suggests that this taxon may be a key player in slow-digestible carbohydrate metabolism.
 - The partial independence of butyrate and propionate responder status indicates that different microbial pathways may drive production of these SCFAs, with implications for targeted dietary interventions.
+- Absolute abundance measurements provide critical context for understanding whether responder phenotypes reflect true increases in beneficial taxa (e.g., *Fusicatenibacter*, *Bifidobacterium*) or compositional shifts, informing strategies for microbiome modulation through dietary interventions.
 
 **Future Directions:**
 - Functional metagenomics and metabolomics could identify the specific genes and pathways that drive SCFA production in responder groups.

@@ -373,3 +373,14 @@ The type strain H1-YC4 (DSM 113288, JCM 35911, also designated CLA-AA-H277) was 
 **DSMZ Medium**: https://bacmedia.dsmz.de/medium/1611
 
 **Paper Link**: https://enviromicro-journals.onlinelibrary.wiley.com/doi/10.1111/1462-2920.15935
+
+## Experimental Steps
+
+| Area of Investigation | Specific Action | Rationale |
+|----------------------|----------------|-----------|
+| 1. Genomic Potential Analysis | Search genome for but and buk genes (butyryl-CoA:acetate CoA-transferase and butyrate kinase). | Clarify Butyrate Production: Literature is conflicting. Some sources label it a butyrate producer, while isolation papers list lactate/succinate/acetate as primary products. You need to know if it produces butyrate directly or supplies precursors (lactate/acetate) to other bacteria. |
+| 2. Starch Degradation Capability | Check for Glycosyl Hydrolase (GH) Family 13 & CBMs (Carbohydrate Binding Modules) in its genome. | Determine Role: Does it have the "cell-surface machinery" to bind and degrade starch granules directly, or does it lack these, confirming it is a "secondary scavenger" that relies on Bifidobacterium to do the initial chopping? |
+| 3. Cross-Feeding Verification | Perform Metabolic Correlation Analysis between Fusicatenibacter and Bifidobacterium. | Test the "Scavenger" Hypothesis: Since Bifidobacterium (a known primary degrader) was also elevated in SDC, a strong positive correlation would suggest Fusicatenibacter is cross-feeding on the maltose/oligosaccharides released by Bifidobacterium. |
+| 4. "Healthy" vs. "Obese" Context | Correlate abundance with host metabolic markers (e.g., ApoB, inflammatory cytokines) if available. | Contextualize "Health": While generally beneficial/anti-inflammatory, it has been positively correlated with ApoB (cardiovascular risk) in some low-risk populations. Check if its elevation in your "Obese" group tracks with improved or worsened markers. |
+| 5. SDC Specificity | In vitro growth assay on SDC vs. Maltose. | Confirm Substrate Preference: Attempt to grow Fusicatenibacter isolate on the specific SDC used as the sole carbon source. If it grows poorly on SDC but well on Maltose, it confirms it requires a primary degrader helper. |
+| 6. Metabolite Tracing | Measure Succinate levels specifically. | Identify Biomarker: Fusicatenibacter is a known succinate producer. If SDC conditions have high succinate (which your data showed as "ns" or variable), it might be due to Fusicatenibacter activity that isn't being fully converted to propionate/butyrate by others. |
