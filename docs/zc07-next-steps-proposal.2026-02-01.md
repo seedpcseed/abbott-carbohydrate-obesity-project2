@@ -17,6 +17,8 @@ header-includes:
   - \newunicodechar{α}{{\fallbackfont α}}
   - \newunicodechar{×}{{\fallbackfont ×}}
   - \defaultfontfeatures{Ligatures=TeX}
+  - \usepackage{graphicx}
+  - \usepackage{wrapfig}
 ---
 
 *** 
@@ -43,6 +45,11 @@ This document provides a comprehensive review of the Abbott-Lurie Children's Col
 - Measure energy harvest differences between human obesity-associated fecal microbiota (Aim 2).
 - Isolate SDC bacterial utilizers using single-cell isolation toward synbiotic combinations (Aim 3).
 
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.8\textwidth]{./images/approach-overview.png}
+\caption{\small Approach overview}
+\end{figure}
 ### Analysis Progress
 
 #### Microbiome Analysis
@@ -66,7 +73,22 @@ This project has successfully completed comprehensive ex vivo analysis of fecal 
 
 #### Major Findings
 
+\begin{wrapfigure}{r}{0.6\textwidth}
+\vspace{-2\baselineskip}
+\centering
+\includegraphics[width=\linewidth]{./images/key-findings-summary.png}
+\vspace{-25pt}
+\caption{\small Key Findings To Date}
+\vspace{0\baselineskip}
+\end{wrapfigure}
+
 1. **Carbohydrate type and time are primary determinants of SCFA production.** Both rapid digestible carbohydrate (RDC) and slow digestible carbohydrate (SDC) elicited significant increases in butyrate, propionate, and acetate concentrations over 48 hours compared to no-carbohydrate controls. Mixed-effects models accounting for repeated measures confirmed robust main effects and carbohydrate × timepoint interactions, demonstrating that carbohydrate structure and digestibility shape microbial metabolic output.
+
+\begin{wrapfigure}{r}{0.6\textwidth}
+\vspace{-2\baselineskip}
+\centering
+\vspace{0\baselineskip}
+\end{wrapfigure}
 
 2. **Obesity status does not substantially impair ex vivo fermentation capacity.** While minor baseline differences in SCFA levels were observed, the overall magnitude and trajectory of SCFA responses to RDC and SDC were comparable between adolescents with obesity (Case) and healthy-weight controls. Limited significant group main effects or interactions in mixed-effects models indicate that the fundamental microbial capacity to ferment these substrates is preserved in the context of obesity in this cohort.
 
@@ -86,9 +108,16 @@ These findings establish that carbohydrate quality, rather than obesity status p
 
 ## Steps in Progress
 
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\textwidth]{./images/cross-feeding-diagram.png}
+\vspace{-10pt}
+\caption{\small Cross-feeding mechanism}
+\end{figure}
+
 - **Aim 2 (energy harvest):** Ex vivo exposure of fecal samples to SDC and FDC with timepoint collection and bomb calorimetry (kcal per gram) not yet completed.
 - **Aim 3 (SDC utilizers):** Single-cell capture, arraying, and growth assays for SDC vs FDC utilizers from high-SCFA / low–energy-extraction donors not yet completed.
-    - **Reference strain acquisition (*Fusicatenibacter*):** Fully sequenced type strains are being procured from the DSMZ culture collection (see `integrated/fusicatenibacter_strain_information_DSMZ.md`). Two strains have been identified: *F. saccharivorans* (DSM 26062; type strain HT03-11), originally isolated from human feces, with documented saccharolytic capacity for glucose, arabinose, xylose, cellobiose, and starch, and established relevance to carbohydrate metabolism and SCFA production within Lachnospiraceae; and *F. faecihominis* (DSM 113288), also of human fecal origin, with a complete genome sequence available for comparative genomic and functional validation studies.
+    - **Reference strain acquisition (*Fusicatenibacter*):** Fully sequenced type strains are being procured from the DSMZ culture collection. Two strains have been identified: *F. saccharivorans* (DSM 26062; type strain HT03-11), originally isolated from human feces, with documented saccharolytic capacity for glucose, arabinose, xylose, cellobiose, and starch, and established relevance to carbohydrate metabolism and SCFA production within Lachnospiraceae; and *F. faecihominis* (DSM 113288), also of human fecal origin, with a complete genome sequence available for comparative genomic and functional validation studies.
     - **Reference strain acquisition (*Bifidobacterium*):** Given the observed enrichment of *Bifidobacterium* under both RDC and SDC conditions (with greater increases under SDC), procurement of representative strains is warranted. *B. adolescentis* and *B. longum* are established primary fermenters and cross-feeders for butyrate-producing taxa: these species ferment oligosaccharides and starch to lactate and acetate, which are subsequently converted to butyrate by lactate-utilizing organisms (e.g., *Anaerostipes*, *Eubacterium hallii*, *Roseburia*, *Faecalibacterium prausnitzii*). Additionally, *Bifidobacterium* species release partially hydrolyzed oligosaccharides that serve as substrates for select butyrate producers. Reference strains of these species will enable mechanistic and synbiotic co-culture experiments in conjunction with *Fusicatenibacter*.
 - **Analysis:** Finalizing responder/non-responder definitions and validation; any remaining cross-dataset QC and narrative for publication.
 
@@ -152,6 +181,14 @@ These findings establish that carbohydrate quality, rather than obesity status p
 - Integrate energy harvest data with SCFA production and microbiome composition to test whether high-SCFA/low-energy phenotypes correlate with specific taxa
 - Target completion: 3 months from sample retrieval and calorimetry setup
 
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.7\linewidth]{./images/near-mid-term-goals.png}
+\vspace{-10pt}
+\caption{\small Near- and mid-term goals}
+\end{figure}
+
 **2. Advance Aim 3 (SDC utilizer characterization) with taxa-focused approach**
 
 - Obtain and culture reference strains:
@@ -172,6 +209,7 @@ These findings establish that carbohydrate quality, rather than obesity status p
 - Target: Abstract submission within 6–8 weeks; manuscript draft for internal review within 3 months
 
 ### Mid-Term (6–18 months)
+
 
 **1. Pilot dietary intervention: RDC vs SDC supplementation in adolescents**
 
