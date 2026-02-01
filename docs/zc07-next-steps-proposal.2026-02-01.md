@@ -118,7 +118,7 @@ This project has successfully completed comprehensive *ex vivo* analysis of feca
 
 \par\noindent
 
-These findings establish that carbohydrate quality, rather than obesity status per se, is a modifiable determinant of microbial SCFA production in adolescents. The substantial interpersonal variation and identification of candidate taxa (*Fusicatenibacter*, *Bifidobacterium*) that associate with SCFA responsiveness provide a foundation for precision nutrition strategies. Future interventions may be optimized by: (1) selecting individuals with baseline microbiome profiles enriched in SDC-utilizing taxa, (2) co-administering targeted probiotics or synbiotics alongside SDC to enhance fermentation, or (3) using *ex vivo* SCFA assays as companion diagnostics to predict *in vivo* responsiveness to dietary carbohydrate interventions.
+These findings establish that carbohydrate quality, rather than obesity status *per se*, is a modifiable determinant of microbial SCFA production in adolescents. The substantial interpersonal variation and identification of candidate taxa (*Fusicatenibacter*, *Bifidobacterium*) that associate with SCFA responsiveness provide a foundation for precision nutrition strategies. Future interventions may be optimized by: (1) selecting individuals with baseline microbiome profiles enriched in SDC-utilizing taxa, (2) co-administering targeted probiotics or synbiotics alongside SDC to enhance fermentation, or (3) using *ex vivo* SCFA assays as companion diagnostics to predict *in vivo* responsiveness to dietary carbohydrate interventions.
 
 #### Gaps in Translation
 
@@ -131,6 +131,8 @@ Additional gaps to consider include: **gastrointestinal transit and digestion**â
 ***
 
 ## Steps in Progress
+
+The following aims and tasks remain in progress: energy harvest quantification (Aim 2), SDC utilizer characterization and reference strain acquisition (Aim 3), and finalization of integrated analyses and publication narrative.
 
 - **Aim 2 (energy harvest):** *Ex vivo* exposure of fecal samples to SDC and FDC with timepoint collection and bomb calorimetry (kcal per gram) not yet completed.
 - **Aim 3 (SDC utilizers):** Single-cell capture, arraying, and growth assays for SDC vs FDC utilizers from high-SCFA / lowâ€“energy-extraction donors not yet completed.
