@@ -69,7 +69,7 @@ Single workflow combining SCFA and microbiome with shared metadata; SCFA delta a
 
 ### Achievements to Date
 
-This project has successfully completed comprehensive ex vivo analysis of fecal microbiota from adolescents with and without obesity, examining metabolic and compositional responses to carbohydrate substrates of varying digestibility. The integrated analysis combines targeted metabolomics, 16S rRNA gene sequencing, and advanced statistical modeling to provide mechanistic insights into interpersonal variation in carbohydrate fermentation capacity.
+This project has successfully completed comprehensive *ex vivo* analysis of fecal microbiota from adolescents with and without obesity, examining metabolic and compositional responses to carbohydrate substrates of varying digestibility. The integrated analysis combines targeted metabolomics, 16S rRNA gene sequencing, and advanced statistical modeling to provide mechanistic insights into interpersonal variation in carbohydrate fermentation capacity.
 
 #### Major Findings
 
@@ -90,7 +90,7 @@ This project has successfully completed comprehensive ex vivo analysis of fecal 
 \vspace{0\baselineskip}
 \end{wrapfigure}
 
-2. **Obesity status does not substantially impair ex vivo fermentation capacity.** While minor baseline differences in SCFA levels were observed, the overall magnitude and trajectory of SCFA responses to RDC and SDC were comparable between adolescents with obesity (Case) and healthy-weight controls. Limited significant group main effects or interactions in mixed-effects models indicate that the fundamental microbial capacity to ferment these substrates is preserved in the context of obesity in this cohort.
+2. **Obesity status does not substantially impair *ex vivo* fermentation capacity.** While minor baseline differences in SCFA levels were observed, the overall magnitude and trajectory of SCFA responses to RDC and SDC were comparable between adolescents with obesity (Case) and healthy-weight controls. Limited significant group main effects or interactions in mixed-effects models indicate that the fundamental microbial capacity to ferment these substrates is preserved in the context of obesity in this cohort.
 
 3. **Pronounced interpersonal variation in SCFA production supports precision nutrition approaches.** Subject-to-subject variability in SCFA response magnitude was substantial, with some individuals consistently classified as high or low producers across carbohydrate conditions. This heterogeneity persisted even after accounting for obesity status and carbohydrate type, underscoring that individual microbiome composition—rather than obesity phenotype alone—drives metabolic responsiveness. Responder vs non-responder stratification (median-delta split for butyrate and propionate) enabled targeted characterization of microbiome features associated with differential SCFA production.
 
@@ -102,7 +102,7 @@ This project has successfully completed comprehensive ex vivo analysis of fecal 
 
 #### Implications
 
-These findings establish that carbohydrate quality, rather than obesity status per se, is a modifiable determinant of microbial SCFA production in adolescents. The substantial interpersonal variation and identification of candidate taxa (*Fusicatenibacter*, *Bifidobacterium*) that associate with SCFA responsiveness provide a foundation for precision nutrition strategies. Future interventions may be optimized by: (1) selecting individuals with baseline microbiome profiles enriched in SDC-utilizing taxa, (2) co-administering targeted probiotics or synbiotics alongside SDC to enhance fermentation, or (3) using ex vivo SCFA assays as companion diagnostics to predict in vivo responsiveness to dietary carbohydrate interventions.
+These findings establish that carbohydrate quality, rather than obesity status per se, is a modifiable determinant of microbial SCFA production in adolescents. The substantial interpersonal variation and identification of candidate taxa (*Fusicatenibacter*, *Bifidobacterium*) that associate with SCFA responsiveness provide a foundation for precision nutrition strategies. Future interventions may be optimized by: (1) selecting individuals with baseline microbiome profiles enriched in SDC-utilizing taxa, (2) co-administering targeted probiotics or synbiotics alongside SDC to enhance fermentation, or (3) using *ex vivo* SCFA assays as companion diagnostics to predict *in vivo* responsiveness to dietary carbohydrate interventions.
 
 ***
 
@@ -115,7 +115,7 @@ These findings establish that carbohydrate quality, rather than obesity status p
 \caption{\small Cross-feeding mechanism}
 \end{figure}
 
-- **Aim 2 (energy harvest):** Ex vivo exposure of fecal samples to SDC and FDC with timepoint collection and bomb calorimetry (kcal per gram) not yet completed.
+- **Aim 2 (energy harvest):** *Ex vivo* exposure of fecal samples to SDC and FDC with timepoint collection and bomb calorimetry (kcal per gram) not yet completed.
 - **Aim 3 (SDC utilizers):** Single-cell capture, arraying, and growth assays for SDC vs FDC utilizers from high-SCFA / low–energy-extraction donors not yet completed.
     - **Reference strain acquisition (*Fusicatenibacter*):** Fully sequenced type strains are being procured from the DSMZ culture collection. Two strains have been identified: *F. saccharivorans* (DSM 26062; type strain HT03-11), originally isolated from human feces, with documented saccharolytic capacity for glucose, arabinose, xylose, cellobiose, and starch, and established relevance to carbohydrate metabolism and SCFA production within Lachnospiraceae; and *F. faecihominis* (DSM 113288), also of human fecal origin, with a complete genome sequence available for comparative genomic and functional validation studies.
     - **Reference strain acquisition (*Bifidobacterium*):** Given the observed enrichment of *Bifidobacterium* under both RDC and SDC conditions (with greater increases under SDC), procurement of representative strains is warranted. *B. adolescentis* and *B. longum* are established primary fermenters and cross-feeders for butyrate-producing taxa: these species ferment oligosaccharides and starch to lactate and acetate, which are subsequently converted to butyrate by lactate-utilizing organisms (e.g., *Anaerostipes*, *Eubacterium hallii*, *Roseburia*, *Faecalibacterium prausnitzii*). Additionally, *Bifidobacterium* species release partially hydrolyzed oligosaccharides that serve as substrates for select butyrate producers. Reference strains of these species will enable mechanistic and synbiotic co-culture experiments in conjunction with *Fusicatenibacter*.
@@ -129,9 +129,9 @@ These findings establish that carbohydrate quality, rather than obesity status p
 ### Abstract (Sample)
  *Microbiome Composition and Short-Chain Fatty Acid Response to Slow and Rapid Digestible Carbohydrates: An Ex Vivo Study in Adolescents With and Without Obesity*
 
-**Introduction.** Childhood obesity is a major driver of adult obesity, and the gut microbiome is a central mediator of metabolic health. Carbohydrate quality—particularly digestibility—may matter more than quantity for metabolic outcomes. Interpersonal variation in microbial short-chain fatty acid (SCFA) production may determine who benefits from slowly digestible carbohydrates (SDC). We aimed to characterize ex vivo SCFA production and microbiome composition in adolescents with and without obesity in response to different carbohydrate substrates.
+**Introduction.** Childhood obesity is a major driver of adult obesity, and the gut microbiome is a central mediator of metabolic health. Carbohydrate quality—particularly digestibility—may matter more than quantity for metabolic outcomes. Interpersonal variation in microbial short-chain fatty acid (SCFA) production may determine who benefits from slowly digestible carbohydrates (SDC). We aimed to characterize *ex vivo* SCFA production and microbiome composition in adolescents with and without obesity in response to different carbohydrate substrates.
 
-**Methods.** Fecal samples from adolescents with obesity (Case) and healthy-weight controls (Control) were incubated ex vivo under no-carbohydrate, rapid digestible (RDC), and slow digestible (SDC) conditions. SCFAs (acetate, butyrate, propionate, and related metabolites) were quantified by gas chromatography–mass spectrometry after PFBBr derivatization; microbiome composition was assessed by 16S rRNA gene sequencing. Analyses included linear mixed-effects models for SCFA trajectories, alpha and beta diversity with PERMANOVA, differential abundance (ANCOM-BC2, MaAsLin2), taxon–SCFA associations, and responder vs non-responder stratification (median-delta SCFA).
+**Methods.** Fecal samples from adolescents with obesity (Case) and healthy-weight controls (Control) were incubated *ex vivo* under no-carbohydrate, rapid digestible (RDC), and slow digestible (SDC) conditions. SCFAs (acetate, butyrate, propionate, and related metabolites) were quantified by gas chromatography–mass spectrometry after PFBBr derivatization; microbiome composition was assessed by 16S rRNA gene sequencing. Analyses included linear mixed-effects models for SCFA trajectories, alpha and beta diversity with PERMANOVA, differential abundance (ANCOM-BC2, MaAsLin2), taxon–SCFA associations, and responder vs non-responder stratification (median-delta SCFA).
 
 **Results.** Carbohydrate type and incubation time were the primary drivers of SCFA production; both RDC and SDC increased SCFAs versus no-carbohydrate controls with SDC driving the highest levels of butyrate. Obesity status did not affect fermentation capacity. Pronounced interpersonal variation in SCFA response was observed. Specific taxa (e.g., *Fusicatenibacter*) were associated with SCFA concentrations; responder stratification enabled targeted characterization of microbiome composition differences.
 
@@ -149,23 +149,23 @@ These findings establish that carbohydrate quality, rather than obesity status p
   5. *Ex Vivo Fermentation Capacity of Adolescent Gut Microbiota: Carbohydrate Type Supersedes Obesity Status as a Determinant of SCFA Production*
 - **Structured abstract format:** Background, Methods, Results, Conclusions (see sample abstract above).
 - **Introduction:** Childhood obesity, microbiome as metabolic mediator, SDC/FDC rationale, Lurie–Abbott aims, interpersonal variation and precision nutrition.
-- **Methods:** Subject/sample description; ex vivo culture conditions; SCFA (extraction, derivatization, GC-MS); 16S sequencing and processing; alpha/beta diversity, differential abundance, mixed-effects and taxon–SCFA analyses; responder definition; software and FDR.
+- **Methods:** Subject/sample description; *ex vivo* culture conditions; SCFA (extraction, derivatization, GC-MS); 16S sequencing and processing; alpha/beta diversity, differential abundance, mixed-effects and taxon–SCFA analyses; responder definition; software and FDR.
 - **Results (content we have):** Sample summary; SCFA by group and carbohydrate type; SCFA over time and delta analyses; mixed-effects results; alpha/beta diversity; composition and differential abundance; taxon–SCFA (e.g., *Fusicatenibacter*) and responder vs non-responder composition.
 - **Results (to fill in):** Bomb calorimetry (if Aim 2 completed); isolate growth data (if Aim 3 used); any additional validation or sensitivity analyses.
-- **Discussion:** Interpretation of carbohydrate and time effects; interpersonal variation and precision nutrition; taxa–SCFA and responder findings; limitations (ex vivo, single cohort, timepoints); future directions (Aim 2/3, mechanisms, trials).
+- **Discussion:** Interpretation of carbohydrate and time effects; interpersonal variation and precision nutrition; taxa–SCFA and responder findings; limitations (*ex vivo*, single cohort, timepoints); future directions (Aim 2/3, mechanisms, trials).
 - **Major figures/tables planned:** (1) Study design/sampling schema; (2) SCFA by carbohydrate type and time (e.g., line + delta boxplots); (3) Alpha/beta diversity by group, carbohydrate, timepoint; (4) Composition (e.g., genus bar/alluvial) 0H vs 48H; (5) Differential abundance (forest or volcano); (6) Taxon–SCFA correlations (e.g., *Fusicatenibacter* vs butyrate/propionate); (7) Responder vs non-responder composition; (8) Summary tables: mixed-effects SCFA, PERMANOVA, DA summary (taxon | method | p/q).
 
 ### Data to Improve Publication Impact
 
-- **Bomb calorimetry of energy harvest:** Quantify energy extraction (kcal per gram) by ex vivo fecal microbiota under no-carbohydrate, RDC, and SDC conditions to test whether carbohydrate type and obesity status affect microbial energy harvest (aligns with Aim 2).
-- **Energy harvest with physiologically relevant substrates:** Apply bomb calorimetry to ex vivo cultures supplied with pre-digested carbohydrates from a simulated gastrointestinal digestion model (e.g., SHIME or similar) to better approximate in vivo substrate availability and strengthen translational interpretation.
+- **Bomb calorimetry of energy harvest:** Quantify energy extraction (kcal per gram) by *ex vivo* fecal microbiota under no-carbohydrate, RDC, and SDC conditions to test whether carbohydrate type and obesity status affect microbial energy harvest (aligns with Aim 2).
+- **Energy harvest with physiologically relevant substrates:** Apply bomb calorimetry to *ex vivo* cultures supplied with pre-digested carbohydrates from a simulated gastrointestinal digestion model (e.g., SHIME or similar) to better approximate *in vivo* substrate availability and strengthen translational interpretation.
 - **Mechanistic validation of *Fusicatenibacter*:** Measure SCFA production by *Fusicatenibacter* reference strains (e.g., *F. saccharivorans*, *F. faecihominis*) when grown on RDC vs SDC alone, and with acetate or Bifidobacterium feeder co-culture, to confirm cross-feeding and carbohydrate-utilization roles inferred from the integrated microbiome–SCFA analyses.
 
 ***
 
 ## Follow on Studies for Consideration
 
-- **Mechanistic follow-on:** Link ex vivo SCFA and taxa to *in vivo* outcomes (glycemia, weight, inflammation); validate *Fusicatenibacter* and other SDC-utilizers in gnotobiotic or cultured systems; test synbiotic (SDC + isolates) in preclinical or pilot human studies.
+- **Mechanistic follow-on:** Link *ex vivo* SCFA and taxa to *in vivo* outcomes (glycemia, weight, inflammation); validate *Fusicatenibacter* and other SDC-utilizers in gnotobiotic or cultured systems; test synbiotic (SDC + isolates) in preclinical or pilot human studies.
 - **Larger/clinical:** Replicate in larger adolescent cohorts; test SDC interventions with microbiome and SCFA as mediators; define predictors of “SCFA responder” for trial stratification.
 
 ***
@@ -176,7 +176,7 @@ These findings establish that carbohydrate quality, rather than obesity status p
 
 **1. Complete Aim 2 (Energy harvest quantification)**
 
-- Perform bomb calorimetry on banked ex vivo culture samples (no-carb, RDC, SDC) from all subjects
+- Perform bomb calorimetry on banked *ex vivo* culture samples (no-carb, RDC, SDC) from all subjects
 - Analyze energy extraction patterns by obesity status and carbohydrate type
 - Integrate energy harvest data with SCFA production and microbiome composition to test whether high-SCFA/low-energy phenotypes correlate with specific taxa
 - Target completion: 3 months from sample retrieval and calorimetry setup
@@ -196,7 +196,7 @@ These findings establish that carbohydrate quality, rather than obesity status p
   - *Bifidobacterium adolescentis* and *B. longum* reference strains
 - Monoculture growth assays: Test SCFA production (acetate, lactate, butyrate, propionate) by each strain on RDC vs SDC substrates
 - Co-culture experiments: *Bifidobacterium* + *Fusicatenibacter* to test acetate/lactate cross-feeding and enhanced butyrate production with SDC
-- Compare reference strain SCFA profiles to ex vivo community patterns from responder vs non-responder subjects
+- Compare reference strain SCFA profiles to *ex vivo* community patterns from responder vs non-responder subjects
 - Target completion: 4–6 months (dependent on strain acquisition and culture optimization)
 
 **3. Manuscript and presentation preparation**
@@ -213,12 +213,12 @@ These findings establish that carbohydrate quality, rather than obesity status p
 
 **1. Pilot dietary intervention: RDC vs SDC supplementation in adolescents**
 
-*Rationale:* Translate ex vivo findings to in vivo setting; test whether SDC preferentially enriches *Fusicatenibacter*, *Bifidobacterium*, and other SCFA producers; identify microbiome/SCFA predictors of metabolic response.
+*Rationale:* Translate *ex vivo* findings to *in vivo* setting; test whether SDC preferentially enriches *Fusicatenibacter*, *Bifidobacterium*, and other SCFA producers; identify microbiome/SCFA predictors of metabolic response.
 
 **Key Questions:**
 
 - Does SDC supplementation increase abundance of *Fusicatenibacter* and *Bifidobacterium* compared to RDC or control diet?
-- Do baseline microbiome composition (presence/abundance of *Fusicatenibacter*, *Bifidobacterium*) and SCFA production capacity (ex vivo assay at baseline) predict glycemic, weight, or inflammatory responses to SDC?
+- Do baseline microbiome composition (presence/abundance of *Fusicatenibacter*, *Bifidobacterium*) and SCFA production capacity (*ex vivo* assay at baseline) predict glycemic, weight, or inflammatory responses to SDC?
 - Are changes in *Fusicatenibacter* and *Bifidobacterium* abundance during intervention associated with responder vs non-responder phenotypes?
 
 **Study Design:**
@@ -236,7 +236,7 @@ These findings establish that carbohydrate quality, rather than obesity status p
 
 **Secondary Outcomes:**
 
-- Fecal microbiome composition (16S and/or shotgun metagenomics): relative and absolute abundance of *Fusicatenibacter*, *Bifidobacterium*, other DA taxa from ex vivo study
+- Fecal microbiome composition (16S and/or shotgun metagenomics): relative and absolute abundance of *Fusicatenibacter*, *Bifidobacterium*, other DA taxa from *ex vivo* study
 - Fecal and plasma SCFA concentrations (acetate, propionate, butyrate)
 - Inflammatory markers (hsCRP, IL-6, TNF-α)
 - Dietary adherence and tolerability (food diaries, GI symptom questionnaires)
@@ -248,9 +248,9 @@ These findings establish that carbohydrate quality, rather than obesity status p
 - Dietary intervention: Provided supplements (blinded sachets) mixed into food/beverages daily; monthly dietitian counseling to maintain isocaloric background diet
 - Sample collection: Fasting blood, fecal sample (home collection kit, -80°C storage within 24h)
 - Microbiome: 16S V4 sequencing + qPCR for absolute quantification; consider shotgun metagenomics for functional pathways
-- SCFA: GC-MS PFBBr derivatization (same protocol as ex vivo study)
-- Ex vivo fermentation assay at baseline: Use subject's baseline fecal sample in RDC/SDC culture to define "high" vs "low" SCFA producer phenotype for predictor analysis
-- Statistical analysis: Mixed-effects models for repeated measures; correlation of baseline microbiome/ex vivo SCFA with outcome changes; responder definition (e.g., >10% reduction in HOMA-IR or glucose AUC)
+- SCFA: GC-MS PFBBr derivatization (same protocol as *ex vivo* study)
+- *Ex vivo* fermentation assay at baseline: Use subject's baseline fecal sample in RDC/SDC culture to define "high" vs "low" SCFA producer phenotype for predictor analysis
+- Statistical analysis: Mixed-effects models for repeated measures; correlation of baseline microbiome/*ex vivo* SCFA with outcome changes; responder definition (e.g., >10% reduction in HOMA-IR or glucose AUC)
 
 **Timeline:** 12–18 months (3 months planning/IRB, 6–9 months enrollment/intervention, 3 months analysis/manuscript)
 
@@ -284,7 +284,7 @@ These findings establish that carbohydrate quality, rather than obesity status p
 **1. Precision nutrition trials stratified by microbiome/SCFA phenotype**
 
 - Multi-site RCTs of SDC ± synbiotic (*Fusicatenibacter*, *Bifidobacterium*, or consortia) in adolescents with obesity
-- Enrollment stratified or enriched for baseline microbiome features (e.g., presence/absence of *Fusicatenibacter*, ex vivo high vs low SCFA producer)
+- Enrollment stratified or enriched for baseline microbiome features (e.g., presence/absence of *Fusicatenibacter*, *ex vivo* high vs low SCFA producer)
 - Adaptive trial designs: Early futility or efficacy signals based on microbiome/SCFA biomarkers
 - Integration with digital health (CGM, activity trackers, microbiome monitoring)
 - Outcomes: Weight, glycemia, cardiometabolic risk, quality of life, microbiome/SCFA durability
@@ -292,7 +292,7 @@ These findings establish that carbohydrate quality, rather than obesity status p
 **2. Mechanistic and translational studies**
 
 - Gnotobiotic mouse models: Colonize with defined consortia (*Fusicatenibacter* + *Bifidobacterium* + butyrate producers) ± SDC diet; measure weight, glucose, inflammation, intestinal barrier, hepatic metabolism
-- Human organoid or epithelial co-culture models: Test SCFA (from ex vivo cultures or pure standards) effects on enterocyte glucose transport, GLP-1 secretion, barrier integrity
+- Human organoid or epithelial co-culture models: Test SCFA (from *ex vivo* cultures or pure standards) effects on enterocyte glucose transport, GLP-1 secretion, barrier integrity
 - Multi-omics integration: Metagenomics, metatranscriptomics, metabolomics (fecal, serum, urine) to map carbohydrate -> microbiome -> metabolite -> host pathways
 - Collaboration with systems biology and computational groups for predictive modeling
 
