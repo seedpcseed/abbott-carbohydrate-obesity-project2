@@ -18,13 +18,21 @@ header-includes:
   - \newunicodechar{×}{{\fallbackfont ×}}
   - \defaultfontfeatures{Ligatures=TeX}
   - \usepackage{graphicx}
+  - \usepackage{titlesec}
+  - \titlespacing*{\subsubsection}{0pt}{3.25ex plus 1ex minus .2ex}{1.5ex plus .2ex}
   - \usepackage{wrapfig}
+  - \usepackage{fancyhdr}
+  - \pagestyle{fancy}
+  - \fancyhf{}
+  - \fancyhead[R]{\textit{Abbott-Lurie Children's Collaboration ZC07, Updated 2026-02-02}}
+  - \fancyfoot[C]{\thepage}
+  - \fancypagestyle{plain}{\fancyhf{}\fancyfoot[C]{\thepage}\renewcommand{\headrulewidth}{0pt}}
 ---
 
 *** 
 ## Introduction and Purpose 
 
-This document provides a comprehensive review of the Abbott-Lurie Children's Collaboration ZC07 project, summarizing progress to date and outlining a strategic roadmap for near-term, mid-term, and long-term activities. The objectives of this proposal are to:
+This document provides a comprehensive review of the ZC07 Abbott-Lurie Children's Collaboration, summarizing progress to date and outlining a strategic roadmap for near-term, mid-term, and long-term activities to consider. The objectives of this documents are to:
 
 1. **Review project goals and milestones:** Summarize the original aims and assess progress toward each objective.
 2. **Identify completed and ongoing work:** Document analyses and experiments that have been finalized, and clarify remaining tasks.
@@ -36,6 +44,14 @@ This document provides a comprehensive review of the Abbott-Lurie Children's Col
 ***
 
 ## Project Background and Progress to Date 
+
+### Significance
+
+Obesity continues to increase as a public health emergency, with the origins of most adult obesity rooted in childhood. Effective clinical approaches are urgently needed to prevent or reverse childhood obesity. The gut-associated microbiome is an established central factor in energy harvest, hepatic function, insulin sensitivity, and adipose tissue homeostasis, making it a critical target for obesity intervention strategies. A growing body of evidence indicates that carbohydrate *quality*—particularly digestibility—matters more than quantity for metabolic outcomes. Resistant starch, slowly digestible starch (SDS), and high-molecular-weight β-glucans have been shown to improve glycemic control, reduce visceral adiposity, and modulate the gut microbiota in ways that favor insulin sensitivity and SCFA production. Meta-analyses and clinical trials support the therapeutic potential of these substrates for metabolic syndrome and obesity management, though optimal dosing, individual variability, and long-term sustainability remain active areas of research.
+
+This project builds on foundational work demonstrating that slowly digestible carbohydrates (SDC) reduce glucose excursions in healthy, insulin-resistant, and type 2 diabetic individuals by inducing slow, prolonged glucose release and lower postprandial glycemic responses. In type 2 diabetic patients, SDC-rich diets have been shown to reduce glycemic variability parameters (e.g., standard deviation, MAGE) by 17–23%, with these parameters correlating with HbA1c. Abbott investigators have shown in rodent  models of obesity that nutrition with SDC, in comparison to fast digestible carbohydrate (FDC) sources, reverses obesity-associated phenotypes including elevated body mass, insulin resistance, and systemic inflammation. These preclinical findings provide a mechanistic rationale for testing SDC in human populations, but interpersonal differences in SDC utilization by the childhood-associated human microbiota may not be fully predicted by murine models.
+
+Lurie investigators and colleagues have demonstrated interpersonal variation in short-chain fatty acid (SCFA) production by the human gut microbiome from adolescents with obesity in response to *ex vivo* prebiotic exposure. This variation suggests that complex carbohydrate utilization by the microbiota differs between individuals and may determine who responds to SDC and other nutritional approaches to obesity. Understanding the compositional and metabolic responses of the childhood-associated microbiota to slow versus fast digestible carbohydrates can therefore inform future obesity-treatment trials and precision approaches to therapy—including the identification of likely responders and the development of synbiotic or dietary strategies tailored to microbiome phenotype. The ZC07 collaboration between Abbott Nutrition and Lurie Children's Hospital was established to measure this variation systematically and to identify childhood-associated organisms with facile utilization of SDC, with the long-term goal of enabling precision nutrition interventions for pediatric obesity.
 
 ### Project Goals
 
@@ -67,7 +83,7 @@ Targeted SCFA metabolomics (GC-MS/PFBBr: acetate, butyrate, propionate, 5-aminov
 
 Single workflow combining SCFA and microbiome with shared metadata; SCFA delta and mixed-effects results; alpha/beta diversity; composition and differential abundance; taxon–SCFA associations (e.g., *Fusicatenibacter* vs butyrate/propionate); responder vs non-responder (median-delta split for butyrate/propionate) and composition comparisons; absolute abundance (qPCR-based) for focal taxa; correlation and regression for taxa–SCFA relationships.
 
-### Achievements to Date
+### Progress to Date
 
 This project has successfully completed comprehensive *ex vivo* analysis of fecal microbiota from adolescents with and without obesity, examining metabolic and compositional responses to carbohydrate substrates of varying digestibility. The integrated analysis combines targeted metabolomics, 16S rRNA gene sequencing, and advanced statistical modeling to provide mechanistic insights into interpersonal variation in carbohydrate fermentation capacity.
 
@@ -101,8 +117,12 @@ This project has successfully completed comprehensive *ex vivo* analysis of feca
 6. **Integration of SCFA and microbiome data identifies taxon–metabolite linkages.** By incorporating SCFA concentrations as continuous predictors in differential abundance models, taxa positively or negatively associated with butyrate and propionate were identified. These taxon–SCFA associations provide mechanistic hypotheses for how specific community members contribute to overall fermentation output. The responder stratification revealed compositional differences: high SCFA responders had enriched abundance of putative butyrate producers (e.g., *Fusicatenibacter*, *Roseburia*) and primary fermenters (e.g., *Bifidobacterium*), while low responders showed reduced representation of these taxa.
 
 #### Implications
-
 These findings establish that carbohydrate quality, rather than obesity status per se, is a modifiable determinant of microbial SCFA production in adolescents. The substantial interpersonal variation and identification of candidate taxa (*Fusicatenibacter*, *Bifidobacterium*) that associate with SCFA responsiveness provide a foundation for precision nutrition strategies. Future interventions may be optimized by: (1) selecting individuals with baseline microbiome profiles enriched in SDC-utilizing taxa, (2) co-administering targeted probiotics or synbiotics alongside SDC to enhance fermentation, or (3) using *ex vivo* SCFA assays as companion diagnostics to predict *in vivo* responsiveness to dietary carbohydrate interventions.
+
+#### Gaps in Translation
+Several gaps limit translation of these *ex vivo* findings to human health outcomes. First, elevations in fecal SCFA do not necessarily correlate with plasma SCFA; systemic availability and metabolic fate of microbially produced SCFAs remain to be established in this population. Second, microbiome changes observed under specific carbohydrate conditions *ex vivo* may not reflect what occurs *in vivo*, where substrate availability, transit time, and host factors differ. Third, elevated SCFA production—whether fecal or plasma—may or may not associate with meaningful clinical outcomes such as improved insulin sensitivity, HbA1c, or weight loss; these relationships have not been tested in this cohort. Fourth, *Fusicatenibacter* and *Bifidobacterium*, though associated with SCFA production *ex vivo*, may or may not correlate with these human outcomes, and whether their presence or abundance in the baseline microbiota predicts dietary response to SDC is unknown.
+
+Additional gaps to consider include: **gastrointestinal transit and digestion**—the carbohydrates in this study were not exposed to different segments of the gastrointestinal tract (stomach, small intestine) where they may be partially digested or modified before reaching the colon; *ex vivo* fermentation therefore uses substrates that may differ from those available to the colonic microbiota *in vivo*; **dose, formulation, and duration**—*ex vivo* conditions use fixed substrates and short incubations (48–72 h), whereas *in vivo* dose, SDC type (e.g., resistant starch vs slowly digestible starch), food matrix, and intervention length (weeks to months) will affect substrate delivery and microbiome adaptation; **dietary context**—*ex vivo* tests single substrates, but *in vivo* the background diet (fiber, fat, other carbohydrates) and whether SDC is substituted or added will influence response; **host factors**—medication use (e.g., metformin, GLP-1 agonists), genetics, gut motility, and intestinal transit are not captured *ex vivo* but can modify *in vivo* microbiome and metabolic outcomes; **generalizability**—this cohort is a single adolescent population from one site, and results may not extend to other ages, ethnicities, or obesity severity; and **causality**—*ex vivo* taxon–SCFA associations are correlative, and causal roles in health outcomes require intervention or mechanistic studies. Closing these gaps requires a direct human study (e.g., a pilot dietary intervention) in which SDC or control supplementation is administered, microbiome and SCFA are measured over time, and glycemic, metabolic, and weight outcomes are assessed to test whether *ex vivo* phenotypes predict *in vivo* response.
 
 ***
 
@@ -126,6 +146,9 @@ These findings establish that carbohydrate quality, rather than obesity status p
 ***
 
 ## Near Term Work 
+
+Near-term priorities center on disseminating current findings and strengthening the manuscript. Below are a draft conference abstract, a publication outline with planned content and figures, and a list of additional data that would improve publication impact.
+
 ### Abstract (Sample)
  *Microbiome Composition and Short-Chain Fatty Acid Response to Slow and Rapid Digestible Carbohydrates: An Ex Vivo Study in Adolescents With and Without Obesity*
 
