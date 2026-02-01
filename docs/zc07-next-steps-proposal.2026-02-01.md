@@ -18,8 +18,6 @@ header-includes:
   - \newunicodechar{×}{{\fallbackfont ×}}
   - \defaultfontfeatures{Ligatures=TeX}
   - \usepackage{graphicx}
-  - \usepackage{titlesec}
-  - \titlespacing*{\subsubsection}{0pt}{3.25ex plus 1ex minus .2ex}{1.5ex plus .2ex}
   - \usepackage{wrapfig}
   - \usepackage{fancyhdr}
   - \pagestyle{fancy}
@@ -117,9 +115,15 @@ This project has successfully completed comprehensive *ex vivo* analysis of feca
 6. **Integration of SCFA and microbiome data identifies taxon–metabolite linkages.** By incorporating SCFA concentrations as continuous predictors in differential abundance models, taxa positively or negatively associated with butyrate and propionate were identified. These taxon–SCFA associations provide mechanistic hypotheses for how specific community members contribute to overall fermentation output. The responder stratification revealed compositional differences: high SCFA responders had enriched abundance of putative butyrate producers (e.g., *Fusicatenibacter*, *Roseburia*) and primary fermenters (e.g., *Bifidobacterium*), while low responders showed reduced representation of these taxa.
 
 #### Implications
+
+\par\noindent
+
 These findings establish that carbohydrate quality, rather than obesity status per se, is a modifiable determinant of microbial SCFA production in adolescents. The substantial interpersonal variation and identification of candidate taxa (*Fusicatenibacter*, *Bifidobacterium*) that associate with SCFA responsiveness provide a foundation for precision nutrition strategies. Future interventions may be optimized by: (1) selecting individuals with baseline microbiome profiles enriched in SDC-utilizing taxa, (2) co-administering targeted probiotics or synbiotics alongside SDC to enhance fermentation, or (3) using *ex vivo* SCFA assays as companion diagnostics to predict *in vivo* responsiveness to dietary carbohydrate interventions.
 
 #### Gaps in Translation
+
+\par\noindent
+
 Several gaps limit translation of these *ex vivo* findings to human health outcomes. First, elevations in fecal SCFA do not necessarily correlate with plasma SCFA; systemic availability and metabolic fate of microbially produced SCFAs remain to be established in this population. Second, microbiome changes observed under specific carbohydrate conditions *ex vivo* may not reflect what occurs *in vivo*, where substrate availability, transit time, and host factors differ. Third, elevated SCFA production—whether fecal or plasma—may or may not associate with meaningful clinical outcomes such as improved insulin sensitivity, HbA1c, or weight loss; these relationships have not been tested in this cohort. Fourth, *Fusicatenibacter* and *Bifidobacterium*, though associated with SCFA production *ex vivo*, may or may not correlate with these human outcomes, and whether their presence or abundance in the baseline microbiota predicts dietary response to SDC is unknown.
 
 Additional gaps to consider include: **gastrointestinal transit and digestion**—the carbohydrates in this study were not exposed to different segments of the gastrointestinal tract (stomach, small intestine) where they may be partially digested or modified before reaching the colon; *ex vivo* fermentation therefore uses substrates that may differ from those available to the colonic microbiota *in vivo*; **dose, formulation, and duration**—*ex vivo* conditions use fixed substrates and short incubations (48–72 h), whereas *in vivo* dose, SDC type (e.g., resistant starch vs slowly digestible starch), food matrix, and intervention length (weeks to months) will affect substrate delivery and microbiome adaptation; **dietary context**—*ex vivo* tests single substrates, but *in vivo* the background diet (fiber, fat, other carbohydrates) and whether SDC is substituted or added will influence response; **host factors**—medication use (e.g., metformin, GLP-1 agonists), genetics, gut motility, and intestinal transit are not captured *ex vivo* but can modify *in vivo* microbiome and metabolic outcomes; **generalizability**—this cohort is a single adolescent population from one site, and results may not extend to other ages, ethnicities, or obesity severity; and **causality**—*ex vivo* taxon–SCFA associations are correlative, and causal roles in health outcomes require intervention or mechanistic studies. Closing these gaps requires a direct human study (e.g., a pilot dietary intervention) in which SDC or control supplementation is administered, microbiome and SCFA are measured over time, and glycemic, metabolic, and weight outcomes are assessed to test whether *ex vivo* phenotypes predict *in vivo* response.
@@ -128,17 +132,17 @@ Additional gaps to consider include: **gastrointestinal transit and digestion**�
 
 ## Steps in Progress
 
+- **Aim 2 (energy harvest):** *Ex vivo* exposure of fecal samples to SDC and FDC with timepoint collection and bomb calorimetry (kcal per gram) not yet completed.
+- **Aim 3 (SDC utilizers):** Single-cell capture, arraying, and growth assays for SDC vs FDC utilizers from high-SCFA / low–energy-extraction donors not yet completed.
+    - **Reference strain acquisition (*Fusicatenibacter*):** Fully sequenced type strains are being procured from the DSMZ culture collection. Two strains have been identified: *F. saccharivorans* (DSM 26062; type strain HT03-11), originally isolated from human feces, with documented saccharolytic capacity for glucose, arabinose, xylose, cellobiose, and starch, and established relevance to carbohydrate metabolism and SCFA production within Lachnospiraceae; and *F. faecihominis* (DSM 113288), also of human fecal origin, with a complete genome sequence available for comparative genomic and functional validation studies.
+    - **Reference strain acquisition (*Bifidobacterium*):** Given the observed enrichment of *Bifidobacterium* under both RDC and SDC conditions (with greater increases under SDC), procurement of representative strains is warranted. *B. adolescentis* and *B. longum* are established primary fermenters and cross-feeders for butyrate-producing taxa: these species ferment oligosaccharides and starch to lactate and acetate, which are subsequently converted to butyrate by lactate-utilizing organisms (e.g., *Anaerostipes*, *Eubacterium hallii*, *Roseburia*, *Faecalibacterium prausnitzii*). Additionally, *Bifidobacterium* species release partially hydrolyzed oligosaccharides that serve as substrates for select butyrate producers. Reference strains of these species will enable mechanistic and synbiotic co-culture experiments in conjunction with *Fusicatenibacter*.
+    
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.5\textwidth]{./images/cross-feeding-diagram.png}
 \vspace{-10pt}
 \caption{\small Cross-feeding mechanism}
 \end{figure}
-
-- **Aim 2 (energy harvest):** *Ex vivo* exposure of fecal samples to SDC and FDC with timepoint collection and bomb calorimetry (kcal per gram) not yet completed.
-- **Aim 3 (SDC utilizers):** Single-cell capture, arraying, and growth assays for SDC vs FDC utilizers from high-SCFA / low–energy-extraction donors not yet completed.
-    - **Reference strain acquisition (*Fusicatenibacter*):** Fully sequenced type strains are being procured from the DSMZ culture collection. Two strains have been identified: *F. saccharivorans* (DSM 26062; type strain HT03-11), originally isolated from human feces, with documented saccharolytic capacity for glucose, arabinose, xylose, cellobiose, and starch, and established relevance to carbohydrate metabolism and SCFA production within Lachnospiraceae; and *F. faecihominis* (DSM 113288), also of human fecal origin, with a complete genome sequence available for comparative genomic and functional validation studies.
-    - **Reference strain acquisition (*Bifidobacterium*):** Given the observed enrichment of *Bifidobacterium* under both RDC and SDC conditions (with greater increases under SDC), procurement of representative strains is warranted. *B. adolescentis* and *B. longum* are established primary fermenters and cross-feeders for butyrate-producing taxa: these species ferment oligosaccharides and starch to lactate and acetate, which are subsequently converted to butyrate by lactate-utilizing organisms (e.g., *Anaerostipes*, *Eubacterium hallii*, *Roseburia*, *Faecalibacterium prausnitzii*). Additionally, *Bifidobacterium* species release partially hydrolyzed oligosaccharides that serve as substrates for select butyrate producers. Reference strains of these species will enable mechanistic and synbiotic co-culture experiments in conjunction with *Fusicatenibacter*.
 - **Analysis:** Finalizing responder/non-responder definitions and validation; any remaining cross-dataset QC and narrative for publication.
 
 **Challenges in completing remaining goals:** Resource and timeline constraints for bomb calorimetry and single-cell isolation workflows; need to align sample availability and lab capacity for Aims 2–3; defining responder thresholds (median-delta vs clinical anchors) for publication; coordinating integrated analyses across SCFA and microbiome pipelines.
@@ -184,12 +188,6 @@ Near-term priorities center on disseminating current findings and strengthening 
 - **Energy harvest with physiologically relevant substrates:** Apply bomb calorimetry to *ex vivo* cultures supplied with pre-digested carbohydrates from a simulated gastrointestinal digestion model (e.g., SHIME or similar) to better approximate *in vivo* substrate availability and strengthen translational interpretation.
 - **Mechanistic validation of *Fusicatenibacter*:** Measure SCFA production by *Fusicatenibacter* reference strains (e.g., *F. saccharivorans*, *F. faecihominis*) when grown on RDC vs SDC alone, and with acetate or Bifidobacterium feeder co-culture, to confirm cross-feeding and carbohydrate-utilization roles inferred from the integrated microbiome–SCFA analyses.
 
-***
-
-## Follow on Studies for Consideration
-
-- **Mechanistic follow-on:** Link *ex vivo* SCFA and taxa to *in vivo* outcomes (glycemia, weight, inflammation); validate *Fusicatenibacter* and other SDC-utilizers in gnotobiotic or cultured systems; test synbiotic (SDC + isolates) in preclinical or pilot human studies.
-- **Larger/clinical:** Replicate in larger adolescent cohorts; test SDC interventions with microbiome and SCFA as mediators; define predictors of “SCFA responder” for trial stratification.
 
 ***
 
