@@ -2,8 +2,9 @@
 
 **Project:** Abbott–Lurie ZC07, Project 2  
 **Date:** July 19, 2026  
-**Status:** Proposed; analysis code and results are not yet implemented  
-**Prerequisite:** Retain the locked donor → A/B aliquot → culture well → time hierarchy from [`unit-hierarchy-reanalysis-plan.2026-07-19.md`](unit-hierarchy-reanalysis-plan.2026-07-19.md).
+**Status:** Partially executed 2026-07-19 — Priority A/B core analyses completed under `integrated/results/additional_analyses_2026-07-19/`; MaAsLin 3 / ALDEx3 and facility qPCR QC remain blocked.  
+**Prerequisite:** Retain the locked donor → A/B aliquot → culture well → time hierarchy from [`unit-hierarchy-reanalysis-plan.2026-07-19.md`](unit-hierarchy-reanalysis-plan.2026-07-19.md).  
+**Execution log:** [`integrated/results/additional_analyses_2026-07-19/README.md`](../integrated/results/additional_analyses_2026-07-19/README.md)
 
 ## 1. Executive decision
 
@@ -596,39 +597,39 @@ These methods add complexity without adding reliable independent information at 
 
 ### Gate 1: data and assay
 
-- [ ] Planned-versus-analyzed donors and missing wells are reconciled.
-- [ ] Adjusted SCFA change contrasts are exported for all three primary analytes.
-- [ ] Claim-facing alpha models retain donor pairing.
-- [ ] PERMANOVA term tables and dispersion results are exported.
+- [x] Planned-versus-analyzed donors and missing wells are reconciled.
+- [x] Adjusted SCFA change contrasts are exported for all three primary analytes.
+- [x] Claim-facing alpha models retain donor pairing.
+- [x] PERMANOVA term tables and dispersion results are exported.
 - [ ] qPCR target, efficiency, standard curve, LOD, and LOQ documented.
-- [ ] `gene_copies_per_ul` and `genome_copies_per_ul*` definitions reconciled.
-- [ ] Exact well-level join has no duplicate keys.
-- [ ] Paired 0/48-hour completeness is exported.
+- [x] `gene_copies_per_ul` and `genome_copies_per_ul*` definitions reconciled.
+- [x] Exact well-level join has no duplicate keys.
+- [x] Paired 0/48-hour completeness is exported.
 - [ ] Media/negative-control handling is documented.
 
 ### Gate 2: focal analysis
 
-- [ ] One primary Fusicatenibacter–SDC–butyrate estimand is locked.
-- [ ] Zero/detection rule is locked before outcome modeling.
-- [ ] Donor-level N and lower-level records are distinguished.
-- [ ] Donor bootstrap and leave-one-donor-out results are complete.
-- [ ] Relative abundance, total load, RDC, and other SCFAs are checked as specificity analyses.
+- [x] One primary Fusicatenibacter–SDC–butyrate estimand is locked.
+- [x] Zero/detection rule is locked before outcome modeling.
+- [x] Donor-level N and lower-level records are distinguished.
+- [x] Donor bootstrap and leave-one-donor-out results are complete.
+- [x] Relative abundance, total load, RDC, and other SCFAs are checked as specificity analyses.
 
 ### Gate 3: modern-method expansion
 
 - [ ] Separate `renv` environment is locked.
 - [ ] MaAsLin 3 qPCR scaling is verified on a small known example.
 - [ ] ALDEx3 scale means and variances are documented and sensitivity-tested.
-- [ ] Direct contrasts are exported.
+- [x] Direct contrasts are exported.
 - [ ] ANCOM-BC2, MaAsLin 3, and ALDEx3 coefficients are compared, not only q-values.
-- [ ] Full results, including null and failed fits, are retained.
+- [x] Full results, including null and failed fits, are retained.
 
 ### Gate 4: manuscript integration
 
 - [ ] Section 5.2 unpaired delta tests are descriptive only or replaced.
-- [ ] Unimplemented LEfSe language is removed.
+- [x] Unimplemented LEfSe language is removed.
 - [ ] Existing sample-level correlation and pooled responder p-values are retired.
-- [ ] Claim audit is updated from versioned outputs.
+- [x] Claim audit is updated from versioned outputs.
 - [ ] Figures display independent donors honestly.
 - [ ] “qPCR-scaled” replaces “direct absolute qPCR” where appropriate.
 - [ ] No mechanistic or predictive wording exceeds the design.

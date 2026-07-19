@@ -2389,7 +2389,7 @@ print(genus_validation_plot)
 
 ## 6.5 Differential Abundance and Predictive Modeling
 
-Differential abundance analysis identifies microbial taxa that differ significantly between experimental conditions. We applied multiple complementary methods to ensure robust identification of differentially abundant taxa: ANCOM-BC2 (Analysis of Compositions of Microbiomes with Bias Correction), which accounts for compositional bias and uses mixed-effects models; MaAsLin2 (Microbiome Multivariable Associations with Linear Models), which handles multivariate associations with normalization and transformations; and LEfSe (Linear Discriminant Analysis Effect Size), which identifies biomarker taxa between groups.
+Differential abundance analysis identifies microbial taxa that differ significantly between experimental conditions. We applied complementary methods to identify differentially abundant taxa: ANCOM-BC2 (Analysis of Compositions of Microbiomes with Bias Correction), which accounts for compositional bias and uses mixed-effects models, and MaAsLin2 (Microbiome Multivariable Associations with Linear Models), which handles multivariable associations with normalization and transformations. LEfSe is not implemented in this workflow.
 
 ### 6.5.1 ANCOM-BC2 Analysis
 
