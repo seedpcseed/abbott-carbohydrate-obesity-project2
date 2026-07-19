@@ -450,9 +450,11 @@ Two complementary methods were used to identify taxa that differ significantly b
 
 **ANCOM-BC2**: Analysis of Compositions of Microbiomes with Bias Correction 2 was applied using the `ANCOMBC` package on relative abundances in this render environment (ANCOMBC 2.4). This method accounts for compositionality and provides log-fold change estimates with bias correction, standard errors, and FDR-adjusted q-values. Carbohydrate × timepoint is encoded as a `carb_time` factor where needed because this ANCOMBC build does not parse `*` / `:` tokens in `fix_formula`. Models include donor ID as a random intercept where appropriate.
 
-**MaAsLin3**: Microbiome Multivariable Associations with Linear Models 3 is the claim-facing multivariable DA method per `docs/additional-analyses-plan.2026-07-19.md`. Fits live in the locked R 4.6 / Bioconductor 3.23 library (`integrated/additional_analyses/renv_bioc323/`) because MaAsLin3 is not available in the report render environment (R 4.3). This report loads versioned outputs from `integrated/results/additional_analyses_2026-07-19/absolute_da/`. The abundance model uses qPCR-scaled genus relative abundances (relative × `gene_copies_per_ul`) with `normalization = NONE`, `transform = LOG`, formula `~ carbohydrate * timepoint + obesity_group + (1|donor_id)`, and joint/individual FDR q-values.
+**MaAsLin3**: Microbiome Multivariable Associations with Linear Models 3 is the primary multivariable abundance screen for qPCR-scaled genera per `docs/additional-analyses-plan.2026-07-19.md`. Fits live in the locked R 4.6 / Bioconductor 3.23 library (`integrated/additional_analyses/renv_bioc323/`) because MaAsLin3 is not available in the report render environment (R 4.3). This report loads versioned outputs from `integrated/results/additional_analyses_2026-07-19/absolute_da/`. The abundance model uses qPCR-scaled genus relative abundances (relative × `gene_copies_per_ul`) with `normalization = NONE`, `transform = LOG`, formula `~ carbohydrate * timepoint + obesity_group + (1|donor_id)`, and joint/individual FDR q-values.
 
-Results were filtered to retain associations with q < 0.1 (FDR-adjusted). ANCOM-BC2 and MaAsLin3 are complementary screens (relative composition vs qPCR-scaled abundance); interaction estimands are not identical across packages.
+**ALDEx3**: ALDEx3 (CRAN 1.2.x) is the qPCR-scale-uncertainty sensitivity analysis. It combines Dirichlet-multinomial sequencing uncertainty with an external total-abundance scale (`sample.sm`, `s.mu = log2(gene_copies_per_ul)`, provisional `s.var ∈ {0.05, 0.25, 1.0}` because facility qPCR technical variance is unavailable). The same fixed/random formula as MaAsLin3 is used. Primary report displays use `s.var = 0.25`; the full grid is retained under `absolute_da/`. Because ALDEx3 is newly released (July 2026), treat it as high-value sensitivity, not the sole manuscript DA method.
+
+Results were filtered to retain associations with q < 0.1 (FDR-adjusted). ANCOM-BC2 (relative composition), MaAsLin3 (qPCR-scaled abundance), and ALDEx3 (scale-uncertain abundance) are complementary screens; interaction estimands are not identical across packages, so coefficient concordance is interpretative rather than a formal three-way p-value reconciliation.
 
 ### 3.4.6 Taxon–SCFA Association Analysis
 
@@ -479,7 +481,7 @@ SCFA and microbiome data were integrated by matching samples based on subject ID
 
 ## 3.6 Visualization and Reporting
 
-All visualizations were created using `ggplot2` with a consistent color palette and theme derived from the SCFA analysis. Forest plots display effect sizes (log-fold changes) with 95% confidence intervals for ANCOM-BC2 results. Volcano plots show effect sizes versus significance for MaAsLin3 abundance results. Alluvial diagrams illustrate compositional changes over time. Statistical test results are displayed directly on plots where appropriate (e.g., Wilcoxon p-values on boxplots, R² values on scatter plots). All p-values are reported with FDR adjustment where multiple comparisons were performed.
+All visualizations were created using `ggplot2` with a consistent color palette and theme derived from the SCFA analysis. Forest plots display effect sizes (log-fold changes) with 95% confidence intervals for ANCOM-BC2 results. Volcano plots show effect sizes versus significance for MaAsLin3 and ALDEx3 abundance results. Alluvial diagrams illustrate compositional changes over time. Statistical test results are displayed directly on plots where appropriate (e.g., Wilcoxon p-values on boxplots, R² values on scatter plots). All p-values are reported with FDR adjustment where multiple comparisons were performed.
 
 
 # 4. Summary Data
@@ -2389,7 +2391,7 @@ print(genus_validation_plot)
 
 ## 6.5 Differential Abundance and Predictive Modeling
 
-Differential abundance analysis identifies microbial taxa that differ significantly between experimental conditions. We applied complementary methods: ANCOM-BC2 on relative abundances in this report, and MaAsLin3 on qPCR-scaled abundances from the locked BioC 3.23 additional-analyses environment (loaded as versioned tables). LEfSe is not implemented in this workflow.
+Differential abundance analysis identifies microbial taxa that differ significantly between experimental conditions. We applied complementary methods: ANCOM-BC2 on relative abundances in this report, plus MaAsLin3 and ALDEx3 on qPCR-scaled / scale-uncertain abundances from the locked BioC 3.23 additional-analyses environment (loaded as versioned tables). LEfSe is not implemented in this workflow.
 
 ### 6.5.1 ANCOM-BC2 Analysis
 
@@ -3527,6 +3529,396 @@ if (exists("maaslin3_ixn_tbl") && nrow(maaslin3_ixn_tbl) > 0) {
 }
 ```
 
+### 6.5.13 ALDEx3 Scale-Uncertainty Sensitivity
+
+ALDEx3 is the plan’s qPCR-scale-uncertainty sensitivity (Priority B). Versioned fits use `sample.sm` with `s.mu = log2(gene_copies_per_ul)` and a provisional `s.var` grid because facility qPCR technical variance is unavailable; primary displays use **s.var = 0.25**. Counts were constructed as `round(genus_relative × asv_read_depth)` with high-zero genera amalgamated to `other`. Treat ALDEx3 as supportive sensitivity alongside MaAsLin3, not as the sole claim-facing screen.
+
+```{r aldex3-analysis, echo=FALSE, cache=FALSE}
+absolute_da_dir <- file.path("results", "additional_analyses_2026-07-19", "absolute_da")
+aldex3_path <- file.path(absolute_da_dir, "aldex3_results_svar_0.25.csv")
+aldex3_fusi_path <- file.path(absolute_da_dir, "fusicatenibacter_aldex3_svar0.25.csv")
+aldex3_notes_path <- file.path(absolute_da_dir, "aldex3_scale_notes.md")
+aldex3_grid_path <- file.path(absolute_da_dir, "aldex3_results_all_svar.csv")
+
+aldex3_empty <- tibble::tibble(
+  parameter = character(0),
+  entity = character(0),
+  estimate = numeric(0),
+  std.error = numeric(0),
+  p.val.adj = numeric(0),
+  s_var = numeric(0),
+  engine = character(0)
+)
+
+if (!file.exists(aldex3_path)) {
+  cat(
+    "ALDEx3 results not found at", aldex3_path,
+    "\nRun integrated/additional_analyses/R/absolute_da_aldex3.R first.\n"
+  )
+  aldex3_tbl <- aldex3_empty
+} else {
+  aldex3_tbl <- readr::read_csv(aldex3_path, show_col_types = FALSE) %>%
+    dplyr::arrange(p.val.adj)
+  aldex3_sig <- aldex3_tbl %>% dplyr::filter(p.val.adj < 0.1)
+  cat(
+    "ALDEx3 (s.var=0.25) significant results (adj p < 0.1):",
+    nrow(aldex3_sig), "feature–parameter combinations (",
+    dplyr::n_distinct(aldex3_sig$entity), "entities)\n"
+  )
+  if (file.exists(aldex3_notes_path)) {
+    cat("\nScale model notes:\n")
+    cat(paste0(readLines(aldex3_notes_path), collapse = "\n"), "\n")
+  }
+}
+```
+
+```{r aldex3-summary-table, echo=FALSE, dependson="aldex3-analysis"}
+if (nrow(aldex3_tbl) > 0) {
+  aldex3_show <- aldex3_tbl %>%
+    dplyr::filter(p.val.adj < 0.1) %>%
+    dplyr::transmute(
+      Feature = entity,
+      Parameter = parameter,
+      Estimate = signif(estimate, 4),
+      `SE` = signif(std.error, 4),
+      `Adj p` = signif(p.val.adj, 4),
+      `s.var` = s_var,
+      Engine = engine
+    )
+  if (knitr::is_html_output()) {
+    DT::datatable(
+      aldex3_show,
+      caption = "ALDEx3 significant associations (s.var = 0.25, adj p < 0.1)",
+      filter = "top",
+      options = list(pageLength = 20, scrollX = TRUE),
+      rownames = FALSE
+    )
+  } else {
+    knitr::kable(aldex3_show, caption = "ALDEx3 significant associations (s.var = 0.25)")
+  }
+} else {
+  cat("No ALDEx3 rows to display\n")
+}
+```
+
+```{r aldex3-visualizations, echo=FALSE, fig.width=12, fig.height=10, cache=FALSE, dependson="aldex3-analysis"}
+if (nrow(aldex3_tbl) > 0) {
+  plot_aldex <- aldex3_tbl %>%
+    dplyr::mutate(
+      neglog10q = -log10(pmax(p.val.adj, 1e-300)),
+      significant = p.val.adj < 0.1,
+      term_label = dplyr::case_when(
+        parameter == "timepoint48H" ~ "48H vs 0H",
+        parameter == "carbohydrateRDC" ~ "RDC vs No Added Carb",
+        parameter == "carbohydrateSDC" ~ "SDC vs No Added Carb",
+        parameter == "carbohydrateRDC:timepoint48H" ~ "RDC × 48H",
+        parameter == "carbohydrateSDC:timepoint48H" ~ "SDC × 48H",
+        parameter == "obesity_groupobesity" ~ "Obesity vs healthy weight",
+        TRUE ~ parameter
+      )
+    )
+  labs_aldex <- plot_aldex %>%
+    dplyr::filter(significant) %>%
+    dplyr::arrange(p.val.adj) %>%
+    dplyr::slice_head(n = 20)
+
+  print(
+    ggplot(plot_aldex, aes(x = estimate, y = neglog10q, color = significant)) +
+      geom_hline(yintercept = -log10(0.1), linetype = "dashed", color = "red3") +
+      geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+      geom_point(alpha = 0.55, size = 1.5) +
+      ggrepel::geom_text_repel(
+        data = labs_aldex,
+        aes(label = entity),
+        size = 2.8,
+        max.overlaps = 30
+      ) +
+      facet_wrap(~ term_label, scales = "free_x") +
+      scale_color_manual(
+        values = c("FALSE" = "gray70", "TRUE" = "#E31A1C"),
+        labels = c("FALSE" = "adj p ≥ 0.1", "TRUE" = "adj p < 0.1"),
+        name = "Significant"
+      ) +
+      labs(
+        title = "ALDEx3 Volcano Plot (s.var = 0.25)",
+        subtitle = "Dirichlet count uncertainty + provisional qPCR scale variance",
+        x = "Estimate",
+        y = "-log10(adjusted p)"
+      ) +
+      theme_scfa() +
+      theme(legend.position = "bottom", strip.text = element_text(size = 9))
+  )
+
+  if (file.exists(aldex3_fusi_path)) {
+    fusi_aldex <- readr::read_csv(aldex3_fusi_path, show_col_types = FALSE)
+    if (knitr::is_html_output()) {
+      DT::datatable(
+        fusi_aldex,
+        caption = "ALDEx3 Fusicatenibacter coefficients (s.var = 0.25)",
+        options = list(pageLength = 10, dom = "tip"),
+        rownames = FALSE
+      ) %>% DT::formatRound(columns = c("aldex_est", "aldex_q"), digits = 4)
+    } else {
+      knitr::kable(fusi_aldex, digits = 4, caption = "ALDEx3 Fusicatenibacter")
+    }
+  }
+
+  if (file.exists(aldex3_grid_path)) {
+    grid_sum <- readr::read_csv(aldex3_grid_path, show_col_types = FALSE) %>%
+      dplyr::group_by(s_var) %>%
+      dplyr::summarise(
+        n_tests = dplyr::n(),
+        n_sig_adj_p_0.1 = sum(p.val.adj < 0.1, na.rm = TRUE),
+        .groups = "drop"
+      )
+    cat("\nALDEx3 s.var sensitivity (adj p < 0.1 counts):\n")
+    print(grid_sum)
+  }
+} else {
+  cat("No ALDEx3 results for visualization\n")
+}
+```
+
+### 6.5.14 Three-Method Concordance (ANCOM-BC2 / MaAsLin3 / ALDEx3)
+
+Coefficient **directions** are compared across ANCOM-BC2 (relative), MaAsLin3 (qPCR-scaled), and ALDEx3 (s.var = 0.25). Effect labels are loosely aligned; interaction estimands are not identical, so discordance is diagnostic rather than an automatic contradiction.
+
+```{r da-concordance, echo=FALSE, cache=FALSE, fig.width=12, fig.height=8}
+absolute_da_dir <- file.path("results", "additional_analyses_2026-07-19", "absolute_da")
+concord_focus_path <- file.path(absolute_da_dir, "concordance_focus_effects.csv")
+concord_fusi_path <- file.path(absolute_da_dir, "concordance_fusicatenibacter.csv")
+
+if (file.exists(concord_focus_path)) {
+  concord_focus <- readr::read_csv(concord_focus_path, show_col_types = FALSE)
+  have3 <- concord_focus %>%
+    dplyr::filter(
+      !is.na(dir_maaslin), !is.na(dir_aldex), !is.na(dir_ancom)
+    )
+  cat(
+    "Focus effects with all three coefficients:", nrow(have3),
+    "; three-way direction-concordant:", sum(have3$concordant_all3, na.rm = TRUE),
+    sprintf("(%.0f%%)\n", 100 * mean(have3$concordant_all3, na.rm = TRUE))
+  )
+  sdc48 <- have3 %>% dplyr::filter(effect == "carbohydrateSDC:timepoint48H")
+  if (nrow(sdc48) > 0) {
+    cat(
+      "SDC×48H three-way concordant:",
+      sum(sdc48$concordant_all3, na.rm = TRUE), "/", nrow(sdc48), "\n"
+    )
+  }
+
+  concord_rate <- have3 %>%
+    dplyr::group_by(effect) %>%
+    dplyr::summarise(
+      n_total = dplyr::n(),
+      n_concordant = sum(concordant_all3, na.rm = TRUE),
+      pct_concordant = 100 * mean(as.logical(concordant_all3), na.rm = TRUE),
+      .groups = "drop"
+    ) %>%
+    dplyr::arrange(dplyr::desc(n_total))
+
+  if (knitr::is_html_output()) {
+    DT::datatable(
+      concord_rate %>% dplyr::mutate(pct_concordant = round(pct_concordant, 1)),
+      caption = "Three-way direction concordance by effect (rows with all three coefficients)",
+      options = list(pageLength = 15, dom = "tip"),
+      rownames = FALSE
+    )
+  } else {
+    knitr::kable(concord_rate, digits = 1, caption = "Three-way concordance by effect")
+  }
+} else {
+  cat("Concordance table not found; run absolute_da_ancombc2_concordance.R\n")
+}
+
+if (file.exists(concord_fusi_path)) {
+  fusi_conc <- readr::read_csv(concord_fusi_path, show_col_types = FALSE)
+  cat("\nFusicatenibacter concordance (interpret with estimand caveats):\n")
+  if (knitr::is_html_output()) {
+    DT::datatable(
+      fusi_conc,
+      caption = "Fusicatenibacter: MaAsLin3 / ALDEx3 / ANCOM-BC2",
+      options = list(pageLength = 10, scrollX = TRUE, dom = "tip"),
+      rownames = FALSE
+    ) %>%
+      DT::formatRound(
+        columns = intersect(
+          names(fusi_conc),
+          c("maaslin_coef", "maaslin_q", "maaslin_joint_q", "aldex_est", "aldex_q", "ancom_lfc", "ancom_se", "ancom_q")
+        ),
+        digits = 4
+      )
+  } else {
+    knitr::kable(fusi_conc, digits = 4)
+  }
+  cat(
+    "Interpretation lock: SDC×48H is directionally positive in MaAsLin3 and ALDEx3 but not significant after multiplicity;",
+    "ANCOM relative carb_timeSDC_48H is near zero/negative. Do not claim a significant absolute *Fusicatenibacter* SDC interaction from these screens.",
+    "Head-to-head relative RDC-vs-SDC at 48H (*Fusicatenibacter* higher in SDC) remains an ANCOM finding (Section 6.5.6).\n"
+  )
+}
+```
+
+## 6.7 Versioned Additional-Analyses Results
+
+The blocks below load Priority A/B exports from `results/additional_analyses_2026-07-19/` (exact well match, donor-aware models). They do not re-fit the BioC 3.23 / Python pipelines inside this knit.
+
+### 6.7.1 Carbohydrate-change SCFA contrasts
+
+```{r addanal-scfa-contrasts, echo=FALSE, cache=FALSE}
+addanal_root <- file.path("results", "additional_analyses_2026-07-19")
+scfa_contr_path <- file.path(addanal_root, "scfa_contrasts", "carbohydrate_change_contrasts.csv")
+if (file.exists(scfa_contr_path)) {
+  scfa_contr <- readr::read_csv(scfa_contr_path, show_col_types = FALSE)
+  if (knitr::is_html_output()) {
+    DT::datatable(
+      scfa_contr,
+      caption = "Adjusted 0-to-48-hour carbohydrate-change contrasts (acetate, propionate, butyrate)",
+      filter = "top",
+      options = list(pageLength = 15, scrollX = TRUE),
+      rownames = FALSE
+    )
+  } else {
+    knitr::kable(scfa_contr, digits = 4)
+  }
+  if (all(c("contrast", "p.value") %in% names(scfa_contr)) ||
+      any(grepl("SDC|RDC|p", names(scfa_contr), ignore.case = TRUE))) {
+    cat(
+      "Claim language: SDC-versus-RDC 0-to-48-hour change contrasts remain nonsignificant for the primary analytes under the exported multiplicity adjustment;",
+      "do not claim greater butyrate under SDC than RDC from this table alone.\n"
+    )
+  }
+} else {
+  cat("Missing", scfa_contr_path, "\n")
+}
+```
+
+### 6.7.2 Donor-aware alpha contrasts and PERMANOVA / betadisper
+
+```{r addanal-alpha-permanova, echo=FALSE, cache=FALSE}
+alpha_path <- file.path(addanal_root, "alpha_permanova", "alpha_group_contrasts.csv")
+perm48_path <- file.path(addanal_root, "alpha_permanova", "permanova_terms_48h.csv")
+beta_path <- file.path(addanal_root, "alpha_permanova", "betadisper_48h.csv")
+
+if (file.exists(alpha_path)) {
+  alpha_c <- readr::read_csv(alpha_path, show_col_types = FALSE)
+  cat("Claim-facing alpha group contrasts (donor-aware mixed models):\n")
+  if (knitr::is_html_output()) {
+    DT::datatable(
+      alpha_c,
+      caption = "Alpha diversity: obesity-group contrasts by carbohydrate × time",
+      filter = "top",
+      options = list(pageLength = 12, scrollX = TRUE),
+      rownames = FALSE
+    )
+  } else knitr::kable(alpha_c, digits = 4)
+  cat(
+    "Faceted Wilcoxon tables elsewhere in this report are descriptive within-stratum checks only.\n"
+  )
+}
+if (file.exists(perm48_path)) {
+  perm48 <- readr::read_csv(perm48_path, show_col_types = FALSE)
+  cat("\n48H donor-aggregated PERMANOVA terms:\n")
+  print(perm48)
+  cat(
+    "Interpretation: at 48H, obesity group contributes measurable community structure (see term R²/p);",
+    "carbohydrate and group×carbohydrate terms are not significant in this donor-aggregated model.",
+    "Do not interpret whole-model PERMANOVA summaries as carbohydrate-specific claims.\n"
+  )
+}
+if (file.exists(beta_path)) {
+  beta48 <- readr::read_csv(beta_path, show_col_types = FALSE)
+  cat("\n48H betadisper:\n")
+  print(beta48)
+}
+```
+
+### 6.7.3 Total bacterial load (qPCR)
+
+```{r addanal-total-load, echo=FALSE, cache=FALSE}
+load_path <- file.path(addanal_root, "total_load", "donor_contrasts.csv")
+if (file.exists(load_path)) {
+  load_c <- readr::read_csv(load_path, show_col_types = FALSE)
+  if (knitr::is_html_output()) {
+    DT::datatable(
+      load_c,
+      caption = "Donor-level Δlog10(total 16S load) carbohydrate contrasts",
+      options = list(pageLength = 10, dom = "tip"),
+      rownames = FALSE
+    ) %>% DT::formatRound(columns = setdiff(names(load_c), "contrast"), digits = 4)
+  } else knitr::kable(load_c, digits = 4)
+  cat(
+    "Units are total bacterial 16S target load trajectories, not genus-specific absolute qPCR.",
+    "Facility LOD/LOQ confirmation remains blocking for stronger absolute-units language.\n"
+  )
+} else cat("Missing", load_path, "\n")
+```
+
+### 6.7.4 Focal qPCR-scaled Fusicatenibacter–butyrate (claim-facing)
+
+```{r addanal-focal-fusi, echo=FALSE, cache=FALSE, fig.width=8, fig.height=6}
+focal_dir <- file.path(addanal_root, "focal_fusicatenibacter")
+primary_path <- file.path(focal_dir, "primary_fusicatenibacter_butyrate.csv")
+spec_path <- file.path(focal_dir, "specificity_family.csv")
+loo_path <- file.path(focal_dir, "primary_leave_one_donor_out.csv")
+donor_path <- file.path(focal_dir, "donor_net_change_table.csv")
+
+if (file.exists(primary_path)) {
+  primary <- readr::read_csv(primary_path, show_col_types = FALSE)
+  cat("Primary estimand: donor-level SDC-attributable net Δlog10(qPCR-scaled Fusicatenibacter) vs net Δbutyrate.\n")
+  if (knitr::is_html_output()) {
+    DT::datatable(primary, caption = "Primary focal association", options = list(dom = "t", scrollX = TRUE), rownames = FALSE)
+  } else knitr::kable(primary, digits = 4)
+
+  rho <- primary$spearman_rho[1]
+  pperm <- primary$permutation_p[1]
+  ci_lo <- primary$bootstrap_ci95_low[1]
+  ci_hi <- primary$bootstrap_ci95_high[1]
+  n_d <- primary$n_donors[1]
+  cat(sprintf(
+    "\n**Claim lock:** Spearman ρ = %.3f, permutation p = %.3f, 95%% donor-bootstrap CI [%.3f, %.3f], N = %d donors. ",
+    rho, pperm, ci_lo, ci_hi, n_d
+  ))
+  cat("Direction is positive but the CI includes 0 — **do not claim a significant Fusicatenibacter–butyrate association.**\n")
+}
+
+if (file.exists(donor_path)) {
+  donors <- readr::read_csv(donor_path, show_col_types = FALSE)
+  xcol <- intersect(names(donors), c("net_delta_log10_fusi_qpcr_SDC", "delta_log10_fusi_qpcr_SDC"))
+  ycol <- intersect(names(donors), c("net_delta_butyrate_SDC", "delta_butyrate_SDC"))
+  if (length(xcol) && length(ycol)) {
+    print(
+      ggplot(donors, aes(.data[[xcol[1]]], .data[[ycol[1]]])) +
+        geom_hline(yintercept = 0, linetype = "dashed", color = "gray60") +
+        geom_vline(xintercept = 0, linetype = "dashed", color = "gray60") +
+        geom_point(size = 3, alpha = 0.8) +
+        geom_smooth(method = "lm", se = TRUE, color = "#1f78b4", linewidth = 0.8) +
+        labs(
+          title = "Donor-level SDC net-change association",
+          x = "Net Δlog10 qPCR-scaled Fusicatenibacter (SDC − control)",
+          y = "Net Δbutyrate (SDC − control)",
+          caption = "One point per independent donor; claim-facing estimand"
+        ) +
+        theme_scfa()
+    )
+  }
+}
+
+if (file.exists(spec_path)) {
+  spec <- readr::read_csv(spec_path, show_col_types = FALSE)
+  cat("\nPrespecified specificity family (BH within family):\n")
+  if (knitr::is_html_output()) {
+    DT::datatable(spec, caption = "Specificity family", options = list(pageLength = 10, scrollX = TRUE), rownames = FALSE)
+  } else knitr::kable(spec, digits = 4)
+  cat("All secondary associations were nonsignificant after BH correction — no pathway-specific rescue claim.\n")
+}
+
+if (file.exists(loo_path)) {
+  loo <- readr::read_csv(loo_path, show_col_types = FALSE)
+  cat("Leave-one-donor-out influence table retained under focal_fusicatenibacter/ (", nrow(loo), " rows).\n", sep = "")
+}
+```
+
 ### 6.4.4 Genus Composition at 48H: No Carbohydrate vs RDC vs SDC
 
 This alluvial plot shows the comparison of genus-level composition at 48H across the three carbohydrate conditions (No Added Carb, RDC, and SDC), highlighting the top 25 most abundant genera and including key differentially abundant taxa.
@@ -4469,7 +4861,7 @@ cat("Legacy relative multivariable volcano skipped; claim-facing method is MaAsL
 
 ## 7.4 Fusicatenibacter–SCFA Correlations
 
-> **Claim retirement (2026-07-19):** The sample-level relative-abundance correlations below are exploratory diagnostics only. Do not report their N, R², or p-values as evidence of a *Fusicatenibacter*–butyrate association. The claim-facing donor-level qPCR-scaled SDC net-change analysis is nonsignificant (Spearman ρ≈0.48, permutation p≈0.088, bootstrap CI includes 0, N=14 donors); see `integrated/results/additional_analyses_2026-07-19/focal_fusicatenibacter/primary_fusicatenibacter_butyrate.csv`.
+> **Claim retirement (2026-07-19):** The sample-level relative-abundance correlations below are exploratory diagnostics only. Do not report their N, R², or p-values as evidence of a *Fusicatenibacter*–butyrate association. The claim-facing donor-level qPCR-scaled SDC net-change analysis is nonsignificant and is displayed in **Section 6.7.4** (`focal_fusicatenibacter/primary_fusicatenibacter_butyrate.csv`: Spearman ρ≈0.48, permutation p≈0.088, bootstrap CI includes 0, N=14 donors).
 
 ```{r fusicatenibacter-claim-facing-summary, echo=FALSE}
 focal_csv <- file.path(
@@ -6219,9 +6611,14 @@ This integrated analysis brings together SCFA metabolomics and 16S rRNA gene mic
 - The interaction between group and carbohydrate type was significant, indicating that the response to different carbohydrates varies by obesity status.
 
 **Differential Abundance:**
-- ANCOM-BC2 (relative) and MaAsLin3 (qPCR-scaled abundance) identified multiple taxa associated with carbohydrate, timepoint, and obesity-group contrasts.
-- Head-to-head RDC-versus-SDC contrasts at 48H are reported with ANCOM-BC2; MaAsLin3 reports reference-based carbohydrate × 48H interaction terms from the locked BioC 3.23 pipeline.
-- These complementary screens suggest that carbohydrate structure shapes microbial composition and qPCR-scaled abundances, with method-specific estimands that should not be treated as identical.
+- ANCOM-BC2 (relative), MaAsLin3 (qPCR-scaled), and ALDEx3 (scale-uncertain sensitivity) are reported from versioned `absolute_da/` exports (Sections 6.5.8–6.5.14).
+- At focus effects with all three coefficients, roughly half of rows are three-way direction-concordant; SDC×48H concordance is lower — treat method agreement as diagnostic, not a joint significance claim.
+- *Fusicatenibacter* SDC×48H is directionally positive in MaAsLin3/ALDEx3 but not significant after multiplicity; ANCOM relative SDC_48H vs reference is not supportive of an absolute expansion claim.
+- Head-to-head relative RDC-versus-SDC at 48H remains an ANCOM finding (*Fusicatenibacter* higher in SDC).
+
+**Focal Fusicatenibacter–butyrate:**
+- The claim-facing donor-level SDC net-change association is **nonsignificant** (Section 6.7.4): permutation p≈0.088 with bootstrap CI for ρ that includes 0 (N=14).
+- Specificity family (relative Fusi, total load, other SCFAs, RDC) is BH-nonsignificant — no mechanistic rescue claim.
 
 **qPCR-Scaled Abundance:**
 - Genus relative abundances were scaled by total bacterial 16S qPCR load to estimate target equivalents per µL (not genus-specific qPCR or cell counts).
@@ -6244,7 +6641,13 @@ if (exists("maaslin3_tbl") && nrow(maaslin3_tbl) > 0) {
 } else {
   cat("- MaAsLin3 qPCR-scaled abundance results are summarized in Section 6.5.8 / absolute_da/.\n")
 }
-cat("- Continuous SCFA~taxon MaAsLin3 models are not yet exported; claim-facing Fusicatenibacter–butyrate inference uses the donor-level focal analysis.\n")
+if (exists("aldex3_tbl") && nrow(aldex3_tbl) > 0) {
+  n_a3 <- sum(aldex3_tbl$p.val.adj < 0.1, na.rm = TRUE)
+  cat(sprintf("- ALDEx3 (s.var=0.25) reported %d significant feature–parameter associations at adj p < 0.1 (Section 6.5.13).\n", n_a3))
+} else {
+  cat("- ALDEx3 scale-uncertainty sensitivity is summarized in Section 6.5.13.\n")
+}
+cat("- Continuous SCFA~taxon multivariable ports are not yet exported; claim-facing Fusicatenibacter–butyrate inference uses the donor-level focal analysis (Section 6.7.4; nonsignificant).\n")
 ```
 
 **Propionate Associations (48H timepoint):**
