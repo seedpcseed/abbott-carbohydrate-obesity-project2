@@ -1270,11 +1270,24 @@ To test whether SDC produces a greater 0-to-48-hour butyrate increase than RDC a
 
 
 ```{r butyrate-sdc-rdc-contrast, echo=FALSE, cache=FALSE}
-# The response estimand is the difference in 0-to-48-hour change:
-# (SDC 48H - SDC 0H) - (RDC 48H - RDC 0H).
+# Estimand: (SDC 48H - SDC 0H) - (RDC 48H - RDC 0H).
+# Prefer the versioned export (knit-stable). Fall back to live emmeans from the
+# nested butyrate LMM. Avoid <<- (knitr false-empty local) and bare %>% (cached
+# library chunks may leave magrittr unattached).
+suppressPackageStartupMessages({
+  library(dplyr)
+  library(emmeans)
+  library(stringr)
+  library(tibble)
+  library(purrr)
+  library(readr)
+  library(DT)
+})
+
 butyrate_sdc_mean_delta <- NA_real_
 butyrate_rdc_mean_delta <- NA_real_
-butyrate_sdc_rdc <- tibble::tibble(
+butyrate_contrast_source <- NA_character_
+butyrate_sdc_rdc <- tibble(
   contrast = character(0),
   estimate = numeric(0),
   SE = numeric(0),
@@ -1286,109 +1299,152 @@ butyrate_sdc_rdc <- tibble::tibble(
 )
 butyrate_change_results <- butyrate_sdc_rdc
 
-butyrate_model <- mixed_effects_results %>%
-  dplyr::filter(analyte == "butyrate") %>%
-  dplyr::pull(model) %>%
-  purrr::pluck(1)
-
-tryCatch({
-  # Estimate the 48H - 0H change separately for each carbohydrate condition.
-  butyrate_time_emm <- emmeans::emmeans(
-    butyrate_model,
-    ~ timepoint_hr | carbohydrate_type,
-    weights = "equal"
+csv_candidates <- c(
+  "results/additional_analyses_2026-07-19/scfa_contrasts/carbohydrate_change_contrasts.csv",
+  file.path(
+    "..", "integrated", "results", "additional_analyses_2026-07-19",
+    "scfa_contrasts", "carbohydrate_change_contrasts.csv"
   )
+)
+csv_hit <- csv_candidates[file.exists(csv_candidates)][1]
 
-  butyrate_changes <- emmeans::contrast(
-    butyrate_time_emm,
-    method = "revpairwise",
-    by = "carbohydrate_type"
+if (!is.na(csv_hit)) {
+  scfa_contr <- read_csv(csv_hit, show_col_types = FALSE)
+  butyrate_change_results <- dplyr::filter(
+    scfa_contr,
+    analyte == "butyrate",
+    contrast_family == "carb_change_and_pairwise",
+    contrast %in% c("RDC_vs_NC_change", "SDC_vs_NC_change", "SDC_vs_RDC_change")
   )
+  butyrate_sdc_rdc <- dplyr::filter(
+    butyrate_change_results,
+    contrast == "SDC_vs_RDC_change"
+  )
+  butyrate_contrast_source <- paste0("versioned_csv:", basename(dirname(csv_hit)), "/", basename(csv_hit))
+}
 
-  # Compare the three carbohydrate-specific changes, with Tukey adjustment.
-  butyrate_change_results <<- pairs(
-    butyrate_changes,
-    by = NULL,
-    reverse = TRUE,
-    adjust = "tukey"
-  ) %>%
-    summary(infer = c(TRUE, TRUE), adjust = "tukey") %>%
-    as.data.frame() %>%
-    tibble::as_tibble()
-
-  butyrate_sdc_rdc <<- butyrate_change_results %>%
-    dplyr::filter(
-      stringr::str_detect(
-        contrast,
-        "slow_digestible.*rapid_digestible"
+# Prefer live emmeans from the same nested LMM when available (methods estimand).
+if (exists("mixed_effects_results")) {
+  live_result <- try(
+    {
+      butyrate_model <- purrr::pluck(
+        dplyr::pull(
+          dplyr::filter(mixed_effects_results, analyte == "butyrate"),
+          model
+        ),
+        1
       )
+      if (is.null(butyrate_model)) {
+        stop("Butyrate mixed model is missing from mixed_effects_results.")
+      }
+      butyrate_time_emm <- emmeans::emmeans(
+        butyrate_model,
+        ~ timepoint_hr | carbohydrate_type,
+        weights = "equal"
+      )
+      butyrate_changes <- emmeans::contrast(
+        butyrate_time_emm,
+        method = "revpairwise",
+        by = "carbohydrate_type"
+      )
+      live_tbl <- tibble::as_tibble(
+        as.data.frame(
+          summary(
+            pairs(butyrate_changes, by = NULL, reverse = TRUE, adjust = "tukey"),
+            infer = c(TRUE, TRUE),
+            adjust = "tukey"
+          )
+        )
+      )
+      live_hit <- dplyr::filter(
+        live_tbl,
+        stringr::str_detect(contrast, "slow_digestible"),
+        stringr::str_detect(contrast, "rapid_digestible"),
+        !stringr::str_detect(contrast, "no_carbohydrate")
+      )
+      if (nrow(live_hit) != 1) {
+        stop(
+          "Unable to identify a unique live SDC-versus-RDC contrast. Labels: ",
+          paste(live_tbl$contrast, collapse = " | ")
+        )
+      }
+      list(tbl = live_tbl, hit = live_hit)
+    },
+    silent = TRUE
+  )
+  if (!inherits(live_result, "try-error")) {
+    butyrate_change_results <- live_result$tbl
+    butyrate_sdc_rdc <- live_result$hit
+    butyrate_contrast_source <- "live_emmeans_lmm"
+  } else if (!is.na(butyrate_contrast_source)) {
+    cat(
+      "Live emmeans path skipped (", as.character(live_result), "). Using ",
+      butyrate_contrast_source, ".\n",
+      sep = ""
     )
-
-  if (nrow(butyrate_sdc_rdc) != 1) {
-    stop("Unable to identify a unique SDC-versus-RDC butyrate change contrast.")
   }
+}
 
-  butyrate_delta_summary <- delta_data %>%
-    dplyr::filter(
-      analyte == "butyrate",
-      carbohydrate_type %in% c("rapid_digestible", "slow_digestible")
-    ) %>%
-    dplyr::group_by(carbohydrate_type) %>%
-    dplyr::summarise(
-      mean_delta = mean(delta_48h_0h, na.rm = TRUE),
-      sd_delta = sd(delta_48h_0h, na.rm = TRUE),
-      n_subject_ids = dplyr::n_distinct(subject),
-      .groups = "drop"
-    )
+if (exists("delta_data")) {
+  butyrate_delta_summary <- dplyr::summarise(
+    dplyr::group_by(
+      dplyr::filter(
+        delta_data,
+        analyte == "butyrate",
+        carbohydrate_type %in% c("rapid_digestible", "slow_digestible")
+      ),
+      carbohydrate_type
+    ),
+    mean_delta = mean(delta_48h_0h, na.rm = TRUE),
+    .groups = "drop"
+  )
+  butyrate_rdc_mean_delta <- dplyr::pull(
+    dplyr::filter(butyrate_delta_summary, carbohydrate_type == "rapid_digestible"),
+    mean_delta
+  )
+  butyrate_sdc_mean_delta <- dplyr::pull(
+    dplyr::filter(butyrate_delta_summary, carbohydrate_type == "slow_digestible"),
+    mean_delta
+  )
+}
 
-  butyrate_rdc_mean_delta <<- butyrate_delta_summary %>%
-    dplyr::filter(carbohydrate_type == "rapid_digestible") %>%
-    dplyr::pull(mean_delta)
-
-  butyrate_sdc_mean_delta <<- butyrate_delta_summary %>%
-    dplyr::filter(carbohydrate_type == "slow_digestible") %>%
-    dplyr::pull(mean_delta)
-
-  if (knitr::is_html_output()) {
-    print(
+if (nrow(butyrate_sdc_rdc) != 1) {
+  cat("Butyrate SDC-versus-RDC contrast failed: no unique contrast row available.\n")
+} else if (knitr::is_html_output()) {
+  print(
+    DT::formatRound(
       DT::datatable(
-        butyrate_change_results %>%
-          dplyr::select(
-            contrast, estimate, SE, df, lower.CL, upper.CL, t.ratio, p.value
-          ),
+        dplyr::select(
+          butyrate_change_results,
+          contrast, estimate, SE, df, lower.CL, upper.CL, t.ratio, p.value
+        ),
         caption = paste(
           "Adjusted pairwise comparisons of 0-to-48-hour butyrate change",
-          "(Tukey-adjusted within the three carbohydrate comparisons)"
+          "(Tukey-adjusted within the three carbohydrate comparisons;",
+          butyrate_contrast_source, ")"
         ),
         options = list(pageLength = 10, dom = "tip", scrollX = TRUE),
         rownames = FALSE
-      ) %>%
-        DT::formatRound(
-          columns = c("estimate", "SE", "df", "lower.CL", "upper.CL", "t.ratio", "p.value"),
-          digits = 3
-        )
+      ),
+      columns = c("estimate", "SE", "df", "lower.CL", "upper.CL", "t.ratio", "p.value"),
+      digits = 3
     )
-  } else {
-    print(
-      knitr::kable(
-        butyrate_change_results %>%
-          dplyr::select(
-            contrast, estimate, SE, df, lower.CL, upper.CL, t.ratio, p.value
-          ),
-        digits = 3,
-        caption = paste(
-          "Adjusted pairwise comparisons of 0-to-48-hour butyrate change",
-          "(Tukey-adjusted within the three carbohydrate comparisons)"
-        )
-      )
+  )
+} else {
+  print(
+    knitr::kable(
+      dplyr::select(
+        butyrate_change_results,
+        contrast, estimate, SE, df, lower.CL, upper.CL, t.ratio, p.value
+      ),
+      digits = 3,
+      caption = "Adjusted pairwise comparisons of 0-to-48-hour butyrate change"
     )
-  }
-}, error = function(e) {
-  cat("Butyrate SDC-versus-RDC contrast failed:", e$message, "\n")
-})
+  )
+}
 ```
 
-The mean 0-to-48-hour butyrate change was `r if (exists("butyrate_sdc_mean_delta") && length(butyrate_sdc_mean_delta) == 1) sprintf("%.2f", butyrate_sdc_mean_delta) else "NA"` μM under SDC and `r if (exists("butyrate_rdc_mean_delta") && length(butyrate_rdc_mean_delta) == 1) sprintf("%.2f", butyrate_rdc_mean_delta) else "NA"` μM under RDC. The model-adjusted SDC-versus-RDC difference in change was `r if (exists("butyrate_sdc_rdc") && nrow(butyrate_sdc_rdc) == 1) sprintf("%.2f", butyrate_sdc_rdc$estimate) else "NA"` μM (95% CI, `r if (exists("butyrate_sdc_rdc") && nrow(butyrate_sdc_rdc) == 1) sprintf("%.2f", butyrate_sdc_rdc$lower.CL) else "NA"` to `r if (exists("butyrate_sdc_rdc") && nrow(butyrate_sdc_rdc) == 1) sprintf("%.2f", butyrate_sdc_rdc$upper.CL) else "NA"`; Tukey-adjusted p = `r if (exists("butyrate_sdc_rdc") && nrow(butyrate_sdc_rdc) == 1) format.pval(butyrate_sdc_rdc$p.value, digits = 3, eps = 0.001) else "NA"`). Thus, the butyrate increase was numerically greater under SDC, but the current analysis does not demonstrate that SDC produces a greater butyrate response than RDC.
+The mean 0-to-48-hour butyrate change was `r if (exists("butyrate_sdc_mean_delta") && length(butyrate_sdc_mean_delta) == 1 && is.finite(butyrate_sdc_mean_delta)) sprintf("%.2f", butyrate_sdc_mean_delta) else "NA"` μM under SDC and `r if (exists("butyrate_rdc_mean_delta") && length(butyrate_rdc_mean_delta) == 1 && is.finite(butyrate_rdc_mean_delta)) sprintf("%.2f", butyrate_rdc_mean_delta) else "NA"` μM under RDC. The model-adjusted SDC-versus-RDC difference in change was `r if (exists("butyrate_sdc_rdc") && nrow(butyrate_sdc_rdc) == 1) sprintf("%.2f", butyrate_sdc_rdc$estimate) else "NA"` μM (95% CI, `r if (exists("butyrate_sdc_rdc") && nrow(butyrate_sdc_rdc) == 1) sprintf("%.2f", butyrate_sdc_rdc$lower.CL) else "NA"` to `r if (exists("butyrate_sdc_rdc") && nrow(butyrate_sdc_rdc) == 1) sprintf("%.2f", butyrate_sdc_rdc$upper.CL) else "NA"`; Tukey-adjusted p = `r if (exists("butyrate_sdc_rdc") && nrow(butyrate_sdc_rdc) == 1) format.pval(butyrate_sdc_rdc$p.value, digits = 3, eps = 0.001) else "NA"`). Thus, the butyrate increase was numerically greater under SDC, but the current analysis does not demonstrate that SDC produces a greater butyrate response than RDC.
 
 This estimate uses the corrected biological-unit hierarchy: numeric subject (independent person), A/B sample aliquots nested within subject, and R1/R2 or S1/S2 culture wells nested within aliquot. The concentration unit remains provisional pending facility confirmation.
 
@@ -5383,7 +5439,10 @@ cat("- Samples with responder status:",
 To assess whether median responder labels are sensitive to stool subsample noise, we compared A versus B aliquot classifications against the donor-level median threshold.
 
 
-```{r responder-aliquot-stability, echo=FALSE, cache=FALSE, dependson="responder-nonresponder"}
+```{r responder-aliquot-stability, echo=FALSE, cache=FALSE}
+if (!exists("aliquot_classification_stability")) {
+  cat("aliquot_classification_stability missing; skipping A/B sensitivity table.\n")
+} else {
 aliquot_stability_table <- aliquot_classification_stability %>%
   dplyr::transmute(
     Analyte = stringr::str_to_title(analyte),
@@ -5419,9 +5478,10 @@ if (knitr::is_html_output()) {
     caption = "Sensitivity of responder labels to A/B aliquot changes"
   )
 }
+}
 ```
 
-Across the active-carbohydrate responder classifications, the A and B aliquots fell on the same side of the donor-derived median threshold for `r min(aliquot_classification_stability$donors_with_A_B_same_side)` to `r max(aliquot_classification_stability$donors_with_A_B_same_side)` of 16 donors, depending on analyte and carbohydrate. This sensitivity supports retaining continuous donor-level delta as the primary interpersonal-variation outcome and treating median-defined responder analyses as secondary.
+Across the active-carbohydrate responder classifications, the A and B aliquots fell on the same side of the donor-derived median threshold for `r if (exists("aliquot_classification_stability") && nrow(aliquot_classification_stability) > 0) paste0(min(aliquot_classification_stability$donors_with_A_B_same_side), " to ", max(aliquot_classification_stability$donors_with_A_B_same_side)) else "NA"` of 16 donors, depending on analyte and carbohydrate. This sensitivity supports retaining continuous donor-level delta as the primary interpersonal-variation outcome and treating median-defined responder analyses as secondary.
 
 ## 7.6 Microbial Composition Differences: Butyrate Responders vs Non-Responders
 
