@@ -47,7 +47,7 @@ library(DT)
 library(phyloseq)
 library(vegan)
 library(ANCOMBC)
-library(Maaslin2)
+# MaAsLin3 runs outside this render env (R≥4.6 / BioC 3.23); report loads versioned tables.
 library(nlme)
 library(ggalluvial)
 library(scico)
@@ -448,15 +448,15 @@ Between-sample microbial community dissimilarity was quantified using Bray-Curti
 
 Two complementary methods were used to identify taxa that differ significantly between conditions:
 
-**ANCOM-BC2**: Analysis of Compositions of Microbiomes with Bias Correction 2 was applied using the `ANCOMBC` package. This method accounts for compositionality and provides log-fold change estimates with bias correction, standard errors, and FDR-adjusted q-values. Models included group, carbohydrate, timepoint, and their interactions as fixed effects, with subject ID as a random effect where appropriate.
+**ANCOM-BC2**: Analysis of Compositions of Microbiomes with Bias Correction 2 was applied using the `ANCOMBC` package on relative abundances in this render environment (ANCOMBC 2.4). This method accounts for compositionality and provides log-fold change estimates with bias correction, standard errors, and FDR-adjusted q-values. Carbohydrate × timepoint is encoded as a `carb_time` factor where needed because this ANCOMBC build does not parse `*` / `:` tokens in `fix_formula`. Models include donor ID as a random intercept where appropriate.
 
-**MaAsLin2**: Microbiome Multivariable Association with Linear Models 2 was applied using the `Maaslin2` package. This method uses linear models with total sum scaling (TSS) normalization and log transformation. It provides coefficient estimates, standard errors, p-values, and FDR-adjusted q-values. Models included the same fixed and random effects as ANCOM-BC2 analyses.
+**MaAsLin3**: Microbiome Multivariable Associations with Linear Models 3 is the claim-facing multivariable DA method per `docs/additional-analyses-plan.2026-07-19.md`. Fits live in the locked R 4.6 / Bioconductor 3.23 library (`integrated/additional_analyses/renv_bioc323/`) because MaAsLin3 is not available in the report render environment (R 4.3). This report loads versioned outputs from `integrated/results/additional_analyses_2026-07-19/absolute_da/`. The abundance model uses qPCR-scaled genus relative abundances (relative × `gene_copies_per_ul`) with `normalization = NONE`, `transform = LOG`, formula `~ carbohydrate * timepoint + obesity_group + (1|donor_id)`, and joint/individual FDR q-values.
 
-Both methods were applied to relative abundance data, and results were filtered to retain associations with q < 0.1 (FDR-adjusted p-value threshold).
+Results were filtered to retain associations with q < 0.1 (FDR-adjusted). ANCOM-BC2 and MaAsLin3 are complementary screens (relative composition vs qPCR-scaled abundance); interaction estimands are not identical across packages.
 
 ### 3.4.6 Taxon–SCFA Association Analysis
 
-To identify microbial taxa associated with SCFA concentrations, ANCOM-BC2 and MaAsLin2 were applied with butyrate or propionate concentrations as continuous predictors, along with carbohydrate type and their interactions. These analyses were performed on relative abundance data and included subject ID as a random effect to account for repeated measures.
+To identify microbial taxa associated with SCFA concentrations, ANCOM-BC2 was applied with butyrate or propionate concentrations as continuous predictors, along with carbohydrate type. These analyses are exploratory relative-abundance screens. MaAsLin3 ports of SCFA-continuous predictors are not yet in the versioned `absolute_da/` exports; claim-facing *Fusicatenibacter*–butyrate inference uses the donor-level focal analysis instead (Section 3.4.7).
 
 ### 3.4.7 Correlation Analyses
 
@@ -471,7 +471,7 @@ Responder status was defined separately for butyrate and propionate from the don
 Microbial composition differences between responder and non-responder groups were assessed using:
 - Alpha diversity comparisons with Wilcoxon rank-sum tests
 - Beta diversity comparisons using PERMANOVA
-- Differential abundance analysis using ANCOM-BC2 and MaAsLin2 to identify taxa that differ between responder and non-responder groups
+- Differential abundance analysis using ANCOM-BC2 to identify taxa that differ between responder and non-responder groups (exploratory; MaAsLin3 responder models not yet exported)
 
 ## 3.5 Integration Methods
 
@@ -479,7 +479,7 @@ SCFA and microbiome data were integrated by matching samples based on subject ID
 
 ## 3.6 Visualization and Reporting
 
-All visualizations were created using `ggplot2` with a consistent color palette and theme derived from the SCFA analysis. Forest plots display effect sizes (log-fold changes) with 95% confidence intervals for ANCOM-BC2 results. Volcano plots show effect sizes versus significance for MaAsLin2 results. Alluvial diagrams illustrate compositional changes over time. Statistical test results are displayed directly on plots where appropriate (e.g., Wilcoxon p-values on boxplots, R² values on scatter plots). All p-values are reported with FDR adjustment where multiple comparisons were performed.
+All visualizations were created using `ggplot2` with a consistent color palette and theme derived from the SCFA analysis. Forest plots display effect sizes (log-fold changes) with 95% confidence intervals for ANCOM-BC2 results. Volcano plots show effect sizes versus significance for MaAsLin3 abundance results. Alluvial diagrams illustrate compositional changes over time. Statistical test results are displayed directly on plots where appropriate (e.g., Wilcoxon p-values on boxplots, R² values on scatter plots). All p-values are reported with FDR adjustment where multiple comparisons were performed.
 
 
 # 4. Summary Data
@@ -2389,7 +2389,7 @@ print(genus_validation_plot)
 
 ## 6.5 Differential Abundance and Predictive Modeling
 
-Differential abundance analysis identifies microbial taxa that differ significantly between experimental conditions. We applied complementary methods to identify differentially abundant taxa: ANCOM-BC2 (Analysis of Compositions of Microbiomes with Bias Correction), which accounts for compositional bias and uses mixed-effects models, and MaAsLin2 (Microbiome Multivariable Associations with Linear Models), which handles multivariable associations with normalization and transformations. LEfSe is not implemented in this workflow.
+Differential abundance analysis identifies microbial taxa that differ significantly between experimental conditions. We applied complementary methods: ANCOM-BC2 on relative abundances in this report, and MaAsLin3 on qPCR-scaled abundances from the locked BioC 3.23 additional-analyses environment (loaded as versioned tables). LEfSe is not implemented in this workflow.
 
 ### 6.5.1 ANCOM-BC2 Analysis
 
@@ -3218,615 +3218,312 @@ if (exists("ancombc2_48h_rdc_sdc_tbl") && nrow(ancombc2_48h_rdc_sdc_tbl) > 0 && 
 
 
 
-### 6.5.8 MaAsLin2 Analysis
+### 6.5.8 MaAsLin3 Analysis (qPCR-scaled)
 
-MaAsLin2 (Microbiome Multivariable Associations with Linear Models) uses generalized linear models to identify associations between microbial taxa and metadata variables while accounting for confounding factors. We applied MaAsLin2 to identify taxa associated with group, carbohydrate type, and timepoint.
+MaAsLin3 is the claim-facing multivariable differential-abundance method in the additional-analyses plan. Models were fit outside this render environment (R 4.6 / Bioconductor 3.23) on **qPCR-scaled** genus abundances (`relative × gene_copies_per_ul`) with formula `~ carbohydrate * timepoint + obesity_group + (1|donor_id)`. This section loads the versioned abundance table from `integrated/results/additional_analyses_2026-07-19/absolute_da/`.
 
-```{r maaslin2-analysis, echo=FALSE, cache=TRUE, cache.path="cache/integrated-"}
-# Prepare data for MaAsLin2 (needs count data)
-ps_maaslin2 <- ps_genus
+```{r maaslin3-analysis, echo=FALSE, cache=FALSE}
+# Rmd lives in integrated/; path is relative to that knit cwd
+absolute_da_dir <- file.path(
+  "results", "additional_analyses_2026-07-19", "absolute_da"
+)
+maaslin3_abundance_path <- file.path(absolute_da_dir, "maaslin3_abundance_results.csv")
+maaslin3_fusi_path <- file.path(absolute_da_dir, "fusicatenibacter_maaslin3.csv")
 
-# Prepare count matrix and metadata
-# Use proper conversion methods for phyloseq objects
-maaslin2_counts <- as.data.frame(otu_table(ps_maaslin2))
-maaslin2_meta <- as(sample_data(ps_maaslin2), "data.frame")
-maaslin2_meta$SampleID <- rownames(maaslin2_meta)
+maaslin3_empty_tbl <- tibble::tibble(
+  feature = character(0),
+  metadata = character(0),
+  value = character(0),
+  name = character(0),
+  coef = numeric(0),
+  stderr = numeric(0),
+  pval = numeric(0),
+  q = numeric(0),
+  q_joint = numeric(0),
+  model = character(0),
+  N = numeric(0),
+  genus_species = character(0)
+)
 
-# Ensure numeric columns are numeric
-maaslin2_meta <- maaslin2_meta %>%
-  dplyr::mutate(
-    donor_id = as.character(donor_id),
-    aliquot_id = as.character(aliquot_id),
-    subject_id = as.character(subject_id),
-    group = as.factor(group),
-    carbohydrate = as.factor(carbohydrate),
-    timepoint = as.factor(timepoint)
+if (!file.exists(maaslin3_abundance_path)) {
+  cat(
+    "MaAsLin3 abundance results not found at", maaslin3_abundance_path,
+    "\nRun integrated/additional_analyses/R/absolute_da_maaslin3.R first.\n"
   )
-
-# Run MaAsLin2 (suppress output)
-maaslin2_fit <- tryCatch({
-  suppressMessages(suppressWarnings(
-    capture.output(
-      maaslin2_fit_result <- Maaslin2::Maaslin2(
-        input_data = maaslin2_counts,
-        input_metadata = maaslin2_meta,
-        output = tempfile(pattern = "maaslin2_", tmpdir = getwd()),  # Create temporary output directory
-        min_prevalence = 0.05,
-        normalization = "TSS",
-        transform = "LOG",
-        analysis_method = "LM",
-        fixed_effects = c("group", "carbohydrate", "timepoint"),
-        random_effects = c("donor_id"),
-        plot_heatmap = FALSE,
-        plot_scatter = FALSE
-      ),
-      file = nullfile()
-    )
-  ))
-  maaslin2_fit_result
-}, error = function(e) {
-  cat("MaAsLin2 failed:", e$message, "\n")
-  NULL
-})
-
-# Extract results
-if (!is.null(maaslin2_fit) && !is.null(maaslin2_fit$results)) {
-  maaslin2_tbl <- maaslin2_fit$results %>%
-    dplyr::as_tibble() %>%
+  maaslin3_tbl <- maaslin3_empty_tbl
+} else {
+  maaslin3_tbl <- readr::read_csv(maaslin3_abundance_path, show_col_types = FALSE) %>%
     dplyr::mutate(
-      q = p.adjust(pval, method = "BH")  # Add BH-adjusted q-value
+      pval = pval_individual,
+      q = qval_individual,
+      q_joint = qval_joint,
+      genus_species = feature
     ) %>%
     dplyr::arrange(q)
-  
-  # Add taxonomy information
-  tax_table_df <- as.data.frame(tax_table(ps_maaslin2)) %>%
-    tibble::rownames_to_column("feature") %>%
-    dplyr::mutate(
-      Genus_clean = stringr::str_replace(Genus, "^g__", ""),
-      Species_clean = stringr::str_replace(Species, "^s__", ""),
-      Family_clean = stringr::str_replace(Family, "^f__", ""),
-      # Only use Species if Genus is valid; if Genus is NA, use Family
-      genus_species = dplyr::case_when(
-        !is.na(Genus_clean) & Genus_clean != "NA" & Genus_clean != "" &
-          !is.na(Species_clean) & Species_clean != "NA" & Species_clean != "" ~ 
-          paste0(Genus_clean, " ", Species_clean),
-        !is.na(Genus_clean) & Genus_clean != "NA" & Genus_clean != "" ~ Genus_clean,
-        !is.na(Family_clean) & Family_clean != "NA" & Family_clean != "" ~ Family_clean,
-        TRUE ~ feature
-      )
-    )
-  
-  maaslin2_tbl <- maaslin2_tbl %>%
-    dplyr::left_join(
-      tax_table_df %>% dplyr::select(feature, Genus, genus_species),
-      by = "feature"
-    )
-  
-  # Summary of significant results
-  maaslin2_sig <- maaslin2_tbl %>% dplyr::filter(q < 0.1)
-  cat("MaAsLin2 significant results (q < 0.1):", nrow(maaslin2_sig), "feature-metadata combinations\n")
-} else {
-  maaslin2_tbl <- tibble(
-    feature = character(0),
-    metadata = character(0),
-    value = character(0),
-    coef = numeric(0),
-    stderr = numeric(0),
-    pval = numeric(0),
-    qval = numeric(0),
-    q = numeric(0),
-    Genus = character(0),
-    genus_species = character(0)
+
+  maaslin3_sig <- maaslin3_tbl %>% dplyr::filter(q < 0.1)
+  cat(
+    "MaAsLin3 abundance significant results (individual q < 0.1):",
+    nrow(maaslin3_sig), "feature-metadata combinations (",
+    dplyr::n_distinct(maaslin3_sig$feature), "genera)\n"
   )
-  cat("No MaAsLin2 results available\n")
+  if (file.exists(maaslin3_fusi_path)) {
+    fusi_m3 <- readr::read_csv(maaslin3_fusi_path, show_col_types = FALSE)
+    cat("Focal Fusicatenibacter MaAsLin3 rows:", nrow(fusi_m3), "\n")
+  }
 }
 ```
 
-### 6.5.9 MaAsLin2 Summary Table
+### 6.5.9 MaAsLin3 Summary Table
 
-```{r maaslin2-summary-table, echo=FALSE}
-# Create summary table with taxon, genus_species, method, p-value, q-value
-# Fill NA values from taxonomy table and ensure taxon is always seq##
-if (nrow(maaslin2_tbl) > 0) {
-  # Get full taxonomy table for lookups - use original ps object before genus aggregation
-  # to get ASV-level taxonomy
-  tax_table_full <- as.data.frame(tax_table(ps)) %>%
-    tibble::rownames_to_column("feature") %>%
-    dplyr::mutate(
-      # Clean taxonomy levels - remove prefixes and check for valid values
-      Genus_clean = stringr::str_replace(Genus, "^g__", ""),
-      Species_clean = stringr::str_replace(Species, "^s__", ""),
-      Family_clean = stringr::str_replace(Family, "^f__", ""),
-      Order_clean = stringr::str_replace(Order, "^o__", ""),
-      Class_clean = stringr::str_replace(Class, "^c__", ""),
-      Phylum_clean = stringr::str_replace(Phylum, "^p__", ""),
-      Kingdom_clean = stringr::str_replace(Kingdom, "^k__", ""),
-      # Get first non-NA taxonomy level (skip "NA" strings)
-      # IMPORTANT: Only use Species if Genus is valid; if Genus is NA, use Family
-      first_non_na_tax = dplyr::case_when(
-        # Use Genus + Species only if both are valid
-        !is.na(Genus_clean) & Genus_clean != "NA" & Genus_clean != "" &
-          !is.na(Species_clean) & Species_clean != "NA" & Species_clean != "" ~ 
-          paste0(Genus_clean, " ", Species_clean),
-        # Use Genus alone if valid
-        !is.na(Genus_clean) & Genus_clean != "NA" & Genus_clean != "" ~ Genus_clean,
-        # If Genus is NA, use Family
-        !is.na(Family_clean) & Family_clean != "NA" & Family_clean != "" ~ Family_clean,
-        # Continue down the hierarchy
-        !is.na(Order_clean) & Order_clean != "NA" & Order_clean != "" ~ Order_clean,
-        !is.na(Class_clean) & Class_clean != "NA" & Class_clean != "" ~ Class_clean,
-        !is.na(Phylum_clean) & Phylum_clean != "NA" & Phylum_clean != "" ~ Phylum_clean,
-        !is.na(Kingdom_clean) & Kingdom_clean != "NA" & Kingdom_clean != "" ~ Kingdom_clean,
-        TRUE ~ feature
-      )
-    )
-  
-  maaslin2_summary_tbl <- maaslin2_tbl %>%
+```{r maaslin3-summary-table, echo=FALSE, dependson="maaslin3-analysis"}
+if (nrow(maaslin3_tbl) > 0) {
+  maaslin3_summary_tbl <- maaslin3_tbl %>%
     dplyr::filter(q < 0.1) %>%
-    dplyr::left_join(
-      tax_table_full %>% dplyr::select(feature, first_non_na_tax),
-      by = "feature"
-    ) %>%
     dplyr::mutate(
-      # Fill NA genus_species with first non-NA taxonomy level (always use taxonomy, never feature)
-      `Genus Species` = dplyr::case_when(
-        !is.na(genus_species) & genus_species != "NA" & genus_species != "" & !stringr::str_starts(genus_species, "seq") ~ 
-          stringr::str_replace_all(genus_species, "^(g__|f__|o__|c__|p__|k__)", ""),
-        !is.na(first_non_na_tax) & first_non_na_tax != "NA" & first_non_na_tax != "" & !stringr::str_starts(first_non_na_tax, "seq") ~
-          stringr::str_replace_all(first_non_na_tax, "^(g__|f__|o__|c__|p__|k__)", ""),
-        TRUE ~ stringr::str_replace_all(first_non_na_tax, "^(g__|f__|o__|c__|p__|k__)", "")
-      ),
-      `DA Method` = "MaAsLin2",
+      taxon = feature,
+      `Genus Species` = feature,
+      `DA Method` = "MaAsLin3 (qPCR-scaled)",
       `p value` = signif(pval, 4),
       `q value` = signif(q, 4),
+      `q joint` = signif(q_joint, 4),
       `Effect Size (coef)` = signif(coef, 4),
-      Variable = paste0(metadata, "=", value)
+      Variable = dplyr::coalesce(as.character(name), paste0(metadata, "=", value))
     ) %>%
-    dplyr::select(taxon = feature, `Genus Species`, 
-                  `DA Method`, Variable, `Effect Size (coef)`, `p value`, `q value`)
-  
-  # Combine with ANCOM-BC2 results if available
-  if (nrow(ancombc2_tbl) > 0 && "q_value" %in% names(ancombc2_tbl)) {
-    # Map ANCOM-BC2 genus-level taxa back to ASV IDs (seq##)
-    # Get ASV to genus mapping from original ps object
-    asv_to_genus_map <- as.data.frame(tax_table(ps)) %>%
-      tibble::rownames_to_column("asv_id") %>%
-      dplyr::mutate(
-        genus_match = stringr::str_replace(Genus, "^g__", "")
-      ) %>%
-      dplyr::select(asv_id, Genus, genus_match)
-    
-    # Create a mapping: for each unique genus in ANCOM-BC2, find first ASV with that genus
-    genus_to_asv_mapping <- asv_to_genus_map %>%
-      dplyr::group_by(genus_match) %>%
-      dplyr::slice_head(n = 1) %>%
-      dplyr::ungroup() %>%
-      dplyr::select(genus_match, asv_id)
-    
-    # Get full taxonomy for all ASVs (for lookup later)
-    # Use the same tax_table_full that already has first_non_na_tax calculated correctly
-    ancombc2_tax_lookup_full <- tax_table_full %>%
-      dplyr::mutate(
-        genus_match = stringr::str_replace(Genus, "^g__", "")
-      )
-    
+    dplyr::select(
+      taxon, `Genus Species`, `DA Method`, Variable,
+      `Effect Size (coef)`, `p value`, `q value`, `q joint`
+    )
+
+  if (exists("ancombc2_tbl") && nrow(ancombc2_tbl) > 0 && "q_value" %in% names(ancombc2_tbl)) {
     ancombc2_summary_tbl <- ancombc2_tbl %>%
       dplyr::filter(q_value < 0.1) %>%
       dplyr::mutate(
-        genus_clean = stringr::str_replace(taxon, "^g__", "")
-      ) %>%
-      dplyr::left_join(
-        genus_to_asv_mapping,
-        by = c("genus_clean" = "genus_match")
-      ) %>%
-      dplyr::left_join(
-        ancombc2_tax_lookup_full %>% dplyr::select(feature, first_non_na_tax),
-        by = c("asv_id" = "feature")
-      ) %>%
-      dplyr::mutate(
-        # Use mapped ASV ID as taxon (seq##), use first non-NA taxonomy for Genus Species
-        taxon = dplyr::case_when(
-          !is.na(asv_id) ~ asv_id,
-          TRUE ~ taxon  # Fallback to original taxon if no match
-        ),
-        # Ensure Genus Species uses taxonomy, not seq## or NA
-        `Genus Species` = dplyr::case_when(
-          !is.na(first_non_na_tax) & first_non_na_tax != "NA" & first_non_na_tax != "" & 
-            !stringr::str_starts(first_non_na_tax, "seq") ~
-            stringr::str_replace_all(first_non_na_tax, "^(g__|f__|o__|c__|p__|k__)", ""),
-          !is.na(genus_clean) & genus_clean != "NA" & genus_clean != "" ~ 
-            stringr::str_replace_all(genus_clean, "^(g__|f__|o__|c__|p__|k__)", ""),
-          TRUE ~ taxon
-        ),
-        `DA Method` = "ANCOM-BC2",
+        taxon = stringr::str_replace(taxon, "^g__", ""),
+        `Genus Species` = taxon,
+        `DA Method` = "ANCOM-BC2 (relative)",
         `p value` = signif(p_value, 4),
         `q value` = signif(q_value, 4),
+        `q joint` = NA_real_,
         `Effect Size (coef)` = signif(beta, 4),
         Variable = effect
       ) %>%
-      dplyr::select(taxon, `Genus Species`, `DA Method`, Variable, 
-                    `Effect Size (coef)`, `p value`, `q value`)
-    
-    # Combine both methods
-    da_summary_combined <- dplyr::bind_rows(maaslin2_summary_tbl, ancombc2_summary_tbl)
+      dplyr::select(
+        taxon, `Genus Species`, `DA Method`, Variable,
+        `Effect Size (coef)`, `p value`, `q value`, `q joint`
+      )
+    da_summary_combined <- dplyr::bind_rows(maaslin3_summary_tbl, ancombc2_summary_tbl) %>%
+      dplyr::arrange(`Genus Species`, `q value`)
   } else {
-    da_summary_combined <- maaslin2_summary_tbl
+    da_summary_combined <- maaslin3_summary_tbl %>% dplyr::arrange(`Genus Species`, `q value`)
   }
-  
-  # Final cleanup: ensure no NA or seq## in Genus Species, remove all prefixes
-  # Create lookup table for any remaining missing values
-  tax_lookup_final <- tax_table_full %>%
-    dplyr::select(feature, first_non_na_tax_final = first_non_na_tax)
-  
-  da_summary_combined <- da_summary_combined %>%
-    dplyr::left_join(
-      tax_lookup_final,
-      by = c("taxon" = "feature")
-    ) %>%
-    dplyr::mutate(
-      # Remove all prefixes from Genus Species
-      `Genus Species` = stringr::str_replace_all(`Genus Species`, "^(g__|f__|o__|c__|p__|k__)", ""),
-      # If Genus Species is still NA, seq##, or empty, use lookup
-      `Genus Species` = dplyr::case_when(
-        is.na(`Genus Species`) | `Genus Species` == "NA" | `Genus Species` == "" | stringr::str_starts(`Genus Species`, "seq") ~
-          stringr::str_replace_all(first_non_na_tax_final, "^(g__|f__|o__|c__|p__|k__)", ""),
-        TRUE ~ `Genus Species`
-      ),
-      # Final check: ensure no seq## or NA remains
-      `Genus Species` = dplyr::case_when(
-        stringr::str_starts(`Genus Species`, "seq") | `Genus Species` == "NA" | is.na(`Genus Species`) ~
-          stringr::str_replace_all(first_non_na_tax_final, "^(g__|f__|o__|c__|p__|k__)", ""),
-        TRUE ~ `Genus Species`
-      ),
-      # Remove any remaining prefixes one more time
-      `Genus Species` = stringr::str_replace_all(`Genus Species`, "^(g__|f__|o__|c__|p__|k__)", "")
-    ) %>%
-    dplyr::select(-first_non_na_tax_final) %>%
-    # Sort alphabetically by Genus Species
-    dplyr::arrange(`Genus Species`, `q value`)
-  
-  # Display as interactive table in HTML or kable otherwise
+
   if (knitr::is_html_output()) {
     DT::datatable(
       da_summary_combined,
-      caption = "Summary of Differential Abundance Results (q < 0.1)",
+      caption = "Summary of Differential Abundance Results (q < 0.1): MaAsLin3 + ANCOM-BC2",
       filter = "top",
-      options = list(pageLength = 25, scrollX = TRUE, order = list(list(1, 'asc')))
+      options = list(pageLength = 25, scrollX = TRUE, order = list(list(1, "asc")))
     )
   } else {
-    knitr::kable(da_summary_combined, caption = "Summary of Differential Abundance Results (q < 0.1)")
+    knitr::kable(
+      da_summary_combined,
+      caption = "Summary of Differential Abundance Results (q < 0.1): MaAsLin3 + ANCOM-BC2"
+    )
   }
 } else {
-  cat("No differential abundance results available for summary table\n")
+  cat("No MaAsLin3 results available for summary table\n")
 }
 ```
 
-### 6.5.10 MaAsLin2 Visualizations
+### 6.5.10 MaAsLin3 Visualizations
 
-```{r maaslin2-visualizations, echo=FALSE, fig.width=14, fig.height=16, cache=FALSE, dependson="maaslin2-analysis"}
-if (nrow(maaslin2_tbl) > 0 && nrow(maaslin2_tbl %>% dplyr::filter(q < 0.1)) > 0) {
-  # Get taxonomy table for Family lookups (for NA taxa)
-  tax_table_for_vis <- as.data.frame(tax_table(ps)) %>%
-    tibble::rownames_to_column("feature") %>%
-    dplyr::mutate(
-      Family_clean = stringr::str_replace(Family, "^f__", ""),
-      Order_clean = stringr::str_replace(Order, "^o__", ""),
-      Class_clean = stringr::str_replace(Class, "^c__", ""),
-      Phylum_clean = stringr::str_replace(Phylum, "^p__", ""),
-      # Get first non-NA taxonomy level for NA taxa
-      first_non_na_tax = dplyr::case_when(
-        !is.na(Family_clean) & Family_clean != "NA" & Family_clean != "" ~ Family_clean,
-        !is.na(Order_clean) & Order_clean != "NA" & Order_clean != "" ~ Order_clean,
-        !is.na(Class_clean) & Class_clean != "NA" & Class_clean != "" ~ Class_clean,
-        !is.na(Phylum_clean) & Phylum_clean != "NA" & Phylum_clean != "" ~ Phylum_clean,
-        TRUE ~ feature
-      )
-    ) %>%
-    dplyr::select(feature, first_non_na_tax)
-  
-  maaslin2_sig <- maaslin2_tbl %>%
+```{r maaslin3-visualizations, echo=FALSE, fig.width=14, fig.height=16, cache=FALSE, dependson="maaslin3-analysis"}
+if (nrow(maaslin3_tbl) > 0 && any(maaslin3_tbl$q < 0.1, na.rm = TRUE)) {
+  maaslin3_sig <- maaslin3_tbl %>%
     dplyr::filter(q < 0.1) %>%
-    dplyr::left_join(tax_table_for_vis, by = "feature") %>%
     dplyr::mutate(
-      # Replace NA genus_species with Family level (or other taxonomy)
-      genus_species = dplyr::case_when(
-        is.na(genus_species) | genus_species == "NA" | genus_species == "" | 
-          stringr::str_starts(genus_species, "seq") ~
-          stringr::str_replace_all(first_non_na_tax, "^(g__|f__|o__|c__|p__|k__)", ""),
-        TRUE ~ stringr::str_replace_all(genus_species, "^(g__|f__|o__|c__|p__|k__)", "")
-      ),
-      # Create comparison labels for subtitle
+      genus_species = feature,
       comparison_label = dplyr::case_when(
-        metadata == "carbohydrate" & value == "RDC" ~ "RDC vs No Added Carb (positive = more in RDC)",
-        metadata == "carbohydrate" & value == "SDC" ~ "SDC vs No Added Carb (positive = more in SDC)",
-        metadata == "group" & value == "Obese" ~ "Obese vs Healthy (positive = more in Obese)",
-        metadata == "timepoint" & value == "48H" ~ "48H vs 0H (positive = more at 48H)",
-        metadata == "timepoint" & value == "72H" ~ "72H vs 0H (positive = more at 72H)",
-        TRUE ~ paste0(value, " vs Reference")
+        value == "RDC" ~ "RDC vs No Added Carb",
+        value == "SDC" ~ "SDC vs No Added Carb",
+        value == "48H" ~ "48H vs 0H",
+        value == "RDC:timepoint48H" ~ "RDC × 48H interaction",
+        value == "SDC:timepoint48H" ~ "SDC × 48H interaction",
+        value == "obesity" ~ "Obesity vs healthy weight",
+        TRUE ~ as.character(value)
       ),
       significance = dplyr::case_when(
-        q < 0.001 ~ "***",
-        q < 0.01 ~ "**",
-        q < 0.05 ~ "*",
-        TRUE ~ ""
-      ),
-      display_label = paste0(genus_species, " (", metadata, "=", value, ")", significance),
-      full_label = display_label,
-      metadata_value = paste0(metadata, "=", value)
-    ) %>%
-    dplyr::select(-first_non_na_tax)
-  
-  # Plot 1: Coefficient effect sizes by metadata variable
-  maaslin2_effects_plot <- ggplot(
-    maaslin2_sig,
-    aes(x = coef, y = reorder(full_label, coef))
-  ) +
-    geom_col(aes(fill = metadata_value), alpha = 0.8) +
-    geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
-    scale_fill_scfa() +
-    labs(
-      title = "MaAsLin2 Results: Significant Associations",
-      subtitle = "Coefficient Effect Sizes by Variable",
-      x = "Coefficient (Effect Size)",
-      y = "Features",
-      caption = "*** q<0.001, ** q<0.01, * q<0.05"
-    ) +
-    theme_scfa() +
-    theme(
-      axis.text.y = element_text(size = 10),
-      axis.text.x = element_text(size = 11),
-      strip.text = element_text(size = 12, face = "bold"),
-      legend.position = "bottom",
-      panel.grid.major.y = element_blank(),
-      panel.grid.minor = element_blank()
-    )
-  
-  print(maaslin2_effects_plot)
-  
-  # Plot 2: Volcano plot with ggrepel labels
-  sig_points <- maaslin2_tbl %>%
-    dplyr::filter(q < 0.1) %>%
-    dplyr::left_join(tax_table_for_vis, by = "feature") %>%
-    dplyr::mutate(
-      # Replace NA genus_species with Family level (or other taxonomy)
-      genus_species_clean = dplyr::case_when(
-        is.na(genus_species) | genus_species == "NA" | genus_species == "" | 
-          stringr::str_starts(genus_species, "seq") ~
-          stringr::str_replace_all(first_non_na_tax, "^(g__|f__|o__|c__|p__|k__)", ""),
-        TRUE ~ stringr::str_replace_all(genus_species, "^(g__|f__|o__|c__|p__|k__)", "")
-      ),
-      genus_label = dplyr::case_when(
-        !is.na(genus_species_clean) & stringr::str_detect(genus_species_clean, " ") ~ 
-          stringr::str_extract(genus_species_clean, "^[^ ]+"),
-        !is.na(genus_species_clean) ~ genus_species_clean,
-        TRUE ~ stringr::str_replace_all(first_non_na_tax, "^(g__|f__|o__|c__|p__|k__)", "")
+        q < 0.001 ~ "q < 0.001",
+        q < 0.01 ~ "q < 0.01",
+        q < 0.05 ~ "q < 0.05",
+        q < 0.1 ~ "q < 0.1",
+        TRUE ~ "q ≥ 0.1"
       )
     ) %>%
-    dplyr::select(-first_non_na_tax)
-  
-  maaslin2_volcano_plot <- ggplot(
-    maaslin2_tbl,
-    aes(x = coef, y = -log10(q))
-  ) +
-    geom_point(aes(color = q < 0.1), alpha = 0.6, size = 2) +
-    geom_hline(yintercept = -log10(0.1), linetype = "dashed", color = "red", alpha = 0.7) +
-    geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
-    ggrepel::geom_text_repel(
-      data = sig_points,
-      aes(label = genus_label),
-      size = 4,
-      color = "#E31A1C",
-      fontface = "bold",
-      max.overlaps = 20,
-      min.segment.length = 0.1,
-      box.padding = 0.3,
-      point.padding = 0.2,
-      segment.color = "gray50",
-      segment.alpha = 0.6
-    ) +
-    scale_color_manual(
-      values = c("FALSE" = "gray70", "TRUE" = "#E31A1C"),
-      name = "Significant",
-      labels = c("FALSE" = "q ≥ 0.1", "TRUE" = "q < 0.1")
-    ) +
-    labs(
-      title = "MaAsLin2 Volcano Plot",
-      subtitle = "Effect Size vs Statistical Significance",
-      x = "Coefficient (Effect Size)",
-      y = "-log10(q-value)",
-      caption = "Red dashed line: q = 0.1 threshold; Labels show significant taxa"
-    ) +
-    theme_scfa() +
-    theme(
-      legend.position = "bottom"
-    )
-  
-  print(maaslin2_volcano_plot)
-  
-  # Plot 3: Top effects by metadata variable
-  top_effects <- maaslin2_sig %>%
-    dplyr::group_by(metadata) %>%
-    dplyr::slice_max(abs(coef), n = 10) %>%
-    dplyr::ungroup() %>%
-    dplyr::mutate(
-      # Create dynamic subtitle per metadata variable
-      subtitle_text = dplyr::case_when(
-        metadata == "carbohydrate" ~ "RDC vs No Added Carb (pos=more in RDC); SDC vs No Added Carb (pos=more in SDC)",
-        metadata == "group" ~ "Obese vs Healthy (positive = more in Obese)",
-        metadata == "timepoint" ~ "48H vs 0H (pos=more at 48H); 72H vs 0H (pos=more at 72H)",
-        TRUE ~ paste0("Comparison: ", metadata)
-      )
-    )
-  
-  # Create subtitle that combines all comparisons
-  all_comparisons <- top_effects %>%
-    dplyr::distinct(metadata, comparison_label) %>%
-    dplyr::group_by(metadata) %>%
-    dplyr::summarize(comparisons = paste(comparison_label, collapse = "; ")) %>%
-    dplyr::summarize(all_text = paste(metadata, ":", comparisons, collapse = " | "))
-  
-  subtitle_text <- if (nrow(all_comparisons) > 0) {
-    paste0("Top 10 largest effects per metadata variable. Comparisons: ", all_comparisons$all_text[1])
-  } else {
-    "Top 10 largest effects per metadata variable"
-  }
-  
-  maaslin2_top_effects_plot <- ggplot(
-    top_effects,
-    aes(x = coef, y = reorder(genus_species, coef))
-  ) +
-    geom_col(aes(fill = metadata), alpha = 0.8) +
-    geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
-    scale_fill_scfa() +
-    labs(
-      title = "MaAsLin2: Top Effects by Variable",
-      subtitle = subtitle_text,
-      x = "Coefficient (Effect Size)",
-      y = "Genus Species"
-    ) +
-    theme_scfa() +
-    theme(
-      axis.text.y = element_text(size = 9),
-      axis.text.x = element_text(size = 10),
-      legend.position = "bottom",
-      panel.grid.major.y = element_blank(),
-      panel.grid.minor = element_blank()
-    ) +
-    facet_wrap(~metadata, scales = "free_y", ncol = 1)
-  
-  print(maaslin2_top_effects_plot)
-} else {
-  cat("No significant MaAsLin2 results found (q < 0.1) for visualizations\n")
-}
-```
+    dplyr::arrange(dplyr::desc(abs(coef))) %>%
+    dplyr::slice_head(n = 60)
 
-### 6.5.11 MaAsLin2 48H RDC vs SDC Analysis
-
-```{r maaslin2-48h-rdc-sdc, echo=FALSE, cache=TRUE, cache.path="cache/integrated-"}
-# Subset to 48H timepoint and RDC vs SDC only
-ps_maaslin2_48h <- phyloseq::subset_samples(
-  ps_maaslin2,
-  timepoint == "48H" & carbohydrate %in% c("RDC", "SDC")
-)
-
-# Prepare data
-maaslin2_48h_counts <- as.data.frame(otu_table(ps_maaslin2_48h))
-maaslin2_48h_meta <- as(sample_data(ps_maaslin2_48h), "data.frame")
-maaslin2_48h_meta$SampleID <- rownames(maaslin2_48h_meta)
-
-maaslin2_48h_meta <- maaslin2_48h_meta %>%
-  dplyr::mutate(
-    donor_id = as.character(donor_id),
-    aliquot_id = as.character(aliquot_id),
-    subject_id = as.character(subject_id),
-    carbohydrate = as.factor(carbohydrate)
+  print(
+    ggplot(maaslin3_sig, aes(x = coef, y = reorder(genus_species, coef), color = significance)) +
+      geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+      geom_point(size = 2) +
+      facet_wrap(~ comparison_label, scales = "free_y", ncol = 2) +
+      scale_color_manual(
+        values = c(
+          "q < 0.001" = "#d73027",
+          "q < 0.01" = "#f46d43",
+          "q < 0.05" = "#fdae61",
+          "q < 0.1" = "#fee08b"
+        ),
+        name = "FDR q (individual)"
+      ) +
+      labs(
+        title = "MaAsLin3 (qPCR-scaled): Significant Associations",
+        subtitle = "Abundance model; positive coef = higher under the named contrast",
+        x = "Coefficient",
+        y = "Genus"
+      ) +
+      theme_scfa() +
+      theme(legend.position = "bottom", axis.text.y = element_text(size = 8))
   )
 
-# Run MaAsLin2 for 48H RDC vs SDC (suppress output)
-maaslin2_48h_fit <- tryCatch({
-  suppressMessages(suppressWarnings(
-    capture.output(
-      maaslin2_48h_fit_result <- Maaslin2::Maaslin2(
-        input_data = maaslin2_48h_counts,
-        input_metadata = maaslin2_48h_meta,
-        output = tempfile(pattern = "maaslin2_48h_", tmpdir = getwd()),  # Create temporary output directory
-        min_prevalence = 0.05,
-        normalization = "TSS",
-        transform = "LOG",
-        analysis_method = "LM",
-        fixed_effects = c("carbohydrate"),
-        random_effects = c("donor_id"),
-        plot_heatmap = FALSE,
-        plot_scatter = FALSE
-      ),
-      file = nullfile()
+  volcano_data <- maaslin3_tbl %>%
+    dplyr::mutate(
+      neglog10q = -log10(pmax(q, 1e-300)),
+      significant = q < 0.1
     )
-  ))
-  maaslin2_48h_fit_result
-}, error = function(e) {
-  cat("MaAsLin2 48H RDC vs SDC failed:", e$message, "\n")
-  NULL
-})
-
-# Extract results
-if (!is.null(maaslin2_48h_fit) && !is.null(maaslin2_48h_fit$results)) {
-  maaslin2_48h_tbl <- maaslin2_48h_fit$results %>%
-    dplyr::as_tibble() %>%
-    dplyr::mutate(q = p.adjust(pval, method = "BH")) %>%
+  sig_lab <- volcano_data %>%
+    dplyr::filter(significant) %>%
     dplyr::arrange(q) %>%
-    dplyr::left_join(
-      tax_table_df %>% dplyr::select(feature, Genus, genus_species),
-      by = "feature"
-    )
-  
-  cat("MaAsLin2 48H RDC vs SDC significant results (q < 0.1):", 
-      nrow(maaslin2_48h_tbl %>% dplyr::filter(q < 0.1)), "\n")
-} else {
-  maaslin2_48h_tbl <- tibble(
-    feature = character(0),
-    metadata = character(0),
-    value = character(0),
-    coef = numeric(0),
-    pval = numeric(0),
-    q = numeric(0),
-    genus_species = character(0)
+    dplyr::slice_head(n = 25)
+
+  print(
+    ggplot(volcano_data, aes(x = coef, y = neglog10q, color = significant)) +
+      geom_hline(yintercept = -log10(0.1), linetype = "dashed", color = "red3") +
+      geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+      geom_point(alpha = 0.55, size = 1.6) +
+      ggrepel::geom_text_repel(
+        data = sig_lab,
+        aes(label = feature),
+        size = 2.8,
+        max.overlaps = 40,
+        force = 2
+      ) +
+      scale_color_manual(
+        values = c("FALSE" = "gray70", "TRUE" = "#E31A1C"),
+        labels = c("FALSE" = "q ≥ 0.1", "TRUE" = "q < 0.1"),
+        name = "Significant"
+      ) +
+      labs(
+        title = "MaAsLin3 Volcano Plot (qPCR-scaled abundance)",
+        x = "Coefficient",
+        y = "-log10(individual q-value)",
+        caption = "Red dashed line: q = 0.1"
+      ) +
+      theme_scfa() +
+      theme(legend.position = "bottom")
   )
+} else {
+  cat("No significant MaAsLin3 results found (q < 0.1) for visualizations\n")
 }
 ```
 
-### 6.5.12 MaAsLin2 48H RDC vs SDC Volcano Plot
+### 6.5.11 MaAsLin3 Carbohydrate × Time Interactions
 
-```{r maaslin2-48h-volcano, echo=FALSE, fig.width=12, fig.height=10, cache=FALSE, dependson="maaslin2-48h-rdc-sdc"}
-if (nrow(maaslin2_48h_tbl) > 0) {
-  sig_points_48h <- maaslin2_48h_tbl %>%
-    dplyr::filter(q < 0.1) %>%
+MaAsLin3 uses No-Added-Carb and 0H as reference levels, so the head-to-head RDC-versus-SDC contrast at 48H is not a single coefficient. The scientifically adjacent terms are the carbohydrate × 48H interactions (`RDC:timepoint48H`, `SDC:timepoint48H`). Direct RDC-versus-SDC at 48H remains in the ANCOM-BC2 section above.
+
+```{r maaslin3-carb-time-interactions, echo=FALSE, cache=FALSE, dependson="maaslin3-analysis"}
+if (nrow(maaslin3_tbl) > 0) {
+  maaslin3_ixn_tbl <- maaslin3_tbl %>%
+    dplyr::filter(value %in% c("RDC:timepoint48H", "SDC:timepoint48H", "RDC", "SDC", "48H")) %>%
+    dplyr::arrange(q)
+
+  n_sig_ixn <- sum(
+    maaslin3_ixn_tbl$value %in% c("RDC:timepoint48H", "SDC:timepoint48H") &
+      maaslin3_ixn_tbl$q < 0.1,
+    na.rm = TRUE
+  )
+  cat(
+    "MaAsLin3 carbohydrate × 48H interaction terms with q < 0.1:",
+    n_sig_ixn, "\n"
+  )
+
+  if (exists("maaslin3_fusi_path") && file.exists(maaslin3_fusi_path)) {
+    fusi_show <- readr::read_csv(maaslin3_fusi_path, show_col_types = FALSE)
+    if (knitr::is_html_output()) {
+      DT::datatable(
+        fusi_show,
+        caption = "MaAsLin3 Fusicatenibacter coefficients (qPCR-scaled)",
+        options = list(pageLength = 10, dom = "tip"),
+        rownames = FALSE
+      ) %>%
+        DT::formatRound(
+          columns = c("maaslin_coef", "maaslin_q", "maaslin_joint_q"),
+          digits = 4
+        )
+    } else {
+      knitr::kable(fusi_show, digits = 4, caption = "MaAsLin3 Fusicatenibacter coefficients")
+    }
+  }
+} else {
+  maaslin3_ixn_tbl <- maaslin3_empty_tbl
+  cat("No MaAsLin3 results for carbohydrate × time interactions\n")
+}
+```
+
+### 6.5.12 MaAsLin3 Interaction Volcano Plot
+
+```{r maaslin3-interaction-volcano, echo=FALSE, fig.width=12, fig.height=10, cache=FALSE, dependson="maaslin3-carb-time-interactions"}
+if (exists("maaslin3_ixn_tbl") && nrow(maaslin3_ixn_tbl) > 0) {
+  plot_ixn <- maaslin3_ixn_tbl %>%
+    dplyr::filter(value %in% c("RDC:timepoint48H", "SDC:timepoint48H")) %>%
     dplyr::mutate(
-      genus_label = dplyr::case_when(
-        !is.na(genus_species) & stringr::str_detect(genus_species, " ") ~ 
-          stringr::str_extract(genus_species, "^[^ ]+"),
-        !is.na(genus_species) ~ genus_species,
-        TRUE ~ feature
+      neglog10q = -log10(pmax(q, 1e-300)),
+      significant = q < 0.1,
+      term_label = dplyr::if_else(
+        value == "SDC:timepoint48H",
+        "SDC × 48H",
+        "RDC × 48H"
       )
     )
-  
-  maaslin2_48h_volcano_plot <- ggplot(
-    maaslin2_48h_tbl,
-    aes(x = coef, y = -log10(q))
-  ) +
-    geom_point(aes(color = q < 0.1), alpha = 0.6, size = 2) +
-    geom_hline(yintercept = -log10(0.1), linetype = "dashed", color = "red", alpha = 0.7) +
-    geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
-    ggrepel::geom_text_repel(
-      data = sig_points_48h,
-      aes(label = genus_label),
-      size = 3,
-      color = "#E31A1C",
-      fontface = "bold",
-      max.overlaps = 15,
-      box.padding = 0.5,
-      point.padding = 0.3,
-      segment.color = "gray50",
-      segment.size = 0.3,
-      force = 2
-    ) +
-    scale_color_manual(
-      values = c("FALSE" = "gray70", "TRUE" = "#E31A1C"),
-      name = "Significant",
-      labels = c("FALSE" = "q ≥ 0.1", "TRUE" = "q < 0.1")
-    ) +
-    labs(
-      title = "MaAsLin2 Volcano Plot: 48H RDC vs SDC",
-      subtitle = "Carbohydrate Effect Size vs Statistical Significance",
-      x = "Coefficient (Effect Size)",
-      y = "-log10(q-value)",
-      caption = "Red dashed line: q = 0.1 threshold"
-    ) +
-    theme_scfa() +
-    theme(legend.position = "bottom")
-  
-  print(maaslin2_48h_volcano_plot)
+  labs_ixn <- plot_ixn %>%
+    dplyr::filter(significant) %>%
+    dplyr::arrange(q) %>%
+    dplyr::slice_head(n = 20)
+
+  if (nrow(plot_ixn) > 0) {
+    print(
+      ggplot(plot_ixn, aes(x = coef, y = neglog10q, color = significant)) +
+        geom_hline(yintercept = -log10(0.1), linetype = "dashed", color = "red3") +
+        geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+        geom_point(alpha = 0.7, size = 2) +
+        ggrepel::geom_text_repel(
+          data = labs_ixn,
+          aes(label = feature),
+          size = 3,
+          max.overlaps = 30
+        ) +
+        facet_wrap(~ term_label) +
+        scale_color_manual(
+          values = c("FALSE" = "gray70", "TRUE" = "#E31A1C"),
+          labels = c("FALSE" = "q ≥ 0.1", "TRUE" = "q < 0.1"),
+          name = "Significant"
+        ) +
+        labs(
+          title = "MaAsLin3: Carbohydrate × 48H Interactions (qPCR-scaled)",
+          x = "Coefficient",
+          y = "-log10(individual q-value)",
+          caption = "Reference: No Added Carb at 0H"
+        ) +
+        theme_scfa() +
+        theme(legend.position = "bottom")
+    )
+  } else {
+    cat("No carbohydrate × 48H interaction rows found in MaAsLin3 table\n")
+  }
 } else {
-  cat("No MaAsLin2 48H RDC vs SDC results available for volcano plot\n")
+  cat("No MaAsLin3 interaction results available for volcano plot\n")
 }
 ```
 
@@ -4509,75 +4206,13 @@ if (nsamples(ps_butyrate_rel) > 10 && ntaxa(ps_butyrate_rel) > 1) {
   ancombc2_butyrate_tbl_rel_full <- tibble::tibble()
 }
 
-# Run MaAsLin2 for taxon ~ butyrate + carbohydrate
-# Ensure count matrix columns match metadata rownames
-maaslin2_butyrate_counts_rel <- as.data.frame(otu_table(ps_butyrate_rel))
-if (!taxa_are_rows(ps_butyrate_rel)) {
-  maaslin2_butyrate_counts_rel <- t(maaslin2_butyrate_counts_rel)
-}
+# Legacy relative MaAsLin screen removed; claim-facing method is MaAsLin3.
+# Continuous SCFA~taxon MaAsLin3 models are not yet exported under absolute_da/.
+maaslin2_butyrate_tbl_rel <- tibble::tibble()
+maaslin2_butyrate_tbl_rel_full <- tibble::tibble()
+cat("Continuous SCFA–taxon multivariable screen deferred to MaAsLin3 pipeline (see §6.5.8 / absolute_da/)\n")
 
-# Prepare metadata with rownames matching count matrix column names
-maaslin2_butyrate_meta_rel <- data.frame(sample_data(ps_butyrate_rel)) %>%
-  dplyr::mutate(
-    donor_id = as.character(donor_id),
-    aliquot_id = as.character(aliquot_id),
-    subject_id = as.character(subject_id),
-    carbohydrate = as.factor(carbohydrate),
-    butyrate = as.numeric(butyrate)
-  )
-# Ensure rownames match count matrix column names
-rownames(maaslin2_butyrate_meta_rel) <- sample_names(ps_butyrate_rel)
-
-# Use fixed temp directory for caching stability
-maaslin2_butyrate_temp_dir <- file.path(getwd(), "maaslin2_temp_butyrate_rel")
-if (!dir.exists(maaslin2_butyrate_temp_dir)) {
-  dir.create(maaslin2_butyrate_temp_dir, recursive = TRUE, showWarnings = FALSE)
-}
-
-maaslin2_butyrate_rel <- tryCatch({
-  suppressMessages(suppressWarnings(
-    capture.output(
-      maaslin2_butyrate_rel_result <- Maaslin2::Maaslin2(
-        input_data = maaslin2_butyrate_counts_rel,
-        input_metadata = maaslin2_butyrate_meta_rel,
-        output = maaslin2_butyrate_temp_dir,
-        min_prevalence = 0.05,
-        normalization = "TSS",
-        transform = "LOG",
-        analysis_method = "LM",
-        fixed_effects = c("butyrate", "carbohydrate"),
-        random_effects = c("donor_id"),
-        plot_heatmap = FALSE,
-        plot_scatter = FALSE
-      ),
-      file = nullfile()
-    )
-  ))
-  maaslin2_butyrate_rel_result
-}, error = function(e) {
-  cat("MaAsLin2 butyrate (relative) failed:", e$message, "
-")
-  NULL
-})
-
-if (!is.null(maaslin2_butyrate_rel) && !is.null(maaslin2_butyrate_rel$results)) {
-  # Full results for visualization
-  maaslin2_butyrate_tbl_rel_full <- maaslin2_butyrate_rel$results %>%
-    dplyr::as_tibble() %>%
-    dplyr::mutate(q = p.adjust(pval, method = "BH")) %>%
-    dplyr::filter(metadata == "butyrate") %>%
-    dplyr::arrange(q)
-  
-  # Significant results only
-  maaslin2_butyrate_tbl_rel <- maaslin2_butyrate_tbl_rel_full %>%
-    dplyr::filter(q < 0.1)
-} else {
-  maaslin2_butyrate_tbl_rel <- tibble::tibble()
-  maaslin2_butyrate_tbl_rel_full <- tibble::tibble()
-}
-```
-
-### 7.2.1 ANCOM-BC2 and MaAsLin2 Visualizations: Butyrate Associations
+### 7.2.1 ANCOM-BC2 Visualizations: Butyrate Associations
 
 ```{r taxon-butyrate-visualizations, echo=FALSE, fig.width=14, fig.height=10, cache=FALSE, dependson="taxon-butyrate-relative"}
 # ANCOM-BC2 Forest Plot for Butyrate
@@ -4663,63 +4298,8 @@ if (exists("ancombc2_butyrate_tbl_rel_full") && nrow(ancombc2_butyrate_tbl_rel_f
   cat("No ANCOM-BC2 butyrate results available for visualization\n")
 }
 
-# MaAsLin2 Volcano Plot for Butyrate
-if (exists("maaslin2_butyrate_tbl_rel_full") && nrow(maaslin2_butyrate_tbl_rel_full) > 0) {
-  # Get taxonomy for labels
-  tax_table_butyrate <- as.data.frame(tax_table(ps_butyrate_rel)) %>%
-    tibble::rownames_to_column("feature") %>%
-    dplyr::mutate(
-      Genus_clean = stringr::str_replace(Genus, "^g__", ""),
-      Family_clean = stringr::str_replace(Family, "^f__", ""),
-      genus_label = dplyr::case_when(
-        !is.na(Genus_clean) & Genus_clean != "NA" & Genus_clean != "" ~ Genus_clean,
-        !is.na(Family_clean) & Family_clean != "NA" & Family_clean != "" ~ Family_clean,
-        TRUE ~ feature
-      )
-    ) %>%
-    dplyr::select(feature, genus_label)
-  
-  maaslin2_butyrate_plot_data <- maaslin2_butyrate_tbl_rel_full %>%
-    dplyr::left_join(tax_table_butyrate, by = "feature")
-  
-  sig_points_butyrate <- maaslin2_butyrate_plot_data %>%
-    dplyr::filter(q < 0.1)
-  
-  maaslin2_butyrate_volcano <- ggplot(
-    maaslin2_butyrate_plot_data,
-    aes(x = coef, y = -log10(q))
-  ) +
-    geom_point(aes(color = q < 0.1), alpha = 0.6, size = 2) +
-    geom_hline(yintercept = -log10(0.1), linetype = "dashed", color = "red", alpha = 0.7) +
-    geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
-    ggrepel::geom_text_repel(
-      data = sig_points_butyrate,
-      aes(label = genus_label),
-      size = 3,
-      color = "#E31A1C",
-      fontface = "bold",
-      max.overlaps = 20,
-      min.segment.length = 0.1
-    ) +
-    scale_color_manual(
-      values = c("FALSE" = "gray70", "TRUE" = "#E31A1C"),
-      name = "Significant",
-      labels = c("FALSE" = "q ≥ 0.1", "TRUE" = "q < 0.1")
-    ) +
-    labs(
-      title = "MaAsLin2: Taxon Associations with Butyrate",
-      subtitle = "Effect Size vs Statistical Significance",
-      x = "Coefficient (Effect Size)",
-      y = "-log10(q-value)",
-      caption = "Red dashed line: q = 0.1 threshold"
-    ) +
-    theme_scfa() +
-    theme(legend.position = "bottom")
-  
-  print(maaslin2_butyrate_volcano)
-} else {
-  cat("No MaAsLin2 butyrate results available for visualization\n")
-}
+cat("Legacy relative multivariable volcano skipped; claim-facing method is MaAsLin3 (§6.5.8)\n")
+
 ```
 
 ## 7.3 Taxon–Propionate Associations
@@ -4792,75 +4372,12 @@ if (nsamples(ps_propionate_rel) > 10 && ntaxa(ps_propionate_rel) > 1) {
   ancombc2_propionate_tbl_rel_full <- tibble::tibble()
 }
 
-# Run MaAsLin2 for taxon ~ propionate + carbohydrate
-# Ensure count matrix columns match metadata rownames
-maaslin2_propionate_counts_rel <- as.data.frame(otu_table(ps_propionate_rel))
-if (!taxa_are_rows(ps_propionate_rel)) {
-  maaslin2_propionate_counts_rel <- t(maaslin2_propionate_counts_rel)
-}
+# Legacy relative MaAsLin screen removed; claim-facing method is MaAsLin3.
+maaslin2_propionate_tbl_rel <- tibble::tibble()
+maaslin2_propionate_tbl_rel_full <- tibble::tibble()
+cat("Continuous SCFA–taxon multivariable screen deferred to MaAsLin3 pipeline (see §6.5.8 / absolute_da/)\n")
 
-# Prepare metadata with rownames matching count matrix column names
-maaslin2_propionate_meta_rel <- data.frame(sample_data(ps_propionate_rel)) %>%
-  dplyr::mutate(
-    donor_id = as.character(donor_id),
-    aliquot_id = as.character(aliquot_id),
-    subject_id = as.character(subject_id),
-    carbohydrate = as.factor(carbohydrate),
-    propionate = as.numeric(propionate)
-  )
-# Ensure rownames match count matrix column names
-rownames(maaslin2_propionate_meta_rel) <- sample_names(ps_propionate_rel)
-
-# Use fixed temp directory for caching stability
-maaslin2_propionate_temp_dir <- file.path(getwd(), "maaslin2_temp_propionate_rel")
-if (!dir.exists(maaslin2_propionate_temp_dir)) {
-  dir.create(maaslin2_propionate_temp_dir, recursive = TRUE, showWarnings = FALSE)
-}
-
-maaslin2_propionate_rel <- tryCatch({
-  suppressMessages(suppressWarnings(
-    capture.output(
-      maaslin2_propionate_rel_result <- Maaslin2::Maaslin2(
-        input_data = maaslin2_propionate_counts_rel,
-        input_metadata = maaslin2_propionate_meta_rel,
-        output = maaslin2_propionate_temp_dir,
-        min_prevalence = 0.05,
-        normalization = "TSS",
-        transform = "LOG",
-        analysis_method = "LM",
-        fixed_effects = c("propionate", "carbohydrate"),
-        random_effects = c("donor_id"),
-        plot_heatmap = FALSE,
-        plot_scatter = FALSE
-      ),
-      file = nullfile()
-    )
-  ))
-  maaslin2_propionate_rel_result
-}, error = function(e) {
-  cat("MaAsLin2 propionate (relative) failed:", e$message, "
-")
-  NULL
-})
-
-if (!is.null(maaslin2_propionate_rel) && !is.null(maaslin2_propionate_rel$results)) {
-  # Full results for visualization
-  maaslin2_propionate_tbl_rel_full <- maaslin2_propionate_rel$results %>%
-    dplyr::as_tibble() %>%
-    dplyr::mutate(q = p.adjust(pval, method = "BH")) %>%
-    dplyr::filter(metadata == "propionate") %>%
-    dplyr::arrange(q)
-  
-  # Significant results only
-  maaslin2_propionate_tbl_rel <- maaslin2_propionate_tbl_rel_full %>%
-    dplyr::filter(q < 0.1)
-} else {
-  maaslin2_propionate_tbl_rel <- tibble::tibble()
-  maaslin2_propionate_tbl_rel_full <- tibble::tibble()
-}
-```
-
-### 7.3.1 ANCOM-BC2 and MaAsLin2 Visualizations: Propionate Associations
+### 7.3.1 ANCOM-BC2 Visualizations: Propionate Associations
 
 ```{r taxon-propionate-visualizations, echo=FALSE, fig.width=14, fig.height=10, cache=FALSE, dependson="taxon-propionate-relative"}
 # ANCOM-BC2 Forest Plot for Propionate
@@ -4946,63 +4463,8 @@ if (exists("ancombc2_propionate_tbl_rel_full") && nrow(ancombc2_propionate_tbl_r
   cat("No ANCOM-BC2 propionate results available for visualization\n")
 }
 
-# MaAsLin2 Volcano Plot for Propionate
-if (exists("maaslin2_propionate_tbl_rel_full") && nrow(maaslin2_propionate_tbl_rel_full) > 0) {
-  # Get taxonomy for labels
-  tax_table_propionate <- as.data.frame(tax_table(ps_propionate_rel)) %>%
-    tibble::rownames_to_column("feature") %>%
-    dplyr::mutate(
-      Genus_clean = stringr::str_replace(Genus, "^g__", ""),
-      Family_clean = stringr::str_replace(Family, "^f__", ""),
-      genus_label = dplyr::case_when(
-        !is.na(Genus_clean) & Genus_clean != "NA" & Genus_clean != "" ~ Genus_clean,
-        !is.na(Family_clean) & Family_clean != "NA" & Family_clean != "" ~ Family_clean,
-        TRUE ~ feature
-      )
-    ) %>%
-    dplyr::select(feature, genus_label)
-  
-  maaslin2_propionate_plot_data <- maaslin2_propionate_tbl_rel_full %>%
-    dplyr::left_join(tax_table_propionate, by = "feature")
-  
-  sig_points_propionate <- maaslin2_propionate_plot_data %>%
-    dplyr::filter(q < 0.1)
-  
-  maaslin2_propionate_volcano <- ggplot(
-    maaslin2_propionate_plot_data,
-    aes(x = coef, y = -log10(q))
-  ) +
-    geom_point(aes(color = q < 0.1), alpha = 0.6, size = 2) +
-    geom_hline(yintercept = -log10(0.1), linetype = "dashed", color = "red", alpha = 0.7) +
-    geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
-    ggrepel::geom_text_repel(
-      data = sig_points_propionate,
-      aes(label = genus_label),
-      size = 3,
-      color = "#E31A1C",
-      fontface = "bold",
-      max.overlaps = 20,
-      min.segment.length = 0.1
-    ) +
-    scale_color_manual(
-      values = c("FALSE" = "gray70", "TRUE" = "#E31A1C"),
-      name = "Significant",
-      labels = c("FALSE" = "q ≥ 0.1", "TRUE" = "q < 0.1")
-    ) +
-    labs(
-      title = "MaAsLin2: Taxon Associations with Propionate",
-      subtitle = "Effect Size vs Statistical Significance",
-      x = "Coefficient (Effect Size)",
-      y = "-log10(q-value)",
-      caption = "Red dashed line: q = 0.1 threshold"
-    ) +
-    theme_scfa() +
-    theme(legend.position = "bottom")
-  
-  print(maaslin2_propionate_volcano)
-} else {
-  cat("No MaAsLin2 propionate results available for visualization\n")
-}
+cat("Legacy relative multivariable volcano skipped; claim-facing method is MaAsLin3 (§6.5.8)\n")
+
 ```
 
 ## 7.4 Fusicatenibacter–SCFA Correlations
@@ -5637,7 +5099,7 @@ PERMANOVA: Butyrate Responder Status (48H):
 
 ### 7.6.1 Differential Abundance Analysis: Butyrate Responders vs Non-Responders
 
-To identify specific taxa that differ between butyrate responders and non-responders, we performed differential abundance analysis using ANCOM-BC2 and MaAsLin2.
+To identify specific taxa that differ between butyrate responders and non-responders, we performed exploratory differential abundance analysis using ANCOM-BC2 (MaAsLin3 ports of responder contrasts are not yet in `absolute_da/`).
 
 ```{r butyrate-responder-da, echo=FALSE, cache=TRUE, cache.path="cache/integrated-", fig.width=14, fig.height=10}
 # Prepare genus-level phyloseq object for DA analysis
@@ -5750,83 +5212,13 @@ if (nsamples(ps_butyrate_resp_genus) > 10 && ntaxa(ps_butyrate_resp_genus) > 1) 
   cat("Insufficient samples for ANCOM-BC2 butyrate responder analysis\n")
 }
 
-# MaAsLin2 Analysis
-if (nsamples(ps_butyrate_resp_genus) > 5 && ntaxa(ps_butyrate_resp_genus) > 1) {
-  maaslin2_butyrate_resp_counts <- as.data.frame(otu_table(ps_butyrate_resp_genus))
-  if (!taxa_are_rows(ps_butyrate_resp_genus)) {
-    maaslin2_butyrate_resp_counts <- t(maaslin2_butyrate_resp_counts)
-  }
-  
-  maaslin2_butyrate_resp_meta <- data.frame(sample_data(ps_butyrate_resp_genus)) %>%
-    dplyr::mutate(
-      donor_id = as.character(donor_id),
-    aliquot_id = as.character(aliquot_id),
-    subject_id = as.character(subject_id),
-      responder_butyrate = as.factor(responder_butyrate),
-      carbohydrate = as.factor(carbohydrate)
-    )
-  rownames(maaslin2_butyrate_resp_meta) <- sample_names(ps_butyrate_resp_genus)
-  
-  maaslin2_butyrate_resp_fit <- tryCatch({
-    suppressMessages(suppressWarnings(
-      capture.output(
-        maaslin2_butyrate_resp_result <- Maaslin2::Maaslin2(
-          input_data = maaslin2_butyrate_resp_counts,
-          input_metadata = maaslin2_butyrate_resp_meta,
-          output = tempfile(pattern = "maaslin2_butyrate_resp_", tmpdir = getwd()),
-          min_prevalence = 0.05,
-          normalization = "TSS",
-          transform = "LOG",
-          analysis_method = "LM",
-          fixed_effects = c("responder_butyrate", "carbohydrate"),
-          random_effects = c("donor_id"),
-          plot_heatmap = FALSE,
-          plot_scatter = FALSE
-        ),
-        file = nullfile()
-      )
-    ))
-    maaslin2_butyrate_resp_result
-  }, error = function(e) {
-    cat("MaAsLin2 butyrate responder failed:", e$message, "\n")
-    NULL
-  })
-  
-  # Extract MaAsLin2 results
-  if (!is.null(maaslin2_butyrate_resp_fit) && !is.null(maaslin2_butyrate_resp_fit$results)) {
-    maaslin2_butyrate_resp_tbl <- maaslin2_butyrate_resp_fit$results %>%
-      dplyr::as_tibble() %>%
-      dplyr::mutate(q = p.adjust(pval, method = "BH")) %>%
-      dplyr::filter(metadata == "responder_butyrate") %>%
-      dplyr::arrange(q)
-    
-    cat("MaAsLin2 butyrate responder:", 
-        sum(maaslin2_butyrate_resp_tbl$q < 0.1, na.rm = TRUE),
-        "significant associations (q < 0.1)\n")
-  } else {
-    maaslin2_butyrate_resp_tbl <- tibble::tibble(
-      feature = character(0),
-      metadata = character(0),
-      value = character(0),
-      coef = numeric(0),
-      pval = numeric(0),
-      q = numeric(0)
-    )
-  }
-} else {
-  maaslin2_butyrate_resp_tbl <- tibble::tibble(
-    feature = character(0),
-    metadata = character(0),
-    value = character(0),
-    coef = numeric(0),
-    pval = numeric(0),
-    q = numeric(0)
-  )
-  cat("Insufficient samples for MaAsLin2 butyrate responder analysis\n")
-}
-```
+# Legacy relative MaAsLin screen removed; claim-facing method is MaAsLin3.
+maaslin2_butyrate_resp_tbl <- tibble::tibble(
+  feature = character(0), coef = numeric(0), pval = numeric(0), q = numeric(0)
+)
+cat("Responder multivariable DA not yet ported to MaAsLin3; ANCOM-BC2 remains exploratory below\n")
 
-### 7.6.2 ANCOM-BC2 and MaAsLin2 Visualizations: Butyrate Responders vs Non-Responders
+### 7.6.2 ANCOM-BC2 Visualizations: Butyrate Responders vs Non-Responders
 
 ```{r butyrate-responder-da-visualizations, echo=FALSE, fig.width=14, fig.height=10, cache=FALSE, dependson="butyrate-responder-da"}
 # ANCOM-BC2 Forest Plot
@@ -5961,63 +5353,8 @@ if (exists("ancombc2_butyrate_resp_tbl") && nrow(ancombc2_butyrate_resp_tbl) > 0
   cat("No ANCOM-BC2 butyrate responder results available for visualization\n")
 }
 
-# MaAsLin2 Volcano Plot
-if (exists("maaslin2_butyrate_resp_tbl") && nrow(maaslin2_butyrate_resp_tbl) > 0) {
-  # Get taxonomy for labels
-  tax_table_butyrate_resp <- as.data.frame(tax_table(ps_butyrate_resp_genus)) %>%
-    tibble::rownames_to_column("feature") %>%
-    dplyr::mutate(
-      Genus_clean = stringr::str_replace(Genus, "^g__", ""),
-      Family_clean = stringr::str_replace(Family, "^f__", ""),
-      genus_label = dplyr::case_when(
-        !is.na(Genus_clean) & Genus_clean != "NA" & Genus_clean != "" ~ Genus_clean,
-        !is.na(Family_clean) & Family_clean != "NA" & Family_clean != "" ~ Family_clean,
-        TRUE ~ feature
-      )
-    ) %>%
-    dplyr::select(feature, genus_label)
-  
-  maaslin2_butyrate_resp_plot_data <- maaslin2_butyrate_resp_tbl %>%
-    dplyr::left_join(tax_table_butyrate_resp, by = "feature")
-  
-  sig_points_butyrate_resp <- maaslin2_butyrate_resp_plot_data %>%
-    dplyr::filter(q < 0.1)
-  
-  maaslin2_butyrate_resp_volcano <- ggplot(
-    maaslin2_butyrate_resp_plot_data,
-    aes(x = coef, y = -log10(q))
-  ) +
-    geom_point(aes(color = q < 0.1), alpha = 0.6, size = 2) +
-    geom_hline(yintercept = -log10(0.1), linetype = "dashed", color = "red", alpha = 0.7) +
-    geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
-    ggrepel::geom_text_repel(
-      data = sig_points_butyrate_resp,
-      aes(label = genus_label),
-      size = 3,
-      color = "#E31A1C",
-      fontface = "bold",
-      max.overlaps = 20,
-      min.segment.length = 0.1
-    ) +
-    scale_color_manual(
-      values = c("FALSE" = "gray70", "TRUE" = "#E31A1C"),
-      name = "Significant",
-      labels = c("FALSE" = "q ≥ 0.1", "TRUE" = "q < 0.1")
-    ) +
-    labs(
-      title = "MaAsLin2: Butyrate Responders vs Non-Responders",
-      subtitle = "Effect Size vs Statistical Significance",
-      x = "Coefficient (Effect Size: Responder vs Non-Responder)",
-      y = "-log10(q-value)",
-      caption = "Red dashed line: q = 0.1 threshold; Positive values indicate higher abundance in Responders"
-    ) +
-    theme_scfa() +
-    theme(legend.position = "bottom")
-  
-  print(maaslin2_butyrate_resp_volcano)
-} else {
-  cat("No MaAsLin2 butyrate responder results available for visualization\n")
-}
+cat("Legacy relative multivariable volcano skipped; claim-facing method is MaAsLin3 (§6.5.8)\n")
+
 ```
 
 ## 7.7 Microbial Composition Differences: Propionate Responders vs Non-Responders
@@ -6208,7 +5545,7 @@ PERMANOVA: Propionate Responder Status (48H):
 
 ### 7.7.1 Differential Abundance Analysis: Propionate Responders vs Non-Responders
 
-To identify specific taxa that differ between propionate responders and non-responders, we performed differential abundance analysis using ANCOM-BC2 and MaAsLin2.
+To identify specific taxa that differ between propionate responders and non-responders, we performed exploratory differential abundance analysis using ANCOM-BC2 (MaAsLin3 ports of responder contrasts are not yet in `absolute_da/`).
 
 ```{r propionate-responder-da, echo=FALSE, cache=TRUE, cache.path="cache/integrated-", fig.width=14, fig.height=10}
 # Prepare genus-level phyloseq object for DA analysis
@@ -6321,83 +5658,13 @@ if (nsamples(ps_prop_resp_genus) > 10 && ntaxa(ps_prop_resp_genus) > 1) {
   cat("Insufficient samples for ANCOM-BC2 propionate responder analysis\n")
 }
 
-# MaAsLin2 Analysis
-if (nsamples(ps_prop_resp_genus) > 5 && ntaxa(ps_prop_resp_genus) > 1) {
-  maaslin2_prop_resp_counts <- as.data.frame(otu_table(ps_prop_resp_genus))
-  if (!taxa_are_rows(ps_prop_resp_genus)) {
-    maaslin2_prop_resp_counts <- t(maaslin2_prop_resp_counts)
-  }
-  
-  maaslin2_prop_resp_meta <- data.frame(sample_data(ps_prop_resp_genus)) %>%
-    dplyr::mutate(
-      donor_id = as.character(donor_id),
-    aliquot_id = as.character(aliquot_id),
-    subject_id = as.character(subject_id),
-      responder_propionate = as.factor(responder_propionate),
-      carbohydrate = as.factor(carbohydrate)
-    )
-  rownames(maaslin2_prop_resp_meta) <- sample_names(ps_prop_resp_genus)
-  
-  maaslin2_prop_resp_fit <- tryCatch({
-    suppressMessages(suppressWarnings(
-      capture.output(
-        maaslin2_prop_resp_result <- Maaslin2::Maaslin2(
-          input_data = maaslin2_prop_resp_counts,
-          input_metadata = maaslin2_prop_resp_meta,
-          output = tempfile(pattern = "maaslin2_prop_resp_", tmpdir = getwd()),
-          min_prevalence = 0.05,
-          normalization = "TSS",
-          transform = "LOG",
-          analysis_method = "LM",
-          fixed_effects = c("responder_propionate", "carbohydrate"),
-          random_effects = c("donor_id"),
-          plot_heatmap = FALSE,
-          plot_scatter = FALSE
-        ),
-        file = nullfile()
-      )
-    ))
-    maaslin2_prop_resp_result
-  }, error = function(e) {
-    cat("MaAsLin2 propionate responder failed:", e$message, "\n")
-    NULL
-  })
-  
-  # Extract MaAsLin2 results
-  if (!is.null(maaslin2_prop_resp_fit) && !is.null(maaslin2_prop_resp_fit$results)) {
-    maaslin2_prop_resp_tbl <- maaslin2_prop_resp_fit$results %>%
-      dplyr::as_tibble() %>%
-      dplyr::mutate(q = p.adjust(pval, method = "BH")) %>%
-      dplyr::filter(metadata == "responder_propionate") %>%
-      dplyr::arrange(q)
-    
-    cat("MaAsLin2 propionate responder:", 
-        sum(maaslin2_prop_resp_tbl$q < 0.1, na.rm = TRUE),
-        "significant associations (q < 0.1)\n")
-  } else {
-    maaslin2_prop_resp_tbl <- tibble::tibble(
-      feature = character(0),
-      metadata = character(0),
-      value = character(0),
-      coef = numeric(0),
-      pval = numeric(0),
-      q = numeric(0)
-    )
-  }
-} else {
-  maaslin2_prop_resp_tbl <- tibble::tibble(
-    feature = character(0),
-    metadata = character(0),
-    value = character(0),
-    coef = numeric(0),
-    pval = numeric(0),
-    q = numeric(0)
-  )
-  cat("Insufficient samples for MaAsLin2 propionate responder analysis\n")
-}
-```
+# Legacy relative MaAsLin screen removed; claim-facing method is MaAsLin3.
+maaslin2_prop_resp_tbl <- tibble::tibble(
+  feature = character(0), coef = numeric(0), pval = numeric(0), q = numeric(0)
+)
+cat("Responder multivariable DA not yet ported to MaAsLin3; ANCOM-BC2 remains exploratory below\n")
 
-### 7.7.2 ANCOM-BC2 and MaAsLin2 Visualizations: Propionate Responders vs Non-Responders
+### 7.7.2 ANCOM-BC2 Visualizations: Propionate Responders vs Non-Responders
 
 ```{r propionate-responder-da-visualizations, echo=FALSE, fig.width=14, fig.height=10, cache=FALSE, dependson="propionate-responder-da"}
 # ANCOM-BC2 Forest Plot
@@ -6532,63 +5799,8 @@ if (exists("ancombc2_prop_resp_tbl") && nrow(ancombc2_prop_resp_tbl) > 0) {
   cat("No ANCOM-BC2 propionate responder results available for visualization\n")
 }
 
-# MaAsLin2 Volcano Plot
-if (exists("maaslin2_prop_resp_tbl") && nrow(maaslin2_prop_resp_tbl) > 0) {
-  # Get taxonomy for labels
-  tax_table_prop_resp <- as.data.frame(tax_table(ps_prop_resp_genus)) %>%
-    tibble::rownames_to_column("feature") %>%
-    dplyr::mutate(
-      Genus_clean = stringr::str_replace(Genus, "^g__", ""),
-      Family_clean = stringr::str_replace(Family, "^f__", ""),
-      genus_label = dplyr::case_when(
-        !is.na(Genus_clean) & Genus_clean != "NA" & Genus_clean != "" ~ Genus_clean,
-        !is.na(Family_clean) & Family_clean != "NA" & Family_clean != "" ~ Family_clean,
-        TRUE ~ feature
-      )
-    ) %>%
-    dplyr::select(feature, genus_label)
-  
-  maaslin2_prop_resp_plot_data <- maaslin2_prop_resp_tbl %>%
-    dplyr::left_join(tax_table_prop_resp, by = "feature")
-  
-  sig_points_prop_resp <- maaslin2_prop_resp_plot_data %>%
-    dplyr::filter(q < 0.1)
-  
-  maaslin2_prop_resp_volcano <- ggplot(
-    maaslin2_prop_resp_plot_data,
-    aes(x = coef, y = -log10(q))
-  ) +
-    geom_point(aes(color = q < 0.1), alpha = 0.6, size = 2) +
-    geom_hline(yintercept = -log10(0.1), linetype = "dashed", color = "red", alpha = 0.7) +
-    geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
-    ggrepel::geom_text_repel(
-      data = sig_points_prop_resp,
-      aes(label = genus_label),
-      size = 3,
-      color = "#E31A1C",
-      fontface = "bold",
-      max.overlaps = 20,
-      min.segment.length = 0.1
-    ) +
-    scale_color_manual(
-      values = c("FALSE" = "gray70", "TRUE" = "#E31A1C"),
-      name = "Significant",
-      labels = c("FALSE" = "q ≥ 0.1", "TRUE" = "q < 0.1")
-    ) +
-    labs(
-      title = "MaAsLin2: Propionate Responders vs Non-Responders",
-      subtitle = "Effect Size vs Statistical Significance",
-      x = "Coefficient (Effect Size: Responder vs Non-Responder)",
-      y = "-log10(q-value)",
-      caption = "Red dashed line: q = 0.1 threshold; Positive values indicate higher abundance in Responders"
-    ) +
-    theme_scfa() +
-    theme(legend.position = "bottom")
-  
-  print(maaslin2_prop_resp_volcano)
-} else {
-  cat("No MaAsLin2 propionate responder results available for visualization\n")
-}
+cat("Legacy relative multivariable volcano skipped; claim-facing method is MaAsLin3 (§6.5.8)\n")
+
 ```
 
 ## 7.8 qPCR-Scaled Fusicatenibacter Abundance: Responders vs Non-Responders
@@ -7007,9 +6219,9 @@ This integrated analysis brings together SCFA metabolomics and 16S rRNA gene mic
 - The interaction between group and carbohydrate type was significant, indicating that the response to different carbohydrates varies by obesity status.
 
 **Differential Abundance:**
-- ANCOM-BC2 and MaAsLin2 analyses identified multiple taxa that differed significantly between carbohydrate conditions, groups, and timepoints.
-- At 48H, significant differences were observed between RDC and SDC conditions, with distinct taxa associated with each carbohydrate type.
-- These findings suggest that carbohydrate structure and digestibility shape microbial community composition in predictable ways.
+- ANCOM-BC2 (relative) and MaAsLin3 (qPCR-scaled abundance) identified multiple taxa associated with carbohydrate, timepoint, and obesity-group contrasts.
+- Head-to-head RDC-versus-SDC contrasts at 48H are reported with ANCOM-BC2; MaAsLin3 reports reference-based carbohydrate × 48H interaction terms from the locked BioC 3.23 pipeline.
+- These complementary screens suggest that carbohydrate structure shapes microbial composition and qPCR-scaled abundances, with method-specific estimands that should not be treated as identical.
 
 **qPCR-Scaled Abundance:**
 - Genus relative abundances were scaled by total bacterial 16S qPCR load to estimate target equivalents per µL (not genus-specific qPCR or cell counts).
@@ -7024,15 +6236,15 @@ if (exists("ancombc2_butyrate_tbl_rel") && nrow(ancombc2_butyrate_tbl_rel) > 0) 
   n_butyrate_ancombc2 <- nrow(ancombc2_butyrate_tbl_rel)
   cat(sprintf("- ANCOM-BC2 identified %d taxa significantly associated with butyrate concentrations at 48H (q < 0.1) after adjusting for carbohydrate effects.\n", n_butyrate_ancombc2))
 } else {
-  cat("- ANCOM-BC2 analysis identified multiple taxa associated with butyrate concentrations at 48H.\n")
+  cat("- ANCOM-BC2 analysis identified taxa associated with butyrate concentrations at 48H (exploratory relative screen).\n")
 }
-if (exists("maaslin2_butyrate_tbl_rel") && nrow(maaslin2_butyrate_tbl_rel) > 0) {
-  n_butyrate_maaslin2 <- nrow(maaslin2_butyrate_tbl_rel)
-  cat(sprintf("- MaAsLin2 identified %d significant associations between taxa and butyrate concentrations at 48H (q < 0.1).\n", n_butyrate_maaslin2))
+if (exists("maaslin3_tbl") && nrow(maaslin3_tbl) > 0) {
+  n_m3 <- sum(maaslin3_tbl$q < 0.1, na.rm = TRUE)
+  cat(sprintf("- MaAsLin3 (qPCR-scaled abundance) reported %d significant feature–metadata associations at individual q < 0.1 (Section 6.5.8).\n", n_m3))
 } else {
-  cat("- MaAsLin2 analysis identified multiple taxa associated with butyrate concentrations at 48H.\n")
+  cat("- MaAsLin3 qPCR-scaled abundance results are summarized in Section 6.5.8 / absolute_da/.\n")
 }
-cat("- These analyses focused on the 48H timepoint to capture associations at peak SCFA production following carbohydrate intervention.\n")
+cat("- Continuous SCFA~taxon MaAsLin3 models are not yet exported; claim-facing Fusicatenibacter–butyrate inference uses the donor-level focal analysis.\n")
 ```
 
 **Propionate Associations (48H timepoint):**
@@ -7041,15 +6253,9 @@ if (exists("ancombc2_propionate_tbl_rel") && nrow(ancombc2_propionate_tbl_rel) >
   n_propionate_ancombc2 <- nrow(ancombc2_propionate_tbl_rel)
   cat(sprintf("- ANCOM-BC2 identified %d taxa significantly associated with propionate concentrations at 48H (q < 0.1) after adjusting for carbohydrate effects.\n", n_propionate_ancombc2))
 } else {
-  cat("- ANCOM-BC2 analysis identified multiple taxa associated with propionate concentrations at 48H.\n")
+  cat("- ANCOM-BC2 analysis identified taxa associated with propionate concentrations at 48H (exploratory relative screen).\n")
 }
-if (exists("maaslin2_propionate_tbl_rel") && nrow(maaslin2_propionate_tbl_rel) > 0) {
-  n_propionate_maaslin2 <- nrow(maaslin2_propionate_tbl_rel)
-  cat(sprintf("- MaAsLin2 identified %d significant associations between taxa and propionate concentrations at 48H (q < 0.1).\n", n_propionate_maaslin2))
-} else {
-  cat("- MaAsLin2 analysis identified multiple taxa associated with propionate concentrations at 48H.\n")
-}
-cat("- These analyses focused on the 48H timepoint to capture associations at peak SCFA production following carbohydrate intervention.\n")
+cat("- Multivariable claim-facing genus discovery uses MaAsLin3 (Section 6.5.8).\n")
 ```
 
 **Fusicatenibacter–SCFA Correlations:**
