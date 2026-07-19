@@ -2393,44 +2393,80 @@ Differential abundance analysis identifies microbial taxa that differ significan
 
 ### 6.5.1 ANCOM-BC2 Analysis
 
-ANCOM-BC2 models microbial abundance using a generalized linear mixed-effects model with bias correction for compositional data. We tested the main effects of group (Healthy vs Obese), carbohydrate type (RDC vs No Added Carb, SDC vs No Added Carb), timepoint (48H vs 0H), and their interactions.
+ANCOM-BC2 models microbial abundance using a generalized linear mixed-effects model with bias correction for compositional data. We tested the main effects of group (Healthy vs Obese), carbohydrate type, timepoint, and carbohydrate-by-time contrasts. Because ANCOMBC 2.4 in the render environment does not parse `*` / `:` interaction tokens in `fix_formula`, carbohydrate × timepoint is encoded as an explicit `carb_time` factor (reference = No Added Carb at 0H).
 
-```{r ancombc2-analysis, echo=FALSE, cache=TRUE, cache.path="cache/integrated-"}
+```{r ancombc2-analysis, echo=FALSE, cache=FALSE}
 # Prepare phyloseq object for ANCOM-BC2 (needs count data, not relative)
-# Use ps (counts) and ensure we have genus-level data
+stopifnot(exists("ps_genus"))
 ps_ancombc2 <- ps_genus
 
-# Remove samples with too many zeros that cause estimation issues
-zero_prop <- apply(otu_table(ps_ancombc2), 2, function(x) sum(x == 0) / length(x))
+# Remove samples with too many zeros that cause estimation issues.
+# IMPORTANT: do not call sample_names() inside subset_samples(); that expression
+# is evaluated in the sample_data environment and cannot see the phyloseq object.
+zero_prop <- apply(as(otu_table(ps_ancombc2), "matrix"), 2, function(x) {
+  mean(x == 0)
+})
 problematic_samples <- names(zero_prop[zero_prop > 0.95])
+keep_samples <- !sample_names(ps_ancombc2) %in% problematic_samples
+ps_ancombc2_clean <- phyloseq::prune_samples(keep_samples, ps_ancombc2)
+ps_ancombc2_clean <- phyloseq::prune_taxa(taxa_sums(ps_ancombc2_clean) > 0, ps_ancombc2_clean)
 
-if (length(problematic_samples) > 0) {
-  ps_ancombc2_clean <- subset_samples(ps_ancombc2, !sample_names(ps_ancombc2) %in% problematic_samples)
-} else {
-  ps_ancombc2_clean <- ps_ancombc2
-}
+# Encode carbohydrate × timepoint as a single factor for ANCOMBC 2.4.
+sd_ancom <- as(sample_data(ps_ancombc2_clean), "data.frame")
+sd_ancom$donor_id <- factor(as.character(sd_ancom$donor_id))
+sd_ancom$group <- factor(as.character(sd_ancom$group), levels = c("Healthy", "Obese"))
+sd_ancom$carbohydrate <- factor(
+  as.character(sd_ancom$carbohydrate),
+  levels = c("No Added Carb", "RDC", "SDC")
+)
+sd_ancom$timepoint <- factor(as.character(sd_ancom$timepoint), levels = c("0H", "48H"))
+sd_ancom$carb_time <- factor(
+  paste(as.character(sd_ancom$carbohydrate), as.character(sd_ancom$timepoint), sep = "_"),
+  levels = c(
+    "No Added Carb_0H", "No Added Carb_48H",
+    "RDC_0H", "RDC_48H",
+    "SDC_0H", "SDC_48H"
+  )
+)
+sample_data(ps_ancombc2_clean) <- sample_data(sd_ancom)
+
+ancombc2_empty_tbl <- tibble::tibble(
+  taxon = character(0),
+  effect = character(0),
+  beta = numeric(0),
+  se = numeric(0),
+  W = numeric(0),
+  p_value = numeric(0),
+  q_value = numeric(0),
+  diff_abn = logical(0)
+)
 
 # Check if we have enough samples
 if (nsamples(ps_ancombc2_clean) < 10) {
   cat("WARNING: Insufficient samples for ANCOM-BC2 analysis\n")
   ancombc2_res <- NULL
+  ancombc2_tbl <- ancombc2_empty_tbl
 } else {
+  cat(
+    "ANCOM-BC2 samples:", nsamples(ps_ancombc2_clean),
+    "; genera:", ntaxa(ps_ancombc2_clean), "\n"
+  )
   # Run ANCOM-BC2 with mixed-effects model
   ancombc2_res <- tryCatch({
     ANCOMBC::ancombc2(
       data = ps_ancombc2_clean,
       tax_level = "Genus",
-      fix_formula = "group + carbohydrate * timepoint",
+      fix_formula = "group + carb_time",
       rand_formula = "(1|donor_id)",
       p_adj_method = "BH",
       prv_cut = 0.10,
       lib_cut = 0,
       s0_perc = 0.05,
-      group = "carbohydrate",
-      struc_zero = TRUE,
-      neg_lb = TRUE,
+      group = "carb_time",
+      struc_zero = FALSE,
+      neg_lb = FALSE,
       alpha = 0.05,
-      global = TRUE
+      global = FALSE
     )
   }, error = function(e) {
     cat("ANCOM-BC2 failed:", e$message, "\n")
@@ -2438,15 +2474,12 @@ if (nsamples(ps_ancombc2_clean) < 10) {
   })
 }
 
-# Extract results if available
+# Extract results if available (map carb_time level names to report labels)
 if (!is.null(ancombc2_res) && !is.null(ancombc2_res$res)) {
   res_data <- ancombc2_res$res
-  
-  # Get the effect names
-  effect_names <- c("groupObese", "carbohydrateRDC", "carbohydrateSDC", "timepoint48H", 
-                    "carbohydrateRDC:timepoint48H", "carbohydrateSDC:timepoint48H")
-  
-  # Create a data frame from the results for each effect
+  lfc_cols <- grep("^lfc_", names(res_data), value = TRUE)
+  effect_names <- sub("^lfc_", "", lfc_cols)
+
   ancombc2_tbl <- purrr::map_dfr(effect_names, function(effect) {
     lfc_col <- paste0("lfc_", effect)
     se_col <- paste0("se_", effect)
@@ -2454,9 +2487,9 @@ if (!is.null(ancombc2_res) && !is.null(ancombc2_res$res)) {
     p_col <- paste0("p_", effect)
     q_col <- paste0("q_", effect)
     diff_col <- paste0("diff_", effect)
-    
+
     if (all(c(lfc_col, se_col, W_col, p_col, q_col, diff_col) %in% colnames(res_data))) {
-      tibble(
+      tibble::tibble(
         taxon = res_data$taxon,
         effect = effect,
         beta = res_data[[lfc_col]],
@@ -2467,20 +2500,11 @@ if (!is.null(ancombc2_res) && !is.null(ancombc2_res$res)) {
         diff_abn = res_data[[diff_col]]
       )
     } else {
-      tibble()
+      ancombc2_empty_tbl
     }
   }) %>% dplyr::arrange(q_value)
 } else {
-  ancombc2_tbl <- tibble(
-    taxon = character(0),
-    effect = character(0),
-    beta = numeric(0),
-    se = numeric(0),
-    W = numeric(0),
-    p_value = numeric(0),
-    q_value = numeric(0),
-    diff_abn = logical(0)
-  )
+  ancombc2_tbl <- ancombc2_empty_tbl
   cat("No ANCOM-BC2 results available - analysis may have failed\n")
 }
 
@@ -2527,8 +2551,13 @@ if (exists("ancombc2_tbl") && nrow(ancombc2_tbl) > 0 && "q_value" %in% names(anc
       # Create effect labels
       effect_label = dplyr::case_when(
         effect == "groupObese" ~ "Group: Obese vs Healthy",
+        effect == "carb_timeNo Added Carb_48H" ~ "No Added Carb: 48H vs 0H",
+        effect == "carb_timeRDC_0H" ~ "RDC vs No Added Carb (0H)",
+        effect == "carb_timeRDC_48H" ~ "RDC at 48H vs No Added Carb at 0H",
+        effect == "carb_timeSDC_0H" ~ "SDC vs No Added Carb (0H)",
+        effect == "carb_timeSDC_48H" ~ "SDC at 48H vs No Added Carb at 0H",
         effect == "carbohydrateRDC" ~ "Carbohydrate: RDC vs No Added Carb",
-        effect == "carbohydrateSDC" ~ "Carbohydrate: SDC vs No Added Carb", 
+        effect == "carbohydrateSDC" ~ "Carbohydrate: SDC vs No Added Carb",
         effect == "timepoint48H" ~ "Timepoint: 48H vs 0H",
         effect == "carbohydrateRDC:timepoint48H" ~ "RDC × 48H Interaction",
         effect == "carbohydrateSDC:timepoint48H" ~ "SDC × 48H Interaction",
@@ -2613,60 +2642,80 @@ if (exists("ancombc2_tbl") && nrow(ancombc2_tbl) > 0 && "effect" %in% names(anco
     ) %>%
     dplyr::select(taxon, taxon_clean)
   
-  comparison_data <- ancombc2_tbl %>%
-    dplyr::filter(effect %in% c("carbohydrateRDC", "carbohydrateSDC")) %>%
-    dplyr::select(taxon, effect, beta, se, p_value, q_value, diff_abn) %>%
-    tidyr::pivot_wider(
-      names_from = effect,
-      values_from = c(beta, se, p_value, q_value, diff_abn),
-      names_sep = "_"
-    ) %>%
-    dplyr::left_join(tax_table_ancombc2_comp, by = "taxon") %>%
-    dplyr::mutate(
-      # Calculate difference between RDC and SDC effects
-      effect_difference = beta_carbohydrateRDC - beta_carbohydrateSDC,
-      # Determine which treatment has stronger effect
-      stronger_effect = dplyr::case_when(
-        abs(beta_carbohydrateRDC) > abs(beta_carbohydrateSDC) ~ "RDC",
-        abs(beta_carbohydrateSDC) > abs(beta_carbohydrateRDC) ~ "SDC",
-        TRUE ~ "Equal"
-      ),
-      # Check if effects are opposite (different signs)
-      opposite_effects = sign(beta_carbohydrateRDC) != sign(beta_carbohydrateSDC),
-      # Check if either effect is significant
-      either_significant = (q_value_carbohydrateRDC < 0.1) | (q_value_carbohydrateSDC < 0.1)
-    ) %>%
-    dplyr::filter(either_significant | opposite_effects) %>%
-    dplyr::arrange(desc(abs(effect_difference)))
+  # Prefer 48H carb_time contrasts (ANCOMBC 2.4 uses carb_time, not carbohydrate*timepoint).
+  # Fall back to legacy carbohydrateRDC/SDC names if present.
+  available_effects <- unique(as.character(ancombc2_tbl$effect))
+  rdc_effect <- dplyr::case_when(
+    "carb_timeRDC_48H" %in% available_effects ~ "carb_timeRDC_48H",
+    "carbohydrateRDC" %in% available_effects ~ "carbohydrateRDC",
+    TRUE ~ NA_character_
+  )
+  sdc_effect <- dplyr::case_when(
+    "carb_timeSDC_48H" %in% available_effects ~ "carb_timeSDC_48H",
+    "carbohydrateSDC" %in% available_effects ~ "carbohydrateSDC",
+    TRUE ~ NA_character_
+  )
+
+  comparison_data <- tibble::tibble()
+  if (!is.na(rdc_effect) && !is.na(sdc_effect)) {
+    comparison_data <- ancombc2_tbl %>%
+      dplyr::filter(effect %in% c(rdc_effect, sdc_effect)) %>%
+      dplyr::mutate(
+        effect = dplyr::case_when(
+          effect == rdc_effect ~ "RDC",
+          effect == sdc_effect ~ "SDC",
+          TRUE ~ effect
+        )
+      ) %>%
+      dplyr::select(taxon, effect, beta, se, p_value, q_value, diff_abn) %>%
+      tidyr::pivot_wider(
+        names_from = effect,
+        values_from = c(beta, se, p_value, q_value, diff_abn),
+        names_sep = "_"
+      ) %>%
+      dplyr::left_join(tax_table_ancombc2_comp, by = "taxon") %>%
+      dplyr::mutate(
+        effect_difference = beta_RDC - beta_SDC,
+        stronger_effect = dplyr::case_when(
+          abs(beta_RDC) > abs(beta_SDC) ~ "RDC",
+          abs(beta_SDC) > abs(beta_RDC) ~ "SDC",
+          TRUE ~ "Equal"
+        ),
+        opposite_effects = sign(beta_RDC) != sign(beta_SDC),
+        either_significant = (q_value_RDC < 0.1) | (q_value_SDC < 0.1)
+      ) %>%
+      dplyr::filter(either_significant | opposite_effects) %>%
+      dplyr::arrange(desc(abs(effect_difference)))
+  }
   
   if (nrow(comparison_data) > 0) {
     # Prepare long format for plotting
     comparison_plot_data <- comparison_data %>%
-      dplyr::select(taxon_clean, beta_carbohydrateRDC, beta_carbohydrateSDC, 
-                    se_carbohydrateRDC, se_carbohydrateSDC,
-                    q_value_carbohydrateRDC, q_value_carbohydrateSDC) %>%
+      dplyr::select(taxon_clean, beta_RDC, beta_SDC, 
+                    se_RDC, se_SDC,
+                    q_value_RDC, q_value_SDC) %>%
       tidyr::pivot_longer(
-        cols = c(beta_carbohydrateRDC, beta_carbohydrateSDC),
+        cols = c(beta_RDC, beta_SDC),
         names_to = "treatment",
         values_to = "beta",
         names_prefix = "beta_"
       ) %>%
       dplyr::mutate(
         se = dplyr::case_when(
-          treatment == "carbohydrateRDC" ~ se_carbohydrateRDC,
-          treatment == "carbohydrateSDC" ~ se_carbohydrateSDC,
+          treatment == "RDC" ~ se_RDC,
+          treatment == "SDC" ~ se_SDC,
           TRUE ~ NA_real_
         ),
         q_value = dplyr::case_when(
-          treatment == "carbohydrateRDC" ~ q_value_carbohydrateRDC,
-          treatment == "carbohydrateSDC" ~ q_value_carbohydrateSDC,
+          treatment == "RDC" ~ q_value_RDC,
+          treatment == "SDC" ~ q_value_SDC,
           TRUE ~ NA_real_
         ),
         ci_lower = beta - 1.96 * se,
         ci_upper = beta + 1.96 * se,
         treatment_label = dplyr::case_when(
-          treatment == "carbohydrateRDC" ~ "RDC vs No Added Carb",
-          treatment == "carbohydrateSDC" ~ "SDC vs No Added Carb",
+          treatment == "RDC" ~ "RDC vs No Added Carb (48H vs 0H ref)",
+          treatment == "SDC" ~ "SDC vs No Added Carb (48H vs 0H ref)",
           TRUE ~ treatment
         ),
         significance = dplyr::case_when(
@@ -2724,15 +2773,48 @@ if (exists("ancombc2_tbl") && nrow(ancombc2_tbl) > 0 && "effect" %in% names(anco
 
 ### 6.5.4 ANCOM-BC2 48H Timepoint Analysis
 
-```{r ancombc2-48h-analysis, echo=FALSE, cache=TRUE, cache.path="cache/integrated-"}
-# Subset to 48H timepoint only
-ps_ancombc2_48h <- phyloseq::subset_samples(ps_ancombc2_clean, timepoint == "48H")
+```{r ancombc2-48h-analysis, echo=FALSE, cache=FALSE}
+# Rebuild cleaned object if upstream chunk objects are missing (e.g. cache skip).
+if (!exists("ps_ancombc2_clean") || !inherits(ps_ancombc2_clean, "phyloseq")) {
+  stopifnot(exists("ps_genus"))
+  ps_ancombc2_clean <- ps_genus
+  sd_tmp <- as(sample_data(ps_ancombc2_clean), "data.frame")
+  sd_tmp$donor_id <- factor(as.character(sd_tmp$donor_id))
+  sample_data(ps_ancombc2_clean) <- sample_data(sd_tmp)
+}
+
+# Subset to 48H timepoint only using prune_samples (safe outside sample_data env)
+keep_48h <- as.character(sample_data(ps_ancombc2_clean)$timepoint) == "48H"
+ps_ancombc2_48h <- phyloseq::prune_samples(keep_48h, ps_ancombc2_clean)
+ps_ancombc2_48h <- phyloseq::prune_taxa(taxa_sums(ps_ancombc2_48h) > 0, ps_ancombc2_48h)
+# Drop unused carbohydrate levels
+sample_data(ps_ancombc2_48h)$carbohydrate <- factor(
+  as.character(sample_data(ps_ancombc2_48h)$carbohydrate),
+  levels = c("No Added Carb", "RDC", "SDC")
+)
+sample_data(ps_ancombc2_48h)$group <- factor(
+  as.character(sample_data(ps_ancombc2_48h)$group),
+  levels = c("Healthy", "Obese")
+)
+
+ancombc2_48h_empty_tbl <- tibble::tibble(
+  taxon = character(0),
+  effect = character(0),
+  beta = numeric(0),
+  se = numeric(0),
+  W = numeric(0),
+  p_value = numeric(0),
+  q_value = numeric(0),
+  diff_abn = logical(0)
+)
 
 # Check if we have enough samples
 if (nsamples(ps_ancombc2_48h) < 10) {
   cat("WARNING: Insufficient samples for ANCOM-BC2 48H analysis\n")
   ancombc2_48h_res <- NULL
+  ancombc2_48h_tbl <- ancombc2_48h_empty_tbl
 } else {
+  cat("ANCOM-BC2 48H samples:", nsamples(ps_ancombc2_48h), "\n")
   # Run ANCOM-BC2 for 48H timepoint
   ancombc2_48h_res <- tryCatch({
     ANCOMBC::ancombc2(
@@ -2745,10 +2827,10 @@ if (nsamples(ps_ancombc2_48h) < 10) {
       lib_cut = 0,
       s0_perc = 0.05,
       group = "carbohydrate",
-      struc_zero = TRUE,
-      neg_lb = TRUE,
+      struc_zero = FALSE,
+      neg_lb = FALSE,
       alpha = 0.05,
-      global = TRUE
+      global = FALSE
     )
   }, error = function(e) {
     cat("ANCOM-BC2 48H failed:", e$message, "\n")
@@ -2759,11 +2841,9 @@ if (nsamples(ps_ancombc2_48h) < 10) {
 # Extract results if available
 if (!is.null(ancombc2_48h_res) && !is.null(ancombc2_48h_res$res)) {
   res_48h_data <- ancombc2_48h_res$res
-  
-  # Get the effect names for 48H
-  effect_names_48h <- c("groupObese", "carbohydrateRDC", "carbohydrateSDC")
-  
-  # Create a data frame from the results
+  lfc_cols_48h <- grep("^lfc_", names(res_48h_data), value = TRUE)
+  effect_names_48h <- sub("^lfc_", "", lfc_cols_48h)
+
   ancombc2_48h_tbl <- purrr::map_dfr(effect_names_48h, function(effect) {
     lfc_col <- paste0("lfc_", effect)
     se_col <- paste0("se_", effect)
@@ -2771,9 +2851,9 @@ if (!is.null(ancombc2_48h_res) && !is.null(ancombc2_48h_res$res)) {
     p_col <- paste0("p_", effect)
     q_col <- paste0("q_", effect)
     diff_col <- paste0("diff_", effect)
-    
+
     if (all(c(lfc_col, se_col, W_col, p_col, q_col, diff_col) %in% colnames(res_48h_data))) {
-      tibble(
+      tibble::tibble(
         taxon = res_48h_data$taxon,
         effect = effect,
         beta = res_48h_data[[lfc_col]],
@@ -2784,20 +2864,11 @@ if (!is.null(ancombc2_48h_res) && !is.null(ancombc2_48h_res$res)) {
         diff_abn = res_48h_data[[diff_col]]
       )
     } else {
-      tibble()
+      ancombc2_48h_empty_tbl
     }
   }) %>% dplyr::arrange(q_value)
 } else {
-  ancombc2_48h_tbl <- tibble(
-    taxon = character(0),
-    effect = character(0),
-    beta = numeric(0),
-    se = numeric(0),
-    W = numeric(0),
-    p_value = numeric(0),
-    q_value = numeric(0),
-    diff_abn = logical(0)
-  )
+  ancombc2_48h_tbl <- ancombc2_48h_empty_tbl
 }
 
 if (nrow(ancombc2_48h_tbl) > 0 && "q_value" %in% names(ancombc2_48h_tbl)) {
@@ -2900,29 +2971,61 @@ if (exists("ancombc2_48h_tbl") && nrow(ancombc2_48h_tbl) > 0 && "q_value" %in% n
 
 To directly compare the effects of RDC versus SDC at the 48H timepoint, we performed a focused ANCOM-BC2 analysis including only RDC and SDC samples at 48H, excluding the No Added Carb condition.
 
-```{r ancombc2-48h-rdc-sdc-analysis, echo=FALSE, cache=TRUE, cache.path="cache/integrated-"}
-# Subset to 48H timepoint and only RDC vs SDC (exclude No Added Carb)
-ps_ancombc2_48h_rdc_sdc <- phyloseq::subset_samples(
-  ps_ancombc2_clean,
-  timepoint == "48H" & carbohydrate %in% c("RDC", "SDC")
+```{r ancombc2-48h-rdc-sdc-analysis, echo=FALSE, cache=FALSE}
+# Rebuild cleaned object if needed
+if (!exists("ps_ancombc2_clean") || !inherits(ps_ancombc2_clean, "phyloseq")) {
+  stopifnot(exists("ps_genus"))
+  ps_ancombc2_clean <- ps_genus
+  sd_tmp <- as(sample_data(ps_ancombc2_clean), "data.frame")
+  sd_tmp$donor_id <- factor(as.character(sd_tmp$donor_id))
+  sample_data(ps_ancombc2_clean) <- sample_data(sd_tmp)
+}
+
+# Subset to 48H RDC/SDC with prune_samples (avoid subset_samples env lookup)
+sd_all <- as(sample_data(ps_ancombc2_clean), "data.frame")
+keep_rdc_sdc <- as.character(sd_all$timepoint) == "48H" &
+  as.character(sd_all$carbohydrate) %in% c("RDC", "SDC")
+ps_ancombc2_48h_rdc_sdc <- phyloseq::prune_samples(keep_rdc_sdc, ps_ancombc2_clean)
+ps_ancombc2_48h_rdc_sdc <- phyloseq::prune_taxa(
+  taxa_sums(ps_ancombc2_48h_rdc_sdc) > 0,
+  ps_ancombc2_48h_rdc_sdc
 )
 
 # Check sample counts
 cat("48H RDC vs SDC samples for ANCOM-BC2:", nsamples(ps_ancombc2_48h_rdc_sdc), "\n")
 cat("Sample distribution by carbohydrate:\n")
-print(table(sample_data(ps_ancombc2_48h_rdc_sdc)$carbohydrate))
+print(table(as.character(sample_data(ps_ancombc2_48h_rdc_sdc)$carbohydrate)))
+
+ancombc2_48h_rdc_sdc_empty_tbl <- tibble::tibble(
+  taxon = character(0),
+  effect = character(0),
+  beta = numeric(0),
+  se = numeric(0),
+  W = numeric(0),
+  p_value = numeric(0),
+  q_value = numeric(0),
+  diff_abn = logical(0)
+)
 
 # Check if we have enough samples
 if (nsamples(ps_ancombc2_48h_rdc_sdc) < 10) {
   cat("WARNING: Insufficient samples for ANCOM-BC2 48H RDC vs SDC analysis\n")
   ancombc2_48h_rdc_sdc_res <- NULL
+  ancombc2_48h_rdc_sdc_tbl <- ancombc2_48h_rdc_sdc_empty_tbl
 } else {
   # Set RDC as reference level
-  sample_data(ps_ancombc2_48h_rdc_sdc)$carbohydrate <- relevel(
-    as.factor(sample_data(ps_ancombc2_48h_rdc_sdc)$carbohydrate),
-    ref = "RDC"
+  sample_data(ps_ancombc2_48h_rdc_sdc)$carbohydrate <- factor(
+    as.character(sample_data(ps_ancombc2_48h_rdc_sdc)$carbohydrate),
+    levels = c("RDC", "SDC")
   )
-  
+  sample_data(ps_ancombc2_48h_rdc_sdc)$group <- factor(
+    as.character(sample_data(ps_ancombc2_48h_rdc_sdc)$group),
+    levels = c("Healthy", "Obese")
+  )
+  sample_data(ps_ancombc2_48h_rdc_sdc)$donor_id <- factor(
+    as.character(sample_data(ps_ancombc2_48h_rdc_sdc)$donor_id)
+  )
+
   # Run ANCOM-BC2 for 48H RDC vs SDC
   ancombc2_48h_rdc_sdc_res <- tryCatch({
     ANCOMBC::ancombc2(
@@ -2935,10 +3038,10 @@ if (nsamples(ps_ancombc2_48h_rdc_sdc) < 10) {
       lib_cut = 0,
       s0_perc = 0.05,
       group = "carbohydrate",
-      struc_zero = TRUE,
-      neg_lb = TRUE,
+      struc_zero = FALSE,
+      neg_lb = FALSE,
       alpha = 0.05,
-      global = TRUE
+      global = FALSE
     )
   }, error = function(e) {
     cat("ANCOM-BC2 48H RDC vs SDC failed:", e$message, "\n")
@@ -2949,12 +3052,9 @@ if (nsamples(ps_ancombc2_48h_rdc_sdc) < 10) {
 # Extract results if available
 if (!is.null(ancombc2_48h_rdc_sdc_res) && !is.null(ancombc2_48h_rdc_sdc_res$res)) {
   res_48h_rdc_sdc_data <- ancombc2_48h_rdc_sdc_res$res
-  
-  # Get the effect names for 48H RDC vs SDC
-  # With RDC as reference, we'll get carbohydrateSDC effect
-  effect_names_48h_rdc_sdc <- c("groupObese", "carbohydrateSDC")
-  
-  # Create a data frame from the results
+  lfc_cols_rdc_sdc <- grep("^lfc_", names(res_48h_rdc_sdc_data), value = TRUE)
+  effect_names_48h_rdc_sdc <- sub("^lfc_", "", lfc_cols_rdc_sdc)
+
   ancombc2_48h_rdc_sdc_tbl <- purrr::map_dfr(effect_names_48h_rdc_sdc, function(effect) {
     lfc_col <- paste0("lfc_", effect)
     se_col <- paste0("se_", effect)
@@ -2962,9 +3062,9 @@ if (!is.null(ancombc2_48h_rdc_sdc_res) && !is.null(ancombc2_48h_rdc_sdc_res$res)
     p_col <- paste0("p_", effect)
     q_col <- paste0("q_", effect)
     diff_col <- paste0("diff_", effect)
-    
+
     if (all(c(lfc_col, se_col, W_col, p_col, q_col, diff_col) %in% colnames(res_48h_rdc_sdc_data))) {
-      tibble(
+      tibble::tibble(
         taxon = res_48h_rdc_sdc_data$taxon,
         effect = effect,
         beta = res_48h_rdc_sdc_data[[lfc_col]],
@@ -2975,28 +3075,21 @@ if (!is.null(ancombc2_48h_rdc_sdc_res) && !is.null(ancombc2_48h_rdc_sdc_res$res)
         diff_abn = res_48h_rdc_sdc_data[[diff_col]]
       )
     } else {
-      tibble()
+      ancombc2_48h_rdc_sdc_empty_tbl
     }
   }) %>% dplyr::arrange(q_value)
-  
-  # Summary of significant results
+
+  # Summary of significant results for the SDC-vs-RDC contrast
   if (nrow(ancombc2_48h_rdc_sdc_tbl) > 0 && "q_value" %in% names(ancombc2_48h_rdc_sdc_tbl)) {
     ancombc2_48h_rdc_sdc_sig <- ancombc2_48h_rdc_sdc_tbl %>%
       dplyr::filter(effect == "carbohydrateSDC", q_value < 0.1)
-    cat("ANCOM-BC2 48H RDC vs SDC significant results (q < 0.1):", 
-        nrow(ancombc2_48h_rdc_sdc_sig), "taxa\n")
+    cat(
+      "ANCOM-BC2 48H RDC vs SDC significant results (q < 0.1):",
+      nrow(ancombc2_48h_rdc_sdc_sig), "taxa\n"
+    )
   }
 } else {
-  ancombc2_48h_rdc_sdc_tbl <- tibble(
-    taxon = character(0),
-    effect = character(0),
-    beta = numeric(0),
-    se = numeric(0),
-    W = numeric(0),
-    p_value = numeric(0),
-    q_value = numeric(0),
-    diff_abn = logical(0)
-  )
+  ancombc2_48h_rdc_sdc_tbl <- ancombc2_48h_rdc_sdc_empty_tbl
 }
 ```
 
