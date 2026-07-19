@@ -1,0 +1,7 @@
+feature,parameter,aldex_est,aldex_q,s_var
+Fusicatenibacter,carbohydrateRDC,-0.8008326632397791,0.7604676489930458,0.25
+Fusicatenibacter,carbohydrateSDC,0.4656494969216269,1,0.25
+Fusicatenibacter,timepoint48H,-2.3713319577910315,0.8182681969127906,0.25
+Fusicatenibacter,obesity_groupobesity,1.0147061170823253,1,0.25
+Fusicatenibacter,carbohydrateRDC:timepoint48H,2.6563677267805574,0.4617535577374844,0.25
+Fusicatenibacter,carbohydrateSDC:timepoint48H,4.30843911795709,0.5812375885148636,0.25

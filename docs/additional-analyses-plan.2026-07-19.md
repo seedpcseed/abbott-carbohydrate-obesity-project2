@@ -2,7 +2,7 @@
 
 **Project:** Abbott–Lurie ZC07, Project 2  
 **Date:** July 19, 2026  
-**Status:** Partially executed 2026-07-19 — Priority A/B core analyses completed under `integrated/results/additional_analyses_2026-07-19/`; MaAsLin 3 / ALDEx3 and facility qPCR QC remain blocked.  
+**Status:** Executed 2026-07-19 — Priority A/B core analyses + MaAsLin 3 / ALDEx3 under `integrated/results/additional_analyses_2026-07-19/` (separate R 4.6 / BioC 3.23 library). Facility qPCR LOD/LOQ/primer confirmation remains blocking for absolute-units language. Integrated HTML re-knit completed with claim-retirement language.  
 **Prerequisite:** Retain the locked donor → A/B aliquot → culture well → time hierarchy from [`unit-hierarchy-reanalysis-plan.2026-07-19.md`](unit-hierarchy-reanalysis-plan.2026-07-19.md).  
 **Execution log:** [`integrated/results/additional_analyses_2026-07-19/README.md`](../integrated/results/additional_analyses_2026-07-19/README.md)
 
@@ -605,7 +605,7 @@ These methods add complexity without adding reliable independent information at 
 - [x] `gene_copies_per_ul` and `genome_copies_per_ul*` definitions reconciled.
 - [x] Exact well-level join has no duplicate keys.
 - [x] Paired 0/48-hour completeness is exported.
-- [ ] Media/negative-control handling is documented.
+- [x] Media/negative-control handling is documented.
 
 ### Gate 2: focal analysis
 
@@ -617,22 +617,22 @@ These methods add complexity without adding reliable independent information at 
 
 ### Gate 3: modern-method expansion
 
-- [ ] Separate `renv` environment is locked.
-- [ ] MaAsLin 3 qPCR scaling is verified on a small known example.
-- [ ] ALDEx3 scale means and variances are documented and sensitivity-tested.
+- [x] Separate `renv` environment is locked.
+- [x] MaAsLin 3 qPCR scaling is verified on a small known example.
+- [x] ALDEx3 scale means and variances are documented and sensitivity-tested.
 - [x] Direct contrasts are exported.
-- [ ] ANCOM-BC2, MaAsLin 3, and ALDEx3 coefficients are compared, not only q-values.
+- [x] ANCOM-BC2, MaAsLin 3, and ALDEx3 coefficients are compared, not only q-values.
 - [x] Full results, including null and failed fits, are retained.
 
 ### Gate 4: manuscript integration
 
-- [ ] Section 5.2 unpaired delta tests are descriptive only or replaced.
+- [x] Section 5.2 unpaired delta tests are descriptive only or replaced.
 - [x] Unimplemented LEfSe language is removed.
-- [ ] Existing sample-level correlation and pooled responder p-values are retired.
+- [x] Existing sample-level correlation and pooled responder p-values are retired.
 - [x] Claim audit is updated from versioned outputs.
 - [ ] Figures display independent donors honestly.
-- [ ] “qPCR-scaled” replaces “direct absolute qPCR” where appropriate.
-- [ ] No mechanistic or predictive wording exceeds the design.
+- [x] “qPCR-scaled” replaces “direct absolute qPCR” where appropriate.
+- [x] No mechanistic or predictive wording exceeds the design.
 
 ## 14. Recommended order of execution
 

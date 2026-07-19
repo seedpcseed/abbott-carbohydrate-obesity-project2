@@ -128,7 +128,7 @@ if (!inherits(fit_lme4, "error")) {
   tab$s_var <- 0.25
   tab$engine <- "lme4_trimmed"
   write_csv(tab, file.path(out_dir, "aldex3_results_svar_0.25_lme4_trimmed.csv"))
-  summaries[["0.25_lme4"]] <- tab
+  summaries[["lme4_025"]] <- tab
 } else {
   writeLines(conditionMessage(fit_lme4), file.path(out_dir, "aldex3_ERROR_lme4_trimmed.txt"))
 }
