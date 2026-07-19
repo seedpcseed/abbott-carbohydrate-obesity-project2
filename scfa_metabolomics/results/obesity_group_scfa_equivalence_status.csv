@@ -1,0 +1,2 @@
+analysis_date,planned_participants,analyzed_subjects,healthy_weight_subjects,obesity_subjects,subject_definition,well_definition,primary_estimands,global_equivalence_verdict,margin_specification,formal_tost_performed,unit_status
+2026-07-19,40,32,16,16,numeric identifier plus A/B suffix,R1/R2 and S1/S2 biological culture wells; NC well 1,6,not_evaluable_external_margins_unavailable,scfa_metabolomics/equivalence_margins.csv,False,uM label pending facility confirmation

@@ -27,8 +27,8 @@ The safest current conclusion is:
 |---|---|---|---|
 | Carbohydrate condition and time are the primary drivers of SCFA production. | Supported | Mixed models found strong time effects for all five analytes and carbohydrate effects for acetate, butyrate, and propionate. BH-adjusted time p-values were approximately 4.9×10⁻⁴⁶ for acetate, 5.4×10⁻³² for propionate, 3.1×10⁻²⁷ for butyrate, 2.2×10⁻²⁴ for 5-aminovalerate, and 1.7×10⁻⁸ for succinate. Carbohydrate main-effect adjusted p-values were 0.011 for acetate, 0.042 for butyrate, and 0.0084 for propionate. | Incubation time and carbohydrate condition were associated with ex vivo SCFA concentrations. |
 | Both RDC and SDC increase acetate, butyrate, and propionate relative to no added carbohydrate. | Supported with qualification | The global carbohydrate effect on 48-hour deltas was significant for acetate (p=0.0479), butyrate (p=0.0420), and propionate (p=0.0209). The rendered report does not provide adjusted pairwise no-carb versus RDC and no-carb versus SDC contrasts. | Both carbohydrate conditions showed higher SCFA trajectories than the no-added-carbohydrate condition in the descriptive data; adjusted pairwise contrasts will determine which condition-specific differences are statistically supported. |
-| SDC produces the highest butyrate response. | Unsupported | The current mixed models test the three-level carbohydrate factor. The delta analysis reports an omnibus effect. Neither output establishes an adjusted SDC-versus-RDC butyrate difference. | Do not state until an adjusted SDC-versus-RDC contrast is reported with an effect estimate and confidence interval. |
-| Obesity status does not substantially impair fermentation capacity. | Supported with qualification | No group main effect, group-by-carbohydrate interaction, group-by-time interaction, or three-way interaction remained significant after BH correction; the smallest adjusted group-related p-value was approximately 0.50 for butyrate. A nonsignificant test is not evidence of equivalence. | SCFA trajectories did not differ significantly by obesity status in this cohort. Avoid “equivalent,” “preserved,” or “unaffected” unless equivalence margins and confidence intervals are added. |
+| SDC produces the highest butyrate response. | Unsupported | With A/B retained as 32 subject IDs and culture wells modeled separately, the direct mixed-model contrast estimated the SDC-versus-RDC difference in 0-to-48-hour butyrate change as 1.03 µM (95% CI, −0.85 to 2.91; Tukey-adjusted p=0.396). The concentration unit remains pending facility confirmation. | The butyrate increase was numerically greater under SDC than RDC, but the adjusted contrast was not significant and does not demonstrate SDC superiority. |
+| Obesity status does not substantially impair fermentation capacity. | Supported with qualification | After retaining A/B as part of 32 distinct subject IDs and modeling repeated culture wells, none of the six primary obesity-minus-healthy-weight differences in 0-to-48-hour change was significant. Estimates ranged from −1.17 to 3.43 in the concentration units labeled µM. No external biological equivalence margin or project-specific assay-precision bound was available, so formal TOST equivalence was not evaluable. | SCFA trajectories did not differ significantly by obesity status in this cohort. Equivalence was not evaluated because no externally justified margin was available; avoid “equivalent,” “preserved,” or “unaffected.” |
 | Healthy participants had higher alpha diversity than participants with obesity at 48 hours under no added carbohydrate. | Unsupported after multiplicity correction | Raw Wilcoxon p-values were 0.0080 for Shannon, 0.0113 for Observed, and 0.0433 for Simpson, but BH-adjusted p-values were 0.102, 0.102, and 0.260, respectively. | No Healthy–Obese alpha-diversity comparison remained significant after FDR correction. |
 | Carbohydrate, time, group, and group-by-carbohydrate each significantly affect beta diversity. | Unsupported as currently reported | The rendered PERMANOVA output provides only aggregate model results: all timepoints R²=0.171, p=0.001; 48 hours R²=0.0467, p=0.001. It does not expose term-specific R² or p-values. | Overall community composition differed across the modeled design. Term-specific effects require a complete PERMANOVA table. |
 | Bifidobacterium increases with both carbohydrates, more under SDC. | Supported with qualification | MaAsLin2 coefficients versus the reference condition were 0.745 for SDC (q=0.023) and 0.582 for RDC (q=0.091). These are not a direct SDC-versus-RDC contrast. | *Bifidobacterium* was positively associated with carbohydrate exposure, with stronger evidence for SDC versus the reference condition. Do not claim SDC exceeds RDC without a direct contrast. |
@@ -48,17 +48,39 @@ The safest current conclusion is:
 
 ### SCFA models
 
-The integrated mixed model was:
+The corrected integrated mixed model is:
 
-`concentration ~ group * carbohydrate_type * timepoint_hr + (1 | subject)`
+`concentration ~ group * carbohydrate_type * timepoint_hr + (1 | subject) + (1 | well_id)`
 
 The strongest defensible statements are:
 
-1. Time was associated with all five measured analytes after BH correction.
-2. Carbohydrate condition was associated with acetate, butyrate, and propionate.
-3. Carbohydrate-by-time interactions were supported for butyrate and propionate; the acetate interaction narrowly missed the adjusted threshold (adjusted p≈0.051).
-4. No obesity-group main effect or group interaction was significant after BH correction.
-5. The current model reports statistical significance but not the condition-specific estimated marginal means, effect sizes, or confidence intervals needed for a primary Results table.
+1. The previous collapsed-ID model found strong time effects and carbohydrate-related effects, but its p-values must be regenerated after correcting the subject and well structure.
+2. The corrected model now retains 32 A/B-coded subject IDs and 160 culture wells rather than collapsing to 16 numeric roots.
+3. The six primary obesity-group difference-in-change estimates and confidence intervals are available.
+4. None of those six superiority contrasts was significant; this does not establish equivalence.
+
+### Obesity-group equivalence and non-inferiority analysis
+
+The corrected analysis defines the estimand separately within each carbohydrate condition as:
+
+`(Obesity 48 h − Obesity 0 h) − (Healthy-weight 48 h − Healthy-weight 0 h)`
+
+The nested model retains A/B as part of the subject identifier and models R1/R2 and S1/S2 as repeated culture wells. The six primary estimates, with model-based 95% confidence intervals, were:
+
+- acetate RDC: −0.09 (−5.24 to 5.06);
+- acetate SDC: 3.43 (−1.72 to 8.58);
+- propionate RDC: 0.74 (−0.70 to 2.18);
+- propionate SDC: 0.38 (−1.06 to 1.82);
+- butyrate RDC: −0.74 (−2.92 to 1.43);
+- butyrate SDC: −1.17 (−3.34 to 1.00).
+
+Values use the concentration units labeled µM in the current workflow; facility confirmation is still required. Donor-level bootstrap intervals gave the same qualitative conclusion. Model diagnostics showed non-normal residuals for all three primary analytes and heteroscedasticity for propionate and butyrate, so both model-based and bootstrap intervals should be retained.
+
+According to PubMed, available PFBBr assay papers provide analytical detection, recovery, or precision information but not a biologically negligible difference for this ex vivo obesity-group estimand ([DOI](https://doi.org/10.1016/j.jchromb.2018.06.028); [DOI](https://doi.org/10.1016/j.jchromb.2023.123826)). Comparable obesity fermentation studies also did not supply a reusable equivalence margin ([DOI](https://doi.org/10.1128/mBio.00914-20); [DOI](https://doi.org/10.3390/nu11020217)).
+
+The primary margin file is therefore deliberately blank. TOST p-values and pass/fail decisions are not reported. The post hoc symmetric bounds required merely to contain the observed 90% intervals ranged from ±1.59 to ±7.75 µM across the six contrasts; these are precision frontiers, not margins to adopt after seeing the data.
+
+**Decision:** Retain “did not differ significantly” and state that equivalence was not evaluable because an externally justified margin was unavailable. Do not use “preserved,” “equivalent,” “non-inferior,” or “unaffected.”
 
 ### Community analyses
 
@@ -83,15 +105,16 @@ The strongest defensible statements are:
 | Level | Current evidence | Required interpretation |
 |---|---|---|
 | Planned cohort | 40 participants: 20 healthy-weight and 20 with obesity | Protocol target, not analyzed N |
-| SCFA source labels | 32 A/B-coded labels before collapse to 16 numeric subject IDs: eight control and eight case | The biological meaning of A/B is undocumented |
+| SCFA subject IDs | 32 analyzed A/B-coded subject labels: 16 healthy-weight and 16 obesity | A/B is part of the subject ID; do not collapse to the numeric root |
+| SCFA culture wells | R1/R2 and S1/S2 wells plus one no-added-carbohydrate well per subject-condition | Model well-level repeated observations or average wells only for donor-level delta sensitivity analyses |
 | Microbiome observations | 292 sample-level profiles in the phyloseq object, all matched to qPCR data | Independent donor, collection, and well-replicate counts must be resolved |
 | Responder overlap | 48 subject-by-carbohydrate records | Must not be described as 48 participants |
 
-The SCFA and integrated workflows define subject as:
+The corrected SCFA workflow defines subject as:
 
-`str_extract(sampleid, "^[0-9]+")`
+`str_to_upper(str_extract(sampleid, "^[0-9]+[A-Za-z]"))`
 
-This removes the A/B suffix before averaging technical replicates and fitting random-intercept models. The manuscript cannot report an analyzed participant count until the study team confirms whether A/B denotes independent donors, repeated collections, split aliquots, or another unit.
+The facility metadata contain 40 A/B-coded subject labels, matching the planned 40 participants, and the SCFA export contains 32 of them. The local microbiome analysis plan also defines labels such as `84B` as subject IDs and R1/R2 or S1/S2 as biological replicates. The remaining accounting task is to document why eight planned participants are absent from the SCFA export and why two obesity no-added-carbohydrate 48-hour observations are missing.
 
 ### Timepoint conflict
 
@@ -148,12 +171,13 @@ Absolute taxon abundance is calculated as relative abundance multiplied by qPCR-
 
 ### Priority 0: blocking
 
-1. **Resolve biological units.** Document the meaning of A/B and rebuild donor, collection, aliquot, and technical-replicate identifiers.
-2. **Recompute analyzed N.** Provide a participant flow and condition-by-timepoint completeness table after exclusions.
+1. **Reconcile exclusions.** The corrected SCFA analysis contains 32 subjects (16 per group); document why eight planned participants are absent and why two obesity no-added-carbohydrate 48-hour observations are missing.
+2. **Confirm assay units and QC.** Obtain facility confirmation of the exported concentration unit, dilution mapping, analyte-specific CV, and LOQ.
 3. **Obtain the fermentation protocol.** Exact substrate composition and culture conditions are necessary to interpret “digestibility.”
 4. **Run direct primary contrasts.** Report adjusted RDC versus SDC, RDC versus no-carb, and SDC versus no-carb estimates with 95% confidence intervals for each primary SCFA.
 5. **Export term-level PERMANOVA.** Report R² and p for each model term and test multivariate dispersion.
 6. **Correct the Fusicatenibacter summary.** Remove “significant correlation” language for the relative-abundance analysis.
+7. **Lock equivalence margins only if externally justified.** Until study-team biological thresholds and project QC are available, treat equivalence as not evaluable.
 
 ### Priority 1: required for responder and focal-taxon claims
 
@@ -178,6 +202,7 @@ Use:
 
 - “associated with”
 - “did not differ significantly”
+- “equivalence was not evaluable because no external margin was available”
 - “median-defined response strata”
 - “concurrent 48-hour association”
 - “hypothesis-generating”
@@ -209,9 +234,13 @@ Do not place *Fusicatenibacter*, “responder phenotypes,” or precision nutrit
 
 ## Source ledger
 
-- `integrated/integrated-scfa-microbiome.Rmd`: sample-ID parsing and averaging, lines 126–184; Methods, lines 350–415; sample accounting, lines 418–485; SCFA mixed models, lines 749–812; beta-diversity models, lines 1133–1362; Fusicatenibacter correlations, lines 4322–4453; responder definition and overlap, lines 4480–4570; responder community models, lines 4573–4765 and 5180–5330; absolute-abundance responder analyses, lines 5716 onward.
-- `integrated/integrated-scfa-microbiome.html`: rendered mixed-model table in section 5.4; diversity output in sections 6.2–6.3; Fusicatenibacter correlations in section 7.4; responder output in sections 7.5–7.9.
-- `scfa_metabolomics/scfa-project2-analysis-improved-v2.Rmd`: sample-ID parsing and technical-replicate averaging, lines 174–229.
+- `integrated/integrated-scfa-microbiome.Rmd`: corrected A/B subject parsing, biological-well identifiers, nested SCFA model, obesity-group confidence-interval table, and precision-frontier figure.
+- `integrated/integrated-scfa-microbiome.html`: legacy render that predates the A/B and well-structure correction; do not use its SCFA group results for the revised claim.
+- `scfa_metabolomics/scfa-project2-analysis-improved-v2.Rmd`: legacy standalone workflow that collapses A/B and averages R/S wells; retained as historical source only.
+- `scfa_metabolomics/obesity_equivalence_analysis.py`: corrected nested-well trajectory models, 90% and 95% model intervals, donor-level bootstrap sensitivity intervals, diagnostics, influence checks, and conditional TOST calculations.
+- `scfa_metabolomics/equivalence_margins.csv`: machine-readable margin lock; version `v0.1-unlocked` contains no numerical bounds.
+- `scfa_metabolomics/results/obesity_group_scfa_*.csv`: complete contrasts, diagnostics, sample counts, and analysis status.
+- `docs/scfa-obesity-equivalence-margin-spec.2026-07-19.md`: unit review, external-evidence review, margin decision, and requirements for a future locked version.
 - `docs/2025_DFI_HMMF_Methods.pdf`: PFBBr panel and detailed GC-negative chemical ionization-MS method, pages 2–3.
 - `docs/Introduction-information.md`: planned cohort and aims, lines 158–181.
 - `docs/zc07-next-steps-proposal.2026-02-01.md`: current narrative claims, limitations, and manuscript proposal.
@@ -220,7 +249,7 @@ Do not place *Fusicatenibacter*, “responder phenotypes,” or precision nutrit
 
 ### Begin full manuscript drafting when
 
-- [ ] A/B and technical-replicate structure is documented.
+- [x] A/B subject and biological-well structure is documented and implemented for SCFA.
 - [ ] Analyzed participant N and exclusions are reconciled.
 - [ ] Direct adjusted carbohydrate contrasts are available.
 - [ ] Term-level PERMANOVA and dispersion results are available.

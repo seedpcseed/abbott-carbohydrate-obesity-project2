@@ -1,0 +1,6 @@
+analyte,margin_lower_uM,margin_upper_uM,status,version,source,rationale
+acetate,,,not_locked_missing_external_biological_anchor,v0.1-unlocked,"DFI-HMMF method and PubMed scoping search, 2026-07-19","No study-team threshold, project-specific QC precision, or comparable ex vivo biological equivalence bound was available."
+propionate,,,not_locked_missing_external_biological_anchor,v0.1-unlocked,"DFI-HMMF method and PubMed scoping search, 2026-07-19","No study-team threshold, project-specific QC precision, or comparable ex vivo biological equivalence bound was available."
+butyrate,,,not_locked_missing_external_biological_anchor,v0.1-unlocked,"DFI-HMMF method and PubMed scoping search, 2026-07-19","No study-team threshold, project-specific QC precision, or comparable ex vivo biological equivalence bound was available."
+5aminovalerate,,,not_planned_secondary_analyte,v0.1-unlocked,"Current outcome hierarchy, 2026-07-19","Secondary analyte; quantification status and biological equivalence threshold are unresolved."
+succinate,,,not_planned_secondary_analyte,v0.1-unlocked,"Current outcome hierarchy, 2026-07-19","Secondary analyte; no biological equivalence threshold was identified."

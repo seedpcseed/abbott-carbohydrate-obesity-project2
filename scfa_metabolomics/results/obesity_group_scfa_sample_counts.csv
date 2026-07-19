@@ -1,0 +1,13 @@
+group_label,carbohydrate,timepoint_hr,n_subjects,n_wells,n_analyte_observations
+Healthy-weight,No added carbohydrate,0,16,16,16
+Healthy-weight,No added carbohydrate,48,16,16,16
+Healthy-weight,RDC,0,16,32,32
+Healthy-weight,RDC,48,16,31,31
+Healthy-weight,SDC,0,16,32,32
+Healthy-weight,SDC,48,16,31,31
+Obesity,No added carbohydrate,0,16,16,16
+Obesity,No added carbohydrate,48,14,14,14
+Obesity,RDC,0,16,32,32
+Obesity,RDC,48,16,32,32
+Obesity,SDC,0,16,32,32
+Obesity,SDC,48,16,32,32

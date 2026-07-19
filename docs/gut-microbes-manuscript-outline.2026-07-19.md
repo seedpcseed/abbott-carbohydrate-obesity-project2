@@ -253,10 +253,18 @@ Report qPCR target, primers, standards, efficiency, Ct acceptance, extraction vo
 #### Primary SCFA model
 
 - Fit donor-aware mixed models with group, carbohydrate, time, and interactions.
-- Include the correct nested or crossed random effects after resolving A/B and well replicates.
+- Retain A/B as part of the subject identifier and include random intercepts for subject and the repeated R1/R2, S1/S2, or no-added-carbohydrate culture well.
 - Report estimated marginal means and adjusted contrasts for RDC versus SDC, each carbohydrate versus no added carbohydrate, and relevant group interactions.
 - Provide estimates, 95% confidence intervals, and corrected p-values.
 - State transformation and model-diagnostic decisions.
+
+#### Obesity-group equivalence framework
+
+- Define each primary group estimand as `(Obesity 48 h − Obesity 0 h) − (Healthy-weight 48 h − Healthy-weight 0 h)`, separately for RDC and SDC and for acetate, propionate, and butyrate.
+- Report model-based 95% confidence intervals and donor-level bootstrap sensitivity intervals.
+- Also report 90% confidence intervals, but perform TOST only after externally justified, analyte-specific lower and upper bounds have been locked without consulting the observed group contrasts.
+- The current margin version is unlocked because the repository lacks project-specific CV/LOQ values and a biological negligible-difference threshold. Equivalence and non-inferiority are therefore not evaluable.
+- Treat the smallest symmetric bound containing an observed 90% interval as a post hoc precision frontier, not as a margin.
 
 #### Donor heterogeneity
 
@@ -292,7 +300,9 @@ Report R and package versions, analysis code location, raw-data accession or acc
 
 ### 3.1 Participant and sample accounting
 
-- State independent participant N only after A/B reconciliation.
+- State that the SCFA export contains 32 A/B-coded subjects, 16 per group, from 40 planned participants.
+- Identify A/B as part of the subject ID and R1/R2 or S1/S2 as biological culture wells.
+- Document why eight planned participants are absent and why two obesity no-added-carbohydrate 48-hour observations are missing.
 - Report completeness by group, carbohydrate, time, assay, and replicate.
 - Describe exclusions and missing samples.
 - Reference Figure 1 and Table 1.
@@ -307,9 +317,13 @@ Report R and package versions, analysis code location, raw-data accession or acc
 
 ### 3.3 Obesity status does not significantly modify SCFA trajectories
 
-- Report group main effects and interactions with confidence intervals.
-- Avoid equivalence language.
-- If confidence intervals are wide, state that clinically relevant differences cannot be excluded.
+- Report the six prespecified obesity-minus-healthy-weight differences in 0-to-48-hour change:
+  - acetate: RDC −0.09 µM (95% CI −5.24 to 5.06), SDC 3.43 (−1.72 to 8.58);
+  - propionate: RDC 0.74 (−0.70 to 2.18), SDC 0.38 (−1.06 to 1.82);
+  - butyrate: RDC −0.74 (−2.92 to 1.43), SDC −1.17 (−3.34 to 1.00).
+- State that none of the six superiority contrasts was significant and that donor-level bootstrap intervals gave the same qualitative conclusion.
+- State that equivalence was not evaluable because no externally justified biological margin or project-specific assay-precision bound was available.
+- Do not use “equivalent,” “preserved,” “unaffected,” or “non-inferior.” The observed 90% interval frontiers are precision summaries, not margins.
 - Reference Figure 3.
 
 ### 3.4 Donor-level heterogeneity in SCFA response
@@ -370,7 +384,8 @@ Contrast the controlled human ex vivo system with Plaza-Díaz et al.:
 - Explain that no significant SCFA group interaction was detected.
 - Contrast this with heterogeneous obesity-associated compositional findings in the literature.
 - Reject a simplistic Firmicutes/Bacteroidetes narrative.
-- Emphasize that a null group test does not prove equivalence.
+- Emphasize that a null group test does not prove equivalence and that equivalence was not evaluable without an externally justified margin.
+- Note that the acetate intervals allow larger group differences than the propionate or butyrate intervals, so the absence of statistical significance should not be presented as uniform precision across analytes.
 
 ### 4.4 Interpersonal variation as the main translational signal
 
@@ -405,7 +420,9 @@ Include:
 - ex vivo conditions do not reproduce upper-GI digestion, absorption, transit, host signaling, or dietary context;
 - substrate identity and exposure may not match colonic delivery;
 - fecal-culture SCFA is not plasma exposure;
-- single-site adolescent cohort and uncertain analyzed N until A/B reconciliation;
+- single-site adolescent cohort with 32 of 40 planned participants represented in the SCFA export and unresolved reasons for the eight absent participants;
+- no externally justified SCFA equivalence margins and no project-level analyte CV/LOQ values;
+- non-normal SCFA model residuals and heteroscedasticity for propionate and butyrate, addressed only partly by donor-level bootstrap sensitivity intervals;
 - 16S genus-level resolution and inferred rather than measured function;
 - concurrent taxon–SCFA associations;
 - qPCR conversion assumptions;
@@ -447,7 +464,8 @@ Use a restrained conclusion:
 
 ### Figure 3. Obesity modification and donor heterogeneity
 
-- Group-by-carbohydrate-by-time contrasts with confidence intervals.
+- Obesity-minus-healthy-weight differences in 0-to-48-hour change for RDC and SDC, with 90% and 95% confidence intervals.
+- State in the panel or caption that no equivalence region is shown because no external margin is locked; label post hoc frontier values as precision summaries only.
 - Donor-level trajectories or conditional effects.
 - Variance-component summary.
 
@@ -487,6 +505,7 @@ The original eight-figure plan should be consolidated to six main figures. Compo
 - Analyte.
 - Model term or contrast.
 - Estimate and 95% confidence interval.
+- For obesity-group contrasts, 90% confidence interval, margin status/version, and equivalence verdict.
 - Corrected p-value.
 - Participant and observation count.
 
@@ -502,6 +521,7 @@ The original eight-figure plan should be consolidated to six main figures. Compo
 - Full sample-level accounting and exclusion log.
 - Secondary-analyte SCFA results.
 - Model diagnostics and sensitivity analyses.
+- Complete obesity-group contrast export, donor-bootstrap intervals, influence checks, and the unlocked equivalence-margin specification.
 - Complete alpha-diversity comparison family.
 - Full PERMANOVA and dispersion output.
 - Full ANCOM-BC2 and MaAsLin2 tables.
@@ -543,7 +563,7 @@ All citations in `docs/Introduction-information.md` should be verified against p
 | Fermentation Methods | No | Full protocol and substrate specifications |
 | SCFA Methods | Provisional | Instrument and unit reconciliation |
 | 16S/qPCR Methods | Provisional | Pipeline parameters and qPCR assay details |
-| Primary Results | No | Donor-unit resolution and direct contrasts |
+| Primary Results | Partial | Direct carbohydrate contrasts, assay-unit confirmation, and exclusion reconciliation |
 | Community Results | Partial | Term-level PERMANOVA and dispersion |
 | Responder Results | Exploratory only | Donor-aware, carbohydrate-specific reanalysis |
 | Discussion | Outline only | Locked primary Results and verified literature |
@@ -553,7 +573,8 @@ All citations in `docs/Introduction-information.md` should be verified against p
 
 ### Begin full prose drafting
 
-- [ ] Confirm the meaning of A/B and the independent participant N.
+- [x] Confirm A/B as part of the subject ID and implement 32 analyzed SCFA subjects.
+- [ ] Reconcile the eight planned participants absent from the SCFA export and the two missing obesity no-carb 48-hour observations.
 - [ ] Obtain cohort, ethics, and fermentation protocol details.
 - [ ] Complete direct adjusted carbohydrate contrasts.
 - [ ] Complete term-specific PERMANOVA and dispersion testing.

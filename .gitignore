@@ -36,3 +36,8 @@ microbiome_analysis/references/SILVA_138.2.bacteria_only.sintax_cache.bin
 integrated/cache/
 integrated/maaslin2*
 .gstack/
+
+# Versioned SCFA obesity-group equivalence specification and outputs
+!scfa_metabolomics/equivalence_margins.csv
+!scfa_metabolomics/results/obesity_group_scfa_*.csv
+!scfa_metabolomics/figures/obesity_group_scfa_equivalence_forest.png
