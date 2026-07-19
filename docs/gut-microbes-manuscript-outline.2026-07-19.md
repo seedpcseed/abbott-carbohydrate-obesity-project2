@@ -253,7 +253,7 @@ Report qPCR target, primers, standards, efficiency, Ct acceptance, extraction vo
 #### Primary SCFA model
 
 - Fit donor-aware mixed models with group, carbohydrate, time, and interactions.
-- Retain A/B as part of the subject identifier and include random intercepts for subject and the repeated R1/R2, S1/S2, or no-added-carbohydrate culture well.
+- Nest A/B aliquots within the numeric subject and culture wells within aliquot; include random intercepts for subject, aliquot, and well.
 - Report estimated marginal means and adjusted contrasts for RDC versus SDC, each carbohydrate versus no added carbohydrate, and relevant group interactions.
 - Provide estimates, 95% confidence intervals, and corrected p-values.
 - State transformation and model-diagnostic decisions.
@@ -300,8 +300,8 @@ Report R and package versions, analysis code location, raw-data accession or acc
 
 ### 3.1 Participant and sample accounting
 
-- State that the SCFA export contains 32 A/B-coded subjects, 16 per group, from 40 planned participants.
-- Identify A/B as part of the subject ID and R1/R2 or S1/S2 as biological culture wells.
+- State that the SCFA export contains 16 independent subjects (8 per group) and 32 A/B aliquots, from 20 subjects / 40 aliquot labels in the submission metadata.
+- Identify numeric IDs as independent people, A/B as sample-aliquot splits, and R1/R2 or S1/S2 as biological culture wells.
 - Document why eight planned participants are absent and why two obesity no-added-carbohydrate 48-hour observations are missing.
 - Report completeness by group, carbohydrate, time, assay, and replicate.
 - Describe exclusions and missing samples.
@@ -420,7 +420,7 @@ Include:
 - ex vivo conditions do not reproduce upper-GI digestion, absorption, transit, host signaling, or dietary context;
 - substrate identity and exposure may not match colonic delivery;
 - fecal-culture SCFA is not plasma exposure;
-- single-site adolescent cohort with 32 of 40 planned participants represented in the SCFA export and unresolved reasons for the eight absent participants;
+- single-site adolescent cohort with 16 of 20 planned subjects represented in the SCFA export and unresolved reasons for the four absent subjects;
 - no externally justified SCFA equivalence margins and no project-level analyte CV/LOQ values;
 - non-normal SCFA model residuals and heteroscedasticity for propionate and butyrate, addressed only partly by donor-level bootstrap sensitivity intervals;
 - 16S genus-level resolution and inferred rather than measured function;
@@ -573,7 +573,7 @@ All citations in `docs/Introduction-information.md` should be verified against p
 
 ### Begin full prose drafting
 
-- [x] Confirm A/B as part of the subject ID and implement 32 analyzed SCFA subjects.
+- [x] Confirm subject → A/B aliquot → well nesting and implement N=16 SCFA subjects.
 - [ ] Reconcile the eight planned participants absent from the SCFA export and the two missing obesity no-carb 48-hour observations.
 - [ ] Obtain cohort, ethics, and fermentation protocol details.
 - [ ] Complete direct adjusted carbohydrate contrasts.

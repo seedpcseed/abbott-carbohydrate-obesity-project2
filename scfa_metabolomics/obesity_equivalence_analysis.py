@@ -2,8 +2,10 @@
 
 The primary estimand is the obesity-minus-healthy-weight difference in the
 0-to-48-hour concentration change, separately for RDC and SDC, for acetate,
-propionate, and butyrate. A/B is retained as part of the subject identifier;
-R1/R2 and S1/S2 identify biological culture wells.
+propionate, and butyrate.
+
+Biological unit hierarchy confirmed by the study team:
+  subject (numeric ID, e.g. 84) → sample aliquot A/B → culture well 1/2.
 
 Formal TOST decisions are made only when an externally justified absolute
 margin is populated in ``equivalence_margins.csv``. When no margin is
@@ -97,13 +99,14 @@ def load_metadata() -> pd.DataFrame:
         raise ValueError(f"Sample IDs map to multiple groups: {bad[:10]}")
 
     metadata = metadata.drop_duplicates("sampleid", keep="first").copy()
-    metadata["subject"] = (
-        metadata["sampleid"]
-        .str.extract(r"^(\d+[A-Za-z])", expand=False)
-        .str.upper()
-    )
-    metadata["numeric_root"] = metadata["sampleid"].str.extract(
+    # Subject = independent donor. A/B = splits of that donor's stool sample.
+    metadata["subject"] = metadata["sampleid"].str.extract(
         r"^(\d+)", expand=False
+    )
+    metadata["aliquot"] = (
+        metadata["sampleid"]
+        .str.extract(r"^(\d+)([A-Za-z])", expand=True)[1]
+        .str.upper()
     )
     metadata["carb_repeat"] = (
         metadata["sampleid"]
@@ -127,16 +130,31 @@ def load_metadata() -> pd.DataFrame:
         metadata["sampleid"].str.extract(r" (\d+)h$", expand=False),
         errors="coerce",
     )
+    metadata["aliquot_id"] = (
+        metadata["subject"].astype(str) + "::" + metadata["aliquot"].astype(str)
+    )
+    # Culture well observed at both timepoints within an aliquot × carbohydrate.
     metadata["well_id"] = (
-        metadata["subject"].astype(str)
+        metadata["aliquot_id"]
         + "::"
         + metadata["carbohydrate"].astype(str)
         + "::"
         + metadata["well_repeat"].astype(str)
     )
 
+    # Same donor cannot belong to both obesity groups.
+    conflict = (
+        metadata.groupby("subject", observed=True)["group"].nunique().gt(1)
+    )
+    if conflict.any():
+        raise ValueError(
+            "Subject IDs map to multiple obesity groups: "
+            f"{conflict[conflict].index.tolist()[:10]}"
+        )
+
     required = [
         "subject",
+        "aliquot",
         "carbohydrate",
         "well_repeat",
         "timepoint_hr",
@@ -149,7 +167,7 @@ def load_metadata() -> pd.DataFrame:
 
 
 def load_long_data() -> pd.DataFrame:
-    """Join concentrations to metadata while retaining biological wells."""
+    """Join concentrations to metadata with nested aliquot and well IDs."""
     metadata = load_metadata()
     concentrations = pd.read_csv(DATA_FILE)
     concentrations["sampleid"] = concentrations["sampleid"].astype(str).str.strip()
@@ -164,7 +182,8 @@ def load_long_data() -> pd.DataFrame:
         id_vars=[
             "sampleid",
             "subject",
-            "numeric_root",
+            "aliquot",
+            "aliquot_id",
             "group",
             "carbohydrate",
             "well_repeat",
@@ -212,10 +231,12 @@ def load_margins() -> pd.DataFrame:
 
 
 def fit_trajectory_model(analyte_data: pd.DataFrame) -> ModelFit:
-    """Fit the nested-well model, with documented fallbacks."""
+    """Fit subject → aliquot → well nesting, with documented fallbacks."""
     attempts = (
-        ("mixed_subject_well", "lbfgs"),
-        ("mixed_subject_well", "powell"),
+        ("mixed_subject_aliquot_well", "lbfgs"),
+        ("mixed_subject_aliquot_well", "powell"),
+        ("mixed_subject_aliquot", "lbfgs"),
+        ("mixed_subject_aliquot", "powell"),
         ("mixed_subject", "lbfgs"),
         ("mixed_subject", "powell"),
     )
@@ -225,13 +246,24 @@ def fit_trajectory_model(analyte_data: pd.DataFrame) -> ModelFit:
         try:
             with warnings.catch_warnings(record=True) as caught:
                 warnings.simplefilter("always")
-                if model_type == "mixed_subject_well":
+                if model_type == "mixed_subject_aliquot_well":
                     model = smf.mixedlm(
                         FORMULA,
                         analyte_data,
                         groups=analyte_data["subject"],
                         re_formula="1",
-                        vc_formula={"well": "0 + C(well_id)"},
+                        vc_formula={
+                            "aliquot": "0 + C(aliquot_id)",
+                            "well": "0 + C(well_id)",
+                        },
+                    )
+                elif model_type == "mixed_subject_aliquot":
+                    model = smf.mixedlm(
+                        FORMULA,
+                        analyte_data,
+                        groups=analyte_data["subject"],
+                        re_formula="1",
+                        vc_formula={"aliquot": "0 + C(aliquot_id)"},
                     )
                 else:
                     model = smf.mixedlm(
@@ -487,6 +519,7 @@ def model_diagnostics(
     )
 
     subject_variance = np.nan
+    aliquot_variance = np.nan
     well_variance = np.nan
     residual_variance = float(getattr(result, "scale", np.nan))
     singular = False
@@ -495,13 +528,20 @@ def model_diagnostics(
             subject_variance = float(result.cov_re.iloc[0, 0])
         except Exception:
             pass
-        if model_fit.model_type == "mixed_subject_well":
-            try:
-                well_variance = float(np.asarray(result.vcomp)[0])
-            except Exception:
-                pass
+        try:
+            variance_components = np.asarray(result.vcomp, dtype=float)
+        except Exception:
+            variance_components = np.asarray([], dtype=float)
+        if model_fit.model_type == "mixed_subject_aliquot_well":
+            if variance_components.size >= 1:
+                aliquot_variance = float(variance_components[0])
+            if variance_components.size >= 2:
+                well_variance = float(variance_components[1])
+        elif model_fit.model_type == "mixed_subject_aliquot":
+            if variance_components.size >= 1:
+                aliquot_variance = float(variance_components[0])
         variance_values = np.asarray(
-            [subject_variance, well_variance], dtype=float
+            [subject_variance, aliquot_variance, well_variance], dtype=float
         )
         finite_variances = variance_values[np.isfinite(variance_values)]
         total_variance = residual_variance + finite_variances.sum()
@@ -526,8 +566,10 @@ def model_diagnostics(
         "singular_or_boundary": singular,
         "n_observations": int(len(analyte_data)),
         "n_subjects": int(analyte_data["subject"].nunique()),
+        "n_aliquots": int(analyte_data["aliquot_id"].nunique()),
         "n_wells": int(analyte_data["well_id"].nunique()),
         "subject_random_intercept_variance": subject_variance,
+        "aliquot_random_intercept_variance": aliquot_variance,
         "well_random_intercept_variance": well_variance,
         "residual_variance": residual_variance,
         "residual_skewness": float(stats.skew(residuals, bias=False)),
@@ -551,6 +593,7 @@ def sample_counts(long_data: pd.DataFrame) -> pd.DataFrame:
         )
         .agg(
             n_subjects=("subject", "nunique"),
+            n_aliquots=("aliquot_id", "nunique"),
             n_wells=("well_id", "nunique"),
             n_analyte_observations=("concentration", "size"),
         )
@@ -568,6 +611,7 @@ def sample_counts(long_data: pd.DataFrame) -> pd.DataFrame:
             "carbohydrate",
             "timepoint_hr",
             "n_subjects",
+            "n_aliquots",
             "n_wells",
             "n_analyte_observations",
         ]
@@ -762,7 +806,8 @@ def main() -> None:
         [
             {
                 "analysis_date": pd.Timestamp.now().date().isoformat(),
-                "planned_participants": 40,
+                "planned_participants": 20,
+                "planned_aliquot_labels": 40,
                 "analyzed_subjects": int(long_data["subject"].nunique()),
                 "healthy_weight_subjects": int(
                     long_data.loc[
@@ -774,9 +819,16 @@ def main() -> None:
                         long_data["group"].eq("case"), "subject"
                     ].nunique()
                 ),
-                "subject_definition": "numeric identifier plus A/B suffix",
+                "analyzed_aliquots": int(long_data["aliquot_id"].nunique()),
+                "subject_definition": (
+                    "numeric donor ID (independent person; N=16 in SCFA export)"
+                ),
+                "aliquot_definition": (
+                    "A/B sample splits of the same donor stool specimen"
+                ),
                 "well_definition": (
-                    "R1/R2 and S1/S2 biological culture wells; NC well 1"
+                    "R1/R2 and S1/S2 biological culture wells within aliquot; "
+                    "NC well 1"
                 ),
                 "primary_estimands": 6,
                 "global_equivalence_verdict": global_verdict,

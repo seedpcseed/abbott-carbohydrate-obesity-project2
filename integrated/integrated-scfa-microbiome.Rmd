@@ -140,8 +140,11 @@ tryCatch({
 
 scfa_metadata <- scfa_metadata_raw %>%
   mutate(
-    # A/B is part of the subject label (e.g., 84A and 84B are distinct donors).
-    subject = str_to_upper(str_extract(sampleid, "^[0-9]+[A-Za-z]")),
+    # Numeric ID = independent person. A/B = sample aliquot splits of that person.
+    subject = str_extract(sampleid, "^[0-9]+"),
+    aliquot = str_to_upper(str_match(sampleid, "^[0-9]+([A-Za-z])")[, 2]),
+    # Kept for sample-level joins to microbiome labels such as 84B.
+    aliquot_label = paste0(subject, aliquot),
     carb_repeat = str_extract(sampleid, "(?<= )[rs]\\d|nc(?= )"),
     carbohydrate_type = case_when(
       str_detect(carb_repeat, "^r") ~ "rapid_digestible",
@@ -149,26 +152,28 @@ scfa_metadata <- scfa_metadata_raw %>%
       str_detect(carb_repeat, "^nc") ~ "no_carbohydrate",
       TRUE ~ NA_character_
     ),
-    # R1/R2 and S1/S2 are biological culture wells sampled over time.
+    # R1/R2 and S1/S2 are biological culture wells within each A/B aliquot.
     well_repeat = if_else(
       str_detect(carb_repeat, "^nc"),
       1L,
       as.integer(str_extract(carb_repeat, "\\d+"))
     ),
     timepoint_hr = as.integer(str_extract(sampleid, "(?<= )\\d+(?=h$)")),
+    aliquot_id = interaction(subject, aliquot, drop = TRUE),
     well_id = interaction(
       subject,
+      aliquot,
       carbohydrate_type,
       well_repeat,
       drop = TRUE
     )
   ) %>%
   dplyr::select(
-    sampleid, group, subject, carbohydrate_type,
-    well_repeat, well_id, timepoint_hr
+    sampleid, group, subject, aliquot, aliquot_label, aliquot_id,
+    carbohydrate_type, well_repeat, well_id, timepoint_hr
   ) %>%
   mutate(group = tolower(group)) %>%
-  filter(!is.na(group), !is.na(subject))
+  filter(!is.na(group), !is.na(subject), !is.na(aliquot))
 
 tryCatch({
   scfa_raw <- fread(
@@ -206,6 +211,7 @@ scfa_sample_data_long_factored <- scfa_sample_data_long %>%
     ),
     timepoint_hr = factor(timepoint_hr),
     subject = factor(subject),
+    aliquot_id = factor(aliquot_id),
     well_id = factor(well_id)
   )
 
@@ -384,7 +390,7 @@ This integrated analysis combines methods from both the SCFA metabolomics and 16
 
 ## 3.1 Study Design and Sample Processing
 
-The study design includes two groups (Control/Healthy and Case/Obese) exposed to three carbohydrate conditions: no added carbohydrate (control), rapid digestible carbohydrate (RDC), and slow digestible carbohydrate (SDC). The analyzed SCFA and microbiome files contain 0H and 48H observations. A/B suffixes are retained as part of the subject identifier, while R1/R2 and S1/S2 denote biological culture wells. Repeated observations are modeled at the subject and well levels.
+The study design includes two groups (Control/Healthy and Case/Obese) exposed to three carbohydrate conditions: no added carbohydrate (control), rapid digestible carbohydrate (RDC), and slow digestible carbohydrate (SDC). The analyzed SCFA and microbiome files contain 0H and 48H observations. Each numeric identifier is an independent person; A/B labels are sample-aliquot splits of that person's stool specimen; R1/R2 and S1/S2 denote culture-well replicates within each aliquot. Repeated observations are modeled with nested random intercepts for subject, aliquot, and well.
 
 ## 3.2 SCFA Quantification and Preprocessing
 
@@ -398,7 +404,7 @@ Short-chain fatty acids (butyrate, propionate, acetate, and others) were quantif
 
 ### 3.4.1 Mixed-Effects Models for SCFA Concentrations
 
-Linear mixed-effects models were fitted to analyze SCFA concentrations as a function of group (Control vs Case), carbohydrate type, timepoint, and their interactions, with random intercepts for subject and culture well. The well identifier is nested by construction within subject and carbohydrate condition and links the 0H and 48H observations from the same R1/R2, S1/S2, or no-added-carbohydrate culture. Type III ANOVA tables were generated to test main effects and interactions, with p-values adjusted using the Benjamini-Hochberg (BH) false discovery rate (FDR) procedure.
+Linear mixed-effects models were fitted to analyze SCFA concentrations as a function of group (Control vs Case), carbohydrate type, timepoint, and their interactions, with nested random intercepts for subject (numeric donor), A/B aliquot, and culture well. The well identifier is nested by construction within aliquot × carbohydrate and links the 0H and 48H observations from the same R1/R2, S1/S2, or no-added-carbohydrate culture. Type III ANOVA tables were generated to test main effects and interactions, with p-values adjusted using the Benjamini-Hochberg (BH) false discovery rate (FDR) procedure.
 
 The prespecified direct comparison of the butyrate response to SDC versus RDC was defined as the difference in 0-to-48-hour changes: (SDC 48H - SDC 0H) - (RDC 48H - RDC 0H). This difference-in-differences contrast was estimated from the same mixed-effects model using `emmeans`, marginalizing equally over obesity group. Two-sided inference is reported as the estimated difference in change in μM, a 95% confidence interval, and a Tukey-adjusted p-value controlling the family of three pairwise carbohydrate-change comparisons (RDC versus no added carbohydrate, SDC versus no added carbohydrate, and SDC versus RDC). This contrast, rather than the omnibus carbohydrate main effect or a time-averaged carbohydrate comparison, tests whether the butyrate increase is greater under SDC than RDC.
 
@@ -804,7 +810,7 @@ mixed_effects_results <- scfa_sample_data_long_factored %>%
       data,
       ~ lmerTest::lmer(
         concentration ~ group * carbohydrate_type * timepoint_hr +
-          (1 | subject) + (1 | well_id),
+          (1 | subject) + (1 | aliquot_id) + (1 | well_id),
         data = .x
       )
     ),
@@ -958,7 +964,7 @@ if (knitr::is_html_output()) {
 
 The mean 0-to-48-hour butyrate change was `r sprintf("%.2f", butyrate_sdc_mean_delta)` μM under SDC and `r sprintf("%.2f", butyrate_rdc_mean_delta)` μM under RDC. The model-adjusted SDC-versus-RDC difference in change was `r sprintf("%.2f", butyrate_sdc_rdc$estimate)` μM (95% CI, `r sprintf("%.2f", butyrate_sdc_rdc$lower.CL)` to `r sprintf("%.2f", butyrate_sdc_rdc$upper.CL)`; Tukey-adjusted p = `r format.pval(butyrate_sdc_rdc$p.value, digits = 3, eps = 0.001)`). Thus, the butyrate increase was numerically greater under SDC, but the current analysis does not demonstrate that SDC produces a greater butyrate response than RDC.
 
-This estimate uses the corrected subject definition, which retains A/B as part of each subject identifier and models R1/R2 and S1/S2 as repeated culture wells. The concentration unit remains provisional pending facility confirmation.
+This estimate uses the corrected biological-unit hierarchy: numeric subject (independent person), A/B sample aliquots nested within subject, and R1/R2 or S1/S2 culture wells nested within aliquot. The concentration unit remains provisional pending facility confirmation.
 
 ## 5.5 Obesity-Group SCFA Trajectory Contrasts
 
@@ -1036,9 +1042,9 @@ if (file.exists(equivalence_figure_path)) {
 }
 ```
 
-Across the six primary contrasts, the estimated obesity-minus-healthy-weight differences in 0-to-48-hour change were −0.09 μM (95% CI −5.24 to 5.06) for acetate under RDC, 3.43 μM (−1.72 to 8.58) for acetate under SDC, 0.74 μM (−0.70 to 2.18) for propionate under RDC, 0.38 μM (−1.06 to 1.82) for propionate under SDC, −0.74 μM (−2.92 to 1.43) for butyrate under RDC, and −1.17 μM (−3.34 to 1.00) for butyrate under SDC. None differed significantly from zero. Donor-level bootstrap intervals gave the same qualitative conclusion. Because no externally justified equivalence margin is locked, these intervals do not establish equivalence or preserved fermentation capacity.
+Across the six primary contrasts, the estimated obesity-minus-healthy-weight differences in 0-to-48-hour change were −0.09 μM (95% CI −5.17 to 5.00) for acetate under RDC, 3.43 μM (−1.66 to 8.51) for acetate under SDC, 0.74 μM (−0.70 to 2.18) for propionate under RDC, 0.38 μM (−1.06 to 1.82) for propionate under SDC, −0.76 μM (−2.96 to 1.44) for butyrate under RDC, and −1.19 μM (−3.39 to 1.02) for butyrate under SDC. None differed significantly from zero. Donor-level bootstrap intervals, resampling the 16 independent subjects, gave the same qualitative conclusion. Because no externally justified equivalence margin is locked, these intervals do not establish equivalence or preserved fermentation capacity.
 
-Residual diagnostics indicated non-normality for all analytes and heteroscedasticity for propionate and butyrate; the donor-level bootstrap intervals are therefore retained as a sensitivity analysis. The acetate and propionate well-level variance estimates were negligible or on the boundary (as was secondary-analyte succinate), while the subject-level random intercept remained estimable.
+Residual diagnostics indicated non-normality for all analytes and heteroscedasticity for propionate and butyrate; the donor-level bootstrap intervals are therefore retained as a sensitivity analysis. Several aliquot- or well-level variance components were near the boundary; the subject-level random intercept remained the primary clustering term.
 
 ## 5.6 Summary of SCFA Results
 
@@ -3891,18 +3897,21 @@ This section integrates SCFA metabolomics with microbiome composition to identif
 # SCFA uses: subject, group, carbohydrate_type, timepoint_hr
 # Microbiome uses: subject_id, group, carbohydrate, timepoint
 
-# Get SCFA concentrations at subject × carbohydrate × timepoint level
+# Get SCFA concentrations at aliquot × carbohydrate × timepoint for microbiome join.
+# Microbiome labels keep the A/B sample split (e.g. 84B); nesting for SCFA inference
+# still uses numeric subject.
 scfa_wide <- scfa_sample_data_long_factored %>%
   dplyr::filter(analyte %in% c("butyrate", "propionate")) %>%
   dplyr::filter(timepoint_hr %in% c("0", "48")) %>%
-  # Average biological wells only for the donor-level microbiome join.
-  dplyr::group_by(subject, group, carbohydrate_type, timepoint_hr, analyte) %>%
+  dplyr::group_by(
+    subject, aliquot_label, group, carbohydrate_type, timepoint_hr, analyte
+  ) %>%
   dplyr::summarise(
     concentration = mean(concentration, na.rm = TRUE),
     .groups = "drop"
   ) %>%
   tidyr::pivot_wider(
-    id_cols = c(subject, group, carbohydrate_type, timepoint_hr),
+    id_cols = c(subject, aliquot_label, group, carbohydrate_type, timepoint_hr),
     names_from = analyte,
     values_from = concentration,
     names_prefix = "scfa_"
@@ -3940,13 +3949,13 @@ micro_meta_merged <- data.frame(sample_data(ps)) %>%
     timepoint = as.character(timepoint)
   )
 
-# Merge SCFA data with microbiome metadata
-# Match on the complete A/B-coded subject ID.
+# Match SCFA aliquot labels (e.g. 84B) to microbiome A/B-coded subject IDs.
+# Inference clustering uses numeric subject; sample-level joins use aliquot_label.
 micro_meta_scfa <- micro_meta_merged %>%
   dplyr::left_join(
     scfa_wide,
     by = c(
-      "subject_id_scfa" = "subject",
+      "subject_id_scfa" = "aliquot_label",
       "group" = "group_micro",
       "carbohydrate" = "carbohydrate",
       "timepoint" = "timepoint"
@@ -4703,15 +4712,15 @@ if (length(fusicatenibacter_taxa_rel) > 0) {
 scfa_delta <- scfa_sample_data_long_factored %>%
   dplyr::filter(analyte %in% c("butyrate", "propionate")) %>%
   dplyr::filter(timepoint_hr %in% c("0", "48")) %>%
-  dplyr::group_by(subject, group, carbohydrate_type, analyte) %>%
+  # Responder labels follow A/B aliquot rows so they can join microbiome 84A/84B IDs.
+  dplyr::group_by(subject, aliquot_label, group, carbohydrate_type, analyte) %>%
   dplyr::summarise(
-    conc_0h = concentration[timepoint_hr == "0"][1],
-    conc_48h = concentration[timepoint_hr == "48"][1],
+    conc_0h = mean(concentration[timepoint_hr == "0"], na.rm = TRUE),
+    conc_48h = mean(concentration[timepoint_hr == "48"], na.rm = TRUE),
     .groups = "drop"
   ) %>%
   dplyr::mutate(
     delta_48h_0h = conc_48h - conc_0h,
-    # Map to microbiome labels
     carbohydrate = dplyr::case_when(
       carbohydrate_type == "no_carbohydrate" ~ "No Added Carb",
       carbohydrate_type == "rapid_digestible" ~ "RDC",
@@ -4739,12 +4748,14 @@ responder_status <- scfa_delta %>%
     )
   ) %>%
   dplyr::ungroup() %>%
-  dplyr::select(subject, group_micro, carbohydrate, analyte, responder_status)
+  dplyr::select(
+    subject, aliquot_label, group_micro, carbohydrate, analyte, responder_status
+  )
 
 # Pivot to wide format for overlap analysis
 responder_wide <- responder_status %>%
   tidyr::pivot_wider(
-    id_cols = c(subject, group_micro, carbohydrate),
+    id_cols = c(subject, aliquot_label, group_micro, carbohydrate),
     names_from = analyte,
     values_from = responder_status,
     names_prefix = "responder_"
@@ -4782,8 +4793,7 @@ if ("responder_butyrate" %in% colnames(responder_wide) &&
 # Merge responder status with microbiome metadata at 48H
 ps_48h_resp <- phyloseq::subset_samples(ps, timepoint == "48H")
 
-# Add responder status to sample_data
-# Retain the complete A/B-coded subject ID for matching.
+# Match responder status on A/B aliquot labels used in microbiome metadata.
 sample_meta_resp <- data.frame(sample_data(ps_48h_resp)) %>%
   tibble::rownames_to_column("SampleID") %>%
   dplyr::mutate(
@@ -4793,7 +4803,7 @@ sample_meta_resp <- data.frame(sample_data(ps_48h_resp)) %>%
   ) %>%
   dplyr::left_join(
     responder_wide,
-    by = c("subject_id_scfa" = "subject",
+    by = c("subject_id_scfa" = "aliquot_label",
            "group" = "group_micro",
            "carbohydrate" = "carbohydrate")
   )
@@ -5995,7 +6005,7 @@ if (length(fusicatenibacter_taxa_abs) > 0) {
     meta_abs_resp <- meta_abs_resp %>%
       dplyr::left_join(
         responder_wide %>%
-          dplyr::mutate(subject_id_scfa = as.character(subject)) %>%
+          dplyr::mutate(subject_id_scfa = as.character(aliquot_label)) %>%
           dplyr::select(subject_id_scfa, carbohydrate, responder_butyrate, responder_propionate),
         by = c("subject_id_scfa", "carbohydrate")
       )
@@ -6187,7 +6197,7 @@ if (length(bifidobacterium_taxa_abs) > 0) {
     meta_abs_resp_bif <- meta_abs_resp_bif %>%
       dplyr::left_join(
         responder_wide %>%
-          dplyr::mutate(subject_id_scfa = as.character(subject)) %>%
+          dplyr::mutate(subject_id_scfa = as.character(aliquot_label)) %>%
           dplyr::select(subject_id_scfa, carbohydrate, responder_butyrate, responder_propionate),
         by = c("subject_id_scfa", "carbohydrate")
       )

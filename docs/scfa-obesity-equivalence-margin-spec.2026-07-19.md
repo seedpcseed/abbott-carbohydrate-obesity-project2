@@ -11,7 +11,7 @@ The primary estimand is the obesity-minus-healthy-weight difference in 0-to-48-h
 
 It is estimated separately for RDC and SDC for acetate, propionate, and butyrate, giving six primary contrasts. No-added-carbohydrate and the two secondary analytes are sensitivity analyses.
 
-The submission metadata and the local microbiome analysis plan identify labels such as `84B` as subject IDs. The A/B suffix is therefore retained. R1/R2 and S1/S2 identify biological culture wells sampled at 0 and 48 hours; no-added-carbohydrate has one well. The analyzed SCFA file contains 32 subjects, 16 per obesity group, from the planned cohort of 40.
+The submission metadata contain 40 A/B aliquot labels from 20 numeric subjects (each person contributes A and B sample splits). R1/R2 and S1/S2 identify biological culture wells within each aliquot; no-added-carbohydrate has one well. The analyzed SCFA file contains 16 of those subjects (8 per obesity group) and 32 aliquots.
 
 ## Unit and assay evidence
 
