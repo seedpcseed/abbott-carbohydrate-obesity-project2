@@ -424,7 +424,7 @@ Short-chain fatty acids (butyrate, propionate, acetate, and others) were quantif
 
 ### 3.4.1 Mixed-Effects Models for SCFA Concentrations
 
-Linear mixed-effects models were fitted to analyze SCFA concentrations as a function of group (Control vs Case), carbohydrate type, timepoint, and their interactions, with nested random intercepts for subject (numeric donor), A/B aliquot, and culture well. The well identifier is nested by construction within aliquot × carbohydrate and links the 0H and 48H observations from the same R1/R2, S1/S2, or no-added-carbohydrate culture. Type III ANOVA tables were generated to test main effects and interactions, with p-values adjusted using the Benjamini-Hochberg (BH) false discovery rate (FDR) procedure.
+Linear mixed-effects models were fitted to analyze SCFA concentrations as a function of group (Control vs Case), carbohydrate type, timepoint, and their interactions, with nested random intercepts for subject (numeric donor), A/B aliquot, and culture well. The well identifier is nested by construction within aliquot × carbohydrate and links the 0H and 48H observations from the same R1/R2, S1/S2, or no-added-carbohydrate culture. Type III ANOVA tables were generated to test main effects and interactions, with p-values adjusted using the Benjamini-Hochberg (BH) false discovery rate (FDR) procedure. Variance proportions among the residual nested random effects (donor / aliquot / culture well) plus residual error are reported after accounting for those fixed effects; they do not quantify variance explained by group, carbohydrate, or time.
 
 Interpersonal response heterogeneity was analyzed on one 0-to-48-hour change per donor × analyte × carbohydrate after averaging A/B aliquots and culture wells within donor and timepoint. Donor-aware repeated-measures models used `delta ~ group * carbohydrate + (1 | donor)`. Donor repeatability was summarized with the intraclass correlation coefficient (ICC) and a donor-resampling bootstrap confidence interval; rank consistency between RDC and SDC was summarized with Spearman correlation and a donor bootstrap interval. Obesity-group dispersion was described with donor-level standard deviations, obesity-to-healthy-weight SD ratios, bootstrap intervals, and Brown–Forsythe tests with BH correction across the six primary analyte × active-carbohydrate comparisons. Because responder status is defined from the same delta by a within-stratum median split, responder-versus-non-responder variance of that defining outcome was not tested.
 
@@ -1148,6 +1148,10 @@ if (knitr::is_html_output()) {
 
 ### 5.4.1 Variance Decomposition of SCFA Concentrations
 
+After removing the designed experimental effects (obesity group, carbohydrate, time), most leftover variation in SCFA concentrations is still residual noise—not donor, aliquot, or culture-well structure. Donors and aliquots matter somewhat (especially for succinate and acetate); culture wells barely do.
+
+Each stacked bar below is one SCFA from the nested concentration LMM already adjusted for fixed effects of group × carbohydrate × time. What is left is split among nested random pieces: **Donor** (person-to-person differences that persist after group/carb/time), **Aliquot** (A vs B splits of the same stool—processing / subsample noise), **Culture well** (R1/R2 or S1/S2 wells nested under aliquot × carbohydrate—true culture replicate noise), and **Residual** (measurement error, unmodeled biology, leftover within-well scatter). Bars sum to 100% of random + residual variance only; they do **not** show how much variance group, carbohydrate, or time explained.
+
 ```{r scfa-variance-components, echo=FALSE, fig.width=12, fig.height=6, cache=FALSE, dependson="scfa-mixed-effects"}
 variance_component_summary <- mixed_effects_results %>%
   dplyr::transmute(
@@ -1189,10 +1193,18 @@ variance_component_plot <- variance_component_summary %>%
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
   labs(
     title = "Variance Decomposition After Fixed Group, Carbohydrate, and Time Effects",
-    subtitle = "Proportion of random-effect plus residual variance from nested concentration models",
+    subtitle = paste(
+      "Variance proportions of residual nested random effects",
+      "(donor / A–B aliquot / culture well) plus residual error;",
+      "culture-well variance is negligible for all analytes"
+    ),
     x = "Analyte",
     y = "Variance Proportion",
-    fill = "Component"
+    fill = "Component",
+    caption = paste(
+      "Proportion of random-effect plus residual variance only;",
+      "fixed-effect (group / carbohydrate / time) variance is excluded."
+    )
   ) +
   theme_scfa() +
   theme(
@@ -1214,8 +1226,10 @@ if (knitr::is_html_output()) {
   DT::datatable(
     variance_component_table,
     caption = paste(
-      "Variance components from nested SCFA concentration models.",
-      "Proportions exclude variance explained by fixed effects."
+      "Variance proportions of residual nested random effects",
+      "(donor / A–B aliquot / culture well) plus residual error from SCFA",
+      "concentration LMMs after fixed effects of group, carbohydrate, and time;",
+      "culture-well variance is negligible for all analytes."
     ),
     options = list(pageLength = 20, dom = "tip", scrollX = TRUE),
     rownames = FALSE
@@ -1228,111 +1242,143 @@ if (knitr::is_html_output()) {
   knitr::kable(
     variance_component_table,
     digits = 3,
-    caption = "Variance components from nested SCFA concentration models"
+    caption = paste(
+      "Variance proportions of residual nested random effects",
+      "(donor / A–B aliquot / culture well) plus residual error;",
+      "culture-well variance is negligible for all analytes."
+    )
   )
 }
 ```
+
+After accounting for group, carbohydrate, and time, leftover SCFA concentration variance is mostly residual (~65–85%), with modest donor and aliquot contributions (highest for succinate and acetate, respectively) and essentially no unique culture-well variance, indicating highly repeatable well replicates but substantial unexplained concentration noise.
+
+**How to read the stacks.** Residual dominates for every analyte, so concentrations are noisy relative to the nesting structure: averaging and mixed models still help, but precision is limited. Culture-well variance is nearly invisible—paired 0H/48H observations from the same culture replicate track tightly, so extra wells buy little once donor and aliquot are modeled. Donor is real but moderate (~10–25% depending on analyte; highest for succinate). Aliquot is the interesting intermediate term: acetate shows the largest A/B share (~20%), pointing to subsample/processing sensitivity more than person biology or culture-well run-to-run noise.
+
+**Practical implications.** Donor remains the biologically meaningful clustering unit; aliquot is a technical nesting layer worth retaining (especially for acetate). Averaging wells is justified. Averaging A/B aliquots may help acetate more than butyrate. Claims of “individual response” from concentration alone should stay qualified: donor variance is clear, yet residual still dominates. This panel does **not** quantify fixed Group/Carb/Time effect sizes (see ANOVA/contrasts above) and does **not** address whether ΔSCFA responses are more repeatable than raw concentrations (see donor ICC / RDC–SDC rank analyses in Section 5.2).
 
 ### 5.4.2 Adjusted SDC-versus-RDC Butyrate Response Contrast
 
 ```{r butyrate-sdc-rdc-contrast, echo=FALSE, cache=FALSE}
 # The response estimand is the difference in 0-to-48-hour change:
 # (SDC 48H - SDC 0H) - (RDC 48H - RDC 0H).
+butyrate_sdc_mean_delta <- NA_real_
+butyrate_rdc_mean_delta <- NA_real_
+butyrate_sdc_rdc <- tibble::tibble(
+  contrast = character(0),
+  estimate = numeric(0),
+  SE = numeric(0),
+  df = numeric(0),
+  lower.CL = numeric(0),
+  upper.CL = numeric(0),
+  t.ratio = numeric(0),
+  p.value = numeric(0)
+)
+butyrate_change_results <- butyrate_sdc_rdc
+
 butyrate_model <- mixed_effects_results %>%
   dplyr::filter(analyte == "butyrate") %>%
   dplyr::pull(model) %>%
   purrr::pluck(1)
 
-# Estimate the 48H - 0H change separately for each carbohydrate condition.
-butyrate_time_emm <- emmeans::emmeans(
-  butyrate_model,
-  ~ timepoint_hr | carbohydrate_type,
-  weights = "equal"
-)
-
-butyrate_changes <- emmeans::contrast(
-  butyrate_time_emm,
-  method = "revpairwise",
-  by = "carbohydrate_type"
-)
-
-# Compare the three carbohydrate-specific changes, with Tukey adjustment.
-butyrate_change_results <- pairs(
-  butyrate_changes,
-  by = NULL,
-  reverse = TRUE,
-  adjust = "tukey"
-) %>%
-  summary(infer = c(TRUE, TRUE), adjust = "tukey") %>%
-  as.data.frame() %>%
-  tibble::as_tibble()
-
-butyrate_sdc_rdc <- butyrate_change_results %>%
-  dplyr::filter(
-    stringr::str_detect(
-      contrast,
-      "slow_digestible.*rapid_digestible"
-    )
+tryCatch({
+  # Estimate the 48H - 0H change separately for each carbohydrate condition.
+  butyrate_time_emm <- emmeans::emmeans(
+    butyrate_model,
+    ~ timepoint_hr | carbohydrate_type,
+    weights = "equal"
   )
 
-if (nrow(butyrate_sdc_rdc) != 1) {
-  stop("Unable to identify a unique SDC-versus-RDC butyrate change contrast.")
-}
+  butyrate_changes <- emmeans::contrast(
+    butyrate_time_emm,
+    method = "revpairwise",
+    by = "carbohydrate_type"
+  )
 
-butyrate_delta_summary <- delta_data %>%
-  dplyr::filter(
-    analyte == "butyrate",
-    carbohydrate_type %in% c("rapid_digestible", "slow_digestible")
+  # Compare the three carbohydrate-specific changes, with Tukey adjustment.
+  butyrate_change_results <<- pairs(
+    butyrate_changes,
+    by = NULL,
+    reverse = TRUE,
+    adjust = "tukey"
   ) %>%
-  dplyr::group_by(carbohydrate_type) %>%
-  dplyr::summarise(
-    mean_delta = mean(delta_48h_0h, na.rm = TRUE),
-    sd_delta = sd(delta_48h_0h, na.rm = TRUE),
-    n_subject_ids = dplyr::n_distinct(subject),
-    .groups = "drop"
-  )
+    summary(infer = c(TRUE, TRUE), adjust = "tukey") %>%
+    as.data.frame() %>%
+    tibble::as_tibble()
 
-butyrate_rdc_mean_delta <- butyrate_delta_summary %>%
-  dplyr::filter(carbohydrate_type == "rapid_digestible") %>%
-  dplyr::pull(mean_delta)
-
-butyrate_sdc_mean_delta <- butyrate_delta_summary %>%
-  dplyr::filter(carbohydrate_type == "slow_digestible") %>%
-  dplyr::pull(mean_delta)
-
-if (knitr::is_html_output()) {
-  DT::datatable(
-    butyrate_change_results %>%
-      dplyr::select(
-        contrast, estimate, SE, df, lower.CL, upper.CL, t.ratio, p.value
-      ),
-    caption = paste(
-      "Adjusted pairwise comparisons of 0-to-48-hour butyrate change",
-      "(Tukey-adjusted within the three carbohydrate comparisons)"
-    ),
-    options = list(pageLength = 10, dom = "tip", scrollX = TRUE),
-    rownames = FALSE
-  ) %>%
-    DT::formatRound(
-      columns = c("estimate", "SE", "df", "lower.CL", "upper.CL", "t.ratio", "p.value"),
-      digits = 3
+  butyrate_sdc_rdc <<- butyrate_change_results %>%
+    dplyr::filter(
+      stringr::str_detect(
+        contrast,
+        "slow_digestible.*rapid_digestible"
+      )
     )
-} else {
-  knitr::kable(
-    butyrate_change_results %>%
-      dplyr::select(
-        contrast, estimate, SE, df, lower.CL, upper.CL, t.ratio, p.value
-      ),
-    digits = 3,
-    caption = paste(
-      "Adjusted pairwise comparisons of 0-to-48-hour butyrate change",
-      "(Tukey-adjusted within the three carbohydrate comparisons)"
+
+  if (nrow(butyrate_sdc_rdc) != 1) {
+    stop("Unable to identify a unique SDC-versus-RDC butyrate change contrast.")
+  }
+
+  butyrate_delta_summary <- delta_data %>%
+    dplyr::filter(
+      analyte == "butyrate",
+      carbohydrate_type %in% c("rapid_digestible", "slow_digestible")
+    ) %>%
+    dplyr::group_by(carbohydrate_type) %>%
+    dplyr::summarise(
+      mean_delta = mean(delta_48h_0h, na.rm = TRUE),
+      sd_delta = sd(delta_48h_0h, na.rm = TRUE),
+      n_subject_ids = dplyr::n_distinct(subject),
+      .groups = "drop"
     )
-  )
-}
+
+  butyrate_rdc_mean_delta <<- butyrate_delta_summary %>%
+    dplyr::filter(carbohydrate_type == "rapid_digestible") %>%
+    dplyr::pull(mean_delta)
+
+  butyrate_sdc_mean_delta <<- butyrate_delta_summary %>%
+    dplyr::filter(carbohydrate_type == "slow_digestible") %>%
+    dplyr::pull(mean_delta)
+
+  if (knitr::is_html_output()) {
+    print(
+      DT::datatable(
+        butyrate_change_results %>%
+          dplyr::select(
+            contrast, estimate, SE, df, lower.CL, upper.CL, t.ratio, p.value
+          ),
+        caption = paste(
+          "Adjusted pairwise comparisons of 0-to-48-hour butyrate change",
+          "(Tukey-adjusted within the three carbohydrate comparisons)"
+        ),
+        options = list(pageLength = 10, dom = "tip", scrollX = TRUE),
+        rownames = FALSE
+      ) %>%
+        DT::formatRound(
+          columns = c("estimate", "SE", "df", "lower.CL", "upper.CL", "t.ratio", "p.value"),
+          digits = 3
+        )
+    )
+  } else {
+    print(
+      knitr::kable(
+        butyrate_change_results %>%
+          dplyr::select(
+            contrast, estimate, SE, df, lower.CL, upper.CL, t.ratio, p.value
+          ),
+        digits = 3,
+        caption = paste(
+          "Adjusted pairwise comparisons of 0-to-48-hour butyrate change",
+          "(Tukey-adjusted within the three carbohydrate comparisons)"
+        )
+      )
+    )
+  }
+}, error = function(e) {
+  cat("Butyrate SDC-versus-RDC contrast failed:", e$message, "\n")
+})
 ```
 
-The mean 0-to-48-hour butyrate change was `r sprintf("%.2f", butyrate_sdc_mean_delta)` μM under SDC and `r sprintf("%.2f", butyrate_rdc_mean_delta)` μM under RDC. The model-adjusted SDC-versus-RDC difference in change was `r sprintf("%.2f", butyrate_sdc_rdc$estimate)` μM (95% CI, `r sprintf("%.2f", butyrate_sdc_rdc$lower.CL)` to `r sprintf("%.2f", butyrate_sdc_rdc$upper.CL)`; Tukey-adjusted p = `r format.pval(butyrate_sdc_rdc$p.value, digits = 3, eps = 0.001)`). Thus, the butyrate increase was numerically greater under SDC, but the current analysis does not demonstrate that SDC produces a greater butyrate response than RDC.
+The mean 0-to-48-hour butyrate change was `r if (exists("butyrate_sdc_mean_delta") && length(butyrate_sdc_mean_delta) == 1) sprintf("%.2f", butyrate_sdc_mean_delta) else "NA"` μM under SDC and `r if (exists("butyrate_rdc_mean_delta") && length(butyrate_rdc_mean_delta) == 1) sprintf("%.2f", butyrate_rdc_mean_delta) else "NA"` μM under RDC. The model-adjusted SDC-versus-RDC difference in change was `r if (exists("butyrate_sdc_rdc") && nrow(butyrate_sdc_rdc) == 1) sprintf("%.2f", butyrate_sdc_rdc$estimate) else "NA"` μM (95% CI, `r if (exists("butyrate_sdc_rdc") && nrow(butyrate_sdc_rdc) == 1) sprintf("%.2f", butyrate_sdc_rdc$lower.CL) else "NA"` to `r if (exists("butyrate_sdc_rdc") && nrow(butyrate_sdc_rdc) == 1) sprintf("%.2f", butyrate_sdc_rdc$upper.CL) else "NA"`; Tukey-adjusted p = `r if (exists("butyrate_sdc_rdc") && nrow(butyrate_sdc_rdc) == 1) format.pval(butyrate_sdc_rdc$p.value, digits = 3, eps = 0.001) else "NA"`). Thus, the butyrate increase was numerically greater under SDC, but the current analysis does not demonstrate that SDC produces a greater butyrate response than RDC.
 
 This estimate uses the corrected biological-unit hierarchy: numeric subject (independent person), A/B sample aliquots nested within subject, and R1/R2 or S1/S2 culture wells nested within aliquot. The concentration unit remains provisional pending facility confirmation.
 
@@ -1414,7 +1460,7 @@ if (file.exists(equivalence_figure_path)) {
 
 Across the six primary contrasts, the estimated obesity-minus-healthy-weight differences in 0-to-48-hour change were −0.09 μM (95% CI −5.17 to 5.00) for acetate under RDC, 3.43 μM (−1.66 to 8.51) for acetate under SDC, 0.74 μM (−0.70 to 2.18) for propionate under RDC, 0.38 μM (−1.06 to 1.82) for propionate under SDC, −0.76 μM (−2.96 to 1.44) for butyrate under RDC, and −1.19 μM (−3.39 to 1.02) for butyrate under SDC. None differed significantly from zero. Donor-level bootstrap intervals, resampling the 16 independent subjects, gave the same qualitative conclusion. Because no externally justified equivalence margin is locked, these intervals do not establish equivalence or preserved fermentation capacity.
 
-Residual diagnostics indicated non-normality for all analytes and heteroscedasticity for propionate and butyrate; the donor-level bootstrap intervals are therefore retained as a sensitivity analysis. Several aliquot- or well-level variance components were near the boundary; the subject-level random intercept remained the primary clustering term.
+Residual diagnostics indicated non-normality for all analytes and heteroscedasticity for propionate and butyrate; the donor-level bootstrap intervals are therefore retained as a sensitivity analysis. Consistent with Section 5.4.1, several aliquot- or well-level variance components were near the boundary (culture-well variance essentially negligible), while the subject-level random intercept remained the primary biological clustering term among the nested random effects—even though residual noise still dominated leftover concentration variance.
 
 ## 5.6 Summary of SCFA Results
 
@@ -1429,6 +1475,9 @@ The primary drivers of SCFA production in this ex vivo model were the type of ca
 
 Donor-aware carbohydrate-change contrasts for acetate, propionate, and butyrate are also exported under `results/additional_analyses_2026-07-19/scfa_contrasts/`. The omnibus or main effects do not establish every pairwise carbohydrate difference. For butyrate, the adjusted 0-to-48-hour change was greater for SDC than no added carbohydrate, whereas the RDC-versus-no-added-carbohydrate and SDC-versus-RDC contrasts were not significant after Tukey adjustment (Section 5.4.2).
 
+**1b. Nested replicate variance after fixed effects (Section 5.4.1)**
+
+After accounting for group, carbohydrate, and time, leftover SCFA concentration variance is mostly residual (~65–85%), with modest donor and aliquot contributions (highest for succinate and acetate, respectively) and essentially no unique culture-well variance. Culture-well averaging is therefore justified; aliquot nesting is worth retaining especially for acetate; person-level concentration claims should remain qualified because residual noise still dominates.
 **2. Obesity-Group Contrasts Were Nonsignificant but Not Equivalent**
 
 No primary obesity-group difference-in-change contrast differed significantly from zero. The 95% confidence intervals nevertheless included differences that could be scientifically important, especially for acetate. Because no externally justified analyte-specific margin is available, this analysis cannot establish equivalence, non-inferiority, preserved capacity, or an unaffected fermentation response.
