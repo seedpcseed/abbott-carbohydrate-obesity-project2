@@ -424,7 +424,7 @@ Short-chain fatty acids (butyrate, propionate, acetate, and others) were quantif
 
 ### 3.4.1 Mixed-Effects Models for SCFA Concentrations
 
-Linear mixed-effects models were fitted to analyze SCFA concentrations as a function of group (Control vs Case), carbohydrate type, timepoint, and their interactions, with nested random intercepts for subject (numeric donor), A/B aliquot, and culture well. The well identifier is nested by construction within aliquot × carbohydrate and links the 0H and 48H observations from the same R1/R2, S1/S2, or no-added-carbohydrate culture. Type III ANOVA tables were generated to test main effects and interactions, with p-values adjusted using the Benjamini-Hochberg (BH) false discovery rate (FDR) procedure. Variance proportions among the residual nested random effects (donor / aliquot / culture well) plus residual error are reported after accounting for those fixed effects; they do not quantify variance explained by group, carbohydrate, or time.
+Linear mixed-effects models were fitted to analyze SCFA concentrations as a function of group (Control vs Case), carbohydrate type, timepoint, and their interactions, with nested random intercepts for subject (numeric donor), A/B aliquot, and culture well. The well identifier is nested by construction within aliquot × carbohydrate and links the 0H and 48H observations from the same R1/R2, S1/S2, or no-added-carbohydrate culture. Type III ANOVA tables were generated to test main effects and interactions, with p-values adjusted using the Benjamini-Hochberg (BH) false discovery rate (FDR) procedure. Variance proportions among the residual nested random effects (donor / aliquot / culture well) plus residual error are reported after accounting for those fixed effects; they do not quantify variance explained by group, carbohydrate, or time. As a complementary cross-section, donor-averaged 48H concentrations were also modeled as `concentration ~ group * carbohydrate + (1 | donor)` (Section 5.3.1).
 
 Interpersonal response heterogeneity was analyzed on one 0-to-48-hour change per donor × analyte × carbohydrate after averaging A/B aliquots and culture wells within donor and timepoint. Donor-aware repeated-measures models used `delta ~ group * carbohydrate + (1 | donor)`. Donor repeatability was summarized with the intraclass correlation coefficient (ICC) and a donor-resampling bootstrap confidence interval; rank consistency between RDC and SDC was summarized with Spearman correlation and a donor bootstrap interval. Obesity-group dispersion was described with donor-level standard deviations, obesity-to-healthy-weight SD ratios, bootstrap intervals, and Brown–Forsythe tests with BH correction across the six primary analyte × active-carbohydrate comparisons. Because responder status is defined from the same delta by a within-stratum median split, responder-versus-non-responder variance of that defining outcome was not tested.
 
@@ -560,7 +560,7 @@ if (knitr::is_html_output()) {
 
 ## 5.1 Section Overview
 
-To characterize fermentation outputs under the nested culture design, this section reproduces and extends the SCFA analyses across three layers: donor-level 0-to-48-hour response variation (repeatability and obesity-group dispersion), donor-averaged concentration trajectories over time, and mixed-effects models of absolute concentrations with nested subject, aliquot, and culture-well random effects.
+To characterize fermentation outputs under the nested culture design, this section reproduces and extends the SCFA analyses across four layers: donor-level 0-to-48-hour response variation (repeatability and obesity-group dispersion), donor-averaged concentration trajectories over time, donor-aware **48H endpoint** comparisons of group, carbohydrate, and group × carbohydrate, and mixed-effects models of absolute concentrations with nested subject, aliquot, and culture-well random effects.
 
 ## 5.2 Donor-Level SCFA Response Variation
 To quantify interpersonal heterogeneity in fermentation responses, we reduced SCFA concentrations to one 0-to-48-hour change per independent donor × analyte × carbohydrate and then evaluated repeatability, obesity-group dispersion, and donor-aware fixed effects.
@@ -1086,6 +1086,202 @@ if (!is.null(plot_time_series)) {
 }
 ```
 
+### 5.3.1 Donor-Aware SCFA Concentrations at 48H (Group × Carbohydrate)
+
+To test whether obesity group, carbohydrate condition, and their interaction associate with endpoint fermentation outputs, we analyzed **48H concentrations alone** after averaging A/B aliquots and culture wells to one value per independent donor × carbohydrate × analyte. Boxplots show the donor-level distributions; formal tests use mixed models of the form `concentration_48H ~ group * carbohydrate + (1 | donor)` with Type III ANOVA and BH adjustment across analytes × model terms. Pairwise Wilcoxon symbols on the plots are descriptive only.
+
+```{r scfa-48h-endpoint, echo=FALSE, fig.width=14, fig.height=10, cache=FALSE}
+suppressPackageStartupMessages({
+  library(dplyr)
+  library(ggplot2)
+  library(ggpubr)
+  library(lmerTest)
+  library(tibble)
+  library(tidyr)
+  library(purrr)
+  library(stringr)
+  library(DT)
+})
+
+scfa_48h_donor <- scfa_sample_data_long_factored %>%
+  dplyr::filter(timepoint_hr == "48") %>%
+  dplyr::group_by(
+    subject, group, carbohydrate_type, analyte,
+    group_label, carbohydrate_type_label
+  ) %>%
+  dplyr::summarise(
+    concentration = mean(concentration, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  dplyr::filter(is.finite(concentration))
+
+# --- Boxplots: group × carbohydrate at 48H ---
+plot_48h_group_carb <- scfa_48h_donor %>%
+  ggplot(aes(x = carbohydrate_type_label, y = concentration, fill = group_label)) +
+  geom_boxplot(alpha = 0.8, outlier.shape = NA, position = position_dodge(width = 0.8)) +
+  geom_point(
+    position = position_jitterdodge(jitter.width = 0.15, dodge.width = 0.8),
+    alpha = 0.45,
+    size = 1.4
+  ) +
+  facet_wrap(~ analyte, scales = "free_y") +
+  scale_fill_scfa() +
+  ggpubr::stat_compare_means(
+    aes(group = group_label),
+    method = "wilcox.test",
+    label = "p.signif",
+    hide.ns = FALSE
+  ) +
+  labs(
+    title = "Donor-level SCFA concentrations at 48H: group × carbohydrate",
+    subtitle = "One point per donor after averaging aliquots/wells; Wilcoxon symbols are descriptive",
+    x = "Carbohydrate",
+    y = "Concentration (μM)",
+    fill = "Group"
+  ) +
+  theme_scfa() +
+  theme(
+    axis.text.x = element_text(angle = 35, hjust = 1),
+    legend.position = "bottom"
+  )
+print(plot_48h_group_carb)
+
+# --- Boxplots: carbohydrate main effect (groups combined) ---
+plot_48h_carb <- scfa_48h_donor %>%
+  ggplot(aes(x = carbohydrate_type_label, y = concentration, fill = carbohydrate_type_label)) +
+  geom_boxplot(alpha = 0.8, outlier.shape = NA) +
+  geom_jitter(width = 0.15, alpha = 0.45, size = 1.4, color = "gray25") +
+  facet_wrap(~ analyte, scales = "free_y") +
+  scale_fill_scfa(guide = "none") +
+  ggpubr::stat_compare_means(
+    comparisons = list(
+      c("No Carbohydrate", "Rapid Digestible"),
+      c("No Carbohydrate", "Slow Digestible"),
+      c("Rapid Digestible", "Slow Digestible")
+    ),
+    method = "wilcox.test",
+    label = "p.signif",
+    step.increase = 0.08
+  ) +
+  labs(
+    title = "Donor-level SCFA concentrations at 48H by carbohydrate",
+    subtitle = "Groups pooled; pairwise Wilcoxon vs each carbohydrate pair (descriptive)",
+    x = "Carbohydrate",
+    y = "Concentration (μM)"
+  ) +
+  theme_scfa() +
+  theme(axis.text.x = element_text(angle = 35, hjust = 1))
+print(plot_48h_carb)
+
+# --- Boxplots: group main effect (carbohydrates combined) ---
+plot_48h_group <- scfa_48h_donor %>%
+  ggplot(aes(x = group_label, y = concentration, fill = group_label)) +
+  geom_boxplot(alpha = 0.8, outlier.shape = NA) +
+  geom_jitter(width = 0.15, alpha = 0.45, size = 1.4, color = "gray25") +
+  facet_wrap(~ analyte, scales = "free_y") +
+  scale_fill_scfa(guide = "none") +
+  ggpubr::stat_compare_means(
+    method = "wilcox.test",
+    comparisons = list(c("Control", "Case")),
+    label = "p.signif"
+  ) +
+  labs(
+    title = "Donor-level SCFA concentrations at 48H by obesity group",
+    subtitle = "Carbohydrates pooled; Wilcoxon Control vs Case (descriptive)",
+    x = "Group",
+    y = "Concentration (μM)"
+  ) +
+  theme_scfa()
+print(plot_48h_group)
+
+# --- Donor-aware mixed models at 48H ---
+scfa_48h_anova <- scfa_48h_donor %>%
+  dplyr::group_by(analyte) %>%
+  tidyr::nest() %>%
+  dplyr::mutate(
+    model = purrr::map(
+      data,
+      ~ lmerTest::lmer(
+        concentration ~ group * carbohydrate_type + (1 | subject),
+        data = .x
+      )
+    ),
+    anova_df = purrr::map(
+      model,
+      ~ {
+        a <- as.data.frame(anova(.x))
+        a$effect <- rownames(a)
+        tibble::as_tibble(a)
+      }
+    )
+  ) %>%
+  dplyr::select(analyte, anova_df) %>%
+  tidyr::unnest(anova_df) %>%
+  dplyr::filter(effect != "Residuals") %>%
+  dplyr::rename(
+    F_value = `F value`,
+    pr_f = `Pr(>F)`
+  ) %>%
+  dplyr::mutate(
+    p_adj = p.adjust(pr_f, method = "BH"),
+    significance = dplyr::case_when(
+      p_adj < 0.001 ~ "p<0.001",
+      p_adj < 0.01 ~ "p<0.01",
+      p_adj < 0.05 ~ "p<0.05",
+      TRUE ~ "ns"
+    )
+  ) %>%
+  dplyr::arrange(p_adj)
+
+if (knitr::is_html_output()) {
+  print(
+    DT::formatRound(
+      DT::datatable(
+        dplyr::select(
+          scfa_48h_anova,
+          analyte, effect, F_value, pr_f, p_adj, significance
+        ),
+        caption = paste(
+          "Donor-aware 48H endpoint mixed models:",
+          "concentration ~ group × carbohydrate + (1 | donor)"
+        ),
+        options = list(pageLength = 15, scrollX = TRUE),
+        rownames = FALSE
+      ),
+      columns = c("F_value", "pr_f", "p_adj"),
+      digits = 4
+    )
+  )
+} else {
+  print(
+    knitr::kable(
+      dplyr::select(
+        scfa_48h_anova, analyte, effect, F_value, pr_f, p_adj, significance
+      ),
+      digits = 4,
+      caption = "Donor-aware 48H endpoint mixed models"
+    )
+  )
+}
+
+scfa_48h_sig <- scfa_48h_anova %>% dplyr::filter(p_adj < 0.05)
+if (nrow(scfa_48h_sig) > 0) {
+  cat(
+    "BH-significant 48H endpoint terms (q < 0.05): ",
+    paste(
+      sprintf("%s [%s]", scfa_48h_sig$analyte, scfa_48h_sig$effect),
+      collapse = "; "
+    ),
+    ".\n",
+    sep = ""
+  )
+} else {
+  cat("No BH-significant group, carbohydrate, or interaction terms at the 48H endpoint after multiplicity adjustment.\n")
+}
+```
+
+At the 48H endpoint, carbohydrate condition is expected to dominate absolute SCFA levels among donors, whereas obesity-group main effects and group × carbohydrate interactions are typically weaker—consistent with the trajectory and delta analyses elsewhere in Section 5. Descriptive Wilcoxon marks on the boxplots should not be read as multiplicity-adjusted claims; the mixed-model table above is the donor-aware formal test for this cross-section.
+
 ## 5.4 Advanced Statistical Modeling: Mixed-Effects Models
 To test fixed effects of obesity group, carbohydrate type, and incubation time on absolute SCFA concentrations while accounting for the locked biological hierarchy, we fit linear mixed-effects models with nested random intercepts for donor, A/B aliquot, and culture well.
 
@@ -1539,6 +1735,7 @@ The SCFA metabolomics analysis reveals several key findings regarding short-chai
 The primary drivers of SCFA production in this ex vivo model were the type of carbohydrate supplied and the incubation time. This was supported by:
 - Donor-aware mixed models of 0-to-48-hour change (delta ~ group × carbohydrate + (1 | donor); Section 5.2)
 - Clear temporal increases in SCFA concentrations, with distinct trajectories by carbohydrate condition (Section 5.3)
+- Donor-aware 48H endpoint concentrations comparing group, carbohydrate, and group × carbohydrate (Section 5.3.1)
 - Significant carbohydrate, timepoint, and selected carbohydrate-by-timepoint effects in the nested mixed-effects models (Section 5.4)
 
 Donor-aware carbohydrate-change contrasts for acetate, propionate, and butyrate are also exported under `results/additional_analyses_2026-07-19/scfa_contrasts/`. The omnibus or main effects do not establish every pairwise carbohydrate difference. For butyrate, the adjusted 0-to-48-hour change was greater for SDC than no added carbohydrate, whereas the RDC-versus-no-added-carbohydrate and SDC-versus-RDC contrasts were not significant after Tukey adjustment (Section 5.4.2).
