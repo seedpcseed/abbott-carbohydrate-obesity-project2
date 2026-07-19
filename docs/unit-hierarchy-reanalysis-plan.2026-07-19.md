@@ -2,7 +2,7 @@
 
 **Project:** Abbott–Lurie ZC07, Project 2  
 **Date:** July 19, 2026  
-**Status:** Plan only — do not recode or re-run analyses until this document is accepted.  
+**Status:** Executing / Phase 3 refresh underway — baseline `67bd320`; Phase 0 inventory complete; donor-aware integrated HTML re-knit completed 2026-07-19 (`render/integrated-scfa-microbiome.html`).  
 **Related:** [`docs/gut-microbes-claim-audit.2026-07-19.md`](gut-microbes-claim-audit.2026-07-19.md), [`docs/gut-microbes-manuscript-outline.2026-07-19.md`](gut-microbes-manuscript-outline.2026-07-19.md), [`docs/scfa-obesity-equivalence-margin-spec.2026-07-19.md`](scfa-obesity-equivalence-margin-spec.2026-07-19.md)
 
 ## 1. Decision
@@ -265,17 +265,18 @@ These remain **outside** the unit rebuild but still block some claim language:
 
 Sign-off checklist:
 
-- [ ] Section 2 units accepted as locked
-- [ ] Clean-rebuild (not patch) approach accepted
-- [ ] Phase order accepted (0 → 1 → 2 → 3)
-- [ ] Python obesity contrasts retained as current SCFA group authority
-- [ ] Contaminated microbiome/responder claim numbers will be treated as void until Phase 3
-- [ ] Owner ready to execute Phase 0 inventory next
+- [x] Section 2 units accepted as locked
+- [x] Clean-rebuild (not patch) approach accepted
+- [x] Phase order accepted (0 → 1 → 2 → 3)
+- [x] Python obesity contrasts retained as current SCFA group authority
+- [x] Contaminated microbiome/responder claim numbers will be treated as void until Phase 3
+- [x] Owner ready to execute Phase 0 inventory next
 
 **Approval line:**  
 
-- Accepted by: __________________ Date: __________  
-- Notes / deviations: ____________________________
+- Accepted by: user (execute after baseline commit/push) Date: 2026-07-19  
+- Baseline SHA: `67bd320`  
+- Notes / deviations: Phase 0–2 code and metadata landed; full HTML re-knit in progress; claim-audit community cells stay void until Phase 3 refresh.
 
 ---
 

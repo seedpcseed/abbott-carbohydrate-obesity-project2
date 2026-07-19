@@ -142,6 +142,7 @@ scfa_metadata <- scfa_metadata_raw %>%
   mutate(
     # Numeric ID = independent person. A/B = sample aliquot splits of that person.
     subject = str_extract(sampleid, "^[0-9]+"),
+    donor_id = subject,
     aliquot = str_to_upper(str_match(sampleid, "^[0-9]+([A-Za-z])")[, 2]),
     # Kept for sample-level joins to microbiome labels such as 84B.
     aliquot_label = paste0(subject, aliquot),
@@ -242,11 +243,16 @@ micro_metadata <- micro_metadata_raw %>%
   ) %>%
   separate(
     customer_label,
-    into = c("subject_id", "replicate_code", "timepoint"),
+    into = c("aliquot_id", "replicate_code", "timepoint"),
     sep = "\\.",
     remove = FALSE
   ) %>%
   dplyr::mutate(
+    # Numeric donor is the independent person; A/B aliquot is nested within donor.
+    aliquot_id = stringr::str_to_upper(aliquot_id),
+    donor_id = stringr::str_extract(aliquot_id, "^[0-9]+"),
+    # Legacy alias: subject_id previously meant the A/B label.
+    subject_id = aliquot_id,
     carbohydrate = case_when(
       stringr::str_detect(replicate_code, "R") ~ "RDC",
       stringr::str_detect(replicate_code, "S") ~ "SDC",
@@ -261,11 +267,15 @@ micro_metadata <- micro_metadata_raw %>%
       replicate_code
     ),
     replicate = readr::parse_number(replicate_code_clean),
-    replicate = tidyr::replace_na(replicate, 1L)
+    replicate = tidyr::replace_na(replicate, 1L),
+    well_id = interaction(aliquot_id, carbohydrate, replicate, drop = TRUE)
   ) %>%
   dplyr::select(-replicate_code_clean) %>%
   dplyr::rename(SampleID = sample_id) %>%
-  dplyr::select(SampleID, subject_id, customer_label, timepoint, carbohydrate, replicate, raw_seq_files)
+  dplyr::select(
+    SampleID, donor_id, aliquot_id, subject_id, customer_label,
+    timepoint, carbohydrate, replicate, well_id, raw_seq_files
+  )
 
 tryCatch({
   healthy_lookup <- readr::read_tsv(
@@ -276,8 +286,12 @@ tryCatch({
     show_col_types = FALSE
   ) %>%
     janitor::clean_names() %>%
-    separate(customer_label, into = c("subject_id", "tmp", "tp"), sep = "\\.", remove = FALSE) %>%
-    dplyr::distinct(subject_id) %>%
+    separate(customer_label, into = c("aliquot_id", "tmp", "tp"), sep = "\\.", remove = FALSE) %>%
+    dplyr::mutate(
+      aliquot_id = stringr::str_to_upper(aliquot_id),
+      donor_id = stringr::str_extract(aliquot_id, "^[0-9]+")
+    ) %>%
+    dplyr::distinct(donor_id) %>%
     dplyr::mutate(group = "Healthy")
 }, error = function(e) {
   stop("Error reading microbiome healthy lookup file: ", e$message)
@@ -286,7 +300,7 @@ tryCatch({
 micro_metadata <- micro_metadata %>%
   mutate(SampleID = paste0("S", customer_label)) %>%
   dplyr::mutate(
-    group = if_else(subject_id %in% healthy_lookup$subject_id, "Healthy", "Obese"),
+    group = if_else(donor_id %in% healthy_lookup$donor_id, "Healthy", "Obese"),
     # Override MediaControl: group = NA, timepoint = "0H", carbohydrate = NA
     group = dplyr::if_else(
       stringr::str_detect(customer_label, regex("^MediaControl$", ignore_case = TRUE)),
@@ -304,7 +318,10 @@ micro_metadata <- micro_metadata %>%
       carbohydrate
     ),
     group = factor(group, levels = c("Healthy", "Obese")),
-    subject_id = factor(subject_id)
+    donor_id = factor(donor_id),
+    aliquot_id = factor(aliquot_id),
+    subject_id = factor(subject_id),
+    well_id = factor(well_id)
   )
 
 micro_metadata <- micro_metadata %>%
@@ -337,7 +354,10 @@ sample_data(ps) <- sample_data(metadata_ps)
 ps <- prune_taxa(taxa_sums(ps) > 0, ps)
 ps <- prune_samples(sample_sums(ps) > 0, ps)
 
-sample_data(ps)$SubjectID <- sample_data(ps)$subject_id
+# Primary clustering unit for person-level inference is donor_id (numeric person).
+sample_data(ps)$donor_id <- as.character(sample_data(ps)$donor_id)
+sample_data(ps)$aliquot_id <- as.character(sample_data(ps)$aliquot_id)
+sample_data(ps)$SubjectID <- sample_data(ps)$donor_id
 sample_data(ps)$Group <- sample_data(ps)$group
 sample_data(ps)$Carbohydrate <- sample_data(ps)$carbohydrate
 sample_data(ps)$Timepoint <- sample_data(ps)$timepoint
@@ -406,6 +426,8 @@ Short-chain fatty acids (butyrate, propionate, acetate, and others) were quantif
 
 Linear mixed-effects models were fitted to analyze SCFA concentrations as a function of group (Control vs Case), carbohydrate type, timepoint, and their interactions, with nested random intercepts for subject (numeric donor), A/B aliquot, and culture well. The well identifier is nested by construction within aliquot × carbohydrate and links the 0H and 48H observations from the same R1/R2, S1/S2, or no-added-carbohydrate culture. Type III ANOVA tables were generated to test main effects and interactions, with p-values adjusted using the Benjamini-Hochberg (BH) false discovery rate (FDR) procedure.
 
+Interpersonal response heterogeneity was analyzed on one 0-to-48-hour change per donor × analyte × carbohydrate after averaging A/B aliquots and culture wells within donor and timepoint. Donor-aware repeated-measures models used `delta ~ group * carbohydrate + (1 | donor)`. Donor repeatability was summarized with the intraclass correlation coefficient (ICC) and a donor-resampling bootstrap confidence interval; rank consistency between RDC and SDC was summarized with Spearman correlation and a donor bootstrap interval. Obesity-group dispersion was described with donor-level standard deviations, obesity-to-healthy-weight SD ratios, bootstrap intervals, and Brown–Forsythe tests with BH correction across the six primary analyte × active-carbohydrate comparisons. Because responder status is defined from the same delta by a within-stratum median split, responder-versus-non-responder variance of that defining outcome was not tested.
+
 The prespecified direct comparison of the butyrate response to SDC versus RDC was defined as the difference in 0-to-48-hour changes: (SDC 48H - SDC 0H) - (RDC 48H - RDC 0H). This difference-in-differences contrast was estimated from the same mixed-effects model using `emmeans`, marginalizing equally over obesity group. Two-sided inference is reported as the estimated difference in change in μM, a 95% confidence interval, and a Tukey-adjusted p-value controlling the family of three pairwise carbohydrate-change comparisons (RDC versus no added carbohydrate, SDC versus no added carbohydrate, and SDC versus RDC). This contrast, rather than the omnibus carbohydrate main effect or a time-averaged carbohydrate comparison, tests whether the butyrate increase is greater under SDC than RDC.
 
 ### 3.4.2 Obesity-Group Trajectory Contrasts and Equivalence
@@ -416,11 +438,11 @@ No external biological threshold, project-specific analyte CV/LOQ, or directly c
 
 ### 3.4.3 Alpha Diversity Analysis
 
-Within-sample microbial diversity was assessed using three metrics: Observed richness (number of unique taxa), Shannon diversity index (accounts for both richness and evenness), and Simpson diversity index (emphasizes dominant taxa). Differences in alpha diversity between groups, carbohydrate conditions, and timepoints were tested using Wilcoxon rank-sum tests (Mann-Whitney U tests) with BH FDR correction for multiple comparisons.
+Within-sample microbial diversity was assessed using three metrics: Observed richness (number of unique taxa), Shannon diversity index (accounts for both richness and evenness), and Simpson diversity index (emphasizes dominant taxa). For claim-facing tests, alpha metrics were averaged to one value per donor × carbohydrate × timepoint before Wilcoxon rank-sum tests with BH FDR correction.
 
 ### 3.4.4 Beta Diversity and Community Structure
 
-Between-sample microbial community dissimilarity was quantified using Bray-Curtis distance on relative abundance data. Principal coordinates analysis (PCoA) was used to visualize community structure in reduced dimensions. Permutational multivariate analysis of variance (PERMANOVA) using `vegan::adonis2()` with 999 permutations was employed to test for significant differences in community composition between groups, carbohydrate conditions, and timepoints, with subject ID as a stratification variable to account for repeated measures.
+Between-sample microbial community dissimilarity was quantified using Bray-Curtis distance on relative abundance data. Principal coordinates analysis (PCoA) was used to visualize community structure in reduced dimensions. Permutational multivariate analysis of variance (PERMANOVA) using `vegan::adonis2()` with 999 permutations was employed to test for significant differences in community composition between groups, carbohydrate conditions, and timepoints, with numeric donor ID as a stratification variable to account for repeated measures within person.
 
 ### 3.4.5 Differential Abundance Analysis
 
@@ -442,7 +464,7 @@ Spearman rank correlation coefficients were calculated to assess monotonic relat
 
 ### 3.4.8 Responder vs Non-Responder Classification
 
-Responder status was defined separately for butyrate and propionate based on the change in SCFA concentration from baseline (0H) to 48H (delta = 48H - 0H). For each analyte and carbohydrate condition, samples were classified as "Responder" if their delta value was greater than or equal to the median delta, and "Non-Responder" if below the median. This data-driven threshold allows for identification of individuals who show a substantial SCFA response to carbohydrate challenge relative to their peers in the same condition.
+Responder status was defined separately for butyrate and propionate from the donor-level change in SCFA concentration from baseline (0H) to 48H (delta = 48H - 0H). For each analyte and carbohydrate condition, donors were classified as "Responder" if their delta was greater than or equal to the within-stratum median and "Non-Responder" if below it. This is an exploratory, sample-dependent relative classification rather than a biological or clinical threshold. Classification sensitivity was assessed by applying the donor-level cutoff separately to the A and B aliquot changes. Variance of the defining delta was not compared between responder strata because such a comparison would condition on the outcome used to create the strata.
 
 ### 3.4.9 Responder Group Comparisons
 
@@ -540,9 +562,9 @@ This section reproduces and extends the SCFA analyses, focusing on:
 - SCFA concentrations over time
 - Advanced mixed-effects modeling for SCFA trajectories
 
-We first quantify SCFA response magnitudes (48h – 0h) and evaluate how they vary by carbohydrate type and obesity group. We then visualize SCFA concentrations over time and fit linear mixed-effects models with subject as a random effect to formally test fixed effects of group, carbohydrate type, time, and their interactions on absolute SCFA concentrations.
+We first quantify donor-level SCFA response magnitudes (48h – 0h), their repeatability across carbohydrates, and their dispersion by obesity group. We then visualize donor-averaged SCFA concentrations over time and fit linear mixed-effects models with nested subject, aliquot, and culture-well random effects to test fixed effects of group, carbohydrate type, time, and their interactions on absolute SCFA concentrations.
 
-## 5.2 Carbohydrate Type Effects (Combined Groups)
+## 5.2 Donor-Level SCFA Response Variation
 
 ```{r scfa-carbohydrate-effects-prep, echo=FALSE, include=FALSE}
 # Prepare data for all plots (shared across chunks)
@@ -565,187 +587,435 @@ delta_data <- scfa_sample_data_long_factored %>%
   dplyr::mutate(delta_48h_0h = time_48 - time_0) %>%
   dplyr::filter(!is.na(delta_48h_0h))
 
-# One-way ANOVA on delta by carbohydrate type (combined groups)
-combined_carb_stats <- purrr::map_dfr(
-  unique(delta_data$analyte),
-  function(analyte_name) {
-    analyte_data <- delta_data %>% dplyr::filter(analyte == analyte_name)
-    model <- aov(delta_48h_0h ~ carbohydrate_type, data = analyte_data)
-    anova_summary <- summary(model)[[1]]
-    data.frame(
-      analyte = analyte_name,
-      Effect = rownames(anova_summary),
-      DF = anova_summary$Df,
-      Sum_Sq = anova_summary$`Sum Sq`,
-      Mean_Sq = anova_summary$`Mean Sq`,
-      F_value = anova_summary$`F value`,
-      p = anova_summary$`Pr(>F)`
-    ) %>%
-      dplyr::filter(Effect != "Residuals") %>%
-      dplyr::mutate(
-        p_adj = p.adjust(p, method = "BH"),
-        significance = dplyr::case_when(
-          p_adj < 0.001 ~ "p<0.001",
-          p_adj < 0.01 ~ "p<0.01",
-          p_adj < 0.05 ~ "p<0.05",
-          TRUE ~ "ns"
-        )
+# Donor-aware repeated-measures models replace the one-way ANOVA that treated
+# three carbohydrate records from the same donor as independent.
+delta_mixed_results <- delta_data %>%
+  dplyr::group_by(analyte) %>%
+  tidyr::nest() %>%
+  dplyr::mutate(
+    model = purrr::map(
+      data,
+      ~ lmerTest::lmer(
+        delta_48h_0h ~ group * carbohydrate_type + (1 | subject),
+        data = .x,
+        REML = TRUE
       )
+    ),
+    anova_main = purrr::map(model, ~ as.data.frame(anova(.x)))
+  )
+
+delta_model_anova <- delta_mixed_results %>%
+  dplyr::mutate(
+    anova_df = purrr::map(
+      anova_main,
+      ~ .x %>%
+        tibble::rownames_to_column("effect") %>%
+        tibble::as_tibble()
+    )
+  ) %>%
+  dplyr::select(analyte, anova_df) %>%
+  tidyr::unnest(anova_df) %>%
+  dplyr::rename(
+    F_value = `F value`,
+    p_value = `Pr(>F)`
+  ) %>%
+  dplyr::mutate(
+    p_adj = p.adjust(p_value, method = "BH"),
+    significance = dplyr::case_when(
+      p_adj < 0.001 ~ "q<0.001",
+      p_adj < 0.01 ~ "q<0.01",
+      p_adj < 0.05 ~ "q<0.05",
+      TRUE ~ "ns"
+    )
+  ) %>%
+  dplyr::arrange(p_adj)
+
+extract_delta_icc <- function(model, donor_term = "subject") {
+  variance_table <- as.data.frame(lme4::VarCorr(model))
+  donor_variance <- variance_table$vcov[variance_table$grp == donor_term][1]
+  residual_variance <- variance_table$vcov[variance_table$grp == "Residual"][1]
+  c(
+    donor_variance = donor_variance,
+    residual_variance = residual_variance,
+    icc = donor_variance / (donor_variance + residual_variance)
+  )
+}
+
+bootstrap_delta_icc <- function(data, n_boot = 500) {
+  donor_ids <- unique(as.character(data$subject))
+  bootstrap_icc <- replicate(n_boot, {
+    sampled_donors <- sample(donor_ids, length(donor_ids), replace = TRUE)
+    bootstrap_data <- purrr::map2_dfr(
+      sampled_donors,
+      seq_along(sampled_donors),
+      function(donor, bootstrap_id) {
+        data %>%
+          dplyr::filter(as.character(subject) == donor) %>%
+          dplyr::mutate(subject_boot = factor(bootstrap_id))
+      }
+    )
+    if (dplyr::n_distinct(bootstrap_data$group) < 2) {
+      return(NA_real_)
+    }
+    bootstrap_model <- try(
+      suppressWarnings(
+        lme4::lmer(
+          delta_48h_0h ~ group * carbohydrate_type + (1 | subject_boot),
+          data = bootstrap_data,
+          REML = TRUE
+        )
+      ),
+      silent = TRUE
+    )
+    if (inherits(bootstrap_model, "try-error")) {
+      return(NA_real_)
+    }
+    extract_delta_icc(bootstrap_model, donor_term = "subject_boot")[["icc"]]
+  })
+  stats::quantile(
+    bootstrap_icc[is.finite(bootstrap_icc)],
+    probs = c(0.025, 0.975),
+    na.rm = TRUE,
+    names = FALSE
+  )
+}
+
+set.seed(2720)
+delta_repeatability_summary <- purrr::pmap_dfr(
+  delta_mixed_results %>% dplyr::select(analyte, data, model),
+  function(analyte, data, model) {
+    variance_estimates <- extract_delta_icc(model)
+    icc_interval <- bootstrap_delta_icc(data)
+    tibble::tibble(
+      analyte = analyte,
+      donor_variance = variance_estimates[["donor_variance"]],
+      residual_variance = variance_estimates[["residual_variance"]],
+      icc = variance_estimates[["icc"]],
+      icc_ci_lower = icc_interval[1],
+      icc_ci_upper = icc_interval[2]
+    )
   }
 )
-```
 
-### 5.2.1 Control Group: Delta SCFA by Carbohydrate Type
-
-```{r scfa-carbohydrate-effects-control, echo=FALSE, fig.width=14, fig.height=8, cache=FALSE, dependson="scfa-carbohydrate-effects-prep"}
-# Control group-specific delta plot
-plot_delta_control_only <- tryCatch({
-  delta_data %>%
-    dplyr::filter(group == "control") %>%
-    ggplot(aes(x = carbohydrate_type_label, y = delta_48h_0h)) +
-    geom_hline(yintercept = 0, linetype = "dashed", color = "gray50", alpha = 0.7) +
-    geom_boxplot(aes(fill = carbohydrate_type_label), alpha = 0.8, outlier.shape = NA) +
-    geom_jitter(alpha = 0.6, width = 0.2, size = 1.5, color = "gray30") +
-    facet_wrap(~ analyte, scales = "free_y") +
-    scale_fill_scfa() +
-    ggpubr::stat_compare_means(
-      comparisons = list(
-        c("No Carbohydrate", "Rapid Digestible"),
-        c("No Carbohydrate", "Slow Digestible"),
-        c("Rapid Digestible", "Slow Digestible")
-      ),
-      method = "wilcox.test",
-      label = "p.signif",
-      step.increase = 0.1
-    ) +
-    labs(
-      title = "SCFA Response Magnitude by Carbohydrate Type - Control Group Only",
-      subtitle = "Delta change (48h - 0h) with Wilcoxon pairwise comparisons",
-      x = "Carbohydrate Type",
-      y = "Change in Concentration (48h - 0h) μM"
-    ) +
-    theme_scfa() +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1))
-}, error = function(e) {
-  cat("Error creating plot_delta_control_only:", e$message, "\n")
-  NULL
-})
-
-# Print plot explicitly
-if (!is.null(plot_delta_control_only)) {
-  print(plot_delta_control_only)
-} else {
-  cat("Warning: plot_delta_control_only is NULL\n")
+bootstrap_spearman <- function(data, n_boot = 2000) {
+  bootstrap_rho <- replicate(n_boot, {
+    sampled_rows <- sample(seq_len(nrow(data)), nrow(data), replace = TRUE)
+    sampled_data <- data[sampled_rows, , drop = FALSE]
+    if (
+      dplyr::n_distinct(sampled_data$rapid_digestible) < 2 ||
+        dplyr::n_distinct(sampled_data$slow_digestible) < 2
+    ) {
+      return(NA_real_)
+    }
+    stats::cor(
+      sampled_data$rapid_digestible,
+      sampled_data$slow_digestible,
+      method = "spearman"
+    )
+  })
+  stats::quantile(
+    bootstrap_rho[is.finite(bootstrap_rho)],
+    probs = c(0.025, 0.975),
+    na.rm = TRUE,
+    names = FALSE
+  )
 }
-```
 
-### 5.2.2 Case Group: Delta SCFA by Carbohydrate Type
+set.seed(2720)
+rdc_sdc_rank_summary <- delta_data %>%
+  dplyr::filter(
+    carbohydrate_type %in% c("rapid_digestible", "slow_digestible")
+  ) %>%
+  dplyr::select(subject, analyte, carbohydrate_type, delta_48h_0h) %>%
+  tidyr::pivot_wider(
+    names_from = carbohydrate_type,
+    values_from = delta_48h_0h
+  ) %>%
+  dplyr::group_by(analyte) %>%
+  dplyr::group_modify(
+    ~ {
+      rank_test <- suppressWarnings(
+        stats::cor.test(
+          .x$rapid_digestible,
+          .x$slow_digestible,
+          method = "spearman",
+          exact = FALSE
+        )
+      )
+      rank_interval <- bootstrap_spearman(.x)
+      tibble::tibble(
+        n_donors = nrow(.x),
+        spearman_rho = unname(rank_test$estimate),
+        p_value = rank_test$p.value,
+        rho_ci_lower = rank_interval[1],
+        rho_ci_upper = rank_interval[2]
+      )
+    }
+  ) %>%
+  dplyr::ungroup()
 
-```{r scfa-carbohydrate-effects-case, echo=FALSE, fig.width=14, fig.height=8, cache=FALSE, dependson="scfa-carbohydrate-effects-prep"}
-# Case group-specific delta plot
-plot_delta_case_only <- tryCatch({
-  delta_data %>%
-    dplyr::filter(group == "case") %>%
-    ggplot(aes(x = carbohydrate_type_label, y = delta_48h_0h)) +
-    geom_hline(yintercept = 0, linetype = "dashed", color = "gray50", alpha = 0.7) +
-    geom_boxplot(aes(fill = carbohydrate_type_label), alpha = 0.8, outlier.shape = NA) +
-    geom_jitter(alpha = 0.6, width = 0.2, size = 1.5, color = "gray30") +
-    facet_wrap(~ analyte, scales = "free_y") +
-    scale_fill_scfa() +
-    ggpubr::stat_compare_means(
-      comparisons = list(
-        c("No Carbohydrate", "Rapid Digestible"),
-        c("No Carbohydrate", "Slow Digestible"),
-        c("Rapid Digestible", "Slow Digestible")
-      ),
-      method = "wilcox.test",
-      label = "p.signif",
-      step.increase = 0.1
-    ) +
-    labs(
-      title = "SCFA Response Magnitude by Carbohydrate Type - Case Group Only",
-      subtitle = "Delta change (48h - 0h) with Wilcoxon pairwise comparisons",
-      x = "Carbohydrate Type",
-      y = "Change in Concentration (48h - 0h) μM"
-    ) +
-    theme_scfa() +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1))
-}, error = function(e) {
-  cat("Error creating plot_delta_case_only:", e$message, "\n")
-  NULL
-})
+primary_active_delta <- delta_data %>%
+  dplyr::filter(
+    analyte %in% c("acetate", "propionate", "butyrate"),
+    carbohydrate_type %in% c("rapid_digestible", "slow_digestible")
+  )
 
-# Print plot explicitly
-if (!is.null(plot_delta_case_only)) {
-  print(plot_delta_case_only)
-} else {
-  cat("Warning: plot_delta_case_only is NULL\n")
+bootstrap_sd_ratio <- function(data, n_boot = 5000) {
+  healthy <- data$delta_48h_0h[data$group == "control"]
+  obesity <- data$delta_48h_0h[data$group == "case"]
+  bootstrap_ratios <- replicate(n_boot, {
+    healthy_sd <- stats::sd(sample(healthy, length(healthy), replace = TRUE))
+    obesity_sd <- stats::sd(sample(obesity, length(obesity), replace = TRUE))
+    if (!is.finite(healthy_sd) || healthy_sd <= 0) {
+      return(NA_real_)
+    }
+    obesity_sd / healthy_sd
+  })
+  stats::quantile(
+    bootstrap_ratios[is.finite(bootstrap_ratios)],
+    probs = c(0.025, 0.975),
+    na.rm = TRUE,
+    names = FALSE
+  )
 }
+
+set.seed(2720)
+delta_group_dispersion_summary <- primary_active_delta %>%
+  dplyr::group_by(analyte, carbohydrate_type) %>%
+  dplyr::group_modify(
+    ~ {
+      group_summary <- .x %>%
+        dplyr::group_by(group) %>%
+        dplyr::summarise(
+          n = dplyr::n(),
+          mean_delta = mean(delta_48h_0h),
+          sd_delta = stats::sd(delta_48h_0h),
+          median_delta = stats::median(delta_48h_0h),
+          iqr_delta = stats::IQR(delta_48h_0h),
+          .groups = "drop"
+        ) %>%
+        tidyr::pivot_wider(
+          names_from = group,
+          values_from = c(n, mean_delta, sd_delta, median_delta, iqr_delta),
+          names_sep = "_"
+        )
+
+      brown_forsythe_data <- .x %>%
+        dplyr::group_by(group) %>%
+        dplyr::mutate(
+          absolute_median_deviation = abs(
+            delta_48h_0h - stats::median(delta_48h_0h)
+          )
+        ) %>%
+        dplyr::ungroup()
+      brown_forsythe_anova <- anova(
+        stats::lm(absolute_median_deviation ~ group, data = brown_forsythe_data)
+      )
+      ratio_interval <- bootstrap_sd_ratio(.x)
+
+      group_summary %>%
+        dplyr::mutate(
+          sd_ratio_obesity_healthy = sd_delta_case / sd_delta_control,
+          sd_ratio_ci_lower = ratio_interval[1],
+          sd_ratio_ci_upper = ratio_interval[2],
+          brown_forsythe_F = brown_forsythe_anova$`F value`[1],
+          brown_forsythe_p = brown_forsythe_anova$`Pr(>F)`[1]
+        )
+    }
+  ) %>%
+  dplyr::ungroup() %>%
+  dplyr::mutate(
+    brown_forsythe_q = p.adjust(brown_forsythe_p, method = "BH")
+  )
 ```
 
-### 5.2.3 Combined Groups: Delta SCFA by Carbohydrate Type
+### 5.2.1 Donor Response Profiles and Cross-Condition Repeatability
 
-```{r scfa-carbohydrate-effects-combined, echo=FALSE, fig.width=14, fig.height=8, cache=FALSE, dependson="scfa-carbohydrate-effects-prep"}
-# Combined groups analysis
-plot_delta_carb_combined <- tryCatch({
-  delta_data %>%
-    ggplot(aes(x = carbohydrate_type_label, y = delta_48h_0h)) +
-    geom_hline(yintercept = 0, linetype = "dashed", color = "gray50", alpha = 0.7) +
-    geom_boxplot(aes(fill = carbohydrate_type_label), alpha = 0.8, outlier.shape = NA) +
-    geom_jitter(alpha = 0.5, width = 0.2, size = 1.5, color = "gray30") +
-    facet_wrap(~ analyte, scales = "free_y") +
-    scale_fill_scfa() +
-    ggpubr::stat_compare_means(
-      comparisons = list(
-        c("No Carbohydrate", "Rapid Digestible"),
-        c("No Carbohydrate", "Slow Digestible"),
-        c("Rapid Digestible", "Slow Digestible")
-      ),
-      method = "wilcox.test",
-      label = "p.signif",
-      step.increase = 0.1
-    ) +
-    labs(
-      title = "SCFA Response Magnitude by Carbohydrate Type (Combined Groups)",
-      subtitle = "Delta change (48h - 0h) with Wilcoxon pairwise comparisons",
-      x = "Carbohydrate Type",
-      y = "Change in Concentration (48h - 0h) μM"
-    ) +
-    theme_scfa() +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1))
-}, error = function(e) {
-  cat("Error creating plot_delta_carb_combined:", e$message, "\n")
-  NULL
-})
+```{r scfa-donor-response-profiles, echo=FALSE, fig.width=14, fig.height=8, cache=FALSE, dependson="scfa-carbohydrate-effects-prep"}
+donor_response_profile_plot <- delta_data %>%
+  dplyr::filter(analyte %in% c("acetate", "propionate", "butyrate")) %>%
+  dplyr::mutate(analyte = stringr::str_to_title(analyte)) %>%
+  ggplot(
+    aes(
+      x = carbohydrate_type_label,
+      y = delta_48h_0h,
+      group = subject,
+      color = group_label
+    )
+  ) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray55") +
+  geom_line(alpha = 0.55, linewidth = 0.65) +
+  geom_point(size = 2.2, alpha = 0.85) +
+  facet_wrap(~ analyte, scales = "free_y") +
+  scale_color_scfa() +
+  labs(
+    title = "Donor-Level SCFA Response Profiles Across Carbohydrate Conditions",
+    subtitle = "One line per independent donor; A/B aliquots and culture wells averaged before calculating 48H - 0H",
+    x = "Carbohydrate Condition",
+    y = "Donor-Level Change in Concentration (48H - 0H, μM)",
+    color = "Group"
+  ) +
+  theme_scfa() +
+  theme(
+    legend.position = "bottom",
+    axis.text.x = element_text(angle = 25, hjust = 1)
+  )
 
-# Print plot explicitly
-if (!is.null(plot_delta_carb_combined)) {
-  print(plot_delta_carb_combined)
-} else {
-  cat("Warning: plot_delta_carb_combined is NULL\n")
-}
-```
+print(donor_response_profile_plot)
 
-### 5.2.4 Statistical Summary
+repeatability_table <- delta_repeatability_summary %>%
+  dplyr::filter(analyte %in% c("acetate", "propionate", "butyrate")) %>%
+  dplyr::left_join(rdc_sdc_rank_summary, by = "analyte") %>%
+  dplyr::transmute(
+    Analyte = stringr::str_to_title(analyte),
+    `Donor ICC across three conditions` = icc,
+    `ICC 95% CI lower` = icc_ci_lower,
+    `ICC 95% CI upper` = icc_ci_upper,
+    `RDC-SDC Spearman rho` = spearman_rho,
+    `Rho 95% CI lower` = rho_ci_lower,
+    `Rho 95% CI upper` = rho_ci_upper,
+    `RDC-SDC p` = p_value,
+    `Independent donors` = n_donors
+  )
 
-```{r scfa-carbohydrate-effects-stats, echo=FALSE}
-
-# Display statistics table
 if (knitr::is_html_output()) {
   DT::datatable(
-    combined_carb_stats %>%
-      dplyr::select(analyte, Effect, p, p_adj, significance),
-    caption = "One-way ANOVA: Carbohydrate Type Effects on Delta Changes (Combined Groups)",
-    options = list(pageLength = 10, scrollX = TRUE),
+    repeatability_table,
+    caption = paste(
+      "Donor response repeatability.",
+      "ICC is from delta ~ group × carbohydrate + (1 | donor);",
+      "confidence intervals resample donors."
+    ),
+    options = list(pageLength = 5, dom = "tip", scrollX = TRUE),
     rownames = FALSE
   ) %>%
-    DT::formatRound(columns = c("p", "p_adj"), digits = 4)
+    DT::formatRound(
+      columns = c(
+        "Donor ICC across three conditions",
+        "ICC 95% CI lower", "ICC 95% CI upper",
+        "RDC-SDC Spearman rho",
+        "Rho 95% CI lower", "Rho 95% CI upper",
+        "RDC-SDC p"
+      ),
+      digits = 3
+    )
 } else {
   knitr::kable(
-    combined_carb_stats %>%
-      dplyr::select(analyte, Effect, p, p_adj, significance),
+    repeatability_table,
+    digits = 3,
+    caption = "Donor response repeatability across carbohydrate conditions"
+  )
+}
+```
+
+### 5.2.2 Obesity-Group Dispersion of Donor-Level Responses
+
+```{r scfa-obesity-dispersion, echo=FALSE, fig.width=12, fig.height=10, cache=FALSE, dependson="scfa-carbohydrate-effects-prep"}
+obesity_dispersion_plot <- primary_active_delta %>%
+  dplyr::mutate(
+    analyte = stringr::str_to_title(analyte),
+    group_label = factor(
+      group_label,
+      levels = c("Control", "Case"),
+      labels = c("Healthy-weight", "Obesity")
+    )
+  ) %>%
+  ggplot(aes(x = group_label, y = delta_48h_0h, color = group_label)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray60") +
+  geom_boxplot(
+    aes(fill = group_label),
+    alpha = 0.25,
+    width = 0.55,
+    outlier.shape = NA
+  ) +
+  geom_jitter(width = 0.08, height = 0, size = 2.4, alpha = 0.9) +
+  facet_grid(analyte ~ carbohydrate_type_label, scales = "free_y") +
+  scale_color_scfa() +
+  scale_fill_scfa() +
+  labs(
+    title = "Dispersion of Donor-Level SCFA Responses by Obesity Group",
+    subtitle = "Each point is one independent donor (n = 8 per group in each panel)",
+    x = NULL,
+    y = "Donor-Level Change in Concentration (48H - 0H, μM)",
+    color = "Group",
+    fill = "Group"
+  ) +
+  theme_scfa() +
+  theme(legend.position = "none")
+
+print(obesity_dispersion_plot)
+
+dispersion_table <- delta_group_dispersion_summary %>%
+  dplyr::transmute(
+    Analyte = stringr::str_to_title(analyte),
+    Carbohydrate = dplyr::recode(
+      as.character(carbohydrate_type),
+      rapid_digestible = "RDC",
+      slow_digestible = "SDC"
+    ),
+    `Healthy-weight n` = n_control,
+    `Obesity n` = n_case,
+    `Healthy-weight SD` = sd_delta_control,
+    `Obesity SD` = sd_delta_case,
+    `Obesity / healthy-weight SD ratio` = sd_ratio_obesity_healthy,
+    `Ratio 95% CI lower` = sd_ratio_ci_lower,
+    `Ratio 95% CI upper` = sd_ratio_ci_upper,
+    `Brown-Forsythe p` = brown_forsythe_p,
+    `Brown-Forsythe q` = brown_forsythe_q
+  )
+
+if (knitr::is_html_output()) {
+  DT::datatable(
+    dispersion_table,
+    caption = paste(
+      "Exploratory obesity-group dispersion comparisons on donor-level changes.",
+      "Brown-Forsythe q values adjust the six analyte × carbohydrate tests."
+    ),
+    options = list(pageLength = 6, dom = "tip", scrollX = TRUE),
+    rownames = FALSE
+  ) %>%
+    DT::formatRound(
+      columns = c(
+        "Healthy-weight SD", "Obesity SD",
+        "Obesity / healthy-weight SD ratio",
+        "Ratio 95% CI lower", "Ratio 95% CI upper",
+        "Brown-Forsythe p", "Brown-Forsythe q"
+      ),
+      digits = 3
+    )
+} else {
+  knitr::kable(
+    dispersion_table,
+    digits = 3,
+    caption = "Exploratory obesity-group dispersion comparisons"
+  )
+}
+```
+
+### 5.2.3 Donor-Aware Statistical Summary
+
+```{r scfa-carbohydrate-effects-stats, echo=FALSE, cache=FALSE, dependson="scfa-carbohydrate-effects-prep"}
+if (knitr::is_html_output()) {
+  DT::datatable(
+    delta_model_anova %>%
+      dplyr::select(analyte, effect, F_value, p_value, p_adj, significance),
+    caption = paste(
+      "Donor-aware mixed models of 0-to-48-hour change:",
+      "delta ~ group × carbohydrate + (1 | donor)"
+    ),
+    options = list(pageLength = 15, scrollX = TRUE),
+    rownames = FALSE
+  ) %>%
+    DT::formatRound(
+      columns = c("F_value", "p_value", "p_adj"),
+      digits = 4
+    )
+} else {
+  knitr::kable(
+    delta_model_anova %>%
+      dplyr::select(analyte, effect, F_value, p_value, p_adj, significance),
     digits = 4,
-    caption = "One-way ANOVA: Carbohydrate Type Effects on Delta Changes (Combined Groups)"
+    caption = "Donor-aware mixed models of 0-to-48-hour change"
   )
 }
 ```
@@ -754,11 +1024,21 @@ if (knitr::is_html_output()) {
 
 ```{r scfa-over-time, echo=FALSE, fig.width=14, fig.height=8, cache=FALSE}
 plot_time_series <- tryCatch({
-  scfa_sample_data_long %>%
+  donor_time_data <- scfa_sample_data_long %>%
+    dplyr::group_by(
+      subject, carbohydrate_type_label, timepoint_hr, analyte
+    ) %>%
+    dplyr::summarise(
+      concentration = mean(concentration, na.rm = TRUE),
+      .groups = "drop"
+    )
+
+  donor_time_data %>%
     dplyr::group_by(carbohydrate_type_label, timepoint_hr, analyte) %>%
     dplyr::summarise(
       mean_conc = mean(concentration, na.rm = TRUE),
       sem = sd(concentration, na.rm = TRUE) / sqrt(dplyr::n()),
+      n_donors = dplyr::n_distinct(subject),
       .groups = "drop"
     ) %>%
     ggplot(aes(
@@ -778,8 +1058,9 @@ plot_time_series <- tryCatch({
     scale_color_scfa() +
     labs(
       title = "SCFA Concentrations Over Time by Carbohydrate Type",
+      subtitle = "Means and SEM calculated from donor-level averages (N = 16 donors)",
       x = "Time (hours)",
-      y = "Mean Concentration ± SEM (μM)",
+      y = "Donor-Level Mean Concentration ± SEM (μM)",
       color = "Carbohydrate Type"
     ) +
     theme_scfa() +
@@ -863,7 +1144,94 @@ if (knitr::is_html_output()) {
 }
 ```
 
-### 5.4.1 Adjusted SDC-versus-RDC Butyrate Response Contrast
+### 5.4.1 Variance Decomposition of SCFA Concentrations
+
+```{r scfa-variance-components, echo=FALSE, fig.width=12, fig.height=6, cache=FALSE, dependson="scfa-mixed-effects"}
+variance_component_summary <- mixed_effects_results %>%
+  dplyr::transmute(
+    analyte,
+    variance_components = purrr::map(
+      model,
+      ~ as.data.frame(lme4::VarCorr(.x)) %>%
+        dplyr::transmute(
+          component = dplyr::case_when(
+            grp == "subject" ~ "Donor",
+            grp == "aliquot_id" ~ "Aliquot",
+            grp == "well_id" ~ "Culture well",
+            grp == "Residual" ~ "Residual",
+            TRUE ~ as.character(grp)
+          ),
+          variance = vcov
+        )
+    )
+  ) %>%
+  tidyr::unnest(variance_components) %>%
+  dplyr::group_by(analyte) %>%
+  dplyr::mutate(
+    total_random_residual_variance = sum(variance),
+    variance_proportion = variance / total_random_residual_variance
+  ) %>%
+  dplyr::ungroup() %>%
+  dplyr::mutate(
+    component = factor(
+      component,
+      levels = c("Donor", "Aliquot", "Culture well", "Residual")
+    )
+  )
+
+variance_component_plot <- variance_component_summary %>%
+  dplyr::mutate(analyte = stringr::str_to_title(analyte)) %>%
+  ggplot(aes(x = analyte, y = variance_proportion, fill = component)) +
+  geom_col(width = 0.72) +
+  scale_fill_brewer(palette = "Set2") +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  labs(
+    title = "Variance Decomposition After Fixed Group, Carbohydrate, and Time Effects",
+    subtitle = "Proportion of random-effect plus residual variance from nested concentration models",
+    x = "Analyte",
+    y = "Variance Proportion",
+    fill = "Component"
+  ) +
+  theme_scfa() +
+  theme(
+    legend.position = "bottom",
+    axis.text.x = element_text(angle = 25, hjust = 1)
+  )
+
+print(variance_component_plot)
+
+variance_component_table <- variance_component_summary %>%
+  dplyr::transmute(
+    Analyte = stringr::str_to_title(analyte),
+    Component = as.character(component),
+    Variance = variance,
+    `Variance proportion` = variance_proportion
+  )
+
+if (knitr::is_html_output()) {
+  DT::datatable(
+    variance_component_table,
+    caption = paste(
+      "Variance components from nested SCFA concentration models.",
+      "Proportions exclude variance explained by fixed effects."
+    ),
+    options = list(pageLength = 20, dom = "tip", scrollX = TRUE),
+    rownames = FALSE
+  ) %>%
+    DT::formatRound(
+      columns = c("Variance", "Variance proportion"),
+      digits = 3
+    )
+} else {
+  knitr::kable(
+    variance_component_table,
+    digits = 3,
+    caption = "Variance components from nested SCFA concentration models"
+  )
+}
+```
+
+### 5.4.2 Adjusted SDC-versus-RDC Butyrate Response Contrast
 
 ```{r butyrate-sdc-rdc-contrast, echo=FALSE, cache=FALSE}
 # The response estimand is the difference in 0-to-48-hour change:
@@ -1057,7 +1425,7 @@ The primary drivers of SCFA production in this ex vivo model were the type of ca
 - Clear temporal increases in SCFA concentrations, with distinct trajectories by carbohydrate condition (Section 5.3)
 - Significant carbohydrate, timepoint, and selected carbohydrate-by-timepoint effects in the mixed-effects models (Section 5.4)
 
-The omnibus tests do not establish every pairwise carbohydrate difference. For butyrate, the adjusted 0-to-48-hour change was greater for SDC than no added carbohydrate, whereas the RDC-versus-no-added-carbohydrate and SDC-versus-RDC contrasts were not significant after Tukey adjustment (Section 5.4.1).
+The omnibus tests do not establish every pairwise carbohydrate difference. For butyrate, the adjusted 0-to-48-hour change was greater for SDC than no added carbohydrate, whereas the RDC-versus-no-added-carbohydrate and SDC-versus-RDC contrasts were not significant after Tukey adjustment (Section 5.4.2).
 
 **2. Obesity-Group Contrasts Were Nonsignificant but Not Equivalent**
 
@@ -1070,14 +1438,13 @@ The analyses revealed distinct response patterns for different carbohydrate type
 - The magnitude and timing of responses varied by carbohydrate type, as evidenced by significant carbohydrate × timepoint interactions in the mixed-effects models
 - These differences highlight the importance of carbohydrate structure and digestibility in shaping microbial metabolic output
 
-**4. Pronounced Interpersonal Variation**
+**4. Donor-Level Response Heterogeneity and Repeatability**
 
-A central finding is the high degree of subject-to-subject variability in SCFA production. The delta change analyses (Section 5.2) and temporal trajectories (Section 5.3) clearly demonstrate that:
-- Some individuals are consistently high or low SCFA producers across conditions
-- Response patterns to different carbohydrates are unique to each individual
-- This variability is evident even when accounting for group (case vs control) and carbohydrate type effects
+After averaging replicate measurements within each donor, 0-to-48-hour SCFA changes varied among the 16 independent donors. Donor rankings were reproducible between RDC and SDC: `r paste(sprintf("%s rho = %.2f (95%% bootstrap CI %.2f to %.2f)", stringr::str_to_title(rdc_sdc_rank_summary$analyte[rdc_sdc_rank_summary$analyte %in% c("acetate", "propionate", "butyrate")]), rdc_sdc_rank_summary$spearman_rho[rdc_sdc_rank_summary$analyte %in% c("acetate", "propionate", "butyrate")], rdc_sdc_rank_summary$rho_ci_lower[rdc_sdc_rank_summary$analyte %in% c("acetate", "propionate", "butyrate")], rdc_sdc_rank_summary$rho_ci_upper[rdc_sdc_rank_summary$analyte %in% c("acetate", "propionate", "butyrate")]), collapse = "; ")`. In donor-aware delta models spanning all three carbohydrate conditions, the corresponding ICCs were `r paste(sprintf("%s %.2f (95%% bootstrap CI %.2f to %.2f)", stringr::str_to_title(delta_repeatability_summary$analyte[delta_repeatability_summary$analyte %in% c("acetate", "propionate", "butyrate")]), delta_repeatability_summary$icc[delta_repeatability_summary$analyte %in% c("acetate", "propionate", "butyrate")], delta_repeatability_summary$icc_ci_lower[delta_repeatability_summary$analyte %in% c("acetate", "propionate", "butyrate")], delta_repeatability_summary$icc_ci_upper[delta_repeatability_summary$analyte %in% c("acetate", "propionate", "butyrate")]), collapse = "; ")`.
 
-This pronounced interpersonal variation underscores the need for personalized approaches in nutrition, as a "one-size-fits-all" dietary intervention is unlikely to be effective. The identification of responder and non-responder groups (explored in Section 7) builds upon this finding to enable more targeted analyses of microbial composition differences.
+These results support a general donor tendency toward higher or lower SCFA response across carbohydrate conditions; they do not demonstrate that each donor has a unique carbohydrate-specific response. A donor × carbohydrate variance component or independent validation would be needed for that stronger claim.
+
+Across acetate, propionate, and butyrate under RDC and SDC, obesity-to-healthy-weight SD ratios ranged from `r sprintf("%.2f", min(delta_group_dispersion_summary$sd_ratio_obesity_healthy))` to `r sprintf("%.2f", max(delta_group_dispersion_summary$sd_ratio_obesity_healthy))`; no Brown–Forsythe comparison was significant after BH correction (minimum q = `r format.pval(min(delta_group_dispersion_summary$brown_forsythe_q), digits = 3)`). With eight donors per group, this is evidence of no detected dispersion difference rather than evidence that group variances are equivalent.
 
 **5. Statistical Model Insights**
 
@@ -1085,7 +1452,7 @@ The linear mixed-effects models (Section 5.4) provide formal statistical confirm
 - Significant main effects of carbohydrate type and timepoint across multiple SCFAs
 - Significant interactions between carbohydrate type and timepoint, indicating that the temporal response depends on the carbohydrate substrate
 - Nonsignificant group contrasts whose confidence intervals do not support an equivalence claim
-- The models account for subject-level variation through random intercepts, capturing the interpersonal differences observed in the data
+- Variance components and donor-level ICCs quantify persistent donor differences, while bootstrap intervals convey their uncertainty
 
 These findings set the stage for the integrated analyses in Section 7, where we examine how microbial composition relates to SCFA production patterns and identify specific taxa associated with SCFA concentrations and responder phenotypes.
 
@@ -1117,9 +1484,14 @@ alpha_long <- alpha_metrics %>%
 alpha_long_0_48 <- alpha_long %>%
   dplyr::filter(timepoint %in% c("0H", "48H"))
 
+# Person-level grain for claim-facing alpha tests: mean across A/B wells within donor cell.
+alpha_donor_0_48 <- alpha_long_0_48 %>%
+  dplyr::group_by(donor_id, group, carbohydrate, timepoint, metric) %>%
+  dplyr::summarise(value = mean(value, na.rm = TRUE), .groups = "drop")
+
 # Alpha diversity boxplots by group, carbohydrate, and timepoint
 # with per-facet Healthy vs Obese Wilcoxon p-values
-alpha_plot <- alpha_long_0_48 %>%
+alpha_plot <- alpha_donor_0_48 %>%
   ggplot(aes(x = carbohydrate, y = value, fill = group)) +
   geom_boxplot(alpha = 0.8, outlier.shape = NA, position = position_dodge(width = 0.8)) +
   geom_jitter(
@@ -1141,6 +1513,7 @@ alpha_plot <- alpha_long_0_48 %>%
   scale_y_continuous(expand = expansion(mult = c(0.05, 0.15))) +
   labs(
     title = "Alpha Diversity by Group, Carbohydrate, and Timepoint",
+    subtitle = "Each point is one donor (mean across A/B culture wells within the cell)",
     x = "Carbohydrate",
     y = "Diversity metric"
   ) +
@@ -1148,7 +1521,7 @@ alpha_plot <- alpha_long_0_48 %>%
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 # Summaries at 48H for combined groups modeling
-alpha_48h <- alpha_long %>%
+alpha_48h <- alpha_donor_0_48 %>%
   dplyr::filter(timepoint == "48H")
 
 alpha_48h_summary <- alpha_48h %>%
@@ -1161,8 +1534,9 @@ alpha_48h_summary <- alpha_48h %>%
   )
 
 # Wilcoxon tests: Healthy vs Obese within carbohydrate × timepoint for each alpha metric
+# (donor-aggregated values; one observation per donor × carbohydrate × timepoint)
 alpha_wilcox_group <- tryCatch({
-  alpha_long_0_48 %>%
+  alpha_donor_0_48 %>%
     dplyr::group_by(metric, carbohydrate, timepoint) %>%
     dplyr::filter(dplyr::n_distinct(group) == 2) %>%  # Only test if both groups present
     rstatix::wilcox_test(value ~ group, p.adjust.method = "BH") %>%
@@ -1224,7 +1598,7 @@ if (nrow(alpha_wilcox_group) > 0) {
 
 # Wilcoxon tests: Carbohydrate comparisons within group × timepoint for each alpha metric
 alpha_wilcox_carb <- tryCatch({
-  alpha_long_0_48 %>%
+  alpha_donor_0_48 %>%
     dplyr::group_by(metric, group, timepoint) %>%
     dplyr::filter(dplyr::n_distinct(carbohydrate) >= 2) %>%  # Only test if multiple carb levels present
     rstatix::wilcox_test(value ~ carbohydrate, p.adjust.method = "BH") %>%
@@ -1370,7 +1744,7 @@ make_pcoa_df <- function(ps_obj, distance_method) {
 # Bray-Curtis PCoA across all samples
 pcoa_bray <- make_pcoa_df(ps_rel, "bray")
 
-# PERMANOVA: group × carbohydrate + timepoint with subject-level strata
+# PERMANOVA: group × carbohydrate + timepoint with donor-level strata
 dist_bray <- phyloseq::distance(ps_rel, method = "bray")
 df_beta <- as(sample_data(ps_rel), "data.frame")
 
@@ -1378,7 +1752,7 @@ permanova_bray <- vegan::adonis2(
   dist_bray ~ group * carbohydrate + timepoint,
   data = df_beta,
   permutations = 999,
-  strata = df_beta$subject_id
+  strata = df_beta$donor_id
 )
 
 permanova_bray_tbl <- as.data.frame(permanova_bray) %>%
@@ -1490,7 +1864,7 @@ permanova_48h <- vegan::adonis2(
   dist_48h ~ group * carbohydrate,
   data = metadata_48h,
   permutations = 999,
-  strata = metadata_48h$subject_id
+  strata = metadata_48h$donor_id
 )
 
 permanova_48h_tbl <- as.data.frame(permanova_48h) %>%
@@ -1562,7 +1936,7 @@ if (knitr::is_html_output()) {
   DT::datatable(
     permanova_bray_tbl %>%
       dplyr::select(term, f, r2, p_value),
-    caption = "PERMANOVA results (Bray-Curtis; all timepoints, subject-level strata)",
+    caption = "PERMANOVA results (Bray-Curtis; all timepoints, donor-level strata)",
     options = list(pageLength = 10, scrollX = TRUE),
     rownames = FALSE
   ) %>%
@@ -1572,7 +1946,7 @@ if (knitr::is_html_output()) {
     permanova_bray_tbl %>%
       dplyr::select(term, f, r2, p_value),
     digits = 3,
-    caption = "PERMANOVA results (Bray-Curtis; all timepoints, subject-level strata)"
+    caption = "PERMANOVA results (Bray-Curtis; all timepoints, donor-level strata)"
   )
 }
 
@@ -1584,7 +1958,7 @@ if (knitr::is_html_output()) {
   DT::datatable(
     permanova_48h_tbl %>%
       dplyr::select(term, f, r2, p_value),
-    caption = "PERMANOVA results (Bray-Curtis; 48H only, subject-level strata)",
+    caption = "PERMANOVA results (Bray-Curtis; 48H only, donor-level strata)",
     options = list(pageLength = 10, scrollX = TRUE),
     rownames = FALSE
   ) %>%
@@ -1594,7 +1968,7 @@ if (knitr::is_html_output()) {
     permanova_48h_tbl %>%
       dplyr::select(term, f, r2, p_value),
     digits = 3,
-    caption = "PERMANOVA results (Bray-Curtis; 48H only, subject-level strata)"
+    caption = "PERMANOVA results (Bray-Curtis; 48H only, donor-level strata)"
   )
 }
 ```
@@ -2047,7 +2421,7 @@ if (nsamples(ps_ancombc2_clean) < 10) {
       data = ps_ancombc2_clean,
       tax_level = "Genus",
       fix_formula = "group + carbohydrate * timepoint",
-      rand_formula = "(1|subject_id)",
+      rand_formula = "(1|donor_id)",
       p_adj_method = "BH",
       prv_cut = 0.10,
       lib_cut = 0,
@@ -2365,7 +2739,7 @@ if (nsamples(ps_ancombc2_48h) < 10) {
       data = ps_ancombc2_48h,
       tax_level = "Genus",
       fix_formula = "group + carbohydrate",
-      rand_formula = "(1|subject_id)",
+      rand_formula = "(1|donor_id)",
       p_adj_method = "BH",
       prv_cut = 0.10,
       lib_cut = 0,
@@ -2555,7 +2929,7 @@ if (nsamples(ps_ancombc2_48h_rdc_sdc) < 10) {
       data = ps_ancombc2_48h_rdc_sdc,
       tax_level = "Genus",
       fix_formula = "group + carbohydrate",
-      rand_formula = "(1|subject_id)",
+      rand_formula = "(1|donor_id)",
       p_adj_method = "BH",
       prv_cut = 0.10,
       lib_cut = 0,
@@ -2768,6 +3142,8 @@ maaslin2_meta$SampleID <- rownames(maaslin2_meta)
 # Ensure numeric columns are numeric
 maaslin2_meta <- maaslin2_meta %>%
   dplyr::mutate(
+    donor_id = as.character(donor_id),
+    aliquot_id = as.character(aliquot_id),
     subject_id = as.character(subject_id),
     group = as.factor(group),
     carbohydrate = as.factor(carbohydrate),
@@ -2787,7 +3163,7 @@ maaslin2_fit <- tryCatch({
         transform = "LOG",
         analysis_method = "LM",
         fixed_effects = c("group", "carbohydrate", "timepoint"),
-        random_effects = c("subject_id"),
+        random_effects = c("donor_id"),
         plot_heatmap = FALSE,
         plot_scatter = FALSE
       ),
@@ -3247,6 +3623,8 @@ maaslin2_48h_meta$SampleID <- rownames(maaslin2_48h_meta)
 
 maaslin2_48h_meta <- maaslin2_48h_meta %>%
   dplyr::mutate(
+    donor_id = as.character(donor_id),
+    aliquot_id = as.character(aliquot_id),
     subject_id = as.character(subject_id),
     carbohydrate = as.factor(carbohydrate)
   )
@@ -3264,7 +3642,7 @@ maaslin2_48h_fit <- tryCatch({
         transform = "LOG",
         analysis_method = "LM",
         fixed_effects = c("carbohydrate"),
-        random_effects = c("subject_id"),
+        random_effects = c("donor_id"),
         plot_heatmap = FALSE,
         plot_scatter = FALSE
       ),
@@ -3940,6 +4318,8 @@ scfa_wide <- scfa_sample_data_long_factored %>%
 micro_meta_merged <- data.frame(sample_data(ps)) %>%
   tibble::rownames_to_column("SampleID") %>%
   dplyr::mutate(
+    donor_id = as.character(donor_id),
+    aliquot_id = as.character(aliquot_id),
     subject_id = as.character(subject_id),
     subject_id_scfa = stringr::str_to_upper(
       stringr::str_extract(subject_id, "^[0-9]+[A-Za-z]")
@@ -3989,7 +4369,7 @@ if (nsamples(ps_butyrate_rel) > 10 && ntaxa(ps_butyrate_rel) > 1) {
     ANCOMBC::ancombc2(
       data = ps_butyrate_rel,
       fix_formula = "butyrate + carbohydrate",
-      rand_formula = "(1|subject_id)",
+      rand_formula = "(1|donor_id)",
       p_adj_method = "BH",
       prv_cut = 0.10,
       lib_cut = 1000,
@@ -4046,6 +4426,8 @@ if (!taxa_are_rows(ps_butyrate_rel)) {
 # Prepare metadata with rownames matching count matrix column names
 maaslin2_butyrate_meta_rel <- data.frame(sample_data(ps_butyrate_rel)) %>%
   dplyr::mutate(
+    donor_id = as.character(donor_id),
+    aliquot_id = as.character(aliquot_id),
     subject_id = as.character(subject_id),
     carbohydrate = as.factor(carbohydrate),
     butyrate = as.numeric(butyrate)
@@ -4071,7 +4453,7 @@ maaslin2_butyrate_rel <- tryCatch({
         transform = "LOG",
         analysis_method = "LM",
         fixed_effects = c("butyrate", "carbohydrate"),
-        random_effects = c("subject_id"),
+        random_effects = c("donor_id"),
         plot_heatmap = FALSE,
         plot_scatter = FALSE
       ),
@@ -4270,7 +4652,7 @@ if (nsamples(ps_propionate_rel) > 10 && ntaxa(ps_propionate_rel) > 1) {
     ANCOMBC::ancombc2(
       data = ps_propionate_rel,
       fix_formula = "propionate + carbohydrate",
-      rand_formula = "(1|subject_id)",
+      rand_formula = "(1|donor_id)",
       p_adj_method = "BH",
       prv_cut = 0.10,
       lib_cut = 1000,
@@ -4327,6 +4709,8 @@ if (!taxa_are_rows(ps_propionate_rel)) {
 # Prepare metadata with rownames matching count matrix column names
 maaslin2_propionate_meta_rel <- data.frame(sample_data(ps_propionate_rel)) %>%
   dplyr::mutate(
+    donor_id = as.character(donor_id),
+    aliquot_id = as.character(aliquot_id),
     subject_id = as.character(subject_id),
     carbohydrate = as.factor(carbohydrate),
     propionate = as.numeric(propionate)
@@ -4352,7 +4736,7 @@ maaslin2_propionate_rel <- tryCatch({
         transform = "LOG",
         analysis_method = "LM",
         fixed_effects = c("propionate", "carbohydrate"),
-        random_effects = c("subject_id"),
+        random_effects = c("donor_id"),
         plot_heatmap = FALSE,
         plot_scatter = FALSE
       ),
@@ -4706,14 +5090,14 @@ if (length(fusicatenibacter_taxa_rel) > 0) {
 
 ## 7.5 Responder vs Non-Responder Analysis
 
-```{r responder-nonresponder, echo=FALSE, cache=TRUE, cache.path="cache/integrated-"}
+```{r responder-nonresponder, echo=FALSE, cache=FALSE}
 # Define responder groups based on delta SCFA (48H - 0H)
 # Calculate delta for butyrate and propionate
 scfa_delta <- scfa_sample_data_long_factored %>%
   dplyr::filter(analyte %in% c("butyrate", "propionate")) %>%
   dplyr::filter(timepoint_hr %in% c("0", "48")) %>%
-  # Responder labels follow A/B aliquot rows so they can join microbiome 84A/84B IDs.
-  dplyr::group_by(subject, aliquot_label, group, carbohydrate_type, analyte) %>%
+  # Primary responder definition: one delta per donor × carbohydrate (mean across A/B wells).
+  dplyr::group_by(subject, group, carbohydrate_type, analyte) %>%
   dplyr::summarise(
     conc_0h = mean(concentration[timepoint_hr == "0"], na.rm = TRUE),
     conc_48h = mean(concentration[timepoint_hr == "48"], na.rm = TRUE),
@@ -4731,31 +5115,41 @@ scfa_delta <- scfa_sample_data_long_factored %>%
       group == "control" ~ "Healthy",
       group == "case" ~ "Obese",
       TRUE ~ NA_character_
-    )
+    ),
+    donor_id = as.character(subject)
   ) %>%
   dplyr::filter(!is.na(delta_48h_0h), !is.na(carbohydrate), !is.na(group_micro))
 
-# Define responder/non-responder using median split for each analyte
-# Separate by carbohydrate type for more relevant comparisons
-responder_status <- scfa_delta %>%
+# Define responder/non-responder using a donor-level median split within each
+# analyte × carbohydrate stratum.
+responder_thresholds <- scfa_delta %>%
   dplyr::group_by(analyte, carbohydrate) %>%
-  dplyr::mutate(
+  dplyr::summarise(
     median_delta = median(delta_48h_0h, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+responder_status <- scfa_delta %>%
+  dplyr::left_join(
+    responder_thresholds,
+    by = c("analyte", "carbohydrate")
+  ) %>%
+  dplyr::mutate(
     responder_status = dplyr::if_else(
       delta_48h_0h >= median_delta,
       "Responder",
       "Non-Responder"
     )
   ) %>%
-  dplyr::ungroup() %>%
   dplyr::select(
-    subject, aliquot_label, group_micro, carbohydrate, analyte, responder_status
+    donor_id, subject, group_micro, carbohydrate, analyte,
+    delta_48h_0h, median_delta, responder_status
   )
 
 # Pivot to wide format for overlap analysis
 responder_wide <- responder_status %>%
   tidyr::pivot_wider(
-    id_cols = c(subject, aliquot_label, group_micro, carbohydrate),
+    id_cols = c(donor_id, subject, group_micro, carbohydrate),
     names_from = analyte,
     values_from = responder_status,
     names_prefix = "responder_"
@@ -4764,7 +5158,7 @@ responder_wide <- responder_status %>%
 # Examine overlap in responder status
 cat("Responder Status Overlap:
 ")
-cat("- Total subjects:", nrow(responder_wide), "
+cat("- Total donor × carbohydrate records:", nrow(responder_wide), "
 ")
 if ("responder_butyrate" %in% colnames(responder_wide) && 
     "responder_propionate" %in% colnames(responder_wide)) {
@@ -4790,20 +5184,85 @@ if ("responder_butyrate" %in% colnames(responder_wide) &&
               100 * both_non_responder / nrow(responder_wide)))
 }
 
-# Merge responder status with microbiome metadata at 48H
-ps_48h_resp <- phyloseq::subset_samples(ps, timepoint == "48H")
-
-# Match responder status on A/B aliquot labels used in microbiome metadata.
-sample_meta_resp <- data.frame(sample_data(ps_48h_resp)) %>%
-  tibble::rownames_to_column("SampleID") %>%
+# Sensitivity of the median classification to the A/B aliquot split. This is
+# not independent validation; it quantifies whether each aliquot falls on the
+# same side of the donor-derived threshold.
+scfa_delta_aliquot <- scfa_sample_data_long_factored %>%
+  dplyr::filter(
+    analyte %in% c("butyrate", "propionate"),
+    timepoint_hr %in% c("0", "48")
+  ) %>%
+  dplyr::group_by(
+    subject, aliquot_id, carbohydrate_type, analyte
+  ) %>%
+  dplyr::summarise(
+    conc_0h = mean(concentration[timepoint_hr == "0"], na.rm = TRUE),
+    conc_48h = mean(concentration[timepoint_hr == "48"], na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
   dplyr::mutate(
-    subject_id_scfa = stringr::str_to_upper(
-      stringr::str_extract(as.character(subject_id), "^[0-9]+[A-Za-z]")
+    delta_48h_0h = conc_48h - conc_0h,
+    carbohydrate = dplyr::case_when(
+      carbohydrate_type == "no_carbohydrate" ~ "No Added Carb",
+      carbohydrate_type == "rapid_digestible" ~ "RDC",
+      carbohydrate_type == "slow_digestible" ~ "SDC",
+      TRUE ~ NA_character_
+    ),
+    donor_id = as.character(subject)
+  ) %>%
+  dplyr::filter(is.finite(delta_48h_0h), !is.na(carbohydrate)) %>%
+  dplyr::left_join(
+    responder_thresholds,
+    by = c("analyte", "carbohydrate")
+  ) %>%
+  dplyr::mutate(
+    aliquot_responder_status = dplyr::if_else(
+      delta_48h_0h >= median_delta,
+      "Responder",
+      "Non-Responder"
     )
   ) %>%
   dplyr::left_join(
+    responder_status %>%
+      dplyr::select(
+        donor_id, carbohydrate, analyte,
+        donor_responder_status = responder_status
+      ),
+    by = c("donor_id", "carbohydrate", "analyte")
+  )
+
+aliquot_classification_stability <- scfa_delta_aliquot %>%
+  dplyr::filter(carbohydrate %in% c("RDC", "SDC")) %>%
+  dplyr::group_by(analyte, carbohydrate, donor_id) %>%
+  dplyr::summarise(
+    n_aliquots = dplyr::n(),
+    aliquots_same_side = dplyr::n_distinct(aliquot_responder_status) == 1,
+    aliquot_matches_donor = mean(
+      aliquot_responder_status == donor_responder_status
+    ),
+    .groups = "drop"
+  ) %>%
+  dplyr::group_by(analyte, carbohydrate) %>%
+  dplyr::summarise(
+    donors = dplyr::n(),
+    donors_with_A_B_same_side = sum(aliquots_same_side),
+    percent_donors_A_B_same_side = 100 * mean(aliquots_same_side),
+    percent_aliquot_labels_matching_donor = 100 * mean(aliquot_matches_donor),
+    .groups = "drop"
+  )
+
+# Merge responder status with microbiome metadata at 48H
+ps_48h_resp <- phyloseq::subset_samples(ps, timepoint == "48H")
+
+# Match responder status on donor_id (person-level labels).
+sample_meta_resp <- data.frame(sample_data(ps_48h_resp)) %>%
+  tibble::rownames_to_column("SampleID") %>%
+  dplyr::mutate(
+    donor_id = as.character(donor_id)
+  ) %>%
+  dplyr::left_join(
     responder_wide,
-    by = c("subject_id_scfa" = "aliquot_label",
+    by = c("donor_id" = "donor_id",
            "group" = "group_micro",
            "carbohydrate" = "carbohydrate")
   )
@@ -4820,9 +5279,51 @@ cat("- Samples with responder status:",
 ")
 ```
 
+### 7.5.1 Sensitivity of Responder Classification to A/B Aliquots
+
+```{r responder-aliquot-stability, echo=FALSE, cache=FALSE, dependson="responder-nonresponder"}
+aliquot_stability_table <- aliquot_classification_stability %>%
+  dplyr::transmute(
+    Analyte = stringr::str_to_title(analyte),
+    Carbohydrate = carbohydrate,
+    Donors = donors,
+    `Donors with A/B on same side` = donors_with_A_B_same_side,
+    `Donors with A/B on same side (%)` = percent_donors_A_B_same_side,
+    `Aliquot labels matching donor label (%)` =
+      percent_aliquot_labels_matching_donor
+  )
+
+if (knitr::is_html_output()) {
+  DT::datatable(
+    aliquot_stability_table,
+    caption = paste(
+      "Sensitivity of median-defined responder labels to A/B aliquot changes.",
+      "This is a reproducibility diagnostic, not independent validation."
+    ),
+    options = list(pageLength = 4, dom = "tip", scrollX = TRUE),
+    rownames = FALSE
+  ) %>%
+    DT::formatRound(
+      columns = c(
+        "Donors with A/B on same side (%)",
+        "Aliquot labels matching donor label (%)"
+      ),
+      digits = 1
+    )
+} else {
+  knitr::kable(
+    aliquot_stability_table,
+    digits = 1,
+    caption = "Sensitivity of responder labels to A/B aliquot changes"
+  )
+}
+```
+
+Across the active-carbohydrate responder classifications, the A and B aliquots fell on the same side of the donor-derived median threshold for `r min(aliquot_classification_stability$donors_with_A_B_same_side)` to `r max(aliquot_classification_stability$donors_with_A_B_same_side)` of 16 donors, depending on analyte and carbohydrate. This sensitivity supports retaining continuous donor-level delta as the primary interpersonal-variation outcome and treating median-defined responder analyses as secondary.
+
 ## 7.6 Microbial Composition Differences: Butyrate Responders vs Non-Responders
 
-To investigate whether individual variation in SCFA response is associated with differences in microbiome composition, we classified subjects as "Responders" or "Non-Responders" based on their change in SCFA concentration from baseline (0H) to 48 hours (48H). 
+To explore whether donor-level SCFA response strata are associated with microbiome composition, we classified donors as "Responders" or "Non-Responders" based on their change in SCFA concentration from baseline (0H) to 48 hours (48H). These sample-dependent median strata are used only for secondary microbiome comparisons; they are not tests of SCFA response variance and do not define a validated responder phenotype.
 
 **Definition of Responder Status:**
 - For each SCFA (butyrate and propionate) and each carbohydrate condition (RDC and SDC), we calculated the delta change: Δ = [SCFA]₄₈ₕ - [SCFA]₀ₕ
@@ -4830,7 +5331,7 @@ To investigate whether individual variation in SCFA response is associated with 
 - **Responders**: Subjects with Δ ≥ median Δ for that specific analyte-carbohydrate combination
 - **Non-Responders**: Subjects with Δ < median Δ for that specific analyte-carbohydrate combination
 
-This approach allows us to identify whether individuals who show greater increases in SCFA production (responders) have distinct microbial communities compared to those with smaller increases (non-responders), potentially revealing microbiome features associated with enhanced SCFA production capacity.
+This exploratory approach asks whether donors with larger observed SCFA increases also differ in concurrent microbial community features. It does not establish prediction, mechanism, or a clinically meaningful response threshold.
 
 In this section, we compare the microbial composition (alpha diversity, beta diversity, and community structure) between butyrate responders and non-responders at the 48H timepoint, focusing on samples from RDC and SDC conditions (excluding No Added Carb controls).
 
@@ -5002,7 +5503,7 @@ if (nsamples(ps_48h_butyrate_resp) > 5) {
   perm_resp <- vegan::adonis2(
     dist_bray_resp ~ responder_butyrate * carbohydrate,
     data = meta_resp,
-    strata = meta_resp$subject_id,
+    strata = meta_resp$donor_id,
     permutations = 999
   )
   
@@ -5057,7 +5558,7 @@ if (nsamples(ps_butyrate_resp_genus) > 10 && ntaxa(ps_butyrate_resp_genus) > 1) 
       data = ps_butyrate_resp_genus_clean,
       tax_level = "Genus",
       fix_formula = "responder_butyrate + carbohydrate",
-      rand_formula = "(1|subject_id)",
+      rand_formula = "(1|donor_id)",
       p_adj_method = "BH",
       prv_cut = 0.10,
       lib_cut = 0,
@@ -5141,7 +5642,9 @@ if (nsamples(ps_butyrate_resp_genus) > 5 && ntaxa(ps_butyrate_resp_genus) > 1) {
   
   maaslin2_butyrate_resp_meta <- data.frame(sample_data(ps_butyrate_resp_genus)) %>%
     dplyr::mutate(
-      subject_id = as.character(subject_id),
+      donor_id = as.character(donor_id),
+    aliquot_id = as.character(aliquot_id),
+    subject_id = as.character(subject_id),
       responder_butyrate = as.factor(responder_butyrate),
       carbohydrate = as.factor(carbohydrate)
     )
@@ -5159,7 +5662,7 @@ if (nsamples(ps_butyrate_resp_genus) > 5 && ntaxa(ps_butyrate_resp_genus) > 1) {
           transform = "LOG",
           analysis_method = "LM",
           fixed_effects = c("responder_butyrate", "carbohydrate"),
-          random_effects = c("subject_id"),
+          random_effects = c("donor_id"),
           plot_heatmap = FALSE,
           plot_scatter = FALSE
         ),
@@ -5571,7 +6074,7 @@ if (nsamples(ps_48h_propionate_resp) > 5) {
   perm_prop_resp <- vegan::adonis2(
     dist_bray_prop_resp ~ responder_propionate * carbohydrate,
     data = meta_prop_resp,
-    strata = meta_prop_resp$subject_id,
+    strata = meta_prop_resp$donor_id,
     permutations = 999
   )
   
@@ -5626,7 +6129,7 @@ if (nsamples(ps_prop_resp_genus) > 10 && ntaxa(ps_prop_resp_genus) > 1) {
       data = ps_prop_resp_genus_clean,
       tax_level = "Genus",
       fix_formula = "responder_propionate + carbohydrate",
-      rand_formula = "(1|subject_id)",
+      rand_formula = "(1|donor_id)",
       p_adj_method = "BH",
       prv_cut = 0.10,
       lib_cut = 0,
@@ -5710,7 +6213,9 @@ if (nsamples(ps_prop_resp_genus) > 5 && ntaxa(ps_prop_resp_genus) > 1) {
   
   maaslin2_prop_resp_meta <- data.frame(sample_data(ps_prop_resp_genus)) %>%
     dplyr::mutate(
-      subject_id = as.character(subject_id),
+      donor_id = as.character(donor_id),
+    aliquot_id = as.character(aliquot_id),
+    subject_id = as.character(subject_id),
       responder_propionate = as.factor(responder_propionate),
       carbohydrate = as.factor(carbohydrate)
     )
@@ -5728,7 +6233,7 @@ if (nsamples(ps_prop_resp_genus) > 5 && ntaxa(ps_prop_resp_genus) > 1) {
           transform = "LOG",
           analysis_method = "LM",
           fixed_effects = c("responder_propionate", "carbohydrate"),
-          random_effects = c("subject_id"),
+          random_effects = c("donor_id"),
           plot_heatmap = FALSE,
           plot_scatter = FALSE
         ),
@@ -5993,9 +6498,7 @@ if (length(fusicatenibacter_taxa_abs) > 0) {
     tibble::rownames_to_column("SampleID") %>%
     dplyr::mutate(
       fusicatenibacter_abs_abund = fusicatenibacter_abs_all,
-      subject_id_scfa = stringr::str_to_upper(
-        stringr::str_extract(subject_id, "^[0-9]+[A-Za-z]")
-      ),
+      donor_id = as.character(donor_id),
       has_qpcr = !is.na(genome_copies_per_ul)
     ) %>%
     dplyr::filter(has_qpcr, timepoint == "48H", !is.na(carbohydrate), carbohydrate != "No Added Carb")
@@ -6005,9 +6508,9 @@ if (length(fusicatenibacter_taxa_abs) > 0) {
     meta_abs_resp <- meta_abs_resp %>%
       dplyr::left_join(
         responder_wide %>%
-          dplyr::mutate(subject_id_scfa = as.character(aliquot_label)) %>%
-          dplyr::select(subject_id_scfa, carbohydrate, responder_butyrate, responder_propionate),
-        by = c("subject_id_scfa", "carbohydrate")
+          dplyr::mutate(donor_id = as.character(donor_id)) %>%
+          dplyr::select(donor_id, carbohydrate, responder_butyrate, responder_propionate),
+        by = c("donor_id", "carbohydrate")
       )
     
     # Butyrate Responder Analysis
@@ -6185,9 +6688,7 @@ if (length(bifidobacterium_taxa_abs) > 0) {
     tibble::rownames_to_column("SampleID") %>%
     dplyr::mutate(
       bifidobacterium_abs_abund = bifidobacterium_abs_all,
-      subject_id_scfa = stringr::str_to_upper(
-        stringr::str_extract(subject_id, "^[0-9]+[A-Za-z]")
-      ),
+      donor_id = as.character(donor_id),
       has_qpcr = !is.na(genome_copies_per_ul)
     ) %>%
     dplyr::filter(has_qpcr, timepoint == "48H", !is.na(carbohydrate), carbohydrate != "No Added Carb")
@@ -6197,9 +6698,9 @@ if (length(bifidobacterium_taxa_abs) > 0) {
     meta_abs_resp_bif <- meta_abs_resp_bif %>%
       dplyr::left_join(
         responder_wide %>%
-          dplyr::mutate(subject_id_scfa = as.character(aliquot_label)) %>%
-          dplyr::select(subject_id_scfa, carbohydrate, responder_butyrate, responder_propionate),
-        by = c("subject_id_scfa", "carbohydrate")
+          dplyr::mutate(donor_id = as.character(donor_id)) %>%
+          dplyr::select(donor_id, carbohydrate, responder_butyrate, responder_propionate),
+        by = c("donor_id", "carbohydrate")
       )
     
     # Butyrate Responder Analysis
@@ -6360,17 +6861,17 @@ This integrated analysis brings together SCFA metabolomics and 16S rRNA gene mic
 ## 8.1 SCFA Metabolomics Findings
 
 **Carbohydrate Type Effects:**
-- Both rapid digestible carbohydrate (RDC) and slow digestible carbohydrate (SDC) significantly increased SCFA production (butyrate, propionate, acetate) over 48 hours compared to no-carbohydrate controls.
-- Delta changes (48H - 0H) showed significant differences between carbohydrate conditions across multiple SCFAs, with both RDC and SDC stimulating substantial SCFA production.
+- Both rapid digestible carbohydrate (RDC) and slow digestible carbohydrate (SDC) showed descriptive increases in SCFA production over 48 hours, while adjusted condition-specific support varied by analyte and contrast.
+- Donor-aware delta models showed carbohydrate-associated differences across multiple SCFAs without implying that every active-carbohydrate versus control contrast was significant.
 - The magnitude and timing of SCFA responses varied by carbohydrate type, as evidenced by significant carbohydrate × timepoint interactions in mixed-effects models.
 
 **Group Differences:**
-- Limited significant differences were observed between Control (Healthy) and Case (Obese) groups in SCFA production capacity, suggesting that obesity status alone does not dramatically alter the fundamental ability of gut microbiota to ferment these carbohydrate substrates.
-- Mixed-effects models showed minimal significant main effects of group or major interactions involving group, indicating similar fermentation capacity between groups.
+- None of the six primary obesity-minus-healthy-weight differences in 0-to-48-hour change was statistically significant.
+- The confidence intervals do not establish equivalent or preserved fermentation capacity, and the exploratory dispersion analysis was limited to eight donors per group.
 
 **Interpersonal Variation:**
-- Pronounced subject-to-subject variability in SCFA production was observed, with some individuals consistently showing high or low SCFA responses across carbohydrate conditions.
-- This variability was evident even after accounting for group and carbohydrate type effects, highlighting the need for personalized dietary approaches.
+- Donor-level changes varied across individuals and were repeatable across carbohydrate conditions: primary-analyte ICCs ranged from `r sprintf("%.2f", min(delta_repeatability_summary$icc[delta_repeatability_summary$analyte %in% c("acetate", "propionate", "butyrate")]))` to `r sprintf("%.2f", max(delta_repeatability_summary$icc[delta_repeatability_summary$analyte %in% c("acetate", "propionate", "butyrate")]))`, and RDC–SDC rank correlations ranged from `r sprintf("%.2f", min(rdc_sdc_rank_summary$spearman_rho[rdc_sdc_rank_summary$analyte %in% c("acetate", "propionate", "butyrate")]))` to `r sprintf("%.2f", max(rdc_sdc_rank_summary$spearman_rho[rdc_sdc_rank_summary$analyte %in% c("acetate", "propionate", "butyrate")]))`.
+- SCFA response dispersion was not detectably different between obesity groups after multiplicity correction; this small ex vivo study motivates validation of donor-specific phenotypes but does not demonstrate benefit from personalized dietary intervention.
 
 ## 8.2 Microbiome Composition Findings
 
@@ -6448,8 +6949,8 @@ cat("- These correlations were specific to the 48H timepoint and SDC carbohydrat
 ## 8.4 Responder vs Non-Responder Analysis
 
 **Responder Classification:**
-- Responder status was defined separately for butyrate and propionate based on median delta SCFA changes (48H - 0H) within each carbohydrate condition.
-- This data-driven approach identified individuals who showed substantial SCFA responses relative to their peers in the same condition.
+- Responder status was defined separately for butyrate and propionate from median donor-level delta SCFA changes (48H - 0H) within each carbohydrate condition.
+- The labels are sample-dependent relative strata, not biological thresholds; A/B aliquot sensitivity is reported, and continuous delta remains the primary response outcome.
 
 **Overlap in Responder Status:**
 ```{r summary-responder-overlap, echo=FALSE, results='asis'}
@@ -6466,12 +6967,12 @@ if (exists("responder_wide") && nrow(responder_wide) > 0) {
   }
   
   if (exists("both_responder") && exists("both_non_responder")) {
-    total_subjects <- nrow(responder_wide)
-    pct_both_responder <- 100 * both_responder / total_subjects
-    pct_both_non_responder <- 100 * both_non_responder / total_subjects
-    cat(sprintf("- Of %d subjects with complete data, %d (%.1f%%) were responders for both butyrate and propionate.\n", total_subjects, both_responder, pct_both_responder))
+    total_donor_carbohydrate_records <- nrow(responder_wide)
+    pct_both_responder <- 100 * both_responder / total_donor_carbohydrate_records
+    pct_both_non_responder <- 100 * both_non_responder / total_donor_carbohydrate_records
+    cat(sprintf("- Of %d donor × carbohydrate records, %d (%.1f%%) were responders for both butyrate and propionate.\n", total_donor_carbohydrate_records, both_responder, pct_both_responder))
     cat(sprintf("- %d (%.1f%%) were non-responders for both SCFAs.\n", both_non_responder, pct_both_non_responder))
-    cat("- This partial overlap suggests that butyrate and propionate responses are partially independent, with some individuals showing selective responses to one SCFA but not the other.\n")
+    cat("- The incomplete overlap is descriptive; median splitting and repeated donor records do not establish independent response pathways.\n")
   } else {
     cat("- Responder groups were identified for both butyrate and propionate, with partial overlap between the two classifications.\n")
   }
@@ -6479,33 +6980,32 @@ if (exists("responder_wide") && nrow(responder_wide) > 0) {
 ```
 
 **Microbial Composition Differences:**
-- Alpha diversity comparisons between responder and non-responder groups at 48H revealed significant differences for both butyrate and propionate responders.
-- Differential abundance analyses (ANCOM-BC2 and MaAsLin2) identified distinct taxa associated with responder vs non-responder status for both butyrate and propionate.
-- These findings indicate that microbial community composition is predictive of SCFA response capacity, with specific taxa enriched in responder groups.
+- Exploratory 48H microbiome comparisons examine diversity, community structure, and differential abundance across median-defined response strata.
+- These concurrent, sample-dependent associations do not establish baseline prediction, mechanism, or a validated responder phenotype.
 
 **Absolute Abundance of Key Taxa in Responders:**
-- Absolute abundance analyses (using qPCR-derived total bacterial load) revealed differences in *Fusicatenibacter* and *Bifidobacterium* abundance between responders and non-responders at 48H.
-- These analyses provide insights into whether responder status is associated with true changes in microbial load (absolute abundance) versus compositional shifts (relative abundance).
+- qPCR-scaled absolute-abundance comparisons are retained as exploratory associations and should be interpreted by analyte and carbohydrate condition.
+- A significant result for one responder definition and a nonsignificant result for another do not by themselves demonstrate pathway specificity.
 - The comparison of absolute abundances helps distinguish between taxa that are truly more abundant in responders versus taxa that appear enriched due to compositional effects.
 
 ## 8.5 Integrated Conclusions
 
 **Key Insights:**
-1. **Carbohydrate structure matters:** Both RDC and SDC stimulate SCFA production, but the specific taxa and metabolic pathways involved differ, as evidenced by distinct differential abundance patterns and community structure changes.
+1. **Carbohydrate condition matters:** RDC and SDC showed distinct SCFA trajectories, although adjusted pairwise support varied by analyte and contrast. Community and taxon associations remain exploratory.
 
 2. **Obesity-group SCFA contrasts were nonsignificant but not equivalent:** None of the six primary obesity-minus-healthy-weight differences in 0-to-48-hour SCFA change was significant. Equivalence was not evaluable because no externally justified analyte-specific margin was available, so the data do not establish preserved or unaffected fermentation capacity.
 
-3. **Individual variation is substantial:** The pronounced interpersonal variation in SCFA responses, combined with distinct microbial signatures in responder vs non-responder groups, highlights the importance of personalized nutrition approaches.
+3. **Donor response differences are repeatable:** Continuous donor-level changes and ICCs show persistent high-to-low donor ordering across carbohydrate conditions. Obesity-group dispersion differences were not detected, but estimates are imprecise with eight donors per group.
 
-4. **Taxon–SCFA relationships are context-dependent:** Associations between specific taxa (e.g., *Fusicatenibacter*) and SCFA concentrations are strongest at specific timepoints (48H) and carbohydrate conditions (SDC), emphasizing the importance of considering temporal and dietary context in microbiome–metabolite relationships.
+4. **Taxon–SCFA relationships are exploratory and context-dependent:** Concurrent 48H associations vary by carbohydrate condition and require donor-aware, condition-specific validation. The observed relative *Fusicatenibacter*–butyrate relationship under SDC was not statistically significant.
 
-5. **Responder phenotypes have distinct microbial signatures:** The identification of microbial taxa associated with responder status suggests that microbiome composition may be predictive of individual SCFA response capacity, opening possibilities for microbiome-based precision nutrition strategies.
+5. **Median-defined response strata are hypothesis-generating:** Responder labels are sample-dependent, show A/B aliquot sensitivity, and are linked to concurrent rather than baseline microbiome measurements. They do not establish prediction or a validated phenotype.
 
 **Clinical and Translational Implications:**
-- The identification of responder vs non-responder groups, combined with distinct microbial signatures, suggests that microbiome profiling could inform personalized dietary recommendations.
-- The finding that *Fusicatenibacter* correlates with SCFA production in the SDC condition suggests that this taxon may be a key player in slow-digestible carbohydrate metabolism.
-- The partial independence of butyrate and propionate responder status indicates that different microbial pathways may drive production of these SCFAs, with implications for targeted dietary interventions.
-- Absolute abundance measurements provide critical context for understanding whether responder phenotypes reflect true increases in beneficial taxa (e.g., *Fusicatenibacter*, *Bifidobacterium*) or compositional shifts, informing strategies for microbiome modulation through dietary interventions.
+- This ex vivo study quantifies donor heterogeneity and nominates response phenotypes for validation; it does not show that microbiome profiling can guide personalized dietary treatment.
+- Mechanistic attribution to *Fusicatenibacter* requires isolate, substrate-use, flux, or other functional experiments.
+- Butyrate/propionate responder overlap and taxon associations should not be interpreted as independent pathways without an explicit interaction test and independent cohort.
+- Absolute abundance adds useful context but does not convert concurrent exploratory associations into predictive or causal evidence.
 
 **Future Directions:**
 - Functional metagenomics and metabolomics could identify the specific genes and pathways that drive SCFA production in responder groups.

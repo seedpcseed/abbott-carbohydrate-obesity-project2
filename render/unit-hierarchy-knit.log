@@ -1,0 +1,119 @@
+
+
+processing file: integrated-scfa-microbiome.Rmd
+1/111                                         
+2/111 [setup]                                 
+3/111                                         
+4/111 [libraries]                             
+5/111                                         
+6/111 [themes-and-palettes]                   
+7/111                                         
+8/111 [load-data]                             
+9/111                                         
+10/111 [summary-data]                          
+11/111                                         
+12/111 [scfa-carbohydrate-effects-prep]        
+13/111                                         
+14/111 [scfa-carbohydrate-effects-control]     
+15/111                                         
+16/111 [scfa-carbohydrate-effects-case]        
+17/111                                         
+18/111 [scfa-carbohydrate-effects-combined]    
+19/111                                         
+20/111 [scfa-carbohydrate-effects-stats]       
+21/111                                         
+22/111 [scfa-over-time]                        
+23/111                                         
+24/111 [scfa-mixed-effects]                    
+25/111                                         
+26/111 [butyrate-sdc-rdc-contrast]             
+27/111                                         
+28/111 [scfa-obesity-equivalence]              
+29/111                                         
+30/111 [alpha-diversity]                       
+31/111                                         
+32/111 [beta-diversity]                        
+33/111                                         
+34/111 [genus-aggregation]                     
+35/111                                         
+36/111 [genus-alluvial]                        
+37/111                                         
+38/111 [genus-validation]                      
+39/111                                         
+40/111 [ancombc2-analysis]                     
+41/111                                         
+42/111 [ancombc2-forest-plot]                  
+43/111                                         
+44/111 [ancombc2-carb-comparison]              
+45/111                                         
+46/111 [ancombc2-48h-analysis]                 
+47/111                                         
+48/111 [ancombc2-48h-forest-plot]              
+49/111                                         
+50/111 [ancombc2-48h-rdc-sdc-analysis]         
+51/111                                         
+52/111 [ancombc2-48h-rdc-sdc-forest-plot]      
+53/111                                         
+54/111 [maaslin2-analysis]                     
+55/111                                         
+56/111 [maaslin2-summary-table]                
+57/111                                         
+58/111 [maaslin2-visualizations]               
+59/111                                         
+60/111 [maaslin2-48h-rdc-sdc]                  
+61/111                                         
+62/111 [maaslin2-48h-volcano]                  
+63/111                                         
+64/111 [genus-alluvial-48h-carb]               
+65/111                                         
+66/111 [absolute-abundance-integration]        
+67/111                                         
+68/111 [absolute-abundance-conversion]         
+69/111                                         
+70/111 [qpcr-summary-boxplots]                 
+71/111                                         
+72/111 [fusicatenibacter-absolute-abundance]   
+73/111                                         
+74/111 [scfa-microbiome-integration]           
+75/111                                         
+76/111 [taxon-butyrate-relative]               
+77/111                                         
+78/111 [taxon-butyrate-visualizations]         
+79/111                                         
+80/111 [taxon-propionate-relative]             
+81/111                                         
+82/111 [taxon-propionate-visualizations]       
+83/111                                         
+84/111 [fusicatenibacter-scfa-correlations]    
+85/111                                         
+86/111 [responder-nonresponder]                
+87/111                                         
+88/111 [butyrate-responder-composition]        
+89/111                                         
+90/111 [butyrate-responder-da]                 
+91/111                                         
+92/111 [butyrate-responder-da-visualizations]  
+93/111                                         
+94/111 [propionate-responder-composition]      
+95/111                                         
+96/111 [propionate-responder-da]               
+97/111                                         
+98/111 [propionate-responder-da-visualizations]
+99/111                                         
+100/111 [fusicatenibacter-abs-responders]       
+101/111                                         
+102/111 [bifidobacterium-abs-responders]        
+103/111                                         
+104/111 [summary-butyrate-taxa]                 
+105/111                                         
+106/111 [summary-propionate-taxa]               
+107/111                                         
+108/111 [summary-fusicatenibacter]              
+109/111                                         
+110/111 [summary-responder-overlap]             
+111/111                                         
+output file: integrated-scfa-microbiome.knit.md
+
+/usr/bin/pandoc +RTS -K512m -RTS integrated-scfa-microbiome.knit.md --to html4 --from markdown+autolink_bare_uris+tex_math_single_backslash --output /home/patcseed/projects/abbott-carbohydrate-obesity-project2/render/integrated-scfa-microbiome.html --lua-filter /tmp/abbott-render-r/lib/R/library/rmarkdown/rmarkdown/lua/pagebreak.lua --lua-filter /tmp/abbott-render-r/lib/R/library/rmarkdown/rmarkdown/lua/latex-div.lua --embed-resources --standalone --variable bs3=TRUE --section-divs --template /tmp/abbott-render-r/lib/R/library/rmarkdown/rmd/h/default.html --no-highlight --variable highlightjs=1 --variable theme=united --mathjax --variable 'mathjax-url=https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML' --include-in-header /tmp/RtmpIpe1xs/rmarkdown-strb3ce5902a4a1.html --variable code_folding=hide --variable code_menu=1 
+
+Output created: /home/patcseed/projects/abbott-carbohydrate-obesity-project2/render/integrated-scfa-microbiome.html

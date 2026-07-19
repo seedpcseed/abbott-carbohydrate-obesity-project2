@@ -27,14 +27,14 @@ The safest current conclusion is:
 |---|---|---|---|
 | Carbohydrate condition and time are the primary drivers of SCFA production. | Supported | Mixed models found strong time effects for all five analytes and carbohydrate effects for acetate, butyrate, and propionate. BH-adjusted time p-values were approximately 4.9×10⁻⁴⁶ for acetate, 5.4×10⁻³² for propionate, 3.1×10⁻²⁷ for butyrate, 2.2×10⁻²⁴ for 5-aminovalerate, and 1.7×10⁻⁸ for succinate. Carbohydrate main-effect adjusted p-values were 0.011 for acetate, 0.042 for butyrate, and 0.0084 for propionate. | Incubation time and carbohydrate condition were associated with ex vivo SCFA concentrations. |
 | Both RDC and SDC increase acetate, butyrate, and propionate relative to no added carbohydrate. | Supported with qualification | The global carbohydrate effect on 48-hour deltas was significant for acetate (p=0.0479), butyrate (p=0.0420), and propionate (p=0.0209). The rendered report does not provide adjusted pairwise no-carb versus RDC and no-carb versus SDC contrasts. | Both carbohydrate conditions showed higher SCFA trajectories than the no-added-carbohydrate condition in the descriptive data; adjusted pairwise contrasts will determine which condition-specific differences are statistically supported. |
-| SDC produces the highest butyrate response. | Unsupported | With nested random effects for subject, A/B aliquot, and culture well, the prior direct mixed-model contrast estimated the SDC-versus-RDC difference in 0-to-48-hour butyrate change as 1.03 µM (95% CI, −0.85 to 2.91; Tukey-adjusted p=0.396). Re-render after the subject→aliquot nesting change to refresh this Tukey contrast. The concentration unit remains pending facility confirmation. | The butyrate increase was numerically greater under SDC than RDC, but the adjusted contrast was not significant and does not demonstrate SDC superiority. |
+| SDC produces the highest butyrate response. | Unsupported | With nested random effects for subject, A/B aliquot, and culture well (re-knit 2026-07-19), the direct mixed-model contrast estimated the SDC-versus-RDC difference in 0-to-48-hour butyrate change as 1.03 µM (95% CI, −0.85 to 2.91; Tukey-adjusted p=0.396). The concentration unit remains pending facility confirmation. | The butyrate increase was numerically greater under SDC than RDC, but the adjusted contrast was not significant and does not demonstrate SDC superiority. |
 | Obesity status does not substantially impair fermentation capacity. | Supported with qualification | After clustering on 16 independent numeric subjects (8 per group), with A/B aliquots and culture wells nested within subject, none of the six primary obesity-minus-healthy-weight differences in 0-to-48-hour change was significant. Estimates ranged from −1.19 to 3.43 in the concentration units labeled µM. No external biological equivalence margin or project-specific assay-precision bound was available, so formal TOST equivalence was not evaluable. | SCFA trajectories did not differ significantly by obesity status in this cohort (N=16 subjects). Equivalence was not evaluated because no externally justified margin was available; avoid “equivalent,” “preserved,” or “unaffected.” |
-| Healthy participants had higher alpha diversity than participants with obesity at 48 hours under no added carbohydrate. | Unsupported after multiplicity correction | Raw Wilcoxon p-values were 0.0080 for Shannon, 0.0113 for Observed, and 0.0433 for Simpson, but BH-adjusted p-values were 0.102, 0.102, and 0.260, respectively. | No Healthy–Obese alpha-diversity comparison remained significant after FDR correction. |
-| Carbohydrate, time, group, and group-by-carbohydrate each significantly affect beta diversity. | Unsupported as currently reported | The rendered PERMANOVA output provides only aggregate model results: all timepoints R²=0.171, p=0.001; 48 hours R²=0.0467, p=0.001. It does not expose term-specific R² or p-values. | Overall community composition differed across the modeled design. Term-specific effects require a complete PERMANOVA table. |
+| Healthy participants had higher alpha diversity than participants with obesity at 48 hours under no added carbohydrate. | Unsupported after multiplicity correction | After donor-level aggregation (one mean per donor × carbohydrate × timepoint), raw Wilcoxon p-values at 48 h under no added carbohydrate were 0.0104 for Shannon, 0.0070 for Observed, and 0.105 for Simpson; BH-adjusted values were approximately 0.094, 0.094, and 0.47. | No Healthy–Obese alpha-diversity comparison remained significant after FDR correction. |
+| Carbohydrate, time, group, and group-by-carbohydrate each significantly affect beta diversity. | Unsupported as currently reported | Donor-aware PERMANOVA (`strata = donor_id`) gave whole-model summaries: all timepoints R²=0.174, p=0.001; 48 hours R²=0.053, p=0.004. Term-specific R²/p are still not exported in the rendered table. | Overall community composition differed across the modeled design under donor-level strata. Term-specific effects still require a complete PERMANOVA term table. |
 | Bifidobacterium increases with both carbohydrates, more under SDC. | Supported with qualification | MaAsLin2 coefficients versus the reference condition were 0.745 for SDC (q=0.023) and 0.582 for RDC (q=0.091). These are not a direct SDC-versus-RDC contrast. | *Bifidobacterium* was positively associated with carbohydrate exposure, with stronger evidence for SDC versus the reference condition. Do not claim SDC exceeds RDC without a direct contrast. |
 | Differential abundance identifies multiple genera distinguishing RDC from SDC at 48 hours. | Unsupported in the plural | ANCOM-BC2 and MaAsLin2 each yielded one reported 48-hour RDC-versus-SDC genus at q<0.1. | One genus met the prespecified exploratory q<0.1 threshold in each 48-hour RDC-versus-SDC analysis. Report its identity, coefficient, interval, and method concordance. |
 | Interpersonal variation persists after accounting for group and carbohydrate. | Supported with qualification | Subject-level trajectories and random-intercept models show substantial between-subject heterogeneity, but no variance decomposition or repeatability statistic is reported. | SCFA responses varied markedly among analyzed donor IDs. Quantify this with variance components or intraclass correlations before using “dominant individual axis.” |
-| Butyrate and propionate responder pathways are partly independent. | Exploratory | The 2×2 overlap table is perfectly symmetric: 12 both responders, 12 both nonresponders, and 12 in each discordant cell. The denominator of 48 is subject-by-carbohydrate rows, not 48 independent participants, and the median split forces approximately equal groups within each stratum. | Median-defined butyrate and propionate response classifications showed incomplete overlap across subject-condition records. Do not infer pathway independence. |
+| Butyrate and propionate responder pathways are partly independent. | Exploratory | The 2×2 overlap table remains symmetric after the donor-level rebuild: 12 both responders, 12 both nonresponders, and 12 in each discordant cell. The denominator is **48 donor × carbohydrate records** (16 donors × 3 carbohydrates), not 48 people, and the median split forces approximately equal groups within each stratum. | Median-defined butyrate and propionate response classifications showed incomplete overlap across donor-condition records. Do not infer pathway independence. |
 | Butyrate responders have higher alpha diversity and distinct community structure. | Exploratory | Pooled RDC/SDC comparisons at 48 hours gave adjusted p=0.0167 for Observed, 0.00196 for Shannon, and 0.00348 for Simpson. Aggregate responder PERMANOVA gave R²=0.083, p=0.017. Responder labels and microbiome features come from the same experimental units, and carbohydrate-specific labels are pooled. | Median-defined butyrate response strata differed in 48-hour diversity in exploratory analyses. These analyses do not establish prediction and require carbohydrate-stratified, donor-aware validation. |
 | Propionate responders have a weaker community signature. | Exploratory | Alpha metrics were not significant after adjustment (all adjusted p≥0.225); aggregate PERMANOVA gave R²=0.049, p=0.041. | Median-defined propionate strata showed no alpha-diversity difference and a small aggregate beta-diversity association. |
 | Relative *Fusicatenibacter* abundance correlates with butyrate under SDC. | Unsupported as a significant association | At 48 hours under SDC, the linear model gave R²=0.0368, p=0.1569; Spearman ρ=0.287; N=56. Propionate results were R²≈0.004, p=0.655, ρ=-0.031. | Relative *Fusicatenibacter* abundance showed a weak, nonsignificant positive monotonic relationship with butyrate under SDC. |
@@ -86,18 +86,18 @@ The primary margin file is therefore deliberately blank. TOST p-values and pass/
 
 ### Community analyses
 
-- Overall Bray–Curtis PERMANOVA, all timepoints: R²=0.171, p=0.001.
-- Overall Bray–Curtis PERMANOVA, 48 hours: R²=0.0467, p=0.001.
-- These are whole-model statistics. They cannot be assigned to obesity group, carbohydrate, time, or the group-by-carbohydrate interaction.
-- Healthy–Obese alpha-diversity comparisons did not survive BH correction.
-- RDC-versus-SDC alpha-diversity comparisons at 48 hours were nonsignificant within both groups.
+- Overall Bray–Curtis PERMANOVA (donor-level strata), all timepoints: R²=0.174, p=0.001.
+- Overall Bray–Curtis PERMANOVA (donor-level strata), 48 hours: R²=0.053, p=0.004.
+- These remain whole-model statistics. They cannot be assigned to obesity group, carbohydrate, time, or the group-by-carbohydrate interaction until term-level tables are exported.
+- Healthy–Obese alpha-diversity comparisons after donor aggregation did not survive BH correction.
+- RDC-versus-SDC alpha-diversity comparisons at 48 hours should be re-checked from the donor-aware re-knit before quoting.
 
 ### Responder analyses
 
-- “Responder” means ΔSCFA at or above the median within an analyte-by-carbohydrate stratum.
+- “Responder” means ΔSCFA at or above the median within an analyte-by-carbohydrate stratum at the **donor** grain.
 - The classification is relative and sample-dependent. It is not a biological or clinical threshold.
-- The overlap denominator reported as “48 subjects” is 48 subject-by-carbohydrate records.
-- ANCOM-BC2 identified zero responder-associated taxa at q<0.1 for both butyrate and propionate; MaAsLin2 reported one association for each.
+- The overlap denominator is 48 donor × carbohydrate records (16 × 3).
+- ANCOM-BC2 / MaAsLin2 responder associations from the donor-aware re-knit remain exploratory; confirm method concordance before citing taxa.
 - All responder analyses should be labeled secondary and hypothesis-generating.
 
 ## Methods and sample-accounting audit
@@ -173,6 +173,8 @@ Absolute taxon abundance is calculated as relative abundance multiplied by qPCR-
 
 ## Analysis gate before claim-locked drafting
 
+> **Unit-hierarchy rebuild (2026-07-19):** Baseline preserved at git `67bd320`. Donor-aware re-knit completed (`render/integrated-scfa-microbiome.html`). Community/responder cells below were refreshed from that render where numbers are quoted; remaining exploratory DA taxa lists and Fusicatenibacter responder p-values should be treated as provisional until method-by-method concordance is reconfirmed in a dedicated pass. Nested Python SCFA obesity contrasts (N=16) remain the SCFA group authority. See [`docs/unit-hierarchy-reanalysis-plan.2026-07-19.md`](unit-hierarchy-reanalysis-plan.2026-07-19.md) and `integrated/metadata/`.
+
 ### Priority 0: blocking
 
 1. **Reconcile exclusions.** The corrected SCFA analysis contains 16 independent subjects (8 per group) and 32 A/B aliquots from a planned 20-subject submission sheet; document why four planned subjects are absent and why two obesity no-added-carbohydrate 48-hour observations are missing.
@@ -238,8 +240,9 @@ Do not place *Fusicatenibacter*, “responder phenotypes,” or precision nutrit
 
 ## Source ledger
 
-- `integrated/integrated-scfa-microbiome.Rmd`: nested SCFA parsing (subject → A/B aliquot → well), nested mixed model, obesity-group confidence-interval table, and precision-frontier figure.
-- `integrated/integrated-scfa-microbiome.html`: legacy render that predates the nested-unit correction; do not use its SCFA group results for the revised claim.
+- `integrated/integrated-scfa-microbiome.Rmd`: nested SCFA + microbiome `donor_id` clustering, donor-aggregated alpha tests, donor-aware RE/strata.
+- `render/integrated-scfa-microbiome.html` (and copy under `integrated/`): 2026-07-19 donor-aware re-knit; prefer this over any earlier HTML/PDF.
+- `integrated/metadata/`: Phase 0 inventory and canonical experimental-unit tables.
 - `scfa_metabolomics/scfa-project2-analysis-improved-v2.Rmd`: legacy standalone workflow that collapses A/B and averages R/S wells; retained as historical source only.
 - `scfa_metabolomics/obesity_equivalence_analysis.py`: corrected nested-well trajectory models, 90% and 95% model intervals, donor-level bootstrap sensitivity intervals, diagnostics, influence checks, and conditional TOST calculations.
 - `scfa_metabolomics/equivalence_margins.csv`: machine-readable margin lock; version `v0.1-unlocked` contains no numerical bounds.
@@ -254,6 +257,12 @@ Do not place *Fusicatenibacter*, “responder phenotypes,” or precision nutrit
 ### Begin full manuscript drafting when
 
 - [x] Subject → A/B aliquot → culture-well nesting is documented and implemented for SCFA.
+- [x] Microbiome `donor_id` demotes A/B from the top-level clustering unit; RE/strata use `donor_id`.
+- [x] Donor-aware integrated HTML re-knit produced (`render/integrated-scfa-microbiome.html`).
+- [ ] Equivalence margins are locked from external evidence (still unavailable).
+- [ ] Facility unit / CV / LOQ confirmation is complete.
+- [ ] Term-level PERMANOVA table is exported (still whole-model only).
+- [ ] Responder language is explicitly exploratory or independently validated.
 - [ ] Analyzed participant N and exclusions are reconciled.
 - [ ] Direct adjusted carbohydrate contrasts are available.
 - [ ] Term-level PERMANOVA and dispersion results are available.
