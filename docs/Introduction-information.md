@@ -1,7 +1,7 @@
 # Notes for the project introduction
 
 ## Paper that provided in vitro evidence to support this work
-https://pmc-ncbi-nlm-nih-gov.ezproxy.galter.northwestern.edu/articles/PMC9002105/
+https://www.frontiersin.org/journals/nutrition/articles/10.3389/fnut.2022.992682/full
 
 ## Related papers for the project
 

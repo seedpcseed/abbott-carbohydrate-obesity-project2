@@ -35,3 +35,4 @@ microbiome_analysis/references/SILVA_138.2.bacteria_only.sintax_cache.bin
 
 integrated/cache/
 integrated/maaslin2*
+.gstack/
