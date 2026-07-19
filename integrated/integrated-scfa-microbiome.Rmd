@@ -485,6 +485,8 @@ All visualizations were created using `ggplot2` with a consistent color palette 
 
 
 # 4. Summary Data
+We first summarize the analytical sample available for SCFA metabolomics and 16S profiling. To establish denominators for subsequent inference, we tabulated SCFA and microbiome records by obesity group, carbohydrate condition, and (where applicable) timepoint.
+
 
 We begin with a concise overview of the sample counts by obesity status (Control vs Case) and carbohydrate condition across both SCFA and microbiome datasets.
 
@@ -558,15 +560,11 @@ if (knitr::is_html_output()) {
 
 ## 5.1 Section Overview
 
-This section reproduces and extends the SCFA analyses, focusing on:
-
-- Carbohydrate type effects (combined and stratified by group)
-- SCFA concentrations over time
-- Advanced mixed-effects modeling for SCFA trajectories
-
-We first quantify donor-level SCFA response magnitudes (48h – 0h), their repeatability across carbohydrates, and their dispersion by obesity group. We then visualize donor-averaged SCFA concentrations over time and fit linear mixed-effects models with nested subject, aliquot, and culture-well random effects to test fixed effects of group, carbohydrate type, time, and their interactions on absolute SCFA concentrations.
+To characterize fermentation outputs under the nested culture design, this section reproduces and extends the SCFA analyses across three layers: donor-level 0-to-48-hour response variation (repeatability and obesity-group dispersion), donor-averaged concentration trajectories over time, and mixed-effects models of absolute concentrations with nested subject, aliquot, and culture-well random effects.
 
 ## 5.2 Donor-Level SCFA Response Variation
+To quantify interpersonal heterogeneity in fermentation responses, we reduced SCFA concentrations to one 0-to-48-hour change per independent donor × analyte × carbohydrate and then evaluated repeatability, obesity-group dispersion, and donor-aware fixed effects.
+
 
 ```{r scfa-carbohydrate-effects-prep, echo=FALSE, include=FALSE}
 # Prepare data for all plots (shared across chunks)
@@ -832,6 +830,8 @@ delta_group_dispersion_summary <- primary_active_delta %>%
 ```
 
 ### 5.2.1 Donor Response Profiles and Cross-Condition Repeatability
+To test whether donors who respond strongly under one carbohydrate also respond strongly under another, we profiled donor-level ΔSCFA trajectories across No Added Carb, RDC, and SDC and estimated donor ICC and RDC–SDC rank concordance.
+
 
 ```{r scfa-donor-response-profiles, echo=FALSE, fig.width=14, fig.height=8, cache=FALSE, dependson="scfa-carbohydrate-effects-prep"}
 donor_response_profile_plot <- delta_data %>%
@@ -911,6 +911,8 @@ if (knitr::is_html_output()) {
 ```
 
 ### 5.2.2 Obesity-Group Dispersion of Donor-Level Responses
+To evaluate whether adolescents with obesity show greater (or lesser) interpersonal scatter in SCFA response than healthy-weight donors, we compared donor-level ΔSCFA dispersions between groups within each active carbohydrate condition.
+
 
 ```{r scfa-obesity-dispersion, echo=FALSE, fig.width=12, fig.height=10, cache=FALSE, dependson="scfa-carbohydrate-effects-prep"}
 obesity_dispersion_plot <- primary_active_delta %>%
@@ -995,6 +997,8 @@ if (knitr::is_html_output()) {
 ```
 
 ### 5.2.3 Donor-Aware Statistical Summary
+To formally test carbohydrate and obesity-group effects on donor-level 0-to-48-hour SCFA changes while respecting repeated measures within person, we fit mixed models of the form `delta ~ group * carbohydrate + (1 | donor)` and report adjusted contrasts.
+
 
 ```{r scfa-carbohydrate-effects-stats, echo=FALSE, cache=FALSE, dependson="scfa-carbohydrate-effects-prep"}
 if (knitr::is_html_output()) {
@@ -1023,6 +1027,8 @@ if (knitr::is_html_output()) {
 ```
 
 ## 5.3 SCFA Concentrations Over Time
+To characterize fermentation trajectories in the nested culture design, we visualized donor-averaged SCFA concentrations from 0H to 48H stratified by carbohydrate condition and obesity group.
+
 
 ```{r scfa-over-time, echo=FALSE, fig.width=14, fig.height=8, cache=FALSE}
 plot_time_series <- tryCatch({
@@ -1081,6 +1087,8 @@ if (!is.null(plot_time_series)) {
 ```
 
 ## 5.4 Advanced Statistical Modeling: Mixed-Effects Models
+To test fixed effects of obesity group, carbohydrate type, and incubation time on absolute SCFA concentrations while accounting for the locked biological hierarchy, we fit linear mixed-effects models with nested random intercepts for donor, A/B aliquot, and culture well.
+
 
 ```{r scfa-mixed-effects, echo=FALSE}
 # Mixed-effects models for absolute SCFA concentrations
@@ -1148,7 +1156,7 @@ if (knitr::is_html_output()) {
 
 ### 5.4.1 Variance Decomposition of SCFA Concentrations
 
-After removing the designed experimental effects (obesity group, carbohydrate, time), most leftover variation in SCFA concentrations is still residual noise—not donor, aliquot, or culture-well structure. Donors and aliquots matter somewhat (especially for succinate and acetate); culture wells barely do.
+To partition leftover SCFA concentration variance after fixed experimental effects, we extracted nested random-effect and residual variance components from the concentration LMMs (donor / A–B aliquot / culture well / residual). After removing the designed experimental effects (obesity group, carbohydrate, time), most leftover variation is still residual noise—not donor, aliquot, or culture-well structure. Donors and aliquots matter somewhat (especially for succinate and acetate); culture wells barely do.
 
 Each stacked bar below is one SCFA from the nested concentration LMM already adjusted for fixed effects of group × carbohydrate × time. What is left is split among nested random pieces: **Donor** (person-to-person differences that persist after group/carb/time), **Aliquot** (A vs B splits of the same stool—processing / subsample noise), **Culture well** (R1/R2 or S1/S2 wells nested under aliquot × carbohydrate—true culture replicate noise), and **Residual** (measurement error, unmodeled biology, leftover within-well scatter). Bars sum to 100% of random + residual variance only; they do **not** show how much variance group, carbohydrate, or time explained.
 
@@ -1258,6 +1266,8 @@ After accounting for group, carbohydrate, and time, leftover SCFA concentration 
 **Practical implications.** Donor remains the biologically meaningful clustering unit; aliquot is a technical nesting layer worth retaining (especially for acetate). Averaging wells is justified. Averaging A/B aliquots may help acetate more than butyrate. Claims of “individual response” from concentration alone should stay qualified: donor variance is clear, yet residual still dominates. This panel does **not** quantify fixed Group/Carb/Time effect sizes (see ANOVA/contrasts above) and does **not** address whether ΔSCFA responses are more repeatable than raw concentrations (see donor ICC / RDC–SDC rank analyses in Section 5.2).
 
 ### 5.4.2 Adjusted SDC-versus-RDC Butyrate Response Contrast
+To test whether SDC produces a greater 0-to-48-hour butyrate increase than RDC after adjusting for the nested design, we contrasted carbohydrate-specific time changes within the butyrate mixed model and applied Tukey adjustment among the three carbohydrate comparisons.
+
 
 ```{r butyrate-sdc-rdc-contrast, echo=FALSE, cache=FALSE}
 # The response estimand is the difference in 0-to-48-hour change:
@@ -1383,6 +1393,8 @@ The mean 0-to-48-hour butyrate change was `r if (exists("butyrate_sdc_mean_delta
 This estimate uses the corrected biological-unit hierarchy: numeric subject (independent person), A/B sample aliquots nested within subject, and R1/R2 or S1/S2 culture wells nested within aliquot. The concentration unit remains provisional pending facility confirmation.
 
 ## 5.5 Obesity-Group SCFA Trajectory Contrasts
+To test whether obesity status alters the 0-to-48-hour SCFA response under RDC or SDC, we estimated obesity-minus-healthy-weight differences in change for acetate, propionate, and butyrate and examined confidence intervals against a no-difference null (equivalence margins remain unlocked).
+
 
 ```{r scfa-obesity-equivalence, echo=FALSE, cache=FALSE}
 equivalence_results_path <- file.path(
@@ -1511,9 +1523,11 @@ These findings set the stage for the integrated analyses in Section 7, where we 
 
 ## 6.1 Section Overview
 
-This section reproduces key microbiome results, including alpha and beta diversity, community composition, and differential abundance, using the harmonized metadata and styling. We focus first on within-sample diversity (alpha diversity) to summarize richness and evenness patterns across groups, carbohydrate conditions, and timepoints, then move to between-sample diversity (beta diversity) and taxon-level changes.
+This section reproduces key microbiome results, including alpha and beta diversity, community composition, and differential abundance, using the harmonized metadata and styling. To test within-sample diversity patterns, we first compute alpha metrics across groups, carbohydrate conditions, and timepoints. To test between-sample community structure, we then examine Bray–Curtis beta diversity and PERMANOVA. To identify taxon-level shifts, we finish with composition summaries and differential abundance (ANCOM-BC2, MaAsLin3, and ALDEx3). Claim-facing donor-aware alpha/PERMANOVA exports and the focal Fusicatenibacter analysis are summarized in Section 6.7.
 
 ## 6.2 Alpha Diversity
+To assess within-sample community richness and evenness, we computed Observed, Shannon, and Simpson indices at 0H and 48H. Faceted Wilcoxon tables below are descriptive within-stratum contrasts; claim-facing donor-aware alpha inference is reported with the versioned mixed-model exports in Section 6.7.2.
+
 
 ```{r alpha-diversity, echo=FALSE, fig.width=18, fig.height=8, cache=FALSE}
 # Alpha diversity metrics: Observed, Shannon, Simpson at 0H and 48H
@@ -1771,6 +1785,8 @@ if (knitr::is_html_output()) {
 ```
 
 ## 6.3 Beta Diversity
+To test whether overall community structure differs by obesity group, carbohydrate condition, and time, we quantified Bray–Curtis dissimilarities, visualized PCoA ordinations, and applied PERMANOVA with donor-aware stratification. Claim-facing term-level PERMANOVA and betadisper summaries at the donor-aggregated grain are also loaded in Section 6.7.2.
+
 
 ```{r beta-diversity, echo=FALSE, fig.width=14, fig.height=10, cache=FALSE}
 # Beta diversity and community structure using Bray-Curtis distance
@@ -2025,9 +2041,13 @@ if (knitr::is_html_output()) {
 ```
 
 ## 6.4 Community Composition
+To describe compositional shifts at the genus level, we aggregated ASVs to genus, visualized relative-abundance barplots and alluvial flows across carbohydrate and time, and highlighted taxa flagged by differential abundance analyses.
+
 
 
 ### 6.4.1 Genus-Level Aggregation and Overview
+To summarize community composition across experimental strata, we agglomerated features to genus and displayed the most abundant taxa by obesity group, carbohydrate, and timepoint.
+
 
 ```{r genus-aggregation, echo=FALSE, fig.width=14, fig.height=10, cache=FALSE}
 # Create genus-level aggregation using tax_glom
@@ -2081,6 +2101,8 @@ print(genus_barplot_48h)
 ```
 
 ### 6.4.2 Genus Composition Changes from 0H to 48H by Carbohydrate Type
+To visualize how genus relative abundances reallocate between baseline and 48H within each carbohydrate condition, we constructed alluvial diagrams linking 0H and 48H compositions for the most abundant and differentially abundant genera.
+
 
 ```{r genus-alluvial, echo=FALSE, fig.width=14, fig.height=10, cache=FALSE}
 # Prepare data for alluvial diagrams showing flow from 0H to 48H
@@ -2290,6 +2312,8 @@ print(combined_alluvial)
 ```
 
 ### 6.4.3 Validation: Bar Plots of Genus Abundances by Timepoint and Carbohydrate
+To cross-check the alluvial summaries with conventional stacked barplots, we plotted mean genus relative abundances by timepoint and carbohydrate for the same high-abundance and DA-priority taxa.
+
 
 ```{r genus-validation, echo=FALSE, fig.width=14, fig.height=10, cache=FALSE}
 # Extract genus-level data for validation bar plots
@@ -2439,10 +2463,14 @@ print(genus_validation_plot)
 ```
 
 ## 6.5 Differential Abundance and Predictive Modeling
+To identify taxa associated with experimental factors, we applied complementary differential-abundance frameworks: ANCOM-BC2 on relative abundances in this report, and MaAsLin3 plus ALDEx3 on qPCR-scaled / scale-uncertain abundances from versioned additional-analyses exports.
+
 
 Differential abundance analysis identifies microbial taxa that differ significantly between experimental conditions. We applied complementary methods: ANCOM-BC2 on relative abundances in this report, plus MaAsLin3 and ALDEx3 on qPCR-scaled / scale-uncertain abundances from the locked BioC 3.23 additional-analyses environment (loaded as versioned tables). LEfSe is not implemented in this workflow.
 
 ### 6.5.1 ANCOM-BC2 Analysis
+To test compositional differential abundance while modeling donor as a random effect, we fit ANCOM-BC2 at genus level with group and carbohydrate–time structure encoded for ANCOMBC 2.4 compatibility.
+
 
 ANCOM-BC2 models microbial abundance using a generalized linear mixed-effects model with bias correction for compositional data. We tested the main effects of group (Healthy vs Obese), carbohydrate type, timepoint, and carbohydrate-by-time contrasts. Because ANCOMBC 2.4 in the render environment does not parse `*` / `:` interaction tokens in `fix_formula`, carbohydrate × timepoint is encoded as an explicit `carb_time` factor (reference = No Added Carb at 0H).
 
@@ -2567,6 +2595,8 @@ if (nrow(ancombc2_tbl) > 0 && "q_value" %in% names(ancombc2_tbl)) {
 ```
 
 ### 6.5.2 ANCOM-BC2 Forest Plots
+To summarize the magnitude and uncertainty of ANCOM-BC2 associations at FDR q < 0.1, we plotted log-fold changes with 95% confidence intervals by effect term.
+
 
 ```{r ancombc2-forest-plot, echo=FALSE, fig.width=16, fig.height=12, cache=FALSE, dependson="ancombc2-analysis"}
 # Prepare data for forest plot
@@ -2668,6 +2698,8 @@ if (exists("ancombc2_tbl") && nrow(ancombc2_tbl) > 0 && "q_value" %in% names(anc
 ```
 
 ### 6.5.3 ANCOM-BC2 Side-by-Side Comparison: Carbohydrate Effects
+To compare carbohydrate-related ANCOM-BC2 contrasts for RDC and SDC under the report’s carb_time encoding, we aligned effect sizes for taxa with significant or opposing carbohydrate-linked signals.
+
 
 ```{r ancombc2-carb-comparison, echo=FALSE, fig.width=14, fig.height=10, cache=FALSE, dependson="ancombc2-analysis"}
 # Compare RDC vs No Carb and SDC vs No Carb effects side by side
@@ -2823,6 +2855,8 @@ if (exists("ancombc2_tbl") && nrow(ancombc2_tbl) > 0 && "effect" %in% names(anco
 ```
 
 ### 6.5.4 ANCOM-BC2 48H Timepoint Analysis
+To test carbohydrate and obesity-group associations specifically at the 48H endpoint, we refit ANCOM-BC2 on 48H samples only.
+
 
 ```{r ancombc2-48h-analysis, echo=FALSE, cache=FALSE}
 # Rebuild cleaned object if upstream chunk objects are missing (e.g. cache skip).
@@ -2929,6 +2963,8 @@ if (nrow(ancombc2_48h_tbl) > 0 && "q_value" %in% names(ancombc2_48h_tbl)) {
 ```
 
 ### 6.5.5 ANCOM-BC2 48H Forest Plots
+To display significant 48H ANCOM-BC2 associations, we generated forest plots of log-fold changes with confidence intervals.
+
 
 ```{r ancombc2-48h-forest-plot, echo=FALSE, fig.width=14, fig.height=10, cache=FALSE, dependson="ancombc2-48h-analysis"}
 # Prepare data for 48H forest plot
@@ -3020,7 +3056,7 @@ if (exists("ancombc2_48h_tbl") && nrow(ancombc2_48h_tbl) > 0 && "q_value" %in% n
 
 ### 6.5.6 ANCOM-BC2 RDC vs SDC at 48H
 
-To directly compare the effects of RDC versus SDC at the 48H timepoint, we performed a focused ANCOM-BC2 analysis including only RDC and SDC samples at 48H, excluding the No Added Carb condition.
+To test whether genus abundances differ between RDC and SDC at the 48H endpoint, we performed a focused ANCOM-BC2 analysis including only RDC and SDC samples at 48H (excluding No Added Carb), with RDC as the reference carbohydrate level.
 
 ```{r ancombc2-48h-rdc-sdc-analysis, echo=FALSE, cache=FALSE}
 # Rebuild cleaned object if needed
@@ -3145,6 +3181,8 @@ if (!is.null(ancombc2_48h_rdc_sdc_res) && !is.null(ancombc2_48h_rdc_sdc_res$res)
 ```
 
 ### 6.5.7 Forest Plot: RDC vs SDC at 48H
+To visualize the RDC-versus-SDC ANCOM-BC2 contrast at 48H, we plotted significant log-fold changes (positive values indicate higher abundance under SDC).
+
 
 ```{r ancombc2-48h-rdc-sdc-forest-plot, echo=FALSE, fig.width=12, fig.height=10, cache=FALSE, dependson="ancombc2-48h-rdc-sdc-analysis"}
 # Prepare data for 48H RDC vs SDC forest plot
@@ -3271,7 +3309,7 @@ if (exists("ancombc2_48h_rdc_sdc_tbl") && nrow(ancombc2_48h_rdc_sdc_tbl) > 0 && 
 
 ### 6.5.8 MaAsLin3 Analysis (qPCR-scaled)
 
-MaAsLin3 is the claim-facing multivariable differential-abundance method in the additional-analyses plan. Models were fit outside this render environment (R 4.6 / Bioconductor 3.23) on **qPCR-scaled** genus abundances (`relative × gene_copies_per_ul`) with formula `~ carbohydrate * timepoint + obesity_group + (1|donor_id)`. This section loads the versioned abundance table from `integrated/results/additional_analyses_2026-07-19/absolute_da/`.
+To test multivariable associations on **qPCR-scaled** genus abundances (`relative × gene_copies_per_ul`), we loaded versioned MaAsLin3 abundance results from the additional-analyses plan (fit outside this render environment in R 4.6 / Bioconductor 3.23) using `~ carbohydrate * timepoint + obesity_group + (1|donor_id)`, with `normalization = NONE` and `transform = LOG`. This section reads `integrated/results/additional_analyses_2026-07-19/absolute_da/`.
 
 ```{r maaslin3-analysis, echo=FALSE, cache=FALSE}
 # Rmd lives in integrated/; path is relative to that knit cwd
@@ -3326,6 +3364,8 @@ if (!file.exists(maaslin3_abundance_path)) {
 ```
 
 ### 6.5.9 MaAsLin3 Summary Table
+To report claim-facing multivariable hits alongside compositional ANCOM-BC2 findings, we tabulated associations with individual FDR q < 0.1 from MaAsLin3 and merged them with significant ANCOM-BC2 rows.
+
 
 ```{r maaslin3-summary-table, echo=FALSE, dependson="maaslin3-analysis"}
 if (nrow(maaslin3_tbl) > 0) {
@@ -3388,6 +3428,8 @@ if (nrow(maaslin3_tbl) > 0) {
 ```
 
 ### 6.5.10 MaAsLin3 Visualizations
+To summarize MaAsLin3 abundance associations, we plotted significant coefficients by contrast and generated a volcano plot of effect size versus FDR significance.
+
 
 ```{r maaslin3-visualizations, echo=FALSE, fig.width=14, fig.height=16, cache=FALSE, dependson="maaslin3-analysis"}
 if (nrow(maaslin3_tbl) > 0 && any(maaslin3_tbl$q < 0.1, na.rm = TRUE)) {
@@ -3481,6 +3523,8 @@ if (nrow(maaslin3_tbl) > 0 && any(maaslin3_tbl$q < 0.1, na.rm = TRUE)) {
 ```
 
 ### 6.5.11 MaAsLin3 Carbohydrate × Time Interactions
+To examine carbohydrate-by-time structure in the MaAsLin3 model (No Added Carb / 0H reference), we extracted RDC×48H and SDC×48H interaction terms and displayed focal Fusicatenibacter coefficients.
+
 
 MaAsLin3 uses No-Added-Carb and 0H as reference levels, so the head-to-head RDC-versus-SDC contrast at 48H is not a single coefficient. The scientifically adjacent terms are the carbohydrate × 48H interactions (`RDC:timepoint48H`, `SDC:timepoint48H`). Direct RDC-versus-SDC at 48H remains in the ANCOM-BC2 section above.
 
@@ -3524,6 +3568,8 @@ if (nrow(maaslin3_tbl) > 0) {
 ```
 
 ### 6.5.12 MaAsLin3 Interaction Volcano Plot
+To visualize MaAsLin3 carbohydrate × 48H interaction estimates, we plotted coefficients against −log10(individual q) separately for RDC×48H and SDC×48H.
+
 
 ```{r maaslin3-interaction-volcano, echo=FALSE, fig.width=12, fig.height=10, cache=FALSE, dependson="maaslin3-carb-time-interactions"}
 if (exists("maaslin3_ixn_tbl") && nrow(maaslin3_ixn_tbl) > 0) {
@@ -3580,7 +3626,7 @@ if (exists("maaslin3_ixn_tbl") && nrow(maaslin3_ixn_tbl) > 0) {
 
 ### 6.5.13 ALDEx3 Scale-Uncertainty Sensitivity
 
-ALDEx3 is the plan’s qPCR-scale-uncertainty sensitivity (Priority B). Versioned fits use `sample.sm` with `s.mu = log2(gene_copies_per_ul)` and a provisional `s.var` grid because facility qPCR technical variance is unavailable; primary displays use **s.var = 0.25**. Counts were constructed as `round(genus_relative × asv_read_depth)` with high-zero genera amalgamated to `other`. Treat ALDEx3 as supportive sensitivity alongside MaAsLin3, not as the sole claim-facing screen.
+To evaluate whether qPCR-scale uncertainty alters multivariable abundance conclusions, we loaded ALDEx3 mixed-model results (Priority B sensitivity) that combine Dirichlet-multinomial sequencing uncertainty with an external total-abundance scale (`sample.sm`; `s.mu = log2(gene_copies_per_ul)`; provisional `s.var` grid). Primary displays use **s.var = 0.25**. Counts were constructed as `round(genus_relative × asv_read_depth)` with high-zero genera amalgamated to `other`. Treat ALDEx3 as supportive sensitivity alongside MaAsLin3, not as the sole claim-facing screen.
 
 ```{r aldex3-analysis, echo=FALSE, cache=FALSE}
 absolute_da_dir <- file.path("results", "additional_analyses_2026-07-19", "absolute_da")
@@ -3729,6 +3775,8 @@ if (nrow(aldex3_tbl) > 0) {
 ```
 
 ### 6.5.14 Three-Method Concordance (ANCOM-BC2 / MaAsLin3 / ALDEx3)
+To assess agreement across relative and qPCR-scaled frameworks, we compared coefficient directions among ANCOM-BC2, MaAsLin3, and ALDEx3 for focus effects and for Fusicatenibacter specifically.
+
 
 Coefficient **directions** are compared across ANCOM-BC2 (relative), MaAsLin3 (qPCR-scaled), and ALDEx3 (s.var = 0.25). Effect labels are loosely aligned; interaction estimands are not identical, so discordance is diagnostic rather than an automatic contradiction.
 
@@ -3809,10 +3857,14 @@ if (file.exists(concord_fusi_path)) {
 ```
 
 ## 6.7 Versioned Additional-Analyses Results
+To reproduce Priority A/B analyses from the locked additional-analyses pipeline without re-fitting them in this render environment, we load versioned tables for SCFA contrasts, donor-aware diversity models, total 16S load, and the focal Fusicatenibacter–butyrate estimand.
+
 
 The blocks below load Priority A/B exports from `results/additional_analyses_2026-07-19/` (exact well match, donor-aware models). They do not re-fit the BioC 3.23 / Python pipelines inside this knit.
 
 ### 6.7.1 Carbohydrate-change SCFA contrasts
+To test pairwise carbohydrate differences in 0-to-48-hour SCFA change for acetate, propionate, and butyrate under the donor-aware design, we display the exported adjusted contrast table.
+
 
 ```{r addanal-scfa-contrasts, echo=FALSE, cache=FALSE}
 addanal_root <- file.path("results", "additional_analyses_2026-07-19")
@@ -3843,6 +3895,8 @@ if (file.exists(scfa_contr_path)) {
 ```
 
 ### 6.7.2 Donor-aware alpha contrasts and PERMANOVA / betadisper
+To test the role of obesity group, carbohydrate, and their interaction in alpha and beta diversity after respecting donor nesting, we report donor-aware alpha group contrasts together with donor-aggregated PERMANOVA term tables and 48H betadisper tests.
+
 
 ```{r addanal-alpha-permanova, echo=FALSE, cache=FALSE}
 alpha_path <- file.path(addanal_root, "alpha_permanova", "alpha_group_contrasts.csv")
@@ -3883,6 +3937,8 @@ if (file.exists(beta_path)) {
 ```
 
 ### 6.7.3 Total bacterial load (qPCR)
+To test whether total bacterial 16S load trajectories differ by carbohydrate condition at the donor level, we summarize exported Δlog10(load) contrasts for RDC and SDC relative to No Added Carb and to each other.
+
 
 ```{r addanal-total-load, echo=FALSE, cache=FALSE}
 load_path <- file.path(addanal_root, "total_load", "donor_contrasts.csv")
@@ -3904,6 +3960,8 @@ if (file.exists(load_path)) {
 ```
 
 ### 6.7.4 Focal qPCR-scaled Fusicatenibacter–butyrate (claim-facing)
+To test whether the SDC-attributable 0-to-48-hour change in qPCR-scaled Fusicatenibacter abundance associates with the SDC-attributable change in butyrate across independent donors, we report the prespecified continuous donor-level estimand with permutation and bootstrap uncertainty, plus specificity and leave-one-donor-out summaries.
+
 
 ```{r addanal-focal-fusi, echo=FALSE, cache=FALSE, fig.width=8, fig.height=6}
 focal_dir <- file.path(addanal_root, "focal_fusicatenibacter")
@@ -3969,6 +4027,8 @@ if (file.exists(loo_path)) {
 ```
 
 ### 6.4.4 Genus Composition at 48H: No Carbohydrate vs RDC vs SDC
+To compare endpoint community composition across carbohydrate conditions at 48H, we visualized genus relative abundances for No Added Carb, RDC, and SDC side by side, emphasizing abundant taxa and DA-priority genera.
+
 
 This alluvial plot shows the comparison of genus-level composition at 48H across the three carbohydrate conditions (No Added Carb, RDC, and SDC), highlighting the top 25 most abundant genera and including key differentially abundant taxa.
 
@@ -4175,10 +4235,11 @@ if (length(da_genera_48h_found) > 0) {
 ```
 
 ## 6.6 qPCR-Scaled Abundances
-
-Relative abundance data (compositional) can mask true changes in microbial load. Here we scale genus relative abundances by total bacterial 16S qPCR load to obtain **qPCR-scaled abundances** (estimated 16S target equivalents per µL). This is not a genus-specific qPCR assay. Plots in this section currently use the facility `genome_copies_per_ul*` column already embedded in the nested workflow; newer claim-facing tables prefer `gene_copies_per_ul` and exact well matching (`integrated/results/additional_analyses_2026-07-19/`).
+To convert compositional 16S profiles into load-aware quantities, we scaled genus relative abundances by total bacterial 16S qPCR load to obtain **qPCR-scaled abundances** (estimated 16S target equivalents per µL). Relative abundance alone can mask true changes in microbial load; this is not a genus-specific qPCR assay. Plots in this section currently use the facility `genome_copies_per_ul*` column already embedded in the nested workflow; newer claim-facing tables prefer `gene_copies_per_ul` and exact well matching (`integrated/results/additional_analyses_2026-07-19/`).
 
 ### 6.6.1 Integration of qPCR Data
+To match total bacterial load to sequenced samples, we joined facility qPCR records to phyloseq metadata via customer label and quantified matching completeness.
+
 
 ```{r absolute-abundance-integration, echo=FALSE, cache=TRUE, cache.path="cache/integrated-"}
 # Load qPCR data
@@ -4253,6 +4314,8 @@ cat("- Match rate:", round(matched_samples / nrow(sample_meta_abs) * 100, 1), "%
 ```
 
 ### 6.6.2 Conversion to Absolute Abundances
+To obtain qPCR-scaled genus abundances, we multiplied genus relative abundances by matched total 16S load for each sample.
+
 
 ```{r absolute-abundance-conversion, echo=FALSE, cache=TRUE, cache.path="cache/integrated-"}
 # Convert relative abundances to absolute abundances
@@ -4291,6 +4354,8 @@ cat("- Samples without qPCR data:", sum(is.na(genome_copies)), "\n")
 ```
 
 ### 6.6.3 Absolute Abundance Plots by Group, Carbohydrate, and Timepoint
+To describe total bacterial load distributions across strata, we plotted qPCR load by obesity group, carbohydrate, and timepoint.
+
 
 ```{r qpcr-summary-boxplots, echo=FALSE, fig.width=14, fig.height=8, cache=FALSE}
 # Create summary boxplots of qPCR data (genomes/μL) by group, carbohydrate, and timepoint
@@ -4396,6 +4461,8 @@ print(table(qpcr_plot_data$group, useNA = "ifany"))
 ```
 
 ### 6.6.4 Fusicatenibacter qPCR-Scaled Abundance Plots
+To visualize load-aware Fusicatenibacter abundance across experimental conditions, we plotted qPCR-scaled estimates by group, carbohydrate, and time (descriptive; claim-facing association tests are in Section 6.7.4).
+
 
 ```{r fusicatenibacter-absolute-abundance, echo=FALSE, fig.width=14, fig.height=10, cache=FALSE, dependson="absolute-abundance-conversion"}
 # Extract absolute abundance data for g__Fusicatenibacter
@@ -4496,10 +4563,11 @@ if (length(fusicatenibacter_taxa) > 0) {
 ```
 
 # 7. Integrated Analysis: Taxon–SCFA Relationships
-
-This section integrates SCFA metabolomics with microbiome composition to identify taxa associated with SCFA concentrations. We model associations between microbial taxa and butyrate/propionate concentrations while accounting for carbohydrate type effects, using relative abundance and qPCR-scaled abundance (relative × total 16S load). Sample-level correlation and median-split responder panels in this section are exploratory diagnostics; claim-facing *Fusicatenibacter*–butyrate inference uses the donor-level net-change analysis under `results/additional_analyses_2026-07-19/focal_fusicatenibacter/`.
+To link fermentation outputs to community structure, we joined SCFA concentrations to microbiome samples and tested taxon–SCFA associations while accounting for carbohydrate type, using relative abundance and qPCR-scaled abundance (relative × total 16S load). Sample-level correlation and median-split responder panels in this section are exploratory diagnostics; claim-facing *Fusicatenibacter*–butyrate inference uses the donor-level net-change analysis under `results/additional_analyses_2026-07-19/focal_fusicatenibacter/`.
 
 ## 7.1 Integration of SCFA Data with Microbiome Metadata
+To enable joint SCFA–microbiome analyses, we matched SCFA aliquot × carbohydrate × timepoint concentrations to microbiome sample metadata while preserving numeric donor identity for hierarchical inference.
+
 
 ```{r scfa-microbiome-integration, echo=FALSE, cache=TRUE, cache.path="cache/integrated-"}
 # Merge SCFA data with microbiome metadata
@@ -4575,6 +4643,8 @@ micro_meta_scfa <- micro_meta_merged %>%
 ```
 
 ## 7.2 Taxon–Butyrate Associations
+To identify taxa associated with butyrate concentration at 48H while adjusting for carbohydrate condition, we applied ANCOM-BC2 to relative abundances (exploratory relative screen; continuous SCFA~taxon MaAsLin3 ports are not yet exported).
+
 
 ```{r taxon-butyrate-relative, echo=FALSE, cache=TRUE, cache.path="cache/integrated-", dependson="scfa-microbiome-integration"}
 # Prepare data for analysis: relative abundance with butyrate
@@ -4654,6 +4724,8 @@ maaslin2_butyrate_tbl_rel_full <- tibble::tibble()
 cat("Continuous SCFA–taxon multivariable screen deferred to MaAsLin3 pipeline (see §6.5.8 / absolute_da/)\n")
 
 ### 7.2.1 ANCOM-BC2 Visualizations: Butyrate Associations
+To summarize taxa associated with butyrate at 48H, we plotted ANCOM-BC2 effect sizes and confidence intervals for significant associations.
+
 
 ```{r taxon-butyrate-visualizations, echo=FALSE, fig.width=14, fig.height=10, cache=FALSE, dependson="taxon-butyrate-relative"}
 # ANCOM-BC2 Forest Plot for Butyrate
@@ -4744,6 +4816,8 @@ cat("Legacy relative multivariable volcano skipped; claim-facing method is MaAsL
 ```
 
 ## 7.3 Taxon–Propionate Associations
+To identify taxa associated with propionate concentration at 48H while adjusting for carbohydrate condition, we applied ANCOM-BC2 to relative abundances as an exploratory compositional screen.
+
 
 ```{r taxon-propionate-relative, echo=FALSE, cache=TRUE, cache.path="cache/integrated-"}
 # Prepare data for analysis: relative abundance with propionate
@@ -4819,6 +4893,8 @@ maaslin2_propionate_tbl_rel_full <- tibble::tibble()
 cat("Continuous SCFA–taxon multivariable screen deferred to MaAsLin3 pipeline (see §6.5.8 / absolute_da/)\n")
 
 ### 7.3.1 ANCOM-BC2 Visualizations: Propionate Associations
+To summarize taxa associated with propionate at 48H, we plotted ANCOM-BC2 log-fold changes with confidence intervals.
+
 
 ```{r taxon-propionate-visualizations, echo=FALSE, fig.width=14, fig.height=10, cache=FALSE, dependson="taxon-propionate-relative"}
 # ANCOM-BC2 Forest Plot for Propionate
@@ -4909,6 +4985,8 @@ cat("Legacy relative multivariable volcano skipped; claim-facing method is MaAsL
 ```
 
 ## 7.4 Fusicatenibacter–SCFA Correlations
+To provide descriptive diagnostics of concurrent sample-level Fusicatenibacter–SCFA relationships at 48H under SDC, we report Spearman/OLS summaries with an explicit claim-retirement notice; the claim-facing test remains the donor-level net-change analysis in Section 6.7.4.
+
 
 > **Claim retirement (2026-07-19):** The sample-level relative-abundance correlations below are exploratory diagnostics only. Do not report their N, R², or p-values as evidence of a *Fusicatenibacter*–butyrate association. The claim-facing donor-level qPCR-scaled SDC net-change analysis is nonsignificant and is displayed in **Section 6.7.4** (`focal_fusicatenibacter/primary_fusicatenibacter_butyrate.csv`: Spearman ρ≈0.48, permutation p≈0.088, bootstrap CI includes 0, N=14 donors).
 
@@ -5109,6 +5187,8 @@ if (length(fusicatenibacter_taxa_rel) > 0) {
 ```
 
 ## 7.5 Responder vs Non-Responder Analysis
+To explore secondary microbiome correlates of interpersonal SCFA response strata, we classified donors as responders or non-responders using within-stratum median splits of donor-level ΔSCFA and compared communities between strata (exploratory; not a variance test of the defining outcome).
+
 
 ```{r responder-nonresponder, echo=FALSE, cache=FALSE}
 # Define responder groups based on delta SCFA (48H - 0H)
@@ -5300,6 +5380,8 @@ cat("- Samples with responder status:",
 ```
 
 ### 7.5.1 Sensitivity of Responder Classification to A/B Aliquots
+To assess whether median responder labels are sensitive to stool subsample noise, we compared A versus B aliquot classifications against the donor-level median threshold.
+
 
 ```{r responder-aliquot-stability, echo=FALSE, cache=FALSE, dependson="responder-nonresponder"}
 aliquot_stability_table <- aliquot_classification_stability %>%
@@ -5343,7 +5425,7 @@ Across the active-carbohydrate responder classifications, the A and B aliquots f
 
 ## 7.6 Microbial Composition Differences: Butyrate Responders vs Non-Responders
 
-To explore whether donor-level SCFA response strata are associated with microbiome composition, we classified donors as "Responders" or "Non-Responders" based on their change in SCFA concentration from baseline (0H) to 48 hours (48H). These sample-dependent median strata are used only for secondary microbiome comparisons; they are not tests of SCFA response variance and do not define a validated responder phenotype.
+To test whether butyrate-response strata differ in microbiome composition at 48H, we compared communities between donors classified as butyrate responders versus non-responders using within-stratum median splits of donor-level Δbutyrate. These sample-dependent median strata are used only for secondary microbiome comparisons; they are not tests of SCFA response variance and do not define a validated responder phenotype.
 
 **Definition of Responder Status:**
 - For each SCFA (butyrate and propionate) and each carbohydrate condition (RDC and SDC), we calculated the delta change: Δ = [SCFA]₄₈ₕ - [SCFA]₀ₕ
@@ -5660,6 +5742,8 @@ maaslin2_butyrate_resp_tbl <- tibble::tibble(
 cat("Responder multivariable DA not yet ported to MaAsLin3; ANCOM-BC2 remains exploratory below\n")
 
 ### 7.6.2 ANCOM-BC2 Visualizations: Butyrate Responders vs Non-Responders
+To display exploratory ANCOM-BC2 differences between butyrate responder strata, we plotted significant log-fold changes with confidence intervals.
+
 
 ```{r butyrate-responder-da-visualizations, echo=FALSE, fig.width=14, fig.height=10, cache=FALSE, dependson="butyrate-responder-da"}
 # ANCOM-BC2 Forest Plot
@@ -5799,6 +5883,8 @@ cat("Legacy relative multivariable volcano skipped; claim-facing method is MaAsL
 ```
 
 ## 7.7 Microbial Composition Differences: Propionate Responders vs Non-Responders
+To test whether propionate-response strata differ in community structure at 48H under RDC/SDC, we compared diversity and composition between donor-defined propionate responders and non-responders.
+
 
 Following the same responder classification approach described in Section 7.6, we compare the microbial composition between propionate responders and non-responders at the 48H timepoint. Propionate responder status was determined using a median split of the delta change in propionate concentration (48H - 0H) for each carbohydrate condition separately. This analysis examines whether individuals with greater propionate production responses have distinct microbial communities compared to those with smaller responses.
 
@@ -6106,6 +6192,8 @@ maaslin2_prop_resp_tbl <- tibble::tibble(
 cat("Responder multivariable DA not yet ported to MaAsLin3; ANCOM-BC2 remains exploratory below\n")
 
 ### 7.7.2 ANCOM-BC2 Visualizations: Propionate Responders vs Non-Responders
+To display exploratory ANCOM-BC2 differences between propionate responder strata, we plotted significant log-fold changes with confidence intervals.
+
 
 ```{r propionate-responder-da-visualizations, echo=FALSE, fig.width=14, fig.height=10, cache=FALSE, dependson="propionate-responder-da"}
 # ANCOM-BC2 Forest Plot
@@ -6245,6 +6333,8 @@ cat("Legacy relative multivariable volcano skipped; claim-facing method is MaAsL
 ```
 
 ## 7.8 qPCR-Scaled Fusicatenibacter Abundance: Responders vs Non-Responders
+To describe (exploratory only) whether qPCR-scaled Fusicatenibacter abundance differs between SCFA-response strata at 48H, we compared load-aware abundances across responder labels; continuous donor-level association remains the claim-facing test.
+
 
 > **Claim retirement (2026-07-19):** Pooled responder Wilcoxon tests on well-level qPCR-scaled *Fusicatenibacter* abundances are exploratory only. They dichotomize a continuous SCFA outcome, retain multiple records per donor, and are not SDC-specific when pooled. Prefer the continuous donor-level net-change association in `results/additional_analyses_2026-07-19/focal_fusicatenibacter/`. These values are **qPCR-scaled** (relative × total load), not genus-specific absolute qPCR.
 
@@ -6436,10 +6526,10 @@ if (length(fusicatenibacter_taxa_abs) > 0) {
 ```
 
 ## 7.9 qPCR-Scaled Bifidobacterium Abundance: Responders vs Non-Responders
+To determine whether qPCR-scaled *Bifidobacterium* abundance differs between SCFA responders and non-responders at 48H, we compared load-aware abundances (relative × total 16S qPCR) across exploratory median strata.
+
 
 > **Descriptive only:** Same caveats as Section 7.8 — qPCR-scaled (not genus-specific qPCR), exploratory median-split responder strata, not claim-facing.
-
-To determine whether qPCR-scaled *Bifidobacterium* abundance differs between SCFA responders and non-responders, we compared scaled abundance levels at the 48H timepoint. This uses total bacterial 16S qPCR load × relative abundance.
 
 ```{r bifidobacterium-abs-responders, echo=FALSE, fig.width=14, fig.height=10, cache=FALSE, dependson=c("absolute-abundance-conversion", "responder-nonresponder")}
 # EXPLORATORY / DESCRIPTIVE ONLY — not claim-facing.
