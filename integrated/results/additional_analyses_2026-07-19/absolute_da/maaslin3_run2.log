@@ -1,0 +1,214 @@
+MaAsLin3 samples: 289 donors: 16
+Genera passing donor prevalence filter: 100 / 169
+2026-07-19 12:49:31.58 INFO::Writing function arguments to log file
+2026-07-19 12:49:31.61 INFO::Verifying options selected are valid
+2026-07-19 12:49:31.61 WARNING::Input is a matrix,
+                        passing through as.data.frame() .
+2026-07-19 12:49:31.61 INFO::Determining format of input files
+2026-07-19 12:49:31.61 INFO::Input format is data samples as rows and metadata samples as rows
+2026-07-19 12:49:31.62 INFO::Running selected normalization method: NONE
+2026-07-19 12:49:31.62 INFO::Creating output feature tables folder
+2026-07-19 12:49:31.62 INFO::Writing normalized data to file /home/patcseed/projects/abbott-carbohydrate-obesity-project2/integrated/results/additional_analyses_2026-07-19/absolute_da/maaslin3_fit/features/data_norm.tsv
+2026-07-19 12:49:31.63 INFO::Filter data based on min abundance, min prevalence, and max prevalence
+2026-07-19 12:49:31.63 INFO::Total samples in data: 289
+2026-07-19 12:49:31.63 INFO::Min samples required with min abundance for a feature not to be filtered: 0.000000
+2026-07-19 12:49:31.63 INFO::Max samples allowed with min abundance for a feature not to be filtered: 291.890000
+2026-07-19 12:49:31.64 INFO::Total filtered features: 0
+2026-07-19 12:49:31.64 INFO::Filtered feature names from abundance, min prevalence, and max prevalence filtering:
+2026-07-19 12:49:31.64 INFO::Total features filtered by non-zero variance filtering: 0
+2026-07-19 12:49:31.64 INFO::Filtered feature names from variance filtering:
+2026-07-19 12:49:31.64 INFO::Writing filtered data to file /home/patcseed/projects/abbott-carbohydrate-obesity-project2/integrated/results/additional_analyses_2026-07-19/absolute_da/maaslin3_fit/features/filtered_data.tsv
+2026-07-19 12:49:31.65 INFO::Running selected transform method: LOG
+2026-07-19 12:49:31.65 INFO::Writing normalized, filtered, transformed data to file /home/patcseed/projects/abbott-carbohydrate-obesity-project2/integrated/results/additional_analyses_2026-07-19/absolute_da/maaslin3_fit/features/data_transformed.tsv
+2026-07-19 12:49:31.66 INFO::Factor detected for categorial metadata 'carbohydrate'. Using as-is.
+2026-07-19 12:49:31.66 INFO::Factor detected for categorial metadata 'timepoint'. Using as-is.
+2026-07-19 12:49:31.66 INFO::Applying z-score to standardize continuous metadata
+2026-07-19 12:49:31.69 INFO::Running the linear model component
+2026-07-19 12:49:31.81 INFO::Fitting model to feature number 1, Acetanaerobacterium
+2026-07-19 12:49:31.81 INFO::Fitting model to feature number 2, Actinomyces
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:49:32.18 INFO::Fitting model to feature number 3, Adlercreutzia
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:49:32.21 INFO::Fitting model to feature number 4, Akkermansia
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:49:32.25 INFO::Fitting model to feature number 5, Alistipes
+2026-07-19 12:49:32.29 INFO::Fitting model to feature number 6, Anaerococcus
+2026-07-19 12:49:32.34 INFO::Fitting model to feature number 7, Anaerofilum
+2026-07-19 12:49:32.34 INFO::Fitting model to feature number 8, Anaerostipes
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:49:32.39 INFO::Fitting model to feature number 9, Anaerotruncus
+2026-07-19 12:49:32.42 INFO::Fitting model to feature number 10, Asaccharospora
+2026-07-19 12:49:32.43 INFO::Fitting model to feature number 11, Bacteroides
+2026-07-19 12:49:32.46 INFO::Fitting model to feature number 12, Barnesiella
+2026-07-19 12:49:32.46 INFO::Fitting model to feature number 13, Bifidobacterium
+2026-07-19 12:49:32.49 INFO::Fitting model to feature number 14, Bilophila
+2026-07-19 12:49:32.52 INFO::Fitting model to feature number 15, Blautia
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:49:32.55 INFO::Fitting model to feature number 16, Butyricimonas
+2026-07-19 12:49:32.55 INFO::Fitting model to feature number 17, Carnobacterium
+fixed-effect model matrix is rank deficient so dropping 2 columns / coefficients
+fixed-effect model matrix is rank deficient so dropping 2 columns / coefficients
+fixed-effect model matrix is rank deficient so dropping 2 columns / coefficients
+fixed-effect model matrix is rank deficient so dropping 2 columns / coefficients
+fixed-effect model matrix is rank deficient so dropping 2 columns / coefficients
+fixed-effect model matrix is rank deficient so dropping 2 columns / coefficients
+2026-07-19 12:49:32.63 INFO::Fitting model to feature number 18, Catabacter
+2026-07-19 12:49:32.64 INFO::Fitting model to feature number 19, Catenibacterium
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:49:32.66 INFO::Fitting model to feature number 20, Christensenella
+fixed-effect model matrix is rank deficient so dropping 3 columns / coefficients
+fixed-effect model matrix is rank deficient so dropping 3 columns / coefficients
+2026-07-19 12:49:32.69 INFO::Fitting model to feature number 21, Clostridium
+2026-07-19 12:49:32.72 INFO::Fitting model to feature number 22, Collinsella
+2026-07-19 12:49:32.76 INFO::Fitting model to feature number 23, Coprobacillus
+2026-07-19 12:49:32.79 INFO::Fitting model to feature number 24, Coprococcus
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:49:32.82 INFO::Fitting model to feature number 25, Dialister
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:49:32.86 INFO::Fitting model to feature number 26, Dielma
+2026-07-19 12:49:32.86 INFO::Fitting model to feature number 27, Dorea
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:49:32.89 INFO::Fitting model to feature number 28, Eggerthella
+2026-07-19 12:49:32.92 INFO::Fitting model to feature number 29, Eisenbergiella
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:49:32.96 INFO::Fitting model to feature number 30, Enterobacter
+fixed-effect model matrix is rank deficient so dropping 2 columns / coefficients
+boundary (singular) fit: see help('isSingular')
+fixed-effect model matrix is rank deficient so dropping 2 columns / coefficients
+2026-07-19 12:49:32.99 INFO::Fitting model to feature number 31, Enterococcus
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:49:33.02 INFO::Fitting model to feature number 32, Enterorhabdus
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:49:33.05 INFO::Fitting model to feature number 33, Erysipelatoclostridium
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:49:33.08 INFO::Fitting model to feature number 34, Escherichia
+2026-07-19 12:49:33.11 INFO::Fitting model to feature number 35, Eubacterium
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:49:33.14 INFO::Fitting model to feature number 36, Faecalibacterium
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:49:33.18 INFO::Fitting model to feature number 37, Faecalitalea
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:49:33.20 INFO::Fitting model to feature number 38, Finegoldia
+2026-07-19 12:49:33.23 INFO::Fitting model to feature number 39, Flavonifractor
+2026-07-19 12:49:33.23 INFO::Fitting model to feature number 40, Fusicatenibacter
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:49:33.26 INFO::Fitting model to feature number 41, Gordonibacter
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:49:33.30 INFO::Fitting model to feature number 42, Holdemanella
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:49:33.33 INFO::Fitting model to feature number 43, Holdemania
+fixed-effect model matrix is rank deficient so dropping 2 columns / coefficients
+fixed-effect model matrix is rank deficient so dropping 2 columns / coefficients
+2026-07-19 12:49:33.36 INFO::Fitting model to feature number 44, Hungatella
+2026-07-19 12:49:33.39 INFO::Fitting model to feature number 45, Hydrogenoanaerobacterium
+2026-07-19 12:49:33.39 INFO::Fitting model to feature number 46, Intestinibacter
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:49:33.42 INFO::Fitting model to feature number 47, Intestinimonas
+2026-07-19 12:49:33.42 INFO::Fitting model to feature number 48, Lachnoclostridium
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:49:33.45 INFO::Fitting model to feature number 49, Lachnospira
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:49:33.48 INFO::Fitting model to feature number 50, Lactobacillus
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:49:33.51 INFO::Fitting model to feature number 51, Lactococcus
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:49:33.54 INFO::Fitting model to feature number 52, Lactonifactor
+2026-07-19 12:49:33.54 INFO::Fitting model to feature number 53, Marvinbryantia
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:49:33.57 INFO::Fitting model to feature number 54, Megasphaera
+fixed-effect model matrix is rank deficient so dropping 2 columns / coefficients
+boundary (singular) fit: see help('isSingular')
+fixed-effect model matrix is rank deficient so dropping 2 columns / coefficients
+2026-07-19 12:49:33.59 INFO::Fitting model to feature number 55, Methanobrevibacter
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:49:33.63 INFO::Fitting model to feature number 56, Mogibacterium
+2026-07-19 12:49:33.63 INFO::Fitting model to feature number 57, Negativicoccus
+fixed-effect model matrix is rank deficient so dropping 2 columns / coefficients
+boundary (singular) fit: see help('isSingular')
+fixed-effect model matrix is rank deficient so dropping 2 columns / coefficients
+2026-07-19 12:49:33.66 INFO::Fitting model to feature number 58, Odoribacter
+fixed-effect model matrix is rank deficient so dropping 2 columns / coefficients
+fixed-effect model matrix is rank deficient so dropping 2 columns / coefficients
+2026-07-19 12:49:33.69 INFO::Fitting model to feature number 59, Other
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:49:33.72 INFO::Fitting model to feature number 60, Paenibacillus
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:49:33.75 INFO::Fitting model to feature number 61, Paeniclostridium
+fixed-effect model matrix is rank deficient so dropping 2 columns / coefficients
+fixed-effect model matrix is rank deficient so dropping 2 columns / coefficients
+2026-07-19 12:49:33.78 INFO::Fitting model to feature number 62, Parabacteroides
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:49:33.81 INFO::Fitting model to feature number 63, Paraclostridium
+fixed-effect model matrix is rank deficient so dropping 2 columns / coefficients
+boundary (singular) fit: see help('isSingular')
+fixed-effect model matrix is rank deficient so dropping 2 columns / coefficients
+2026-07-19 12:49:33.84 INFO::Fitting model to feature number 64, Parasutterella
+2026-07-19 12:49:33.84 INFO::Fitting model to feature number 65, Parvimonas
+Feature Parvimonas : simpleWarning in as_lmerModLT(model, devfun): Model may not have converged with 1 eigenvalue close to zero: 7.0e-09
+
+2026-07-19 12:49:33.89 WARNING::Fitting problem for feature 65 a warning was issued
+2026-07-19 12:49:33.90 INFO::Fitting model to feature number 66, Peptoclostridium
+boundary (singular) fit: see help('isSingular')
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:49:33.95 INFO::Fitting model to feature number 67, Peptococcus
+2026-07-19 12:49:33.98 INFO::Fitting model to feature number 68, Peptoniphilus
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:49:34.01 INFO::Fitting model to feature number 69, Phascolarctobacterium
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:49:34.04 INFO::Fitting model to feature number 70, Prevotella
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:49:34.07 INFO::Fitting model to feature number 71, Pseudomonas
+2026-07-19 12:49:34.09 WARNING::Fitting problem for feature 71 returning NA
+2026-07-19 12:49:34.10 INFO::Fitting model to feature number 72, Robinsoniella
+2026-07-19 12:49:34.10 INFO::Fitting model to feature number 73, Romboutsia
+2026-07-19 12:49:34.13 INFO::Fitting model to feature number 74, Roseburia
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:49:34.16 INFO::Fitting model to feature number 75, Ruminiclostridium
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:49:34.20 INFO::Fitting model to feature number 76, Ruminococcus
+2026-07-19 12:49:34.23 INFO::Fitting model to feature number 77, Sarcina
+2026-07-19 12:49:34.32 INFO::Fitting model to feature number 78, Senegalimassilia
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:49:34.35 INFO::Fitting model to feature number 79, Slackia
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:49:34.38 INFO::Fitting model to feature number 80, Solobacterium
+2026-07-19 12:49:34.41 INFO::Fitting model to feature number 81, Streptococcus
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:49:34.44 INFO::Fitting model to feature number 82, Subdoligranulum
+2026-07-19 12:49:34.48 INFO::Fitting model to feature number 83, Succiniclasticum
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:49:34.51 INFO::Fitting model to feature number 84, Sutterella
+fixed-effect model matrix is rank deficient so dropping 2 columns / coefficients
+boundary (singular) fit: see help('isSingular')
+fixed-effect model matrix is rank deficient so dropping 2 columns / coefficients
+2026-07-19 12:49:34.54 INFO::Fitting model to feature number 85, Terrisporobacter
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:49:34.58 INFO::Fitting model to feature number 86, Turicibacter
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:49:34.61 INFO::Fitting model to feature number 87, Tyzzerella
+fixed-effect model matrix is rank deficient so dropping 2 columns / coefficients
+boundary (singular) fit: see help('isSingular')
+fixed-effect model matrix is rank deficient so dropping 2 columns / coefficients
+2026-07-19 12:49:34.63 INFO::Fitting model to feature number 88, Varibaculum
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:49:34.67 INFO::Fitting model to feature number 89, c__Mollicutes
+2026-07-19 12:49:34.69 WARNING::Fitting problem for feature 89 returning NA
+2026-07-19 12:49:34.69 INFO::Fitting model to feature number 90, f__Christensenellaceae
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:49:34.72 INFO::Fitting model to feature number 91, f__Coriobacteriaceae
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:49:34.76 INFO::Fitting model to feature number 92, f__Defluviitaleaceae
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:49:34.78 INFO::Fitting model to feature number 93, f__Erysipelotrichaceae
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:49:34.82 INFO::Fitting model to feature number 94, f__Family XIII
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:49:34.86 INFO::Fitting model to feature number 95, f__Lachnospiraceae
+2026-07-19 12:49:34.89 INFO::Fitting model to feature number 96, f__Prevotellaceae
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:49:34.92 INFO::Fitting model to feature number 97, f__Ruminococcaceae
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:49:34.95 INFO::Fitting model to feature number 98, g__*Soleaferrea
+2026-07-19 12:49:34.95 INFO::Fitting model to feature number 99, o__Bacteroidales
+2026-07-19 12:49:34.95 INFO::Fitting model to feature number 100, o__Clostridiales
+MaAsLin3 finished; outputs in /home/patcseed/projects/abbott-carbohydrate-obesity-project2/integrated/results/additional_analyses_2026-07-19/absolute_da

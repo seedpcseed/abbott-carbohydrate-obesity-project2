@@ -1,0 +1,366 @@
+MaAsLin3 samples: 289 donors: 16
+Genera passing donor prevalence filter: 100 / 169
+2026-07-19 12:50:56.74 INFO::Writing function arguments to log file
+2026-07-19 12:50:56.77 INFO::Verifying options selected are valid
+2026-07-19 12:50:56.77 WARNING::Input is a matrix,
+                        passing through as.data.frame() .
+2026-07-19 12:50:56.77 INFO::Determining format of input files
+2026-07-19 12:50:56.77 INFO::Input format is data samples as rows and metadata samples as rows
+2026-07-19 12:50:56.77 INFO::Running selected normalization method: NONE
+2026-07-19 12:50:56.78 INFO::Creating output feature tables folder
+2026-07-19 12:50:56.78 INFO::Writing normalized data to file /home/patcseed/projects/abbott-carbohydrate-obesity-project2/integrated/results/additional_analyses_2026-07-19/absolute_da/maaslin3_fit/features/data_norm.tsv
+2026-07-19 12:50:56.78 INFO::Filter data based on min abundance, min prevalence, and max prevalence
+2026-07-19 12:50:56.78 INFO::Total samples in data: 289
+2026-07-19 12:50:56.78 INFO::Min samples required with min abundance for a feature not to be filtered: 0.000000
+2026-07-19 12:50:56.79 INFO::Max samples allowed with min abundance for a feature not to be filtered: 291.890000
+2026-07-19 12:50:56.79 INFO::Total filtered features: 0
+2026-07-19 12:50:56.79 INFO::Filtered feature names from abundance, min prevalence, and max prevalence filtering:
+2026-07-19 12:50:56.80 INFO::Total features filtered by non-zero variance filtering: 0
+2026-07-19 12:50:56.80 INFO::Filtered feature names from variance filtering:
+2026-07-19 12:50:56.80 INFO::Writing filtered data to file /home/patcseed/projects/abbott-carbohydrate-obesity-project2/integrated/results/additional_analyses_2026-07-19/absolute_da/maaslin3_fit/features/filtered_data.tsv
+2026-07-19 12:50:56.80 INFO::Running selected transform method: LOG
+2026-07-19 12:50:56.81 INFO::Writing normalized, filtered, transformed data to file /home/patcseed/projects/abbott-carbohydrate-obesity-project2/integrated/results/additional_analyses_2026-07-19/absolute_da/maaslin3_fit/features/data_transformed.tsv
+2026-07-19 12:50:56.81 INFO::Factor detected for categorial metadata 'carbohydrate'. Using as-is.
+2026-07-19 12:50:56.81 INFO::Factor detected for categorial metadata 'timepoint'. Using as-is.
+2026-07-19 12:50:56.81 INFO::Applying z-score to standardize continuous metadata
+2026-07-19 12:50:56.85 INFO::Running the linear model component
+2026-07-19 12:50:56.97 INFO::Fitting model to feature number 1, Acetanaerobacterium
+2026-07-19 12:50:56.97 INFO::Fitting model to feature number 2, Actinomyces
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:50:57.33 INFO::Fitting model to feature number 3, Adlercreutzia
+2026-07-19 12:50:57.36 INFO::Fitting model to feature number 4, Akkermansia
+2026-07-19 12:50:57.39 INFO::Fitting model to feature number 5, Alistipes
+2026-07-19 12:50:57.43 INFO::Fitting model to feature number 6, Anaerococcus
+2026-07-19 12:50:57.47 INFO::Fitting model to feature number 7, Anaerofilum
+2026-07-19 12:50:57.47 INFO::Fitting model to feature number 8, Anaerostipes
+2026-07-19 12:50:57.51 INFO::Fitting model to feature number 9, Anaerotruncus
+2026-07-19 12:50:57.55 INFO::Fitting model to feature number 10, Asaccharospora
+2026-07-19 12:50:57.55 INFO::Fitting model to feature number 11, Bacteroides
+2026-07-19 12:50:57.59 INFO::Fitting model to feature number 12, Barnesiella
+2026-07-19 12:50:57.59 INFO::Fitting model to feature number 13, Bifidobacterium
+2026-07-19 12:50:57.62 INFO::Fitting model to feature number 14, Bilophila
+2026-07-19 12:50:57.64 INFO::Fitting model to feature number 15, Blautia
+2026-07-19 12:50:57.67 INFO::Fitting model to feature number 16, Butyricimonas
+2026-07-19 12:50:57.67 INFO::Fitting model to feature number 17, Carnobacterium
+fixed-effect model matrix is rank deficient so dropping 2 columns / coefficients
+fixed-effect model matrix is rank deficient so dropping 2 columns / coefficients
+2026-07-19 12:50:57.69 INFO::Fitting model to feature number 18, Catabacter
+2026-07-19 12:50:57.70 INFO::Fitting model to feature number 19, Catenibacterium
+2026-07-19 12:50:57.72 INFO::Fitting model to feature number 20, Christensenella
+fixed-effect model matrix is rank deficient so dropping 3 columns / coefficients
+fixed-effect model matrix is rank deficient so dropping 3 columns / coefficients
+2026-07-19 12:50:57.74 INFO::Fitting model to feature number 21, Clostridium
+2026-07-19 12:50:57.77 INFO::Fitting model to feature number 22, Collinsella
+2026-07-19 12:50:57.80 INFO::Fitting model to feature number 23, Coprobacillus
+2026-07-19 12:50:57.82 INFO::Fitting model to feature number 24, Coprococcus
+2026-07-19 12:50:57.84 INFO::Fitting model to feature number 25, Dialister
+2026-07-19 12:50:57.86 INFO::Fitting model to feature number 26, Dielma
+2026-07-19 12:50:57.87 INFO::Fitting model to feature number 27, Dorea
+2026-07-19 12:50:57.89 INFO::Fitting model to feature number 28, Eggerthella
+2026-07-19 12:50:57.92 INFO::Fitting model to feature number 29, Eisenbergiella
+2026-07-19 12:50:57.94 INFO::Fitting model to feature number 30, Enterobacter
+fixed-effect model matrix is rank deficient so dropping 2 columns / coefficients
+fixed-effect model matrix is rank deficient so dropping 2 columns / coefficients
+2026-07-19 12:50:57.97 INFO::Fitting model to feature number 31, Enterococcus
+2026-07-19 12:50:57.99 INFO::Fitting model to feature number 32, Enterorhabdus
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:50:58.01 INFO::Fitting model to feature number 33, Erysipelatoclostridium
+2026-07-19 12:50:58.04 INFO::Fitting model to feature number 34, Escherichia
+2026-07-19 12:50:58.06 INFO::Fitting model to feature number 35, Eubacterium
+2026-07-19 12:50:58.09 INFO::Fitting model to feature number 36, Faecalibacterium
+2026-07-19 12:50:58.12 INFO::Fitting model to feature number 37, Faecalitalea
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:50:58.14 INFO::Fitting model to feature number 38, Finegoldia
+2026-07-19 12:50:58.17 INFO::Fitting model to feature number 39, Flavonifractor
+2026-07-19 12:50:58.17 INFO::Fitting model to feature number 40, Fusicatenibacter
+2026-07-19 12:50:58.19 INFO::Fitting model to feature number 41, Gordonibacter
+2026-07-19 12:50:58.21 INFO::Fitting model to feature number 42, Holdemanella
+2026-07-19 12:50:58.24 INFO::Fitting model to feature number 43, Holdemania
+fixed-effect model matrix is rank deficient so dropping 2 columns / coefficients
+fixed-effect model matrix is rank deficient so dropping 2 columns / coefficients
+2026-07-19 12:50:58.26 INFO::Fitting model to feature number 44, Hungatella
+2026-07-19 12:50:58.29 INFO::Fitting model to feature number 45, Hydrogenoanaerobacterium
+2026-07-19 12:50:58.29 INFO::Fitting model to feature number 46, Intestinibacter
+2026-07-19 12:50:58.31 INFO::Fitting model to feature number 47, Intestinimonas
+2026-07-19 12:50:58.32 INFO::Fitting model to feature number 48, Lachnoclostridium
+2026-07-19 12:50:58.34 INFO::Fitting model to feature number 49, Lachnospira
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:50:58.36 INFO::Fitting model to feature number 50, Lactobacillus
+2026-07-19 12:50:58.39 INFO::Fitting model to feature number 51, Lactococcus
+2026-07-19 12:50:58.41 INFO::Fitting model to feature number 52, Lactonifactor
+2026-07-19 12:50:58.41 INFO::Fitting model to feature number 53, Marvinbryantia
+2026-07-19 12:50:58.43 INFO::Fitting model to feature number 54, Megasphaera
+fixed-effect model matrix is rank deficient so dropping 2 columns / coefficients
+fixed-effect model matrix is rank deficient so dropping 2 columns / coefficients
+2026-07-19 12:50:58.46 INFO::Fitting model to feature number 55, Methanobrevibacter
+2026-07-19 12:50:58.49 INFO::Fitting model to feature number 56, Mogibacterium
+2026-07-19 12:50:58.49 INFO::Fitting model to feature number 57, Negativicoccus
+fixed-effect model matrix is rank deficient so dropping 2 columns / coefficients
+fixed-effect model matrix is rank deficient so dropping 2 columns / coefficients
+2026-07-19 12:50:58.51 INFO::Fitting model to feature number 58, Odoribacter
+fixed-effect model matrix is rank deficient so dropping 2 columns / coefficients
+fixed-effect model matrix is rank deficient so dropping 2 columns / coefficients
+2026-07-19 12:50:58.54 INFO::Fitting model to feature number 59, Other
+2026-07-19 12:50:58.56 INFO::Fitting model to feature number 60, Paenibacillus
+2026-07-19 12:50:58.59 INFO::Fitting model to feature number 61, Paeniclostridium
+fixed-effect model matrix is rank deficient so dropping 2 columns / coefficients
+fixed-effect model matrix is rank deficient so dropping 2 columns / coefficients
+2026-07-19 12:50:58.61 INFO::Fitting model to feature number 62, Parabacteroides
+2026-07-19 12:50:58.64 INFO::Fitting model to feature number 63, Paraclostridium
+fixed-effect model matrix is rank deficient so dropping 2 columns / coefficients
+fixed-effect model matrix is rank deficient so dropping 2 columns / coefficients
+2026-07-19 12:50:58.67 INFO::Fitting model to feature number 64, Parasutterella
+2026-07-19 12:50:58.67 INFO::Fitting model to feature number 65, Parvimonas
+2026-07-19 12:50:58.69 INFO::Fitting model to feature number 66, Peptoclostridium
+2026-07-19 12:50:58.72 INFO::Fitting model to feature number 67, Peptococcus
+2026-07-19 12:50:58.74 INFO::Fitting model to feature number 68, Peptoniphilus
+2026-07-19 12:50:58.76 INFO::Fitting model to feature number 69, Phascolarctobacterium
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:50:58.79 INFO::Fitting model to feature number 70, Prevotella
+2026-07-19 12:50:58.82 INFO::Fitting model to feature number 71, Pseudomonas
+2026-07-19 12:50:58.83 WARNING::Fitting problem for feature 71 returning NA
+2026-07-19 12:50:58.83 INFO::Fitting model to feature number 72, Robinsoniella
+2026-07-19 12:50:58.84 INFO::Fitting model to feature number 73, Romboutsia
+2026-07-19 12:50:58.86 INFO::Fitting model to feature number 74, Roseburia
+2026-07-19 12:50:58.88 INFO::Fitting model to feature number 75, Ruminiclostridium
+2026-07-19 12:50:58.91 INFO::Fitting model to feature number 76, Ruminococcus
+2026-07-19 12:50:58.93 INFO::Fitting model to feature number 77, Sarcina
+2026-07-19 12:50:58.96 INFO::Fitting model to feature number 78, Senegalimassilia
+2026-07-19 12:50:58.99 INFO::Fitting model to feature number 79, Slackia
+2026-07-19 12:50:59.01 INFO::Fitting model to feature number 80, Solobacterium
+2026-07-19 12:50:59.04 INFO::Fitting model to feature number 81, Streptococcus
+2026-07-19 12:50:59.06 INFO::Fitting model to feature number 82, Subdoligranulum
+2026-07-19 12:50:59.09 INFO::Fitting model to feature number 83, Succiniclasticum
+2026-07-19 12:50:59.11 INFO::Fitting model to feature number 84, Sutterella
+fixed-effect model matrix is rank deficient so dropping 2 columns / coefficients
+fixed-effect model matrix is rank deficient so dropping 2 columns / coefficients
+2026-07-19 12:50:59.14 INFO::Fitting model to feature number 85, Terrisporobacter
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:50:59.17 INFO::Fitting model to feature number 86, Turicibacter
+2026-07-19 12:50:59.19 INFO::Fitting model to feature number 87, Tyzzerella
+fixed-effect model matrix is rank deficient so dropping 2 columns / coefficients
+boundary (singular) fit: see help('isSingular')
+fixed-effect model matrix is rank deficient so dropping 2 columns / coefficients
+2026-07-19 12:50:59.22 INFO::Fitting model to feature number 88, Varibaculum
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:50:59.25 INFO::Fitting model to feature number 89, c__Mollicutes
+2026-07-19 12:50:59.26 WARNING::Fitting problem for feature 89 returning NA
+2026-07-19 12:50:59.26 INFO::Fitting model to feature number 90, f__Christensenellaceae
+2026-07-19 12:50:59.29 INFO::Fitting model to feature number 91, f__Coriobacteriaceae
+2026-07-19 12:50:59.31 INFO::Fitting model to feature number 92, f__Defluviitaleaceae
+2026-07-19 12:50:59.34 INFO::Fitting model to feature number 93, f__Erysipelotrichaceae
+2026-07-19 12:50:59.36 INFO::Fitting model to feature number 94, f__Family.XIII
+2026-07-19 12:50:59.39 INFO::Fitting model to feature number 95, f__Lachnospiraceae
+2026-07-19 12:50:59.41 INFO::Fitting model to feature number 96, f__Prevotellaceae
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:50:59.44 INFO::Fitting model to feature number 97, f__Ruminococcaceae
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:50:59.46 INFO::Fitting model to feature number 98, g__.Soleaferrea
+2026-07-19 12:50:59.46 INFO::Fitting model to feature number 99, o__Bacteroidales
+2026-07-19 12:50:59.47 INFO::Fitting model to feature number 100, o__Clostridiales
+2026-07-19 12:50:59.52 INFO::Counting total values for each feature
+2026-07-19 12:50:59.53 INFO::Running the logistic model component
+2026-07-19 12:50:59.54 INFO::Fitting model to feature number 1, Acetanaerobacterium
+Feature Acetanaerobacterium : simpleWarning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, : unable to evaluate scaled gradient
+
+2026-07-19 12:51:06.45 WARNING::Fitting problem for feature 1 a warning was issued
+Feature Acetanaerobacterium : simpleWarning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, : Model failed to converge: degenerate  Hessian with 2 negative eigenvalues
+  See ?lme4::convergence and ?lme4::troubleshooting.
+
+2026-07-19 12:51:06.45 WARNING::Fitting problem for feature 1 a warning was issued
+2026-07-19 12:51:06.46 INFO::Fitting model to feature number 2, Actinomyces
+2026-07-19 12:51:06.64 INFO::Fitting model to feature number 3, Adlercreutzia
+2026-07-19 12:51:06.90 INFO::Fitting model to feature number 4, Akkermansia
+2026-07-19 12:51:07.13 INFO::Fitting model to feature number 5, Alistipes
+2026-07-19 12:51:07.30 INFO::Fitting model to feature number 6, Anaerococcus
+2026-07-19 12:51:07.50 INFO::Fitting model to feature number 7, Anaerofilum
+2026-07-19 12:51:15.46 WARNING::Fitting problem for feature 7 returning NA
+2026-07-19 12:51:15.46 INFO::Fitting model to feature number 8, Anaerostipes
+2026-07-19 12:51:19.53 INFO::Fitting model to feature number 9, Anaerotruncus
+2026-07-19 12:51:19.64 INFO::Fitting model to feature number 10, Asaccharospora
+2026-07-19 12:51:25.43 WARNING::Fitting problem for feature 10 returning NA
+2026-07-19 12:51:25.44 INFO::Fitting model to feature number 11, Bacteroides
+2026-07-19 12:51:25.76 INFO::Fitting model to feature number 12, Barnesiella
+Feature Barnesiella : simpleWarning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, : Model is nearly unidentifiable: large eigenvalue ratio
+ - Rescale variables?
+
+2026-07-19 12:51:34.65 WARNING::Fitting problem for feature 12 a warning was issued
+2026-07-19 12:51:34.66 INFO::Fitting model to feature number 13, Bifidobacterium
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:51:34.69 INFO::Fitting model to feature number 14, Bilophila
+2026-07-19 12:51:34.92 INFO::Fitting model to feature number 15, Blautia
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:51:35.50 INFO::Fitting model to feature number 16, Butyricimonas
+2026-07-19 12:51:41.99 INFO::Fitting model to feature number 17, Carnobacterium
+Feature Carnobacterium : simpleWarning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, : Model is nearly unidentifiable: large eigenvalue ratio
+ - Rescale variables?
+
+2026-07-19 12:51:51.50 WARNING::Fitting problem for feature 17 a warning was issued
+2026-07-19 12:51:51.51 INFO::Fitting model to feature number 18, Catabacter
+2026-07-19 12:51:57.34 WARNING::Fitting problem for feature 18 returning NA
+2026-07-19 12:51:57.35 INFO::Fitting model to feature number 19, Catenibacterium
+2026-07-19 12:51:57.52 INFO::Fitting model to feature number 20, Christensenella
+2026-07-19 12:52:03.82 WARNING::Fitting problem for feature 20 returning NA
+2026-07-19 12:52:03.82 INFO::Fitting model to feature number 21, Clostridium
+2026-07-19 12:52:04.14 INFO::Fitting model to feature number 22, Collinsella
+2026-07-19 12:52:04.45 INFO::Fitting model to feature number 23, Coprobacillus
+2026-07-19 12:52:04.72 INFO::Fitting model to feature number 24, Coprococcus
+2026-07-19 12:52:04.99 INFO::Fitting model to feature number 25, Dialister
+2026-07-19 12:52:05.28 INFO::Fitting model to feature number 26, Dielma
+2026-07-19 12:52:15.24 WARNING::Fitting problem for feature 26 returning NA
+2026-07-19 12:52:15.25 INFO::Fitting model to feature number 27, Dorea
+2026-07-19 12:52:15.72 INFO::Fitting model to feature number 28, Eggerthella
+2026-07-19 12:52:15.87 INFO::Fitting model to feature number 29, Eisenbergiella
+2026-07-19 12:52:16.06 INFO::Fitting model to feature number 30, Enterobacter
+2026-07-19 12:52:20.50 INFO::Fitting model to feature number 31, Enterococcus
+2026-07-19 12:52:20.77 INFO::Fitting model to feature number 32, Enterorhabdus
+2026-07-19 12:52:21.20 INFO::Fitting model to feature number 33, Erysipelatoclostridium
+2026-07-19 12:52:21.30 INFO::Fitting model to feature number 34, Escherichia
+2026-07-19 12:52:21.63 INFO::Fitting model to feature number 35, Eubacterium
+2026-07-19 12:52:25.28 INFO::Fitting model to feature number 36, Faecalibacterium
+2026-07-19 12:52:25.50 INFO::Fitting model to feature number 37, Faecalitalea
+2026-07-19 12:52:25.75 INFO::Fitting model to feature number 38, Finegoldia
+2026-07-19 12:52:25.97 INFO::Fitting model to feature number 39, Flavonifractor
+Feature Flavonifractor : simpleWarning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, : unable to evaluate scaled gradient
+
+2026-07-19 12:52:36.18 WARNING::Fitting problem for feature 39 a warning was issued
+Feature Flavonifractor : simpleWarning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, : Model failed to converge: degenerate  Hessian with 1 negative eigenvalues
+  See ?lme4::convergence and ?lme4::troubleshooting.
+
+2026-07-19 12:52:36.18 WARNING::Fitting problem for feature 39 a warning was issued
+2026-07-19 12:52:36.19 INFO::Fitting model to feature number 40, Fusicatenibacter
+2026-07-19 12:52:36.31 INFO::Fitting model to feature number 41, Gordonibacter
+2026-07-19 12:52:36.42 INFO::Fitting model to feature number 42, Holdemanella
+2026-07-19 12:52:36.66 INFO::Fitting model to feature number 43, Holdemania
+Feature Holdemania : simpleWarning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, : Model is nearly unidentifiable: large eigenvalue ratio
+ - Rescale variables?
+
+2026-07-19 12:52:44.62 WARNING::Fitting problem for feature 43 a warning was issued
+2026-07-19 12:52:44.63 INFO::Fitting model to feature number 44, Hungatella
+2026-07-19 12:52:44.92 INFO::Fitting model to feature number 45, Hydrogenoanaerobacterium
+Feature Hydrogenoanaerobacterium : simpleWarning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, : Model is nearly unidentifiable: large eigenvalue ratio
+ - Rescale variables?
+
+2026-07-19 12:52:46.59 WARNING::Fitting problem for feature 45 a warning was issued
+2026-07-19 12:52:46.59 INFO::Fitting model to feature number 46, Intestinibacter
+2026-07-19 12:52:46.92 INFO::Fitting model to feature number 47, Intestinimonas
+Feature Intestinimonas : simpleWarning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, : Model is nearly unidentifiable: large eigenvalue ratio
+ - Rescale variables?
+
+2026-07-19 12:52:51.57 WARNING::Fitting problem for feature 47 a warning was issued
+2026-07-19 12:52:51.57 INFO::Fitting model to feature number 48, Lachnoclostridium
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:52:51.87 INFO::Fitting model to feature number 49, Lachnospira
+2026-07-19 12:52:52.21 INFO::Fitting model to feature number 50, Lactobacillus
+2026-07-19 12:52:52.38 INFO::Fitting model to feature number 51, Lactococcus
+2026-07-19 12:52:52.65 INFO::Fitting model to feature number 52, Lactonifactor
+2026-07-19 12:52:58.45 INFO::Fitting model to feature number 53, Marvinbryantia
+2026-07-19 12:52:58.72 INFO::Fitting model to feature number 54, Megasphaera
+2026-07-19 12:52:59.11 INFO::Fitting model to feature number 55, Methanobrevibacter
+2026-07-19 12:52:59.26 INFO::Fitting model to feature number 56, Mogibacterium
+2026-07-19 12:53:03.56 INFO::Fitting model to feature number 57, Negativicoccus
+Feature Negativicoccus : simpleWarning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, : unable to evaluate scaled gradient
+
+2026-07-19 12:53:10.56 WARNING::Fitting problem for feature 57 a warning was issued
+Feature Negativicoccus : simpleWarning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, : Model failed to converge: degenerate  Hessian with 2 negative eigenvalues
+  See ?lme4::convergence and ?lme4::troubleshooting.
+
+2026-07-19 12:53:10.57 WARNING::Fitting problem for feature 57 a warning was issued
+2026-07-19 12:53:10.57 INFO::Fitting model to feature number 58, Odoribacter
+2026-07-19 12:53:20.34 WARNING::Fitting problem for feature 58 returning NA
+2026-07-19 12:53:20.34 INFO::Fitting model to feature number 59, Other
+2026-07-19 12:53:20.43 INFO::Fitting model to feature number 60, Paenibacillus
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:53:20.58 INFO::Fitting model to feature number 61, Paeniclostridium
+Feature Paeniclostridium : simpleWarning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, : unable to evaluate scaled gradient
+
+2026-07-19 12:53:28.25 WARNING::Fitting problem for feature 61 a warning was issued
+Feature Paeniclostridium : simpleWarning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, : Model failed to converge: degenerate  Hessian with 1 negative eigenvalues
+  See ?lme4::convergence and ?lme4::troubleshooting.
+
+2026-07-19 12:53:28.25 WARNING::Fitting problem for feature 61 a warning was issued
+2026-07-19 12:53:28.26 INFO::Fitting model to feature number 62, Parabacteroides
+2026-07-19 12:53:28.56 INFO::Fitting model to feature number 63, Paraclostridium
+2026-07-19 12:53:38.66 WARNING::Fitting problem for feature 63 returning NA
+2026-07-19 12:53:38.66 INFO::Fitting model to feature number 64, Parasutterella
+2026-07-19 12:53:45.41 INFO::Fitting model to feature number 65, Parvimonas
+2026-07-19 12:53:45.63 INFO::Fitting model to feature number 66, Peptoclostridium
+2026-07-19 12:53:45.78 INFO::Fitting model to feature number 67, Peptococcus
+2026-07-19 12:53:45.91 INFO::Fitting model to feature number 68, Peptoniphilus
+2026-07-19 12:53:46.18 INFO::Fitting model to feature number 69, Phascolarctobacterium
+2026-07-19 12:53:46.52 INFO::Fitting model to feature number 70, Prevotella
+2026-07-19 12:53:46.72 INFO::Fitting model to feature number 71, Pseudomonas
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:53:46.94 INFO::Fitting model to feature number 72, Robinsoniella
+Feature Robinsoniella : simpleWarning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, : unable to evaluate scaled gradient
+
+2026-07-19 12:53:53.88 WARNING::Fitting problem for feature 72 a warning was issued
+Feature Robinsoniella : simpleWarning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, : Model failed to converge: degenerate  Hessian with 1 negative eigenvalues
+  See ?lme4::convergence and ?lme4::troubleshooting.
+
+2026-07-19 12:53:53.89 WARNING::Fitting problem for feature 72 a warning was issued
+2026-07-19 12:53:53.89 INFO::Fitting model to feature number 73, Romboutsia
+2026-07-19 12:53:54.31 INFO::Fitting model to feature number 74, Roseburia
+2026-07-19 12:53:54.57 INFO::Fitting model to feature number 75, Ruminiclostridium
+2026-07-19 12:53:54.82 INFO::Fitting model to feature number 76, Ruminococcus
+2026-07-19 12:53:55.20 INFO::Fitting model to feature number 77, Sarcina
+2026-07-19 12:53:55.61 INFO::Fitting model to feature number 78, Senegalimassilia
+2026-07-19 12:53:55.88 INFO::Fitting model to feature number 79, Slackia
+2026-07-19 12:53:56.02 INFO::Fitting model to feature number 80, Solobacterium
+2026-07-19 12:53:56.23 INFO::Fitting model to feature number 81, Streptococcus
+2026-07-19 12:53:59.36 INFO::Fitting model to feature number 82, Subdoligranulum
+2026-07-19 12:54:02.42 INFO::Fitting model to feature number 83, Succiniclasticum
+2026-07-19 12:54:02.66 INFO::Fitting model to feature number 84, Sutterella
+Feature Sutterella : simpleWarning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, : Model is nearly unidentifiable: large eigenvalue ratio
+ - Rescale variables?
+
+2026-07-19 12:54:11.09 WARNING::Fitting problem for feature 84 a warning was issued
+2026-07-19 12:54:11.09 INFO::Fitting model to feature number 85, Terrisporobacter
+2026-07-19 12:54:11.23 INFO::Fitting model to feature number 86, Turicibacter
+2026-07-19 12:54:11.33 INFO::Fitting model to feature number 87, Tyzzerella
+Feature Tyzzerella : simpleWarning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, : unable to evaluate scaled gradient
+
+2026-07-19 12:54:20.48 WARNING::Fitting problem for feature 87 a warning was issued
+Feature Tyzzerella : simpleWarning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, : Model failed to converge: degenerate  Hessian with 2 negative eigenvalues
+  See ?lme4::convergence and ?lme4::troubleshooting.
+
+2026-07-19 12:54:20.48 WARNING::Fitting problem for feature 87 a warning was issued
+2026-07-19 12:54:20.49 INFO::Fitting model to feature number 88, Varibaculum
+2026-07-19 12:54:20.79 INFO::Fitting model to feature number 89, c__Mollicutes
+2026-07-19 12:54:21.02 INFO::Fitting model to feature number 90, f__Christensenellaceae
+2026-07-19 12:54:21.18 INFO::Fitting model to feature number 91, f__Coriobacteriaceae
+2026-07-19 12:54:21.30 INFO::Fitting model to feature number 92, f__Defluviitaleaceae
+2026-07-19 12:54:21.43 INFO::Fitting model to feature number 93, f__Erysipelotrichaceae
+2026-07-19 12:54:21.72 INFO::Fitting model to feature number 94, f__Family.XIII
+2026-07-19 12:54:22.12 INFO::Fitting model to feature number 95, f__Lachnospiraceae
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:54:22.52 INFO::Fitting model to feature number 96, f__Prevotellaceae
+2026-07-19 12:54:22.67 INFO::Fitting model to feature number 97, f__Ruminococcaceae
+boundary (singular) fit: see help('isSingular')
+2026-07-19 12:54:23.01 INFO::Fitting model to feature number 98, g__.Soleaferrea
+Feature g__.Soleaferrea : simpleWarning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, : Model is nearly unidentifiable: large eigenvalue ratio
+ - Rescale variables?
+
+2026-07-19 12:54:33.86 WARNING::Fitting problem for feature 98 a warning was issued
+2026-07-19 12:54:33.87 INFO::Fitting model to feature number 99, o__Bacteroidales
+Feature o__Bacteroidales : simpleWarning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, : unable to evaluate scaled gradient
+
+2026-07-19 12:54:42.55 WARNING::Fitting problem for feature 99 a warning was issued
+Feature o__Bacteroidales : simpleWarning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, : Model failed to converge: degenerate  Hessian with 2 negative eigenvalues
+  See ?lme4::convergence and ?lme4::troubleshooting.
+
+2026-07-19 12:54:42.55 WARNING::Fitting problem for feature 99 a warning was issued
+2026-07-19 12:54:42.55 INFO::Fitting model to feature number 100, o__Clostridiales
+2026-07-19 12:54:42.82 INFO::Counting total values for each feature
+2026-07-19 12:54:42.86 INFO::Creating fits folder
+2026-07-19 12:54:42.86 INFO::Writing residuals to file /home/patcseed/projects/abbott-carbohydrate-obesity-project2/integrated/results/additional_analyses_2026-07-19/absolute_da/maaslin3_fit/fits/residuals_linear.rds
+2026-07-19 12:54:42.86 INFO::Writing fitted values to file /home/patcseed/projects/abbott-carbohydrate-obesity-project2/integrated/results/additional_analyses_2026-07-19/absolute_da/maaslin3_fit/fits/fitted_linear.rds
+2026-07-19 12:54:42.86 INFO::Writing extracted random effects to file /home/patcseed/projects/abbott-carbohydrate-obesity-project2/integrated/results/additional_analyses_2026-07-19/absolute_da/maaslin3_fit/fits/ranef_linear.rds
+2026-07-19 12:54:42.86 INFO::Writing residuals to file /home/patcseed/projects/abbott-carbohydrate-obesity-project2/integrated/results/additional_analyses_2026-07-19/absolute_da/maaslin3_fit/fits/residuals_logistic.rds
+2026-07-19 12:54:42.87 INFO::Writing fitted values to file /home/patcseed/projects/abbott-carbohydrate-obesity-project2/integrated/results/additional_analyses_2026-07-19/absolute_da/maaslin3_fit/fits/fitted_logistic.rds
+2026-07-19 12:54:42.88 INFO::Writing extracted random effects to file /home/patcseed/projects/abbott-carbohydrate-obesity-project2/integrated/results/additional_analyses_2026-07-19/absolute_da/maaslin3_fit/fits/ranef_logistic.rds
+2026-07-19 12:54:42.88 INFO::Writing all the results to file (ordered 
+            by increasing individual q-values): /home/patcseed/projects/abbott-carbohydrate-obesity-project2/integrated/results/additional_analyses_2026-07-19/absolute_da/maaslin3_fit/all_results.tsv
+2026-07-19 12:54:42.88 INFO::Writing the significant results without errors (those which have joint q-values less than or equal to the threshold of 0.250000 ) to file (ordered by increasing individual q-values): /home/patcseed/projects/abbott-carbohydrate-obesity-project2/integrated/results/additional_analyses_2026-07-19/absolute_da/maaslin3_fit/significant_results.tsv
+[1] TRUE TRUE
+MaAsLin3 finished; outputs in /home/patcseed/projects/abbott-carbohydrate-obesity-project2/integrated/results/additional_analyses_2026-07-19/absolute_da

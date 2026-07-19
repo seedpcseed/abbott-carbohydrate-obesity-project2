@@ -1,0 +1,5 @@
+sample=116__116A__SDC__1.0__48H
+rel=0.00499731
+gene_copies=1.43552e+10
+scaled=7.17372e+07
+product_check=7.17372e+07

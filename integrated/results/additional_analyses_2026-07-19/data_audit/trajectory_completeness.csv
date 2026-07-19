@@ -1,0 +1,161 @@
+donor_id,aliquot_id,carbohydrate,well_repeat,has_0,has_48,n_rows,n_qpcr,n_fusi,paired_0_48
+116,116A,No Added Carb,1.0,True,True,2,2,2,True
+116,116A,RDC,1.0,True,True,2,2,2,True
+116,116A,RDC,2.0,True,True,2,2,2,True
+116,116A,SDC,1.0,True,True,2,2,2,True
+116,116A,SDC,2.0,True,True,2,2,2,True
+116,116B,No Added Carb,1.0,False,True,1,1,1,False
+116,116B,RDC,1.0,False,True,1,1,1,False
+116,116B,RDC,2.0,False,True,1,1,1,False
+116,116B,SDC,1.0,False,True,1,1,1,False
+116,116B,SDC,2.0,False,True,1,1,1,False
+123,123A,No Added Carb,1.0,True,False,1,1,1,False
+123,123A,RDC,1.0,True,True,2,2,2,True
+123,123A,RDC,2.0,True,True,2,2,2,True
+123,123A,SDC,1.0,True,True,2,2,2,True
+123,123A,SDC,2.0,True,True,2,2,2,True
+123,123B,No Added Carb,1.0,False,True,1,1,1,False
+123,123B,RDC,1.0,False,True,1,1,1,False
+123,123B,RDC,2.0,False,True,1,1,1,False
+123,123B,SDC,1.0,False,True,1,1,1,False
+123,123B,SDC,2.0,False,True,1,1,1,False
+137,137A,No Added Carb,1.0,True,True,2,2,2,True
+137,137A,RDC,1.0,True,True,2,2,2,True
+137,137A,RDC,2.0,True,False,1,1,1,False
+137,137A,SDC,1.0,True,True,2,2,2,True
+137,137A,SDC,2.0,True,True,2,2,2,True
+137,137B,No Added Carb,1.0,True,True,2,2,2,True
+137,137B,RDC,1.0,True,True,2,2,2,True
+137,137B,RDC,2.0,True,True,2,2,2,True
+137,137B,SDC,1.0,True,True,2,2,2,True
+137,137B,SDC,2.0,True,True,2,2,2,True
+161,161A,No Added Carb,1.0,True,True,2,2,2,True
+161,161A,RDC,1.0,True,True,2,2,2,True
+161,161A,RDC,2.0,True,True,2,2,2,True
+161,161A,SDC,1.0,True,True,2,2,2,True
+161,161A,SDC,2.0,True,True,2,2,2,True
+161,161B,No Added Carb,1.0,True,True,2,2,2,True
+161,161B,RDC,1.0,True,True,2,2,2,True
+161,161B,RDC,2.0,True,True,2,2,2,True
+161,161B,SDC,1.0,True,True,2,2,2,True
+161,161B,SDC,2.0,True,True,2,2,2,True
+176,176A,No Added Carb,1.0,True,True,2,2,2,True
+176,176A,RDC,1.0,True,True,2,2,2,True
+176,176A,RDC,2.0,True,True,2,2,2,True
+176,176A,SDC,1.0,True,True,2,2,2,True
+176,176A,SDC,2.0,True,True,2,2,2,True
+176,176B,No Added Carb,1.0,False,True,1,1,1,False
+176,176B,RDC,1.0,True,True,2,2,2,True
+176,176B,RDC,2.0,True,True,2,2,2,True
+176,176B,SDC,1.0,True,True,2,2,2,True
+176,176B,SDC,2.0,False,True,1,1,1,False
+21,21A,No Added Carb,1.0,True,False,1,1,1,False
+21,21A,RDC,1.0,True,True,2,2,2,True
+21,21A,RDC,2.0,True,True,2,2,2,True
+21,21A,SDC,1.0,True,True,2,2,2,True
+21,21A,SDC,2.0,True,True,2,2,2,True
+21,21B,No Added Carb,1.0,True,True,2,2,2,True
+21,21B,RDC,1.0,True,True,2,2,2,True
+21,21B,RDC,2.0,True,True,2,2,2,True
+21,21B,SDC,1.0,True,True,2,2,2,True
+21,21B,SDC,2.0,True,True,2,2,2,True
+239,239A,No Added Carb,1.0,True,True,2,2,2,True
+239,239A,RDC,1.0,True,True,2,2,2,True
+239,239A,RDC,2.0,True,True,2,2,2,True
+239,239A,SDC,1.0,True,True,2,2,2,True
+239,239A,SDC,2.0,True,True,2,2,2,True
+239,239B,No Added Carb,1.0,True,True,2,2,2,True
+239,239B,RDC,1.0,True,True,2,2,2,True
+239,239B,RDC,2.0,True,True,2,2,2,True
+239,239B,SDC,1.0,True,True,2,2,2,True
+239,239B,SDC,2.0,True,True,2,2,2,True
+276,276A,No Added Carb,1.0,False,True,1,1,1,False
+276,276A,RDC,1.0,False,True,1,1,1,False
+276,276A,RDC,2.0,False,True,1,1,1,False
+276,276A,SDC,1.0,False,True,1,1,1,False
+276,276A,SDC,2.0,False,True,1,1,1,False
+276,276B,No Added Carb,1.0,False,True,1,1,1,False
+276,276B,RDC,1.0,False,True,1,1,1,False
+276,276B,RDC,2.0,False,True,1,1,1,False
+276,276B,SDC,1.0,False,True,1,1,1,False
+276,276B,SDC,2.0,False,True,1,1,1,False
+41,41A,No Added Carb,1.0,False,True,1,1,1,False
+41,41A,RDC,1.0,True,True,2,2,2,True
+41,41A,RDC,2.0,True,True,2,2,2,True
+41,41A,SDC,1.0,True,True,2,2,2,True
+41,41A,SDC,2.0,True,True,2,2,2,True
+41,41B,No Added Carb,1.0,True,True,2,2,2,True
+41,41B,RDC,1.0,True,True,2,2,2,True
+41,41B,RDC,2.0,True,True,2,2,2,True
+41,41B,SDC,1.0,True,True,2,2,2,True
+41,41B,SDC,2.0,True,True,2,2,2,True
+50,50A,No Added Carb,1.0,True,True,2,2,2,True
+50,50A,RDC,1.0,True,True,2,2,2,True
+50,50A,RDC,2.0,True,True,2,2,2,True
+50,50A,SDC,1.0,True,True,2,2,2,True
+50,50A,SDC,2.0,True,True,2,2,2,True
+50,50B,No Added Carb,1.0,True,True,2,2,2,True
+50,50B,RDC,1.0,True,True,2,2,2,True
+50,50B,RDC,2.0,True,True,2,2,2,True
+50,50B,SDC,1.0,True,True,2,2,2,True
+50,50B,SDC,2.0,True,True,2,2,2,True
+58,58A,No Added Carb,1.0,True,True,2,2,2,True
+58,58A,RDC,1.0,True,True,2,2,2,True
+58,58A,RDC,2.0,True,True,2,2,2,True
+58,58A,SDC,1.0,True,True,2,2,2,True
+58,58A,SDC,2.0,True,True,2,2,2,True
+58,58B,No Added Carb,1.0,True,True,2,2,2,True
+58,58B,RDC,1.0,True,True,2,2,2,True
+58,58B,RDC,2.0,True,True,2,2,2,True
+58,58B,SDC,1.0,True,True,2,2,2,True
+58,58B,SDC,2.0,True,True,2,2,2,True
+66,66A,No Added Carb,1.0,True,True,2,2,2,True
+66,66A,RDC,1.0,True,True,2,2,2,True
+66,66A,RDC,2.0,True,True,2,2,2,True
+66,66A,SDC,1.0,True,True,2,2,2,True
+66,66A,SDC,2.0,True,True,2,2,2,True
+66,66B,No Added Carb,1.0,True,True,2,2,2,True
+66,66B,RDC,1.0,True,True,2,2,2,True
+66,66B,RDC,2.0,True,False,1,1,1,False
+66,66B,SDC,1.0,True,True,2,2,2,True
+66,66B,SDC,2.0,True,False,1,1,1,False
+67,67A,No Added Carb,1.0,True,True,2,2,2,True
+67,67A,RDC,1.0,True,False,1,1,1,False
+67,67A,RDC,2.0,True,True,2,2,2,True
+67,67A,SDC,1.0,True,True,2,2,2,True
+67,67A,SDC,2.0,True,True,2,2,2,True
+67,67B,No Added Carb,1.0,True,True,2,2,2,True
+67,67B,RDC,1.0,True,True,2,2,2,True
+67,67B,RDC,2.0,True,True,2,2,2,True
+67,67B,SDC,1.0,True,True,2,2,2,True
+67,67B,SDC,2.0,True,True,2,2,2,True
+73,73A,No Added Carb,1.0,True,True,2,2,2,True
+73,73A,RDC,1.0,True,True,2,2,2,True
+73,73A,RDC,2.0,True,True,2,2,2,True
+73,73A,SDC,1.0,True,True,2,2,2,True
+73,73A,SDC,2.0,True,True,2,2,2,True
+73,73B,No Added Carb,1.0,False,True,1,1,1,False
+73,73B,RDC,1.0,True,True,2,2,2,True
+73,73B,RDC,2.0,True,True,2,2,2,True
+73,73B,SDC,1.0,True,True,2,2,2,True
+73,73B,SDC,2.0,True,True,2,2,2,True
+84,84A,No Added Carb,1.0,False,True,1,1,1,False
+84,84A,RDC,1.0,True,True,2,2,2,True
+84,84A,RDC,2.0,True,True,2,2,2,True
+84,84A,SDC,1.0,True,True,2,2,2,True
+84,84A,SDC,2.0,True,True,2,2,2,True
+84,84B,No Added Carb,1.0,True,True,2,2,2,True
+84,84B,RDC,1.0,True,True,2,2,2,True
+84,84B,RDC,2.0,True,True,2,2,2,True
+84,84B,SDC,1.0,True,True,2,2,2,True
+84,84B,SDC,2.0,True,True,2,2,2,True
+92,92A,No Added Carb,1.0,True,True,2,2,2,True
+92,92A,RDC,1.0,True,True,2,2,2,True
+92,92A,RDC,2.0,True,True,2,2,2,True
+92,92A,SDC,1.0,True,True,2,2,2,True
+92,92A,SDC,2.0,True,True,2,2,2,True
+92,92B,No Added Carb,1.0,True,True,2,2,2,True
+92,92B,RDC,1.0,True,True,2,2,2,True
+92,92B,RDC,2.0,True,True,2,2,2,True
+92,92B,SDC,1.0,True,True,2,2,2,True
+92,92B,SDC,2.0,True,True,2,2,2,True

@@ -1,0 +1,45 @@
+donor_id,carbohydrate,group,delta_log10_load,carb,group_f
+116,No Added Carb,control,-0.20866402571961373,No Added Carb,control
+116,RDC,control,0.7356981071075168,RDC,control
+116,SDC,control,0.5394692180508436,SDC,control
+123,RDC,case,0.970828382889751,RDC,case
+123,SDC,case,2.515063055740555,SDC,case
+137,No Added Carb,case,1.7470826269816064,No Added Carb,case
+137,RDC,case,1.8377337002400367,RDC,case
+137,SDC,case,1.3753642780042155,SDC,case
+161,No Added Carb,case,0.8773040535101759,No Added Carb,case
+161,RDC,case,0.9352321420796326,RDC,case
+161,SDC,case,1.0890012094671415,SDC,case
+176,No Added Carb,control,1.7185949508423635,No Added Carb,control
+176,RDC,control,1.046139480279047,RDC,control
+176,SDC,control,1.641166866547982,SDC,control
+21,No Added Carb,case,1.2215344604680087,No Added Carb,case
+21,RDC,case,2.0941571817154587,RDC,case
+21,SDC,case,1.2721511754399883,SDC,case
+239,No Added Carb,case,1.3936282433786,No Added Carb,case
+239,RDC,case,3.062102975190506,RDC,case
+239,SDC,case,0.621618979074392,SDC,case
+41,No Added Carb,case,0.7372654286593061,No Added Carb,case
+41,RDC,case,3.061011472355736,RDC,case
+41,SDC,case,0.7980485652985578,SDC,case
+50,No Added Carb,case,0.8703603776203233,No Added Carb,case
+50,RDC,case,0.5350200366499909,RDC,case
+50,SDC,case,1.1522442768544021,SDC,case
+58,No Added Carb,case,0.6447150665897725,No Added Carb,case
+58,RDC,case,0.5499330747797089,RDC,case
+58,SDC,case,0.6091067350507364,SDC,case
+66,No Added Carb,control,-0.9354003298920712,No Added Carb,control
+66,RDC,control,0.7644936080199543,RDC,control
+66,SDC,control,1.0252336597925393,SDC,control
+67,No Added Carb,control,-0.8900293102286034,No Added Carb,control
+67,RDC,control,1.463280730189708,RDC,control
+67,SDC,control,1.295533612037648,SDC,control
+73,No Added Carb,control,0.7821047135458059,No Added Carb,control
+73,RDC,control,1.704654730894672,RDC,control
+73,SDC,control,1.4604688835210702,SDC,control
+84,No Added Carb,control,2.3468812098903937,No Added Carb,control
+84,RDC,control,1.5292544277967783,RDC,control
+84,SDC,control,1.7436837278740254,SDC,control
+92,No Added Carb,control,-0.3983511324617659,No Added Carb,control
+92,RDC,control,0.4920841271703482,RDC,control
+92,SDC,control,0.5086124198811679,SDC,control

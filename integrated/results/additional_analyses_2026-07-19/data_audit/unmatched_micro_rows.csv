@@ -1,0 +1,9 @@
+scfa_sample_id,donor_id,aliquot_id,carbohydrate,well_repeat,timepoint,acetate,butyrate,propionate,total_scfa,customer_label,Ct,gene_copies_per_ul,genome_copies_per_ul_star,dna_ng_per_ul,sample_id,fusicatenibacter_rel,bifidobacterium_rel,qpcr_genus,asv_read_depth,scfa_micro,well_id,group,group_label,fusicatenibacter_qpcr_scaled,bifidobacterium_qpcr_scaled,genome_over_gene_ratio
+,123,123A,No Added Carb,1.0,48H,,,,,123A.NC.48H,13.02,993259090.0,248314773.0,1262.76845041,zr24558_65V3V4,0.00081422173972,0.00180938164382,both,88428.0,right_only,123A::No Added Carb::1,case,obesity,808733.1442525041,1797184.7650033573,0.2500000005033933
+,21,21A,No Added Carb,1.0,48H,,,,,21A.NC.48H,11.09,4501601773.0,1125400443.0,5723.05931027,zr24558_20V3V4,0.0,0.0336457494325,both,54628.0,right_only,21A::No Added Carb::1,case,obesity,0.0,151459765.29925573,0.2499999999444642
+,66,66B,RDC,2.0,48H,,,,,66B.R2.48H,10.94,6313462551.0,1578365638.0,8026.54754203,zr24558_57V3V4,0.0,0.623980568754,both,56404.0,right_only,66B::RDC::2,control,healthy-weight,0.0,3939477953.3800597,0.25000000003959794
+,66,66B,SDC,2.0,48H,,,,,66B.S2.48H,11.62,3497078790.0,874269698.0,4445.97064622,zr24558_59V3V4,0.0,0.593675676484,both,66853.0,right_only,66B::SDC::2,control,healthy-weight,0.0,2076130616.371098,0.25000000014297646
+,,,,,,,,,,41A.NC.40H,,,,,,0.0817269525923,0.106153439046,right_only,49127.0,right_only,,,,,,
+,,,,,,,,,,73.NC.0H,,,,,,0.100237846717,0.0840334696532,right_only,58441.0,right_only,,,,,,
+,,,,,,,,,,MediaControl,,,,,,0.0,0.000598540145985,right_only,68500.0,right_only,,,,,,
+,,,,,,,,,,MediaControl48h,,,,,,0.100075789474,0.0868884210526,right_only,59375.0,right_only,,,,,,

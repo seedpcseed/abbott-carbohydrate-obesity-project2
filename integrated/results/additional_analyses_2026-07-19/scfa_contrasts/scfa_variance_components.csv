@@ -1,0 +1,13 @@
+grp,var1,var2,vcov,sdcor,analyte
+well_id,(Intercept),NA,0,0,acetate
+aliquot_id,(Intercept),NA,16.10416181100038,4.012999104286018,acetate
+donor_id,(Intercept),NA,10.517653628214111,3.2430932191681,acetate
+Residual,NA,NA,54.67439779059942,7.394213804766496,acetate
+well_id,(Intercept),NA,0,0,propionate
+aliquot_id,(Intercept),NA,0.2507144289066273,0.5007139192259661,propionate
+donor_id,(Intercept),NA,0.5652888755000894,0.7518569514875083,propionate
+Residual,NA,NA,4.268421297764718,2.066015802883588,propionate
+well_id,(Intercept),NA,0,0,butyrate
+aliquot_id,(Intercept),NA,0.2733693397115897,0.5228473388204149,butyrate
+donor_id,(Intercept),NA,1.1407995391178218,1.068082178073308,butyrate
+Residual,NA,NA,10.001461592049191,3.1625087497189934,butyrate

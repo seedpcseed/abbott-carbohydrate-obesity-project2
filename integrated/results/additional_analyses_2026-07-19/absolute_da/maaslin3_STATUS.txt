@@ -1,0 +1,1 @@
+maaslin3 returned error object; see maaslin3_ERROR.txt

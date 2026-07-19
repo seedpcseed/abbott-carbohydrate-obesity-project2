@@ -1,0 +1,2 @@
+model,term,estimate,se,pvalue,n_obs,n_donors,converged,note
+aliquot_delta_MixedLM,ERROR,,,,78,15,False,Singular matrix

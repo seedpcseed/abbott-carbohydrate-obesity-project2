@@ -1,0 +1,5 @@
+donor_id,aliquot_id,carbohydrate,well_repeat,timepoint,expected_sample_id,present_in_scfa_export
+123,123A,No Added Carb,1,48H,123a nc 48h,False
+21,21A,No Added Carb,1,48H,21a nc 48h,False
+66,66B,RDC,2,48H,66b r2 48h,False
+66,66B,SDC,2,48H,66b s2 48h,False

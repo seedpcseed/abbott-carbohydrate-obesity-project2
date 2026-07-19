@@ -1,0 +1,7 @@
+Df,SumOfSqs,R2,F,Pr(>F),term,model
+1,0.6054132632453965,0.026424597135751897,3.171829402104968,0.0037,group,all_timepoints_donor_aggregated
+2,0.32172357433350085,0.014042334975061407,0.8427733206165935,0.6651,carbohydrate,all_timepoints_donor_aggregated
+1,5.475868119244062,0.23900634129464132,28.688700028739614,1e-4,timepoint,all_timepoints_donor_aggregated
+2,0.09298153866323489,0.0040583843291890475,0.24357046342529964,1,group:carbohydrate,all_timepoints_donor_aggregated
+86,16.414987705376294,0.7164683422653564,NA,NA,Residual,all_timepoints_donor_aggregated
+92,22.910974200862487,1,NA,NA,Total,all_timepoints_donor_aggregated

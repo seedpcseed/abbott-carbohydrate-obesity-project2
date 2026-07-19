@@ -1,0 +1,14 @@
+metric,value
+scfa_rows,316
+qpcr_study_rows,293
+matched_both,289
+unmatched_scfa,27
+unmatched_micro,8
+donors_matched,16
+aliquots_matched,32
+paired_trajectories,129
+missing_planned_donors,4
+missing_scfa_design_samples,4
+genome_gene_ratio_median,0.25
+qpcr_qc_documented,0
+qpcr_assay_block_note,LOD/LOQ/primer/efficiency not in repo; provisional thresholds only

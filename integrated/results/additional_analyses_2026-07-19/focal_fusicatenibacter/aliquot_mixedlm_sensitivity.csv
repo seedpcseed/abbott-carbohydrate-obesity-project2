@@ -1,0 +1,2 @@
+term,estimate,se,pvalue,n_obs,n_donors,converged,note
+ERROR,,,,22,14,False,Singular matrix

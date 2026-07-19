@@ -1,6 +1,7 @@
 *.fastq
 *.fastq.gz
 *.RData
+*.rda
 *.zip
 *.png
 *.js
@@ -37,7 +38,37 @@ integrated/cache/
 integrated/maaslin2*
 .gstack/
 
+# Additional analyses (docs/additional-analyses-plan.2026-07-19.md):
+# separate Bioconductor 3.23 library / renv tree — regenerate from lockfile, do not commit.
+# The many *.rda files under this tree are package shipped data (e.g. ade4, vegan), not study results.
+integrated/additional_analyses/renv_bioc323/
+integrated/additional_analyses/**/library/
+integrated/additional_analyses/**/install.log
+integrated/additional_analyses/**/sessionInfo_install.txt
+__pycache__/
+*.pyc
+.Rhistory
+.Rproj.user/
+
 # Versioned SCFA obesity-group equivalence specification and outputs
 !scfa_metabolomics/equivalence_margins.csv
 !scfa_metabolomics/results/obesity_group_scfa_*.csv
 !scfa_metabolomics/figures/obesity_group_scfa_equivalence_forest.png
+
+# Versioned additional-analyses claim tables / diagnostics / figures
+# (override global *.csv / *.txt / *.png ignores; scripts under additional_analyses/ stay tracked)
+!integrated/results/additional_analyses_*/
+!integrated/results/additional_analyses_*/**
+!integrated/results/additional_analyses_*/**/*.csv
+!integrated/results/additional_analyses_*/**/*.txt
+!integrated/results/additional_analyses_*/**/*.png
+!integrated/results/additional_analyses_*/**/*.md
+
+# After the un-ignores above: still drop model-fit scratch and verbose run logs
+integrated/results/**/maaslin3_fit/
+integrated/results/**/*_run.log
+integrated/results/**/maaslin3.log
+
+# If a proper renv lockfile is added later, commit the lockfile only (library stays ignored above)
+!integrated/additional_analyses/**/renv.lock
+!integrated/additional_analyses/renv.lock

@@ -1,0 +1,2 @@
+analysis,exposure,outcome,spearman_rho,permutation_p,bootstrap_ci95_low,bootstrap_ci95_high,n_donors,ols_slope_per_log10,ols_intercept,ols_r2,n_bootstrap
+primary_donor_net_SDC,net_delta_log10_fusi_qpcr_SDC,net_delta_butyrate_SDC,0.4769230769230769,0.08819118088191182,-0.23890866312741313,0.8921348314606741,14,1.3883259284674043,0.5692862828084362,0.4112401152427527,2000

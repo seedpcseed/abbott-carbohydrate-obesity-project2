@@ -418,7 +418,7 @@ Short-chain fatty acids (butyrate, propionate, acetate, and others) were quantif
 
 ## 3.3 Microbiome Sequencing, Processing, and Phyloseq Construction
 
-16S rRNA gene sequencing was performed on fecal samples, and sequences were processed through standard quality control, denoising, and taxonomic assignment pipelines. The processed data were organized into a `phyloseq` object containing an OTU/ASV table, taxonomic classifications, sample metadata, and phylogenetic tree information. Relative abundances were calculated by normalizing counts to proportions within each sample. Absolute abundances were derived by integrating qPCR-determined total bacterial genome copies per sample with relative abundance data.
+16S rRNA gene sequencing was performed on fecal samples, and sequences were processed through standard quality control, denoising, and taxonomic assignment pipelines. The processed data were organized into a `phyloseq` object containing an OTU/ASV table, taxonomic classifications, sample metadata, and phylogenetic tree information. Relative abundances were calculated by normalizing counts to proportions within each sample. **qPCR-scaled abundances** were derived as genus relative abundance × total bacterial 16S qPCR load. These are estimated target equivalents, not genus-specific qPCR or cell counts. Facility confirmation of primers, efficiency, LOD/LOQ, and the `genome_copies_per_ul*` conversion footnote remains pending; claim-facing quantitative summaries should prefer `gene_copies_per_ul` when available (see `integrated/results/additional_analyses_2026-07-19/`).
 
 ## 3.4 Statistical Modeling Strategies
 
@@ -438,7 +438,7 @@ No external biological threshold, project-specific analyte CV/LOQ, or directly c
 
 ### 3.4.3 Alpha Diversity Analysis
 
-Within-sample microbial diversity was assessed using three metrics: Observed richness (number of unique taxa), Shannon diversity index (accounts for both richness and evenness), and Simpson diversity index (emphasizes dominant taxa). For claim-facing tests, alpha metrics were averaged to one value per donor × carbohydrate × timepoint before Wilcoxon rank-sum tests with BH FDR correction.
+Within-sample microbial diversity was assessed using three metrics: Observed richness (number of unique taxa), Shannon diversity index (accounts for both richness and evenness), and Simpson diversity index (emphasizes dominant taxa). Metrics were averaged to one value per donor × carbohydrate × timepoint. Faceted Wilcoxon tables in this report are descriptive within-stratum comparisons. Claim-facing alpha inference uses donor-aware mixed models and group contrasts exported under `integrated/results/additional_analyses_2026-07-19/alpha_permanova/`.
 
 ### 3.4.4 Beta Diversity and Community Structure
 
@@ -460,7 +460,7 @@ To identify microbial taxa associated with SCFA concentrations, ANCOM-BC2 and Ma
 
 ### 3.4.7 Correlation Analyses
 
-Spearman rank correlation coefficients were calculated to assess monotonic relationships between taxon abundances (e.g., *Fusicatenibacter*) and SCFA concentrations. Linear regression models were fitted to estimate R² values and test for linear associations. Correlations were examined at specific timepoints (e.g., 48H) and carbohydrate conditions (e.g., SDC only) to focus on biologically relevant contexts.
+Sample-level Spearman and ordinary linear models of relative *Fusicatenibacter* abundance versus SCFA at 48-hour SDC are retained in Section 7.4 only as descriptive diagnostics. They do **not** support claim-facing association statements because they treat nested wells as independent and do not implement exact well matching before aggregation. The claim-facing estimand is the donor-level SDC-attributable net change in log10 qPCR-scaled *Fusicatenibacter* versus Δbutyrate (N≈14–16 independent donors), reported under `integrated/results/additional_analyses_2026-07-19/focal_fusicatenibacter/`.
 
 ### 3.4.8 Responder vs Non-Responder Classification
 
@@ -1421,11 +1421,11 @@ The SCFA metabolomics analysis reveals several key findings regarding short-chai
 **1. Dominant Effect of Carbohydrate Type and Time**
 
 The primary drivers of SCFA production in this ex vivo model were the type of carbohydrate supplied and the incubation time. This was supported by:
-- Omnibus differences in delta changes (48H - 0H) among carbohydrate conditions for multiple SCFAs (Section 5.2)
+- Donor-aware mixed models of 0-to-48-hour change (delta ~ group × carbohydrate + (1 | donor); Section 5.2)
 - Clear temporal increases in SCFA concentrations, with distinct trajectories by carbohydrate condition (Section 5.3)
-- Significant carbohydrate, timepoint, and selected carbohydrate-by-timepoint effects in the mixed-effects models (Section 5.4)
+- Significant carbohydrate, timepoint, and selected carbohydrate-by-timepoint effects in the nested mixed-effects models (Section 5.4)
 
-The omnibus tests do not establish every pairwise carbohydrate difference. For butyrate, the adjusted 0-to-48-hour change was greater for SDC than no added carbohydrate, whereas the RDC-versus-no-added-carbohydrate and SDC-versus-RDC contrasts were not significant after Tukey adjustment (Section 5.4.2).
+Donor-aware carbohydrate-change contrasts for acetate, propionate, and butyrate are also exported under `results/additional_analyses_2026-07-19/scfa_contrasts/`. The omnibus or main effects do not establish every pairwise carbohydrate difference. For butyrate, the adjusted 0-to-48-hour change was greater for SDC than no added carbohydrate, whereas the RDC-versus-no-added-carbohydrate and SDC-versus-RDC contrasts were not significant after Tukey adjustment (Section 5.4.2).
 
 **2. Obesity-Group Contrasts Were Nonsignificant but Not Equivalent**
 
@@ -3943,9 +3943,9 @@ if (length(da_genera_48h_found) > 0) {
 }
 ```
 
-## 6.6 Absolute Abundances
+## 6.6 qPCR-Scaled Abundances
 
-Relative abundance data (compositional) can mask true changes in microbial load. To address this, we integrated qPCR-derived total genome copy estimates per sample to convert relative abundances to absolute abundances (genome copies per sample). This allows us to distinguish between compositional shifts versus true changes in microbial load.
+Relative abundance data (compositional) can mask true changes in microbial load. Here we scale genus relative abundances by total bacterial 16S qPCR load to obtain **qPCR-scaled abundances** (estimated 16S target equivalents per µL). This is not a genus-specific qPCR assay. Plots in this section currently use the facility `genome_copies_per_ul*` column already embedded in the nested workflow; newer claim-facing tables prefer `gene_copies_per_ul` and exact well matching (`integrated/results/additional_analyses_2026-07-19/`).
 
 ### 6.6.1 Integration of qPCR Data
 
@@ -4164,7 +4164,7 @@ cat("- Samples by group:\n")
 print(table(qpcr_plot_data$group, useNA = "ifany"))
 ```
 
-### 6.6.4 Fusicatenibacter Absolute Abundance Plots
+### 6.6.4 Fusicatenibacter qPCR-Scaled Abundance Plots
 
 ```{r fusicatenibacter-absolute-abundance, echo=FALSE, fig.width=14, fig.height=10, cache=FALSE, dependson="absolute-abundance-conversion"}
 # Extract absolute abundance data for g__Fusicatenibacter
@@ -4223,10 +4223,10 @@ if (length(fusicatenibacter_taxa) > 0) {
     scale_fill_scfa() +
     scale_y_continuous(labels = scales::comma) +
     labs(
-      title = "g__Fusicatenibacter Absolute Abundance",
-      subtitle = "Mean ± SE genome copies per μL by group, carbohydrate, and timepoint",
+      title = "g__Fusicatenibacter qPCR-Scaled Abundance",
+      subtitle = "Mean ± SE (relative × total load; genome_copies_per_ul* scale in this plot)",
       x = "Carbohydrate",
-      y = "Absolute Abundance (genome copies/μL)",
+      y = "qPCR-scaled abundance (copies/μL)",
       fill = "Group"
     ) +
     theme_scfa() +
@@ -4249,10 +4249,10 @@ if (length(fusicatenibacter_taxa) > 0) {
     scale_color_scfa() +
     scale_y_continuous(labels = scales::comma) +
     labs(
-      title = "g__Fusicatenibacter Absolute Abundance Over Time",
-      subtitle = "Mean ± SE genome copies per μL by carbohydrate type and group",
+      title = "g__Fusicatenibacter qPCR-Scaled Abundance Over Time",
+      subtitle = "Mean ± SE (relative × total load; genome_copies_per_ul* scale in this plot)",
       x = "Timepoint",
-      y = "Absolute Abundance (genome copies/μL)",
+      y = "qPCR-scaled abundance (copies/μL)",
       color = "Group"
     ) +
     theme_scfa()
@@ -4266,7 +4266,7 @@ if (length(fusicatenibacter_taxa) > 0) {
 
 # 7. Integrated Analysis: Taxon–SCFA Relationships
 
-This section integrates SCFA metabolomics with microbiome composition to identify taxa associated with SCFA concentrations. We model associations between microbial taxa and butyrate/propionate concentrations while accounting for carbohydrate type effects, using both relative and absolute abundance data.
+This section integrates SCFA metabolomics with microbiome composition to identify taxa associated with SCFA concentrations. We model associations between microbial taxa and butyrate/propionate concentrations while accounting for carbohydrate type effects, using relative abundance and qPCR-scaled abundance (relative × total 16S load). Sample-level correlation and median-split responder panels in this section are exploratory diagnostics; claim-facing *Fusicatenibacter*–butyrate inference uses the donor-level net-change analysis under `results/additional_analyses_2026-07-19/focal_fusicatenibacter/`.
 
 ## 7.1 Integration of SCFA Data with Microbiome Metadata
 
@@ -4914,7 +4914,30 @@ if (exists("maaslin2_propionate_tbl_rel_full") && nrow(maaslin2_propionate_tbl_r
 
 ## 7.4 Fusicatenibacter–SCFA Correlations
 
+> **Claim retirement (2026-07-19):** The sample-level relative-abundance correlations below are exploratory diagnostics only. Do not report their N, R², or p-values as evidence of a *Fusicatenibacter*–butyrate association. The claim-facing donor-level qPCR-scaled SDC net-change analysis is nonsignificant (Spearman ρ≈0.48, permutation p≈0.088, bootstrap CI includes 0, N=14 donors); see `integrated/results/additional_analyses_2026-07-19/focal_fusicatenibacter/primary_fusicatenibacter_butyrate.csv`.
+
+```{r fusicatenibacter-claim-facing-summary, echo=FALSE}
+focal_csv <- file.path(
+  "..", "integrated", "results", "additional_analyses_2026-07-19",
+  "focal_fusicatenibacter", "primary_fusicatenibacter_butyrate.csv"
+)
+# Rmd lives in integrated/, so results are a sibling path from the project root.
+focal_candidates <- c(
+  "results/additional_analyses_2026-07-19/focal_fusicatenibacter/primary_fusicatenibacter_butyrate.csv",
+  "../integrated/results/additional_analyses_2026-07-19/focal_fusicatenibacter/primary_fusicatenibacter_butyrate.csv"
+)
+focal_hit <- focal_candidates[file.exists(focal_candidates)][1]
+if (!is.na(focal_hit)) {
+  focal <- readr::read_csv(focal_hit, show_col_types = FALSE)
+  cat("Claim-facing donor-level qPCR-scaled Fusicatenibacter–butyrate (SDC net change):\n")
+  print(as.data.frame(focal))
+} else {
+  cat("Claim-facing focal table not found beside this knit; see results/additional_analyses_2026-07-19/focal_fusicatenibacter/.\n")
+}
+```
+
 ```{r fusicatenibacter-scfa-correlations, echo=FALSE, fig.width=14, fig.height=10, cache=FALSE, dependson="scfa-microbiome-integration"}
+# DESCRIPTIVE ONLY — not claim-facing (nested wells treated as independent).
 # Extract relative abundance of g__Fusicatenibacter
 fusicatenibacter_taxa_rel <- taxa_names(ps)[
   stringr::str_detect(tax_table(ps)[, "Genus"], regex("Fusicatenibacter", ignore_case = TRUE))
@@ -5061,9 +5084,10 @@ if (length(fusicatenibacter_taxa_rel) > 0) {
     print(corr_propionate_plot)
   }
   
-  # Print correlation statistics summary
-  cat("\nFusicatenibacter-SCFA Correlations (48H, SDC only):\n")
+  # Print correlation statistics summary (DESCRIPTIVE ONLY — not claim-facing)
+  cat("\n[DESCRIPTIVE ONLY] Fusicatenibacter-SCFA sample-level correlations (48H, SDC):\n")
   cat("==================================================\n")
+  cat("Do not use these as claim-facing results; see focal donor-level table above.\n\n")
   
   if (!is.na(r2_butyrate)) {
     cat(sprintf("Butyrate:\n"))
@@ -6474,12 +6498,13 @@ if (exists("maaslin2_prop_resp_tbl") && nrow(maaslin2_prop_resp_tbl) > 0) {
 }
 ```
 
-## 7.8 Absolute Fusicatenibacter Abundance: Responders vs Non-Responders
+## 7.8 qPCR-Scaled Fusicatenibacter Abundance: Responders vs Non-Responders
 
-To determine whether absolute *Fusicatenibacter* abundance differs between SCFA responders and non-responders, we compared absolute abundance levels (genome copies per μL) at the 48H timepoint. This analysis uses qPCR-derived total bacterial load data integrated with relative abundance measurements to calculate absolute *Fusicatenibacter* abundance.
+> **Claim retirement (2026-07-19):** Pooled responder Wilcoxon tests on well-level qPCR-scaled *Fusicatenibacter* abundances are exploratory only. They dichotomize a continuous SCFA outcome, retain multiple records per donor, and are not SDC-specific when pooled. Prefer the continuous donor-level net-change association in `results/additional_analyses_2026-07-19/focal_fusicatenibacter/`. These values are **qPCR-scaled** (relative × total load), not genus-specific absolute qPCR.
 
 ```{r fusicatenibacter-abs-responders, echo=FALSE, fig.width=14, fig.height=10, cache=FALSE, dependson=c("absolute-abundance-conversion", "responder-nonresponder")}
-# Extract absolute Fusicatenibacter abundance and merge with responder status
+# EXPLORATORY / DESCRIPTIVE ONLY — not claim-facing.
+# Extract qPCR-scaled Fusicatenibacter abundance and merge with responder status
 # Find all ASVs assigned to Fusicatenibacter genus
 fusicatenibacter_taxa_abs <- taxa_names(ps_genus_abs_obj)[
   stringr::str_detect(tax_table(ps_genus_abs_obj)[, "Genus"], regex("Fusicatenibacter", ignore_case = TRUE))
@@ -6664,12 +6689,15 @@ if (length(fusicatenibacter_taxa_abs) > 0) {
 }
 ```
 
-## 7.9 Absolute Bifidobacterium Abundance: Responders vs Non-Responders
+## 7.9 qPCR-Scaled Bifidobacterium Abundance: Responders vs Non-Responders
 
-To determine whether absolute *Bifidobacterium* abundance differs between SCFA responders and non-responders, we compared absolute abundance levels (genome copies per μL) at the 48H timepoint. This analysis uses qPCR-derived total bacterial load data integrated with relative abundance measurements to calculate absolute *Bifidobacterium* abundance.
+> **Descriptive only:** Same caveats as Section 7.8 — qPCR-scaled (not genus-specific qPCR), exploratory median-split responder strata, not claim-facing.
+
+To determine whether qPCR-scaled *Bifidobacterium* abundance differs between SCFA responders and non-responders, we compared scaled abundance levels at the 48H timepoint. This uses total bacterial 16S qPCR load × relative abundance.
 
 ```{r bifidobacterium-abs-responders, echo=FALSE, fig.width=14, fig.height=10, cache=FALSE, dependson=c("absolute-abundance-conversion", "responder-nonresponder")}
-# Extract absolute Bifidobacterium abundance and merge with responder status
+# EXPLORATORY / DESCRIPTIVE ONLY — not claim-facing.
+# Extract qPCR-scaled Bifidobacterium abundance and merge with responder status
 # Find all ASVs assigned to Bifidobacterium genus
 bifidobacterium_taxa_abs <- taxa_names(ps_genus_abs_obj)[
   stringr::str_detect(tax_table(ps_genus_abs_obj)[, "Genus"], regex("Bifidobacterium", ignore_case = TRUE))
@@ -6890,10 +6918,10 @@ This integrated analysis brings together SCFA metabolomics and 16S rRNA gene mic
 - At 48H, significant differences were observed between RDC and SDC conditions, with distinct taxa associated with each carbohydrate type.
 - These findings suggest that carbohydrate structure and digestibility shape microbial community composition in predictable ways.
 
-**Absolute Abundance:**
-- Integration of qPCR-derived total bacterial load data with relative abundance measurements enabled calculation of absolute abundances (genome copies per μL) for all taxa.
-- Absolute abundance analyses revealed patterns that complement relative abundance findings, distinguishing between true changes in microbial load versus compositional shifts.
-- Key taxa of interest, including *Fusicatenibacter* and *Bifidobacterium*, were examined using absolute abundance metrics to understand their true abundance changes in response to carbohydrate interventions.
+**qPCR-Scaled Abundance:**
+- Genus relative abundances were scaled by total bacterial 16S qPCR load to estimate target equivalents per µL (not genus-specific qPCR or cell counts).
+- qPCR-scaled summaries complement relative abundance by distinguishing load changes from pure compositional shifts; facility LOD/LOQ confirmation remains pending.
+- *Fusicatenibacter* and *Bifidobacterium* plots in Section 6.6/7.8–7.9 remain descriptive; the claim-facing continuous donor-level *Fusicatenibacter*–butyrate test did not reach significance.
 
 ## 8.3 Taxon–SCFA Relationships
 
@@ -6983,10 +7011,10 @@ if (exists("responder_wide") && nrow(responder_wide) > 0) {
 - Exploratory 48H microbiome comparisons examine diversity, community structure, and differential abundance across median-defined response strata.
 - These concurrent, sample-dependent associations do not establish baseline prediction, mechanism, or a validated responder phenotype.
 
-**Absolute Abundance of Key Taxa in Responders:**
-- qPCR-scaled absolute-abundance comparisons are retained as exploratory associations and should be interpreted by analyte and carbohydrate condition.
+**qPCR-Scaled Abundance of Key Taxa in Responders:**
+- qPCR-scaled comparisons versus median-defined response strata are retained as exploratory associations and should be interpreted by analyte and carbohydrate condition.
 - A significant result for one responder definition and a nonsignificant result for another do not by themselves demonstrate pathway specificity.
-- The comparison of absolute abundances helps distinguish between taxa that are truly more abundant in responders versus taxa that appear enriched due to compositional effects.
+- Prefer continuous donor-level net-change models over pooled well-level Wilcoxon responder tests for claim language.
 
 ## 8.5 Integrated Conclusions
 
@@ -6997,7 +7025,7 @@ if (exists("responder_wide") && nrow(responder_wide) > 0) {
 
 3. **Donor response differences are repeatable:** Continuous donor-level changes and ICCs show persistent high-to-low donor ordering across carbohydrate conditions. Obesity-group dispersion differences were not detected, but estimates are imprecise with eight donors per group.
 
-4. **Taxon–SCFA relationships are exploratory and context-dependent:** Concurrent 48H associations vary by carbohydrate condition and require donor-aware, condition-specific validation. The observed relative *Fusicatenibacter*–butyrate relationship under SDC was not statistically significant.
+4. **Taxon–SCFA relationships are exploratory and context-dependent:** Concurrent 48H associations vary by carbohydrate condition and require donor-aware, condition-specific validation. The donor-level SDC-attributable qPCR-scaled *Fusicatenibacter*–butyrate net-change association was positive but nonsignificant (ρ≈0.48, permutation p≈0.088, bootstrap CI including 0). Sample-level relative-abundance correlations must not be cited as claim-facing results.
 
 5. **Median-defined response strata are hypothesis-generating:** Responder labels are sample-dependent, show A/B aliquot sensitivity, and are linked to concurrent rather than baseline microbiome measurements. They do not establish prediction or a validated phenotype.
 

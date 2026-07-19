@@ -1,0 +1,2 @@
+analysis,spearman_rho,permutation_p,bootstrap_ci95_low,bootstrap_ci95_high,n_donors
+raw_SDC_change_not_net,0.5357142857142856,0.040495950404959506,0.034558386790211455,0.8055223655300805,15
