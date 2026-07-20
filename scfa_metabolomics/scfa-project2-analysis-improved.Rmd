@@ -76,7 +76,7 @@ make_publication_headers <- function(col_names) {
     str_to_title() %>%
     str_replace("Group", "Group") %>%
     str_replace("Analyte", "Analyte") %>%
-    str_replace("Concentration", "Concentration (μM)") %>%
+    str_replace("Concentration", "Concentration (mM)") %>%
     str_replace("Mean", "Mean") %>%
     str_replace("Sd", "SD") %>%
     str_replace("Sem", "SEM") %>%
@@ -230,7 +230,7 @@ plot_by_group_carb <- sample_data_long %>%
   scale_fill_manual(values = group_colors) +
   stat_compare_means(method = "wilcox.test", comparisons = list(c("Case", "Control")), label = "p.signif") +
   labs(title = "SCFA Concentrations by Group and Carbohydrate Type",
-       x = "Group", y = "Concentration (μM)", fill = "Group") +
+       x = "Group", y = "Concentration (mM)", fill = "Group") +
   pub_theme +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
@@ -252,7 +252,7 @@ plot_time_series <- sample_data_long %>%
   facet_wrap(~ analyte, scales = "free_y") +
   scale_color_manual(values = carb_colors) +
   labs(title = "SCFA Concentrations Over Time by Carbohydrate Type",
-       x = "Time (hours)", y = "Mean Concentration ± SEM (μM)", color = "Carbohydrate Type") +
+       x = "Time (hours)", y = "Mean Concentration ± SEM (mM)", color = "Carbohydrate Type") +
   pub_theme +
   theme(legend.position = "bottom")
 
@@ -288,7 +288,7 @@ plot_delta_interaction <- delta_data %>%
   stat_compare_means(aes(group = group_label), label = "p.signif", method = "wilcox.test") +
   labs(title = "SCFA Response Magnitude: Group × Carbohydrate Interaction",
        subtitle = "Delta change (48h - 0h) with Wilcoxon test statistics",
-       x = "Carbohydrate Type", y = "Delta Concentration (48h - 0h) μM", fill = "Group") +
+       x = "Carbohydrate Type", y = "Delta Concentration (48h - 0h) mM", fill = "Group") +
   pub_theme +
   theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "bottom")
 
@@ -371,7 +371,7 @@ plot_delta_control_only <- delta_data %>%
     title = "SCFA Response Magnitude by Carbohydrate Type - Control Group Only",
     subtitle = "Pairwise Wilcoxon rank-sum test comparisons",
     x = "Carbohydrate Type", 
-    y = "Change in Concentration (48h - 0h) μM"
+    y = "Change in Concentration (48h - 0h) mM"
   ) +
   pub_theme +
   theme(
@@ -406,7 +406,7 @@ plot_delta_case_only <- delta_data %>%
     title = "SCFA Response Magnitude by Carbohydrate Type - Case Group Only",
     subtitle = "Pairwise Wilcoxon rank-sum test comparisons",
     x = "Carbohydrate Type", 
-    y = "Change in Concentration (48h - 0h) μM"
+    y = "Change in Concentration (48h - 0h) mM"
   ) +
   pub_theme +
   theme(
@@ -440,7 +440,7 @@ plot_delta_carb_combined <- delta_data %>%
     title = "SCFA Response Magnitude by Carbohydrate Type",
     subtitle = "Combined Control and Case groups with pairwise comparisons vs. no-carbohydrate control",
     x = "Carbohydrate Type", 
-    y = "Change in Concentration (48h - 0h) μM"
+    y = "Change in Concentration (48h - 0h) mM"
   ) +
   pub_theme +
   theme(
@@ -908,7 +908,7 @@ plot_trajectories <- sample_data_long %>%
   scale_color_manual(values = group_colors) +
   labs(title = "Individual Subject SCFA Trajectories by Carbohydrate Source",
        subtitle = "Thin lines: individual subjects, Thick lines: group means",
-       x = "Time (hours)", y = "Concentration (μM)", color = "Group") +
+       x = "Time (hours)", y = "Concentration (mM)", color = "Group") +
   pub_theme +
   theme(legend.position = "bottom")
 
@@ -929,7 +929,7 @@ plot_subject_heatmap <- subject_heatmap_data %>%
   geom_tile(color = "white", linewidth = 0.2) +
   facet_grid(group ~ analyte, scales = "free") +
   scale_fill_viridis_c(name = "Concentration
-(μM)", option = "plasma", trans = "sqrt") +
+(mM)", option = "plasma", trans = "sqrt") +
   labs(title = "Individual Subject SCFA Responses Across All Conditions",
        x = "Condition × Time Point", y = "Subject") +
   pub_theme +

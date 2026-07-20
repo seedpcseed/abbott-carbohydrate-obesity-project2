@@ -26,11 +26,27 @@ knitr::opts_chunk$set(
 )
 
 options(dplyr.summarise.inform = FALSE)
+
+# The R >=4.6 / Bioconductor 3.23 project library is shared with the
+# additional-analysis scripts. Prefer it only when the active interpreter
+# matches, so an older render R (e.g. 4.3) does not pick up incompatible
+# package binaries that demand a newer rlang.
+project_render_lib <- file.path(
+  "additional_analyses", "renv_bioc323", "library"
+)
+if (dir.exists(project_render_lib) && getRversion() >= "4.6") {
+  .libPaths(c(normalizePath(project_render_lib), .libPaths()))
+}
 ```
 
-```{r libraries, include=FALSE}
-# Core libraries from SCFA and microbiome analyses
-library(tidyverse)
+```{r libraries, include=FALSE, cache=FALSE}
+# Core libraries from SCFA and microbiome analyses. Load the component
+# packages explicitly so the report does not depend on the tidyverse meta-package.
+library(dplyr)
+library(tidyr)
+library(tibble)
+library(ggplot2)
+library(forcats)
 library(readr)
 library(readxl)
 library(data.table)
@@ -414,7 +430,7 @@ The study design includes two groups (Control/Healthy and Case/Obese) exposed to
 
 ## 3.2 SCFA Quantification and Preprocessing
 
-Short-chain fatty acids (butyrate, propionate, acetate, and others) were quantified using PFBBr derivatization and negative chemical-ionization GC-MS. The facility method documents authentic-standard calibration for acetate, propionate, butyrate, and succinate. The exported values are labeled micromolar (μM) in this workflow, but the unit and dilution mapping remain pending facility confirmation. The primary trajectory models use the exported concentration scale without log transformation.
+Short-chain fatty acids (butyrate, propionate, acetate, and others) were quantified using PFBBr derivatization and negative chemical-ionization GC-MS. The facility method documents authentic-standard calibration for acetate, propionate, butyrate, and succinate. Concentrations are reported in millimolar (mM). The primary trajectory models use the exported concentration scale without log transformation.
 
 ## 3.3 Microbiome Sequencing, Processing, and Phyloseq Construction
 
@@ -428,7 +444,7 @@ Linear mixed-effects models were fitted to analyze SCFA concentrations as a func
 
 Interpersonal response heterogeneity was analyzed on one 0-to-48-hour change per donor × analyte × carbohydrate after averaging A/B aliquots and culture wells within donor and timepoint. Donor-aware repeated-measures models used `delta ~ group * carbohydrate + (1 | donor)`. Donor repeatability was summarized with the intraclass correlation coefficient (ICC) and a donor-resampling bootstrap confidence interval; rank consistency between RDC and SDC was summarized with Spearman correlation and a donor bootstrap interval. Obesity-group dispersion was described with donor-level standard deviations, obesity-to-healthy-weight SD ratios, bootstrap intervals, and Brown–Forsythe tests with BH correction across the six primary analyte × active-carbohydrate comparisons. Because responder status is defined from the same delta by a within-stratum median split, responder-versus-non-responder variance of that defining outcome was not tested.
 
-The prespecified direct comparison of the butyrate response to SDC versus RDC was defined as the difference in 0-to-48-hour changes: (SDC 48H - SDC 0H) - (RDC 48H - RDC 0H). This difference-in-differences contrast was estimated from the same mixed-effects model using `emmeans`, marginalizing equally over obesity group. Two-sided inference is reported as the estimated difference in change in μM, a 95% confidence interval, and a Tukey-adjusted p-value controlling the family of three pairwise carbohydrate-change comparisons (RDC versus no added carbohydrate, SDC versus no added carbohydrate, and SDC versus RDC). This contrast, rather than the omnibus carbohydrate main effect or a time-averaged carbohydrate comparison, tests whether the butyrate increase is greater under SDC than RDC.
+The prespecified direct comparison of the butyrate response to SDC versus RDC was defined as the difference in 0-to-48-hour changes: (SDC 48H - SDC 0H) - (RDC 48H - RDC 0H). This difference-in-differences contrast was estimated from the same mixed-effects model using `emmeans`, marginalizing equally over obesity group. Two-sided inference is reported as the estimated difference in change in mM, a 95% confidence interval, and a Tukey-adjusted p-value controlling the family of three pairwise carbohydrate-change comparisons (RDC versus no added carbohydrate, SDC versus no added carbohydrate, and SDC versus RDC). This contrast, rather than the omnibus carbohydrate main effect or a time-averaged carbohydrate comparison, tests whether the butyrate increase is greater under SDC than RDC.
 
 ### 3.4.2 Obesity-Group Trajectory Contrasts and Equivalence
 
@@ -854,7 +870,7 @@ donor_response_profile_plot <- delta_data %>%
     title = "Donor-Level SCFA Response Profiles Across Carbohydrate Conditions",
     subtitle = "One line per independent donor; A/B aliquots and culture wells averaged before calculating 48H - 0H",
     x = "Carbohydrate Condition",
-    y = "Donor-Level Change in Concentration (48H - 0H, μM)",
+    y = "Donor-Level Change in Concentration (48H - 0H, mM)",
     color = "Group"
   ) +
   theme_scfa() +
@@ -940,7 +956,7 @@ obesity_dispersion_plot <- primary_active_delta %>%
     title = "Dispersion of Donor-Level SCFA Responses by Obesity Group",
     subtitle = "Each point is one independent donor (n = 8 per group in each panel)",
     x = NULL,
-    y = "Donor-Level Change in Concentration (48H - 0H, μM)",
+    y = "Donor-Level Change in Concentration (48H - 0H, mM)",
     color = "Group",
     fill = "Group"
   ) +
@@ -1068,7 +1084,7 @@ plot_time_series <- tryCatch({
       title = "SCFA Concentrations Over Time by Carbohydrate Type",
       subtitle = "Means and SEM calculated from donor-level averages (N = 16 donors)",
       x = "Time (hours)",
-      y = "Donor-Level Mean Concentration ± SEM (μM)",
+      y = "Donor-Level Mean Concentration ± SEM (mM)",
       color = "Carbohydrate Type"
     ) +
     theme_scfa() +
@@ -1090,7 +1106,7 @@ if (!is.null(plot_time_series)) {
 
 To test whether obesity group, carbohydrate condition, and their interaction associate with endpoint fermentation outputs, we analyzed **48H concentrations alone** after averaging A/B aliquots and culture wells to one value per independent donor × carbohydrate × analyte. Boxplots show the donor-level distributions; formal tests use mixed models of the form `concentration_48H ~ group * carbohydrate + (1 | donor)` with Type III ANOVA and BH adjustment across analytes × model terms. Pairwise Wilcoxon symbols on the plots are descriptive only.
 
-```{r scfa-48h-endpoint, echo=FALSE, fig.width=14, fig.height=10, cache=FALSE}
+```{r scfa-48h-endpoint, echo=FALSE, fig.width=14, fig.height=10, cache=FALSE, error=FALSE}
 suppressPackageStartupMessages({
   library(dplyr)
   library(ggplot2)
@@ -1136,7 +1152,7 @@ plot_48h_group_carb <- scfa_48h_donor %>%
     title = "Donor-level SCFA concentrations at 48H: group × carbohydrate",
     subtitle = "One point per donor after averaging aliquots/wells; Wilcoxon symbols are descriptive",
     x = "Carbohydrate",
-    y = "Concentration (μM)",
+    y = "Concentration (mM)",
     fill = "Group"
   ) +
   theme_scfa() +
@@ -1167,7 +1183,7 @@ plot_48h_carb <- scfa_48h_donor %>%
     title = "Donor-level SCFA concentrations at 48H by carbohydrate",
     subtitle = "Groups pooled; pairwise Wilcoxon vs each carbohydrate pair (descriptive)",
     x = "Carbohydrate",
-    y = "Concentration (μM)"
+    y = "Concentration (mM)"
   ) +
   theme_scfa() +
   theme(axis.text.x = element_text(angle = 35, hjust = 1))
@@ -1189,7 +1205,7 @@ plot_48h_group <- scfa_48h_donor %>%
     title = "Donor-level SCFA concentrations at 48H by obesity group",
     subtitle = "Carbohydrates pooled; Wilcoxon Control vs Case (descriptive)",
     x = "Group",
-    y = "Concentration (μM)"
+    y = "Concentration (mM)"
   ) +
   theme_scfa()
 print(plot_48h_group)
@@ -1209,7 +1225,11 @@ scfa_48h_anova <- scfa_48h_donor %>%
     anova_df = purrr::map(
       model,
       ~ {
-        a <- as.data.frame(anova(.x))
+        a <- as.data.frame(stats::anova(
+          .x,
+          type = 3,
+          ddf = "Satterthwaite"
+        ))
         a$effect <- rownames(a)
         tibble::as_tibble(a)
       }
@@ -1219,50 +1239,55 @@ scfa_48h_anova <- scfa_48h_donor %>%
   tidyr::unnest(anova_df) %>%
   dplyr::filter(effect != "Residuals") %>%
   dplyr::rename(
+    df_num = NumDF,
+    df_den = DenDF,
     F_value = `F value`,
     pr_f = `Pr(>F)`
   ) %>%
   dplyr::mutate(
     p_adj = p.adjust(pr_f, method = "BH"),
     significance = dplyr::case_when(
-      p_adj < 0.001 ~ "p<0.001",
-      p_adj < 0.01 ~ "p<0.01",
-      p_adj < 0.05 ~ "p<0.05",
+      p_adj < 0.001 ~ "q<0.001",
+      p_adj < 0.01 ~ "q<0.01",
+      p_adj < 0.05 ~ "q<0.05",
       TRUE ~ "ns"
     )
   ) %>%
   dplyr::arrange(p_adj)
 
-if (knitr::is_html_output()) {
-  print(
-    DT::formatRound(
-      DT::datatable(
-        dplyr::select(
-          scfa_48h_anova,
-          analyte, effect, F_value, pr_f, p_adj, significance
-        ),
-        caption = paste(
-          "Donor-aware 48H endpoint mixed models:",
-          "concentration ~ group × carbohydrate + (1 | donor)"
-        ),
-        options = list(pageLength = 15, scrollX = TRUE),
-        rownames = FALSE
-      ),
-      columns = c("F_value", "pr_f", "p_adj"),
-      digits = 4
+scfa_48h_anova_export <- scfa_48h_anova %>%
+  dplyr::select(
+    analyte, effect, df_num, df_den, F_value, pr_f, p_adj, significance
+  )
+
+scfa_48h_export_path <- file.path(
+  "results", "additional_analyses_2026-07-19",
+  "scfa_48h_endpoint_type3_anova.csv"
+)
+dir.create(dirname(scfa_48h_export_path), recursive = TRUE, showWarnings = FALSE)
+readr::write_csv(scfa_48h_anova_export, scfa_48h_export_path)
+
+# Use a static table so all 15 rows and exact term statistics are embedded in
+# the standalone HTML and remain visible without JavaScript widget hydration.
+scfa_48h_anova_display <- scfa_48h_anova_export %>%
+  dplyr::mutate(
+    df_num = formatC(df_num, format = "f", digits = 0),
+    df_den = formatC(df_den, format = "f", digits = 1),
+    F_value = formatC(F_value, format = "f", digits = 4),
+    pr_f = formatC(pr_f, format = "g", digits = 4),
+    p_adj = formatC(p_adj, format = "g", digits = 4)
+  )
+
+print(
+  knitr::kable(
+    scfa_48h_anova_display,
+    caption = paste(
+      "Donor-aware 48H endpoint Type III tests:",
+      "concentration ~ group × carbohydrate + (1 | donor);",
+      "BH adjustment across all 15 analyte × term tests"
     )
   )
-} else {
-  print(
-    knitr::kable(
-      dplyr::select(
-        scfa_48h_anova, analyte, effect, F_value, pr_f, p_adj, significance
-      ),
-      digits = 4,
-      caption = "Donor-aware 48H endpoint mixed models"
-    )
-  )
-}
+)
 
 scfa_48h_sig <- scfa_48h_anova %>% dplyr::filter(p_adj < 0.05)
 if (nrow(scfa_48h_sig) > 0) {
@@ -1280,7 +1305,7 @@ if (nrow(scfa_48h_sig) > 0) {
 }
 ```
 
-At the 48H endpoint, carbohydrate condition is expected to dominate absolute SCFA levels among donors, whereas obesity-group main effects and group × carbohydrate interactions are typically weaker—consistent with the trajectory and delta analyses elsewhere in Section 5. Descriptive Wilcoxon marks on the boxplots should not be read as multiplicity-adjusted claims; the mixed-model table above is the donor-aware formal test for this cross-section.
+At the 48H endpoint, the omnibus carbohydrate-condition term was BH-significant for acetate, propionate, butyrate, and succinate, but not 5-aminovalerate. No obesity-group main effect or group × carbohydrate interaction was BH-significant. These endpoint tests establish that concentrations differed somewhere among carbohydrate conditions; they do not identify a significant pairwise contrast, a change from baseline, or SDC superiority over RDC. Descriptive Wilcoxon marks on the boxplots are not multiplicity-adjusted claims; the mixed-model table above is the donor-aware formal test for this cross-section.
 
 ## 5.4 Advanced Statistical Modeling: Mixed-Effects Models
 To test fixed effects of obesity group, carbohydrate type, and incubation time on absolute SCFA concentrations while accounting for the locked biological hierarchy, we fit linear mixed-effects models with nested random intercepts for donor, A/B aliquot, and culture well.
@@ -1640,9 +1665,9 @@ if (nrow(butyrate_sdc_rdc) != 1) {
 }
 ```
 
-The mean 0-to-48-hour butyrate change was `r if (exists("butyrate_sdc_mean_delta") && length(butyrate_sdc_mean_delta) == 1 && is.finite(butyrate_sdc_mean_delta)) sprintf("%.2f", butyrate_sdc_mean_delta) else "NA"` μM under SDC and `r if (exists("butyrate_rdc_mean_delta") && length(butyrate_rdc_mean_delta) == 1 && is.finite(butyrate_rdc_mean_delta)) sprintf("%.2f", butyrate_rdc_mean_delta) else "NA"` μM under RDC. The model-adjusted SDC-versus-RDC difference in change was `r if (exists("butyrate_sdc_rdc") && nrow(butyrate_sdc_rdc) == 1) sprintf("%.2f", butyrate_sdc_rdc$estimate) else "NA"` μM (95% CI, `r if (exists("butyrate_sdc_rdc") && nrow(butyrate_sdc_rdc) == 1) sprintf("%.2f", butyrate_sdc_rdc$lower.CL) else "NA"` to `r if (exists("butyrate_sdc_rdc") && nrow(butyrate_sdc_rdc) == 1) sprintf("%.2f", butyrate_sdc_rdc$upper.CL) else "NA"`; Tukey-adjusted p = `r if (exists("butyrate_sdc_rdc") && nrow(butyrate_sdc_rdc) == 1) format.pval(butyrate_sdc_rdc$p.value, digits = 3, eps = 0.001) else "NA"`). Thus, the butyrate increase was numerically greater under SDC, but the current analysis does not demonstrate that SDC produces a greater butyrate response than RDC.
+The mean 0-to-48-hour butyrate change was `r if (exists("butyrate_sdc_mean_delta") && length(butyrate_sdc_mean_delta) == 1 && is.finite(butyrate_sdc_mean_delta)) sprintf("%.2f", butyrate_sdc_mean_delta) else "NA"` mM under SDC and `r if (exists("butyrate_rdc_mean_delta") && length(butyrate_rdc_mean_delta) == 1 && is.finite(butyrate_rdc_mean_delta)) sprintf("%.2f", butyrate_rdc_mean_delta) else "NA"` mM under RDC. The model-adjusted SDC-versus-RDC difference in change was `r if (exists("butyrate_sdc_rdc") && nrow(butyrate_sdc_rdc) == 1) sprintf("%.2f", butyrate_sdc_rdc$estimate) else "NA"` mM (95% CI, `r if (exists("butyrate_sdc_rdc") && nrow(butyrate_sdc_rdc) == 1) sprintf("%.2f", butyrate_sdc_rdc$lower.CL) else "NA"` to `r if (exists("butyrate_sdc_rdc") && nrow(butyrate_sdc_rdc) == 1) sprintf("%.2f", butyrate_sdc_rdc$upper.CL) else "NA"`; Tukey-adjusted p = `r if (exists("butyrate_sdc_rdc") && nrow(butyrate_sdc_rdc) == 1) format.pval(butyrate_sdc_rdc$p.value, digits = 3, eps = 0.001) else "NA"`). Thus, the butyrate increase was numerically greater under SDC, but the current analysis does not demonstrate that SDC produces a greater butyrate response than RDC.
 
-This estimate uses the corrected biological-unit hierarchy: numeric subject (independent person), A/B sample aliquots nested within subject, and R1/R2 or S1/S2 culture wells nested within aliquot. The concentration unit remains provisional pending facility confirmation.
+This estimate uses the corrected biological-unit hierarchy: numeric subject (independent person), A/B sample aliquots nested within subject, and R1/R2 or S1/S2 culture wells nested within aliquot. Concentrations are in millimolar (mM).
 
 ## 5.5 Obesity-Group SCFA Trajectory Contrasts
 To test whether obesity status alters the 0-to-48-hour SCFA response under RDC or SDC, we estimated obesity-minus-healthy-weight differences in change for acetate, propionate, and butyrate and examined confidence intervals against a no-difference null (equivalence margins remain unlocked).
@@ -1677,12 +1702,12 @@ primary_obesity_contrasts <- obesity_equivalence_results %>%
     Carbohydrate = carbohydrate,
     `Healthy-weight n` = n_healthy_weight,
     `Obesity n` = n_obesity,
-    `Obesity - healthy-weight change` = estimate_uM,
-    `95% CI lower` = ci95_lower_uM,
-    `95% CI upper` = ci95_upper_uM,
-    `90% CI lower` = ci90_lower_uM,
-    `90% CI upper` = ci90_upper_uM,
-    `Post hoc frontier` = minimum_margin_to_contain_90_ci_uM,
+    `Obesity - healthy-weight change` = estimate_mM,
+    `95% CI lower` = ci95_lower_mM,
+    `95% CI upper` = ci95_upper_mM,
+    `90% CI lower` = ci90_lower_mM,
+    `90% CI upper` = ci90_upper_mM,
+    `Post hoc frontier` = minimum_margin_to_contain_90_ci_mM,
     `Equivalence verdict` = equivalence_verdict
   )
 
@@ -1691,7 +1716,7 @@ if (knitr::is_html_output()) {
     primary_obesity_contrasts,
     caption = paste(
       "Obesity-group differences in 0-to-48-hour SCFA change.",
-      "Units are labeled µM pending facility confirmation;",
+      "Units are millimolar (mM);",
       "equivalence is not evaluable because no external margin is locked."
     ),
     options = list(pageLength = 6, scrollX = TRUE),
@@ -1722,7 +1747,7 @@ if (file.exists(equivalence_figure_path)) {
 }
 ```
 
-Across the six primary contrasts, the estimated obesity-minus-healthy-weight differences in 0-to-48-hour change were −0.09 μM (95% CI −5.17 to 5.00) for acetate under RDC, 3.43 μM (−1.66 to 8.51) for acetate under SDC, 0.74 μM (−0.70 to 2.18) for propionate under RDC, 0.38 μM (−1.06 to 1.82) for propionate under SDC, −0.76 μM (−2.96 to 1.44) for butyrate under RDC, and −1.19 μM (−3.39 to 1.02) for butyrate under SDC. None differed significantly from zero. Donor-level bootstrap intervals, resampling the 16 independent subjects, gave the same qualitative conclusion. Because no externally justified equivalence margin is locked, these intervals do not establish equivalence or preserved fermentation capacity.
+Across the six primary contrasts, the estimated obesity-minus-healthy-weight differences in 0-to-48-hour change were −0.09 mM (95% CI −5.17 to 5.00) for acetate under RDC, 3.43 mM (−1.66 to 8.51) for acetate under SDC, 0.74 mM (−0.70 to 2.18) for propionate under RDC, 0.38 mM (−1.06 to 1.82) for propionate under SDC, −0.76 mM (−2.96 to 1.44) for butyrate under RDC, and −1.19 mM (−3.39 to 1.02) for butyrate under SDC. None differed significantly from zero. Donor-level bootstrap intervals, resampling the 16 independent subjects, gave the same qualitative conclusion. Because no externally justified equivalence margin is locked, these intervals do not establish equivalence or preserved fermentation capacity.
 
 Residual diagnostics indicated non-normality for all analytes and heteroscedasticity for propionate and butyrate; the donor-level bootstrap intervals are therefore retained as a sensitivity analysis. Consistent with Section 5.4.1, several aliquot- or well-level variance components were near the boundary (culture-well variance essentially negligible), while the subject-level random intercept remained the primary biological clustering term among the nested random effects—even though residual noise still dominated leftover concentration variance.
 
@@ -5370,7 +5395,7 @@ if (length(fusicatenibacter_taxa_rel) > 0) {
       labs(
         title = "Fusicatenibacter vs Butyrate (Relative Abundance)",
         subtitle = "48H timepoint, SDC carbohydrate only",
-        x = "Butyrate Concentration (μM)",
+        x = "Butyrate Concentration (mM)",
         y = "Fusicatenibacter Relative Abundance"
       ) +
       theme_scfa() +
@@ -5402,7 +5427,7 @@ if (length(fusicatenibacter_taxa_rel) > 0) {
       labs(
         title = "Fusicatenibacter vs Propionate (Relative Abundance)",
         subtitle = "48H timepoint, SDC carbohydrate only",
-        x = "Propionate Concentration (μM)",
+        x = "Propionate Concentration (mM)",
         y = "Fusicatenibacter Relative Abundance"
       ) +
       theme_scfa() +
@@ -7137,5 +7162,3 @@ if (exists("responder_wide") && nrow(responder_wide) > 0) {
 - Functional metagenomics and metabolomics could identify the specific genes and pathways that drive SCFA production in responder groups.
 - Longitudinal studies could determine whether responder status is stable over time and whether dietary interventions can shift individuals from non-responder to responder status.
 - Clinical trials could test whether microbiome-based stratification improves the efficacy of dietary interventions for obesity management.
-
-

@@ -211,8 +211,8 @@ def load_margins() -> pd.DataFrame:
     margins = pd.read_csv(MARGIN_FILE)
     required = {
         "analyte",
-        "margin_lower_uM",
-        "margin_upper_uM",
+        "margin_lower_mM",
+        "margin_upper_mM",
         "status",
         "version",
         "source",
@@ -221,11 +221,11 @@ def load_margins() -> pd.DataFrame:
     missing = required.difference(margins.columns)
     if missing:
         raise ValueError(f"Margin file is missing columns: {sorted(missing)}")
-    margins["margin_lower_uM"] = pd.to_numeric(
-        margins["margin_lower_uM"], errors="coerce"
+    margins["margin_lower_mM"] = pd.to_numeric(
+        margins["margin_lower_mM"], errors="coerce"
     )
-    margins["margin_upper_uM"] = pd.to_numeric(
-        margins["margin_upper_uM"], errors="coerce"
+    margins["margin_upper_mM"] = pd.to_numeric(
+        margins["margin_upper_mM"], errors="coerce"
     )
     return margins
 
@@ -353,16 +353,16 @@ def difference_in_differences(
     ci90_half = stats.norm.ppf(0.95) * standard_error
     ci95_half = stats.norm.ppf(0.975) * standard_error
     return {
-        "estimate_uM": estimate,
-        "standard_error_uM": standard_error,
+        "estimate_mM": estimate,
+        "standard_error_mM": standard_error,
         "degrees_freedom": np.inf,
         "inference_distribution": "asymptotic_normal_wald",
         "wald_z": z_value,
         "superiority_p_two_sided": float(2 * stats.norm.sf(abs(z_value))),
-        "ci90_lower_uM": estimate - ci90_half,
-        "ci90_upper_uM": estimate + ci90_half,
-        "ci95_lower_uM": estimate - ci95_half,
-        "ci95_upper_uM": estimate + ci95_half,
+        "ci90_lower_mM": estimate - ci90_half,
+        "ci90_upper_mM": estimate + ci90_half,
+        "ci95_lower_mM": estimate - ci95_half,
+        "ci95_upper_mM": estimate + ci95_half,
     }
 
 
@@ -381,8 +381,8 @@ def donor_deltas(long_data: pd.DataFrame) -> pd.DataFrame:
         columns="timepoint_hr",
         values="concentration",
     ).reset_index()
-    wide["delta_48h_minus_0h_uM"] = wide.get(48) - wide.get(0)
-    return wide.dropna(subset=["delta_48h_minus_0h_uM"]).copy()
+    wide["delta_48h_minus_0h_mM"] = wide.get(48) - wide.get(0)
+    return wide.dropna(subset=["delta_48h_minus_0h_mM"]).copy()
 
 
 def bootstrap_delta_contrast(
@@ -397,10 +397,10 @@ def bootstrap_delta_contrast(
         & deltas["carbohydrate"].eq(carbohydrate)
     ]
     control = subset.loc[
-        subset["group"].eq("control"), "delta_48h_minus_0h_uM"
+        subset["group"].eq("control"), "delta_48h_minus_0h_mM"
     ].to_numpy()
     case = subset.loc[
-        subset["group"].eq("case"), "delta_48h_minus_0h_uM"
+        subset["group"].eq("case"), "delta_48h_minus_0h_mM"
     ].to_numpy()
     rng = np.random.default_rng(seed)
     control_means = rng.choice(
@@ -417,12 +417,12 @@ def bootstrap_delta_contrast(
     return {
         "n_healthy_weight": len(control),
         "n_obesity": len(case),
-        "healthy_weight_mean_delta_uM": float(control.mean()),
-        "obesity_mean_delta_uM": float(case.mean()),
-        "bootstrap_ci90_lower_uM": float(np.quantile(differences, 0.05)),
-        "bootstrap_ci90_upper_uM": float(np.quantile(differences, 0.95)),
-        "bootstrap_ci95_lower_uM": float(np.quantile(differences, 0.025)),
-        "bootstrap_ci95_upper_uM": float(np.quantile(differences, 0.975)),
+        "healthy_weight_mean_delta_mM": float(control.mean()),
+        "obesity_mean_delta_mM": float(case.mean()),
+        "bootstrap_ci90_lower_mM": float(np.quantile(differences, 0.05)),
+        "bootstrap_ci90_upper_mM": float(np.quantile(differences, 0.95)),
+        "bootstrap_ci95_lower_mM": float(np.quantile(differences, 0.025)),
+        "bootstrap_ci95_upper_mM": float(np.quantile(differences, 0.975)),
     }
 
 
@@ -436,10 +436,10 @@ def leave_one_donor_influence(
     ].copy()
     baseline = (
         subset.loc[
-            subset["group"].eq("case"), "delta_48h_minus_0h_uM"
+            subset["group"].eq("case"), "delta_48h_minus_0h_mM"
         ].mean()
         - subset.loc[
-            subset["group"].eq("control"), "delta_48h_minus_0h_uM"
+            subset["group"].eq("control"), "delta_48h_minus_0h_mM"
         ].mean()
     )
     changes: list[tuple[str, float]] = []
@@ -447,17 +447,17 @@ def leave_one_donor_influence(
         reduced = subset.loc[~subset["subject"].eq(subject)]
         estimate = (
             reduced.loc[
-                reduced["group"].eq("case"), "delta_48h_minus_0h_uM"
+                reduced["group"].eq("case"), "delta_48h_minus_0h_mM"
             ].mean()
             - reduced.loc[
-                reduced["group"].eq("control"), "delta_48h_minus_0h_uM"
+                reduced["group"].eq("control"), "delta_48h_minus_0h_mM"
             ].mean()
         )
         changes.append((str(subject), float(abs(estimate - baseline))))
     influential_subject, maximum_change = max(changes, key=lambda item: item[1])
     return {
         "most_influential_subject": influential_subject,
-        "maximum_leave_one_out_change_uM": maximum_change,
+        "maximum_leave_one_out_change_mM": maximum_change,
     }
 
 
@@ -631,25 +631,25 @@ def make_forest_plot(contrasts: pd.DataFrame, path: Path) -> None:
         panel["y"] = panel["carbohydrate"].map({"RDC": 1, "SDC": 0})
 
         for _, row in panel.iterrows():
-            if pd.notna(row["margin_lower_uM"]) and pd.notna(
-                row["margin_upper_uM"]
+            if pd.notna(row["margin_lower_mM"]) and pd.notna(
+                row["margin_upper_mM"]
             ):
                 axis.axvspan(
-                    row["margin_lower_uM"],
-                    row["margin_upper_uM"],
+                    row["margin_lower_mM"],
+                    row["margin_upper_mM"],
                     color="#d9ead3",
                     alpha=0.22,
                     zorder=0,
                 )
             axis.plot(
-                [row["ci95_lower_uM"], row["ci95_upper_uM"]],
+                [row["ci95_lower_mM"], row["ci95_upper_mM"]],
                 [row["y"], row["y"]],
                 color="#8c8c8c",
                 linewidth=2,
                 zorder=1,
             )
             axis.plot(
-                [row["ci90_lower_uM"], row["ci90_upper_uM"]],
+                [row["ci90_lower_mM"], row["ci90_upper_mM"]],
                 [row["y"], row["y"]],
                 color="#1f4e79",
                 linewidth=5,
@@ -657,7 +657,7 @@ def make_forest_plot(contrasts: pd.DataFrame, path: Path) -> None:
                 zorder=2,
             )
             axis.scatter(
-                row["estimate_uM"],
+                row["estimate_mM"],
                 row["y"],
                 color="#b03a2e",
                 s=38,
@@ -668,7 +668,7 @@ def make_forest_plot(contrasts: pd.DataFrame, path: Path) -> None:
             axis.text(
                 0.98,
                 annotation_y,
-                f"frontier ±{row['minimum_margin_to_contain_90_ci_uM']:.2f}",
+                f"frontier ±{row['minimum_margin_to_contain_90_ci_mM']:.2f}",
                 transform=axis.get_yaxis_transform(),
                 ha="right",
                 va=annotation_va,
@@ -678,7 +678,7 @@ def make_forest_plot(contrasts: pd.DataFrame, path: Path) -> None:
 
         axis.axvline(0, color="black", linewidth=1, linestyle=":")
         axis.set_title(analyte.capitalize())
-        axis.set_xlabel("Difference in 0–48 h change (µM)", fontsize=9)
+        axis.set_xlabel("Difference in 0–48 h change (mM)", fontsize=9)
         axis.set_yticks([0, 1], labels=["SDC", "RDC"])
         axis.grid(axis="x", color="#e6e6e6", linewidth=0.7)
 
@@ -735,12 +735,12 @@ def main() -> None:
                 deltas, analyte, carbohydrate
             )
             required_margin = max(
-                abs(estimates["ci90_lower_uM"]),
-                abs(estimates["ci90_upper_uM"]),
+                abs(estimates["ci90_lower_mM"]),
+                abs(estimates["ci90_upper_mM"]),
             )
 
-            lower_margin = margin_row["margin_lower_uM"]
-            upper_margin = margin_row["margin_upper_uM"]
+            lower_margin = margin_row["margin_lower_mM"]
+            upper_margin = margin_row["margin_upper_mM"]
             valid_margin = (
                 pd.notna(lower_margin)
                 and pd.notna(upper_margin)
@@ -748,8 +748,8 @@ def main() -> None:
             )
             if valid_margin:
                 tost = tost_result(
-                    estimates["estimate_uM"],
-                    estimates["standard_error_uM"],
+                    estimates["estimate_mM"],
+                    estimates["standard_error_mM"],
                     float(lower_margin),
                     float(upper_margin),
                 )
@@ -768,16 +768,16 @@ def main() -> None:
                         analyte in PRIMARY_ANALYTES
                         and carbohydrate in PRIMARY_CARBOHYDRATES
                     ),
-                    "unit": "uM_pending_facility_confirmation",
+                    "unit": "mM",
                     **bootstrap,
                     **estimates,
-                    "margin_lower_uM": lower_margin,
-                    "margin_upper_uM": upper_margin,
+                    "margin_lower_mM": lower_margin,
+                    "margin_upper_mM": upper_margin,
                     "margin_status": margin_row["status"],
                     "margin_version": margin_row["version"],
                     "margin_source": margin_row["source"],
                     "margin_rationale": margin_row["rationale"],
-                    "minimum_margin_to_contain_90_ci_uM": required_margin,
+                    "minimum_margin_to_contain_90_ci_mM": required_margin,
                     "minimum_margin_is_post_hoc": True,
                     **tost,
                     **influence,
@@ -836,7 +836,7 @@ def main() -> None:
                 "formal_tost_performed": bool(
                     primary["tost_p"].notna().all()
                 ),
-                "unit_status": "uM label pending facility confirmation",
+                "unit_status": "mM (facility-confirmed concentration unit)",
             }
         ]
     )

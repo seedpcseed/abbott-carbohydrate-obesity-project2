@@ -26,7 +26,7 @@ SDC-attributable Δlog10(qPCR-scaled *Fusicatenibacter*) vs SDC-attributable Δb
 - Donor permutation p ≈ **0.088**
 - 95% donor-bootstrap CI for ρ ≈ **−0.24 to 0.89**
 - N = **14** donors with complete net-change pairs
-- OLS slope ≈ **1.39 µM per log10 abundance unit** (descriptive)
+- OLS slope ≈ **1.39 mM per log10 abundance unit** (descriptive)
 
 Direction is positive but the confidence interval includes zero. Do not claim a significant association. Relative-abundance and total-load specificity checks were nonsignificant after BH correction within the secondary family.
 

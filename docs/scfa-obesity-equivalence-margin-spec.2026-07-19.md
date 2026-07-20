@@ -15,9 +15,9 @@ The submission metadata contain 40 A/B aliquot labels from 20 numeric subjects (
 
 ## Unit and assay evidence
 
-The DFI-HMMF method documents authentic-standard calibration for acetate, propionate, butyrate, and succinate and describes project QC procedures, including internal-standard recovery, retention time, percent CV, method blanks, and pooled QC. It does not provide this project’s analyte-specific CVs, limits of quantification, total error, or a statement confirming the concentration unit in the exported CSV.
+The DFI-HMMF method documents authentic-standard calibration for acetate, propionate, butyrate, and succinate and describes project QC procedures, including internal-standard recovery, retention time, percent CV, method blanks, and pooled QC. It does not provide this project’s analyte-specific CVs, limits of quantification, or total error. The exported concentrations are in millimolar (mM).
 
-The analysis therefore retains the existing µM label but marks it as pending facility confirmation. Assay precision is treated as a feasibility check, not as a substitute for a biological smallest effect size of interest.
+Concentrations in the exported results are millimolar (mM). Assay precision is treated as a feasibility check, not as a substitute for a biological smallest effect size of interest.
 
 ## External evidence review
 

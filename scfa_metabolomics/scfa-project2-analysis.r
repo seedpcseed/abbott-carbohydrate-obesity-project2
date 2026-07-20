@@ -667,7 +667,7 @@ plot_by_group <- sample_data_long %>%
                      step_increase = 0.1) +
   labs(title = "SCFA Concentrations by Group and Carbohydrate Type",
        x = "Group",
-       y = "Concentration (μM)",
+       y = "Concentration (mM)",
        fill = "Group") +
   pub_theme +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
@@ -685,7 +685,7 @@ plot_by_carb <- sample_data_long %>%
                      step_increase = 0.1) +
   labs(title = "SCFA Concentrations by Carbohydrate Type and Time Point",
        x = "Carbohydrate Type",
-       y = "Concentration (μM)",
+       y = "Concentration (mM)",
        fill = "Carbohydrate Type") +
   pub_theme +
   theme(axis.text.x = element_text(angle = 45, hjust = 1),
@@ -710,7 +710,7 @@ plot_time_series <- sample_data_long %>%
   scale_x_continuous(breaks = c(0, 48)) +
   labs(title = "SCFA Concentrations Over Time by Carbohydrate Type",
        x = "Time (hours)",
-       y = "Mean Concentration ± SEM (μM)",
+       y = "Mean Concentration ± SEM (mM)",
        color = "Carbohydrate Type") +
   pub_theme +
   theme(legend.position = "bottom")
@@ -725,7 +725,7 @@ heatmap_data <- sample_data_long %>%
 plot_heatmap <- heatmap_data %>%
   ggplot(aes(x = condition, y = analyte, fill = mean_conc)) +
   geom_tile(color = "white", linewidth = 0.5) +
-  scale_fill_viridis_c(name = "Mean\nConcentration\n(μM)", option = "plasma") +
+  scale_fill_viridis_c(name = "Mean\nConcentration\n(mM)", option = "plasma") +
   labs(title = "SCFA Concentration Heatmap Across All Conditions",
        x = "Condition (Group_Carbohydrate_Time)",
        y = "SCFA Analyte") +
@@ -749,7 +749,7 @@ plot_interaction <- sample_data_long %>%
   scale_shape_manual(values = c("control" = 16, "case" = 17)) +
   labs(title = "SCFA Concentrations: Group × Carbohydrate × Time Interaction",
        x = "Time (hours)",
-       y = "Mean Concentration (μM)",
+       y = "Mean Concentration (mM)",
        color = "Carbohydrate Type",
        linetype = "Group",
        shape = "Group") +
@@ -810,7 +810,7 @@ plot_subject_heatmap <- subject_heatmap_data %>%
   ggplot(aes(x = condition_time, y = subject_group, fill = mean_conc)) +
   geom_tile(color = "white", linewidth = 0.2) +
   facet_wrap(~ analyte, scales = "free", ncol = 2) +
-  scale_fill_viridis_c(name = "Concentration\n(μM)", option = "plasma", 
+  scale_fill_viridis_c(name = "Concentration\n(mM)", option = "plasma", 
                        trans = "sqrt", na.value = "white") +
   labs(title = "Individual Subject SCFA Responses Across All Conditions",
        subtitle = "Control group (top) and Case group (bottom) with visual separation",
@@ -869,7 +869,7 @@ plot_trajectories <- trajectory_data %>%
   labs(title = "Individual Subject SCFA Trajectories by Carbohydrate Source",
        subtitle = "Thin lines: individual subjects, Thick lines: group means ± SEM",
        x = "Time (hours)",
-       y = "Concentration (μM)",
+       y = "Concentration (mM)",
        color = "Group") +
   pub_theme +
   theme(
@@ -901,7 +901,7 @@ plot_case_only <- case_only_plot_data %>%
   labs(title = "Case Group Only: SCFA Temporal Changes by Carbohydrate Type",
        subtitle = "Mean ± SEM concentrations from 0h to 48h",
        x = "Time (hours)",
-       y = "Mean Concentration ± SEM (μM)",
+       y = "Mean Concentration ± SEM (mM)",
        color = "Carbohydrate Type") +
   pub_theme +
   theme(legend.position = "bottom")
@@ -936,7 +936,7 @@ plot_case_individual <- case_individual_data %>%
   labs(title = "Case Group Individual Subject SCFA Trajectories",
        subtitle = "Thin lines: individual subjects, Thick lines: group means",
        x = "Time (hours)",
-       y = "Concentration (μM)",
+       y = "Concentration (mM)",
        color = "Carbohydrate Type") +
   pub_theme +
   theme(
@@ -959,7 +959,7 @@ plot_delta_group <- delta_analysis %>%
   labs(title = "SCFA Response Magnitude (Δ48h-0h) by Group",
        subtitle = "Comparing metabolic response between control and case groups",
        x = "Group",
-       y = "Delta Concentration (48h - 0h) μM",
+       y = "Delta Concentration (48h - 0h) mM",
        fill = "Group") +
   pub_theme +
   theme(legend.position = "bottom")
@@ -977,7 +977,7 @@ plot_delta_carb <- delta_analysis %>%
   labs(title = "SCFA Response Magnitude (Δ48h-0h) by Carbohydrate Type",
        subtitle = "Comparing metabolic response magnitude across carbohydrate interventions",
        x = "Carbohydrate Type",
-       y = "Delta Concentration (48h - 0h) μM",
+       y = "Delta Concentration (48h - 0h) mM",
        fill = "Carbohydrate Type") +
   pub_theme +
   theme(axis.text.x = element_text(angle = 45, hjust = 1),
@@ -1000,7 +1000,7 @@ plot_delta_interaction <- delta_analysis %>%
   labs(title = "SCFA Response Magnitude: Group × Carbohydrate Interaction",
        subtitle = "Mean ± SEM change from baseline (48h - 0h)",
        x = "Carbohydrate Type",
-       y = "Mean Delta Concentration ± SEM (μM)",
+       y = "Mean Delta Concentration ± SEM (mM)",
        fill = "Group") +
   pub_theme +
   theme(axis.text.x = element_text(angle = 45, hjust = 1),
